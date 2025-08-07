@@ -43,3 +43,8 @@ bin/
 
 # debug information files
 *.dwo
+
+# test output
+test/grid02qtg*
+test/output_intersection/c*
+test/output_shapefiles/grid*
