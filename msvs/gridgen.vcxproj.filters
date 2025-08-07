@@ -1,0 +1,303 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\basic">
+      <UniqueIdentifier>{1a3dafa5-6ec9-4655-a868-01e0a19b4b51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\grid">
+      <UniqueIdentifier>{a341c839-f0f0-47c7-adb9-540e63a8fcc2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\intersection">
+      <UniqueIdentifier>{6d8d8c06-6c42-4f61-8bac-62749b03da9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\tool">
+      <UniqueIdentifier>{65fb33fd-d9bc-440e-a203-7f56808a00d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\basic">
+      <UniqueIdentifier>{3bf6faff-d2cc-4fb1-b0d8-bf80e3769b77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\grid">
+      <UniqueIdentifier>{a80b8411-b78e-466a-8a41-b49eebaeb73d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\intersection">
+      <UniqueIdentifier>{93bbb407-ad98-461c-aa58-f7f5bee169a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\tools">
+      <UniqueIdentifier>{41d698d7-22c4-4138-87a2-7792190a6934}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\tool\shapefile">
+      <UniqueIdentifier>{cdd74916-0c01-459d-be4f-faba05253409}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\tool\shapefile\shapelib">
+      <UniqueIdentifier>{4b8a776c-1feb-4461-86b3-418bee58ccc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\tools\shapefile">
+      <UniqueIdentifier>{bcec2e81-0fd3-4c8d-acd8-250b144ea3b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\tools\shapefile\shapelib">
+      <UniqueIdentifier>{d5b01d67-f2d4-4b5b-9d2a-2666acd77a08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vpass">
+      <UniqueIdentifier>{1aed57cb-5f83-418c-81c8-a8ea5e666c4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\vpass">
+      <UniqueIdentifier>{dedef162-f686-4c39-bdb5-d97483334d97}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\basic\Array3D.cpp">
+      <Filter>Source Files\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basic\Basic.cpp">
+      <Filter>Source Files\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basic\Gauss.cpp">
+      <Filter>Source Files\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basic\polygon.cpp">
+      <Filter>Source Files\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basic\polyline.cpp">
+      <Filter>Source Files\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basic\Quaternion.cpp">
+      <Filter>Source Files\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basic\Util.cpp">
+      <Filter>Source Files\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\grid\Box.cpp">
+      <Filter>Source Files\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\grid\Cube.cpp">
+      <Filter>Source Files\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\grid\GridDomain.cpp">
+      <Filter>Source Files\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\grid\ModflowGrid.cpp">
+      <Filter>Source Files\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\grid\ModflowGrid2D.cpp">
+      <Filter>Source Files\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\grid\NodeGroup.cpp">
+      <Filter>Source Files\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\grid\Octree.cpp">
+      <Filter>Source Files\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\grid\QuadTree3D.cpp">
+      <Filter>Source Files\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\grid\QuadTreeBuilder.cpp">
+      <Filter>Source Files\grid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\intersection\BoxPlyClip.cpp">
+      <Filter>Source Files\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\intersection\GridIntersection.cpp">
+      <Filter>Source Files\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\intersection\PolygonChecker.cpp">
+      <Filter>Source Files\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\def_exporter.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\def_parser.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\def_struct.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\GhostNode.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\reader_treestruct.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\shapefile\intersecReadWrite.cpp">
+      <Filter>Source Files\tools\shapefile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\shapefile\shpReader.cpp">
+      <Filter>Source Files\tools\shapefile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\shapefile\shapelib\dbfopen.cpp">
+      <Filter>Source Files\tools\shapefile\shapelib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\shapefile\shapelib\safileio.cpp">
+      <Filter>Source Files\tools\shapefile\shapelib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\shapefile\shapelib\shpopen.cpp">
+      <Filter>Source Files\tools\shapefile\shapelib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gridgenusg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\GridToShp.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\ascii_grid.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\VPass\vert_pass.cpp">
+      <Filter>Source Files\vpass</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\shapefile\shpGridToLine.cpp">
+      <Filter>Source Files\tools\shapefile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools\GridToVTK.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\basic\Array3D.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\Basic.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\Gauss.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\gettime.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\lineseg.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\Matrix.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\Point.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\polygon.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\polyline.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\Quaternion.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\Util.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basic\Vector.h">
+      <Filter>Header Files\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\Box.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\CooData.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\CsrData.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\Cube.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\CubeQueue.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\Grid.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\GridDomain.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\gridutil.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\MeshReader.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\ModflowGrid.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\ModflowGrid2D.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\NodeGroup.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\Octree.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\PriorityQueue.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\QuadTree3D.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\grid\QuadTreeBuilder.h">
+      <Filter>Header Files\grid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\intersection\BoxPlyClip.h">
+      <Filter>Header Files\intersection</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\intersection\GridIntersection.h">
+      <Filter>Header Files\intersection</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\intersection\intersection.h">
+      <Filter>Header Files\intersection</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\intersection\PolygonChecker.h">
+      <Filter>Header Files\intersection</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\def_exporter.h">
+      <Filter>Header Files\tool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\def_parser.h">
+      <Filter>Header Files\tool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\def_struct.h">
+      <Filter>Header Files\tool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\GhostNode.h">
+      <Filter>Header Files\tool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\reader_treestruct.h">
+      <Filter>Header Files\tool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\shapefile\intersecReadWrite.h">
+      <Filter>Header Files\tool\shapefile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\shapefile\shpReader.h">
+      <Filter>Header Files\tool\shapefile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\shapefile\shapelib\shapefil.h">
+      <Filter>Header Files\tool\shapefile\shapelib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\GridToShp.h">
+      <Filter>Header Files\tool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\ascii_grid.h">
+      <Filter>Header Files\tool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\VPass\vert_pass.h">
+      <Filter>Header Files\vpass</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\shapefile\shpGridToLine.h">
+      <Filter>Header Files\tool\shapefile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tools\GridToVTK.h">
+      <Filter>Header Files\tool</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

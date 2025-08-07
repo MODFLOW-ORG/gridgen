@@ -1,0 +1,6 @@
+LOAD grid02qtg.dfn
+BEGIN GRID_TO_USGDATA grid02qtg-to-usgdata
+  GRID = grid02qtg
+  USG_DATA_PREFIX = output_usgdata/grid02qtg
+END GRID_TO_USGDATA
+

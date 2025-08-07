@@ -32,10 +32,19 @@
 *.a
 *.lib
 
+# meson builddir
+builddir/
+
 # Executables
+bin/
 *.exe
 *.out
 *.app
 
 # debug information files
 *.dwo
+
+# test output
+test/grid02qtg*
+test/output_intersection/c*
+test/output_shapefiles/grid*
