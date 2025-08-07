@@ -1,0 +1,228 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{95C29315-D2E1-4C6E-AFF8-51D7750D4260}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>gridgen</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\basic;..\src\grid;..\src\intersection;..\src\tools;..\src\tools\shapefile;..\src\tools\shapefile\shapelib;..\src\tools\VPass;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\basic;..\src\grid;..\src\intersection;..\src\tools;..\src\tools\shapefile;..\src\tools\shapefile\shapelib;..\src\tools\VPass;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\basic;..\src\grid;..\src\intersection;..\src\tools;..\src\tools\shapefile;..\src\tools\shapefile\shapelib;..\src\tools\VPass;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\basic;..\src\grid;..\src\intersection;..\src\tools;..\src\tools\shapefile;..\src\tools\shapefile\shapelib;..\src\tools\VPass;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\basic\Array3D.cpp" />
+    <ClCompile Include="..\src\basic\Basic.cpp" />
+    <ClCompile Include="..\src\basic\Gauss.cpp" />
+    <ClCompile Include="..\src\basic\polygon.cpp" />
+    <ClCompile Include="..\src\basic\polyline.cpp" />
+    <ClCompile Include="..\src\basic\Quaternion.cpp" />
+    <ClCompile Include="..\src\basic\Util.cpp" />
+    <ClCompile Include="..\src\gridgenusg.cpp" />
+    <ClCompile Include="..\src\grid\Box.cpp" />
+    <ClCompile Include="..\src\grid\Cube.cpp" />
+    <ClCompile Include="..\src\grid\GridDomain.cpp" />
+    <ClCompile Include="..\src\grid\ModflowGrid.cpp" />
+    <ClCompile Include="..\src\grid\ModflowGrid2D.cpp" />
+    <ClCompile Include="..\src\grid\NodeGroup.cpp" />
+    <ClCompile Include="..\src\grid\Octree.cpp" />
+    <ClCompile Include="..\src\grid\QuadTree3D.cpp" />
+    <ClCompile Include="..\src\grid\QuadTreeBuilder.cpp" />
+    <ClCompile Include="..\src\intersection\BoxPlyClip.cpp" />
+    <ClCompile Include="..\src\intersection\GridIntersection.cpp" />
+    <ClCompile Include="..\src\intersection\PolygonChecker.cpp" />
+    <ClCompile Include="..\src\tools\ascii_grid.cpp" />
+    <ClCompile Include="..\src\tools\def_exporter.cpp" />
+    <ClCompile Include="..\src\tools\def_parser.cpp" />
+    <ClCompile Include="..\src\tools\def_struct.cpp" />
+    <ClCompile Include="..\src\tools\GhostNode.cpp" />
+    <ClCompile Include="..\src\tools\GridToShp.cpp" />
+    <ClCompile Include="..\src\tools\GridToVTK.cpp" />
+    <ClCompile Include="..\src\tools\reader_treestruct.cpp" />
+    <ClCompile Include="..\src\tools\shapefile\intersecReadWrite.cpp" />
+    <ClCompile Include="..\src\tools\shapefile\shapelib\dbfopen.cpp" />
+    <ClCompile Include="..\src\tools\shapefile\shapelib\safileio.cpp" />
+    <ClCompile Include="..\src\tools\shapefile\shapelib\shpopen.cpp" />
+    <ClCompile Include="..\src\tools\shapefile\shpGridToLine.cpp" />
+    <ClCompile Include="..\src\tools\shapefile\shpReader.cpp" />
+    <ClCompile Include="..\src\tools\VPass\vert_pass.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\basic\Array3D.h" />
+    <ClInclude Include="..\src\basic\Basic.h" />
+    <ClInclude Include="..\src\basic\Gauss.h" />
+    <ClInclude Include="..\src\basic\gettime.h" />
+    <ClInclude Include="..\src\basic\lineseg.h" />
+    <ClInclude Include="..\src\basic\Matrix.h" />
+    <ClInclude Include="..\src\basic\Point.h" />
+    <ClInclude Include="..\src\basic\polygon.h" />
+    <ClInclude Include="..\src\basic\polyline.h" />
+    <ClInclude Include="..\src\basic\Quaternion.h" />
+    <ClInclude Include="..\src\basic\Util.h" />
+    <ClInclude Include="..\src\basic\Vector.h" />
+    <ClInclude Include="..\src\grid\Box.h" />
+    <ClInclude Include="..\src\grid\CooData.h" />
+    <ClInclude Include="..\src\grid\CsrData.h" />
+    <ClInclude Include="..\src\grid\Cube.h" />
+    <ClInclude Include="..\src\grid\CubeQueue.h" />
+    <ClInclude Include="..\src\grid\Grid.h" />
+    <ClInclude Include="..\src\grid\GridDomain.h" />
+    <ClInclude Include="..\src\grid\gridutil.h" />
+    <ClInclude Include="..\src\grid\MeshReader.h" />
+    <ClInclude Include="..\src\grid\ModflowGrid.h" />
+    <ClInclude Include="..\src\grid\ModflowGrid2D.h" />
+    <ClInclude Include="..\src\grid\NodeGroup.h" />
+    <ClInclude Include="..\src\grid\Octree.h" />
+    <ClInclude Include="..\src\grid\PriorityQueue.h" />
+    <ClInclude Include="..\src\grid\QuadTree3D.h" />
+    <ClInclude Include="..\src\grid\QuadTreeBuilder.h" />
+    <ClInclude Include="..\src\intersection\BoxPlyClip.h" />
+    <ClInclude Include="..\src\intersection\GridIntersection.h" />
+    <ClInclude Include="..\src\intersection\intersection.h" />
+    <ClInclude Include="..\src\intersection\PolygonChecker.h" />
+    <ClInclude Include="..\src\tools\ascii_grid.h" />
+    <ClInclude Include="..\src\tools\def_exporter.h" />
+    <ClInclude Include="..\src\tools\def_parser.h" />
+    <ClInclude Include="..\src\tools\def_struct.h" />
+    <ClInclude Include="..\src\tools\GhostNode.h" />
+    <ClInclude Include="..\src\tools\GridToShp.h" />
+    <ClInclude Include="..\src\tools\GridToVTK.h" />
+    <ClInclude Include="..\src\tools\reader_treestruct.h" />
+    <ClInclude Include="..\src\tools\shapefile\intersecReadWrite.h" />
+    <ClInclude Include="..\src\tools\shapefile\shapelib\shapefil.h" />
+    <ClInclude Include="..\src\tools\shapefile\shpGridToLine.h" />
+    <ClInclude Include="..\src\tools\shapefile\shpReader.h" />
+    <ClInclude Include="..\src\tools\VPass\vert_pass.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

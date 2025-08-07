@@ -1,0 +1,27 @@
+
+LOAD grid02qtg.dfn
+
+BEGIN grid_to_shapefile grid01mfg-to-pointshapefile
+	GRID = grid01mfg
+	SHAPEFILE = output_shapefiles/grid01mfg_pts
+	FEATURE_TYPE = point
+END grid_to_shapefile
+
+BEGIN grid_to_shapefile grid01mfg-to-polyshapefile
+	GRID = grid01mfg
+	SHAPEFILE = output_shapefiles/grid01mfg
+	FEATURE_TYPE = polygon
+END grid_to_shapefile
+
+BEGIN grid_to_shapefile grid02qtg-to-pointshapefile
+	GRID = grid02qtg
+	SHAPEFILE = output_shapefiles/grid02qtg_pts
+	FEATURE_TYPE = point
+END grid_to_shapefile
+
+BEGIN grid_to_shapefile grid02qtg-to-polyshapefile
+	GRID = grid02qtg
+	SHAPEFILE = output_shapefiles/grid02qtg
+	FEATURE_TYPE = polygon
+END grid_to_shapefile
+

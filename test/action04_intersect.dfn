@@ -1,0 +1,22 @@
+
+LOAD grid02qtg.dfn
+
+BEGIN GRID_INTERSECTION canal_grid02qtg_lay1_intersect
+  GRID = grid02qtg
+  LAYER = 1
+  SHAPEFILE = shapefiles/MD_Canals_50m_v2
+  FEATURE_TYPE = line
+  OUTPUT_FILE = output_intersection/canal_grid02qtg_lay1_intersect.ifo
+  ATTRIBUTES = HYDR_COND BOT_ELEV TOP_WIDTH DB_NAME
+  OUTPUT_SHAPEFILE = output_intersection/canal_grid02qtg_lay1_intersect.shp
+END GRID_INTERSECTION
+
+BEGIN GRID_INTERSECTION chd_grid02qtg_lay1_intersect
+  GRID = grid02qtg
+  LAYER = 1
+  SHAPEFILE = shapefiles/chd_line
+  FEATURE_TYPE = line
+  OUTPUT_FILE = output_intersection/chd_grid02qtg_lay1_intersect.ifo
+  #attributes = FID
+  OUTPUT_SHAPEFILE = output_intersection/chd_grid02qtg_lay1_intersect.shp
+END GRID_INTERSECTION

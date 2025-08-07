@@ -1,0 +1,19 @@
+
+LOAD grid02qtg.dfn
+
+BEGIN GRID_TO_VTKFILE grid01mfg-to-vtkfile
+	GRID = grid01mfg
+	VTKFILE = output_vtkfiles/grid01mfg
+END GRID_TO_VTKFILE
+
+BEGIN GRID_TO_VTKFILE grid02qtg-to-vtkfile
+	GRID = grid02qtg
+	VTKFILE = output_vtkfiles/grid02qtg
+    SHARE_VERTEX = FALSE
+END GRID_TO_VTKFILE
+
+BEGIN GRID_TO_VTKFILE grid02qtg-to-vtkfilesv
+	GRID = grid02qtg
+	VTKFILE = output_vtkfiles/grid02qtgsv
+    SHARE_VERTEX = TRUE
+END GRID_TO_VTKFILE
