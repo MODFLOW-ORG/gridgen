@@ -29,6 +29,3 @@ exe = executable(
                  install: true
                 )
 
-test('build the quadtree grid grid02qtg', 
-     find_program('exe'),
-     args : ['buildqtg' 'action01_buildqtg.dfn'])

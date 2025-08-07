@@ -32,6 +32,9 @@
 *.a
 *.lib
 
+# meson builddir
+builddir/
+
 # Executables
 bin/
 *.exe

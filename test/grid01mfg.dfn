@@ -1,0 +1,13 @@
+begin modflow_grid biscmfg
+  rotation_angle = 0.
+  x_offset = 540000
+  y_offset = 2783000
+  length_unit = undefined
+  nlay = 1
+  nrow = 50
+  ncol = 25
+  delr = constant 2000.
+  delc = constant 2000.
+  top = open/close biscmfg.top.dat
+  bottom layer 1 = open/close biscmfg.bot.dat
+end modflow_grid    

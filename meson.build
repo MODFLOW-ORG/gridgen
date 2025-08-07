@@ -14,3 +14,8 @@ cc_id = cc.get_id()
 message('Compiler ID:', cc_id)
 
 subdir('src')
+
+test('build the quadtree grid grid02qtg', 
+     find_program('gridgen'),
+     args : ['buildqtg', 'action01_buildqtg.dfn'],
+     workdir: meson.current_source_dir()/'test')
