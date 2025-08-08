@@ -11,7 +11,13 @@ ninja = "*"
 
 [tasks]
 
-# meson build/test for gridgen
+# meson build for gridgen
 setup = { cmd = "rm -rf builddir; meson setup --prefix=$(pwd) --bindir=bin builddir", env = { PKG_CONFIG_PATH = "$CONDA_PREFIX/lib/pkgconfig" } }
 build = "meson install -C builddir"
-test = "meson test --verbose --no-rebuild -C builddir"
+
+#
+test = { cmd = "meson test --verbose --no-rebuild -C builddir initial write_data shapefileA shapefileB shapefileC shapefileD intersectA intersectB vtkA vtkB vtkC" }
+test-initial = { cmd = "meson test --verbose --no-rebuild -C builddir initial write_data" }
+test-shapefile = { cmd = "meson test --verbose --no-rebuild -C builddir shapefileA shapefileB shapefileC shapefileD" }
+test-intersect = { cmd = "meson test --verbose --no-rebuild -C builddir intersectA intersectB" }
+test-vtk = { cmd = "meson test --verbose --no-rebuild -C builddir vtkA vtkB vtkC" }

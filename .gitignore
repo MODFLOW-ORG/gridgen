@@ -46,5 +46,7 @@ bin/
 
 # test output
 test/grid02qtg*
+test/output_usgdata/grid*
 test/output_intersection/c*
 test/output_shapefiles/grid*
+test/output_vtkfiles/grid*

@@ -122,4 +122,8 @@ jobs:
       - name: Unit test gridgen
         if: success()
         working-directory: gridgen
-        run: pixi run test
+        run: |
+          pixi run test-initial
+          pixi run test-shapefile
+          pixi run test-intersect
+          pixi run test-vtk

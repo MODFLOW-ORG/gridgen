@@ -16,57 +16,57 @@ message('Compiler ID:', cc_id)
 subdir('src')
 
 # tests
-test('build the quadtree grid grid02qtg', 
+test('initial', 
      exe,
      args : ['buildqtg', 'action01_buildqtg.dfn'],
      workdir: meson.current_source_dir()/'test')
 
-test('write modflow-usg data', 
+test('write_data', 
      exe,
      args : ['grid02qtg-to-usgdata', 'action02_writeusgdata.dfn'],
      workdir: meson.current_source_dir()/'test')
 
-test('create shapefiles for both grids - 1', 
+test('shapefileA', 
      exe,
      args : ['grid01mfg-to-polyshapefile', 'action03_shapefile.dfn'],
      workdir: meson.current_source_dir()/'test')
 
-test('create shapefiles for both grids - 2', 
+test('shapefileB', 
      exe,
      args : ['grid02qtg-to-polyshapefile', 'action03_shapefile.dfn'],
      workdir: meson.current_source_dir()/'test')
 
-test('create shapefiles for both grids - 3', 
+test('shapefileC', 
      exe,
      args : ['grid01mfg-to-pointshapefile', 'action03_shapefile.dfn'],
      workdir: meson.current_source_dir()/'test')
 
-test('create shapefiles for both grids - 4', 
+test('shapefileD', 
      exe,
      args : ['grid02qtg-to-pointshapefile', 'action03_shapefile.dfn'],
      workdir: meson.current_source_dir()/'test')
 
-test('intersect features with quadtree grid - canal', 
+test('intersectA', 
      exe,
      args : ['canal_grid02qtg_lay1_intersect', 'action04_intersect.dfn'],
      workdir: meson.current_source_dir()/'test')
 
-test('intersect features with quadtree grid - chd', 
+test('intersectB', 
      exe,
      args : ['chd_grid02qtg_lay1_intersect', 'action04_intersect.dfn'],
      workdir: meson.current_source_dir()/'test')
 
-test('create a vtk file of the grid - 1', 
+test('vtkA', 
      exe,
      args : ['grid01mfg-to-vtkfile', 'action05_vtkfile.dfn'],
      workdir: meson.current_source_dir()/'test')
 
-test('create a vtk file of the grid - 2', 
+test('vtkB', 
      exe,
      args : ['grid02qtg-to-vtkfile', 'action05_vtkfile.dfn'],
      workdir: meson.current_source_dir()/'test')
 
-test('create a vtk file of the grid - 3', 
+test('vtkC', 
      exe,
      args : ['grid02qtg-to-vtkfilesv', 'action05_vtkfile.dfn'],
      workdir: meson.current_source_dir()/'test')
