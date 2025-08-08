@@ -27,8 +27,8 @@ jobs:
           - {os: windows-latest, FC: gcc, FC_V: 13, shell: pwsh}
           # test intel-classic
           - {os: ubuntu-22.04, FC: intel-classic, FC_V: 2021.7, shell: bash}
-          - {os: macos-13, FC: intel-classic, FC_V: 2021.7, shell: bash}
-          - {os: windows-2019, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
+          # - {os: macos-13, FC: intel-classic, FC_V: 2021.7, shell: bash}
+          - {os: windows-2022, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
           # test previous gcc
           - {os: ubuntu-latest, FC: gcc, FC_V: 12, shell: bash}
           - {os: ubuntu-latest, FC: gcc, FC_V: 11, shell: bash}
@@ -39,18 +39,6 @@ jobs:
       run:
         shell: ${{ matrix.shell }}
     steps:
-      - name: Free Disk Space (Ubuntu)
-        if: runner.os == 'Linux'
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-
       - name: Checkout gridgen
         uses: actions/checkout@v4
         with:
