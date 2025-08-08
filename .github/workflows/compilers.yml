@@ -95,10 +95,6 @@ jobs:
           pixi-version: v0.41.4
           manifest-path: "gridgen/pixi.toml"
 
-      - name: Custom pixi install
-        working-directory: gridgen
-        run: pixi run install
-
       - name: Set LDFLAGS (macOS)
         if: runner.os == 'macOS'
         run: |
