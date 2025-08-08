@@ -45,6 +45,9 @@ bin/
 *.dwo
 
 # test output
-test/grid02qtg*
+*.tsf
+test/grid02qtg*.dat
+test/output_usgdata/grid*
 test/output_intersection/c*
 test/output_shapefiles/grid*
+test/output_vtkfiles/grid*

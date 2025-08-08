@@ -3,9 +3,14 @@ on:
   # run at 6 AM UTC every day
   schedule:
     - cron: '0 6 * * *' 
-  # workflow_dispatch trigger to start release via GitHub UI or CLI, see
-  # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
-  workflow_dispatch:
+  push:
+  pull_request:
+    branches:
+      - master
+      - develop
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 env:
   PIXI_BETA_WARNING_OFF: true
 jobs:
@@ -15,84 +20,46 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # combinations from https://github.com/fortran-lang/setup-fortran#runner-compatibility
         include:
-          # gfortran
-          - {os: ubuntu-22.04, compiler: gcc, version: 11}
-          - {os: ubuntu-22.04, compiler: gcc, version: 12}
-          - {os: ubuntu-22.04, compiler: gcc, version: 13}
-          - {os: ubuntu-22.04, compiler: gcc, version: 14}
-          - {os: ubuntu-24.04, compiler: gcc, version: 11}
-          - {os: ubuntu-24.04, compiler: gcc, version: 12}
-          - {os: ubuntu-24.04, compiler: gcc, version: 13}
-          - {os: ubuntu-24.04, compiler: gcc, version: 14}
-          - {os: macos-13, compiler: gcc, version: 11}
-          - {os: macos-13, compiler: gcc, version: 12}
-          - {os: macos-13, compiler: gcc, version: 13}
-          - {os: macos-14, compiler: gcc, version: 11}
-          - {os: macos-14, compiler: gcc, version: 12}
-          - {os: macos-14, compiler: gcc, version: 13}
-          - {os: macos-14, compiler: gcc, version: 14}
-          - {os: windows-2022, compiler: gcc, version: 11}
-          - {os: windows-2022, compiler: gcc, version: 12}
-          - {os: windows-2022, compiler: gcc, version: 13}
-          # ifx
-          - {os: ubuntu-22.04, compiler: intel, version: "2025.0"}
-          - {os: ubuntu-22.04, compiler: intel, version: "2024.1"}
-          - {os: ubuntu-22.04, compiler: intel, version: "2024.0"}
-          - {os: windows-2022, compiler: intel, version: "2025.0"}
-          - {os: windows-2022, compiler: intel, version: "2024.1"}
-          - {os: windows-2022, compiler: intel, version: "2024.0"}
-          # ifort
-          - {os: ubuntu-22.04, compiler: intel-classic, version: "2021.10"}
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.9}
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.8}
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7}
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.6}
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.5}
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.4}
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.3}
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.2}
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.1}
-          - {os: macos-13, compiler: intel-classic, version: "2021.10"}
-          - {os: macos-13, compiler: intel-classic, version: 2021.9}
-          - {os: macos-13, compiler: intel-classic, version: 2021.8}
-          - {os: macos-13, compiler: intel-classic, version: 2021.7}
-          - {os: macos-13, compiler: intel-classic, version: 2021.6}
-          - {os: macos-13, compiler: intel-classic, version: 2021.5}
-          - {os: macos-13, compiler: intel-classic, version: 2021.4}
-          - {os: macos-13, compiler: intel-classic, version: 2021.3}
-          - {os: macos-13, compiler: intel-classic, version: 2021.2}
-          - {os: macos-13, compiler: intel-classic, version: 2021.1}
-          - {os: windows-2022, compiler: intel-classic, version: "2021.10"}
-          - {os: windows-2022, compiler: intel-classic, version: 2021.9}
-          - {os: windows-2022, compiler: intel-classic, version: 2021.8}
-          - {os: windows-2022, compiler: intel-classic, version: 2021.7}
-          - {os: windows-2022, compiler: intel-classic, version: 2021.6}
+          # test latest gcc
+          - {os: ubuntu-latest, FC: gcc, FC_V: 13, shell: bash}
+          - {os: macos-latest, FC: gcc, FC_V: 13, shell: bash}
+          - {os: windows-latest, FC: gcc, FC_V: 13, shell: pwsh}
+          # test intel-classic
+          - {os: ubuntu-22.04, FC: intel-classic, FC_V: 2021.7, shell: bash}
+          # - {os: macos-13, FC: intel-classic, FC_V: 2021.7, shell: bash}
+          - {os: windows-2022, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
+          # test previous gcc
+          - {os: ubuntu-latest, FC: gcc, FC_V: 12, shell: bash}
+          - {os: ubuntu-latest, FC: gcc, FC_V: 11, shell: bash}
+          # test ifx
+          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash}
+          - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh}
     defaults:
       run:
-        shell: bash
+        shell: ${{ matrix.shell }}
     steps:
       - name: Checkout gridgen
         uses: actions/checkout@v4
         with:
           path: gridgen
 
-      - name: Setup ${{ matrix.compiler }} ${{ matrix.version }}
+      - uses: maxim-lobanov/setup-xcode@v1
+        if: ${{ (runner.os == 'macOS') && (matrix.FC == 'intel-classic') }}
+        with:
+          xcode-version: "14.3.1"
+
+      - name: Setup ${{ matrix.FC }} ${{ matrix.FC_V }} on ${{ matrix.os }}
         uses: fortran-lang/setup-fortran@v1
         with:
           compiler: ${{ matrix.compiler}}
           version: ${{ matrix.version }}
-
+          
       - name: Setup pixi
         uses: prefix-dev/setup-pixi@v0.8.14
         with:
           pixi-version: v0.41.4
           manifest-path: "gridgen/pixi.toml"
-
-      - name: Custom pixi install
-        working-directory: gridgen
-        run: pixi run install
 
       - name: Set LDFLAGS (macOS)
         if: runner.os == 'macOS'
@@ -121,4 +88,9 @@ jobs:
       - name: Unit test gridgen
         if: success()
         working-directory: gridgen
-        run: pixi run test
+        run: |
+          pixi run test-initial
+          pixi run test-write
+          pixi run test-shapefile
+          pixi run test-intersect
+          pixi run test-vtk
