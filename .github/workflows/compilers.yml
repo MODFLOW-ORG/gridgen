@@ -1,0 +1,124 @@
+name: gridgen compiler checks
+on:
+  # run at 6 AM UTC every day
+  schedule:
+    - cron: '0 6 * * *' 
+  # workflow_dispatch trigger to start release via GitHub UI or CLI, see
+  # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
+  workflow_dispatch:
+env:
+  PIXI_BETA_WARNING_OFF: true
+jobs:
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # combinations from https://github.com/fortran-lang/setup-fortran#runner-compatibility
+        include:
+          # gfortran
+          - {os: ubuntu-22.04, compiler: gcc, version: 11}
+          - {os: ubuntu-22.04, compiler: gcc, version: 12}
+          - {os: ubuntu-22.04, compiler: gcc, version: 13}
+          - {os: ubuntu-22.04, compiler: gcc, version: 14}
+          - {os: ubuntu-24.04, compiler: gcc, version: 11}
+          - {os: ubuntu-24.04, compiler: gcc, version: 12}
+          - {os: ubuntu-24.04, compiler: gcc, version: 13}
+          - {os: ubuntu-24.04, compiler: gcc, version: 14}
+          - {os: macos-13, compiler: gcc, version: 11}
+          - {os: macos-13, compiler: gcc, version: 12}
+          - {os: macos-13, compiler: gcc, version: 13}
+          - {os: macos-14, compiler: gcc, version: 11}
+          - {os: macos-14, compiler: gcc, version: 12}
+          - {os: macos-14, compiler: gcc, version: 13}
+          - {os: macos-14, compiler: gcc, version: 14}
+          - {os: windows-2022, compiler: gcc, version: 11}
+          - {os: windows-2022, compiler: gcc, version: 12}
+          - {os: windows-2022, compiler: gcc, version: 13}
+          # ifx
+          - {os: ubuntu-22.04, compiler: intel, version: "2025.0"}
+          - {os: ubuntu-22.04, compiler: intel, version: "2024.1"}
+          - {os: ubuntu-22.04, compiler: intel, version: "2024.0"}
+          - {os: windows-2022, compiler: intel, version: "2025.0"}
+          - {os: windows-2022, compiler: intel, version: "2024.1"}
+          - {os: windows-2022, compiler: intel, version: "2024.0"}
+          # ifort
+          - {os: ubuntu-22.04, compiler: intel-classic, version: "2021.10"}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.9}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.8}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.6}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.5}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.4}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.3}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.2}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.1}
+          - {os: macos-13, compiler: intel-classic, version: "2021.10"}
+          - {os: macos-13, compiler: intel-classic, version: 2021.9}
+          - {os: macos-13, compiler: intel-classic, version: 2021.8}
+          - {os: macos-13, compiler: intel-classic, version: 2021.7}
+          - {os: macos-13, compiler: intel-classic, version: 2021.6}
+          - {os: macos-13, compiler: intel-classic, version: 2021.5}
+          - {os: macos-13, compiler: intel-classic, version: 2021.4}
+          - {os: macos-13, compiler: intel-classic, version: 2021.3}
+          - {os: macos-13, compiler: intel-classic, version: 2021.2}
+          - {os: macos-13, compiler: intel-classic, version: 2021.1}
+          - {os: windows-2022, compiler: intel-classic, version: "2021.10"}
+          - {os: windows-2022, compiler: intel-classic, version: 2021.9}
+          - {os: windows-2022, compiler: intel-classic, version: 2021.8}
+          - {os: windows-2022, compiler: intel-classic, version: 2021.7}
+          - {os: windows-2022, compiler: intel-classic, version: 2021.6}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout gridgen
+        uses: actions/checkout@v4
+        with:
+          path: gridgen
+
+      - name: Setup ${{ matrix.compiler }} ${{ matrix.version }}
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: ${{ matrix.compiler}}
+          version: ${{ matrix.version }}
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8.14
+        with:
+          pixi-version: v0.41.4
+          manifest-path: "gridgen/pixi.toml"
+
+      - name: Custom pixi install
+        working-directory: gridgen
+        run: pixi run install
+
+      - name: Set LDFLAGS (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          ldflags="$LDFLAGS -Wl,-ld_classic"
+          echo "LDFLAGS=$ldflags" >> $GITHUB_ENV
+
+      - name: Build gridgen
+        working-directory: gridgen
+        run: |
+          pixi run setup
+          pixi run build
+
+      - name: Show build log
+        if: failure()
+        working-directory: gridgen
+        run: cat builddir/meson-logs/meson-log.txt
+      
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: meson-log.txt
+          path: gridgen/builddir/meson-logs/meson-log.txt
+    
+      - name: Unit test gridgen
+        if: success()
+        working-directory: gridgen
+        run: pixi run test
