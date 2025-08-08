@@ -124,6 +124,7 @@ jobs:
         working-directory: gridgen
         run: |
           pixi run test-initial
+          pixi run test-write
           pixi run test-shapefile
           pixi run test-intersect
           pixi run test-vtk
