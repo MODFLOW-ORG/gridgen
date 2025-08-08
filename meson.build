@@ -6,6 +6,7 @@ project(
   meson_version: '>= 1.1.0',
   default_options : [
     'b_vscrt=static_from_buildtype', # Link runtime libraries statically on Windows
+    'cpp_std=c++11',
     'buildtype=release',
 ])
 
