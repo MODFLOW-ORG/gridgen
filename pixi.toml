@@ -1,0 +1,17 @@
+[project]
+name = "gridgen"
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "linux-aarch64", "osx-arm64", "osx-64"]
+version = "1.0.02"
+
+[dependencies]
+filelock = "*"
+meson = "==1.7.1"
+ninja = "*"
+
+[tasks]
+
+# meson build/test for gridgen
+setup = { cmd = "rm -rf builddir; meson setup --prefix=$(pwd) --bindir=bin builddir", env = { PKG_CONFIG_PATH = "$CONDA_PREFIX/lib/pkgconfig" } }
+build = "meson install -C builddir"
+test = "meson test --verbose --no-rebuild -C builddir"
