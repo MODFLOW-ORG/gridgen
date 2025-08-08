@@ -3,9 +3,14 @@ on:
   # run at 6 AM UTC every day
   schedule:
     - cron: '0 6 * * *' 
-  # workflow_dispatch trigger to start release via GitHub UI or CLI, see
-  # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
-  workflow_dispatch:
+  push:
+  pull_request:
+    branches:
+      - master
+      - develop
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 env:
   PIXI_BETA_WARNING_OFF: true
 jobs:
