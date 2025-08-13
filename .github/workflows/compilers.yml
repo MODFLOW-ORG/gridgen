@@ -22,16 +22,16 @@ jobs:
       matrix:
         include:
           # test latest gcc
-          - {os: ubuntu-latest, FC: gcc, FC_V: 13, shell: bash}
-          - {os: macos-latest, FC: gcc, FC_V: 13, shell: bash}
-          - {os: windows-latest, FC: gcc, FC_V: 13, shell: pwsh}
+          - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash}
+          - {os: macos-latest, compiler: gcc, version: 13, shell: bash}
+          - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh}
           # test intel-classic
-          - {os: ubuntu-22.04, FC: intel-classic, FC_V: 2021.7, shell: bash}
-          # - {os: macos-13, FC: intel-classic, FC_V: 2021.7, shell: bash}
-          - {os: windows-2022, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash}
+          - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash}
+          - {os: windows-2022, compiler: intel-classic, version: 2021.7, shell: pwsh}
           # test previous gcc
-          - {os: ubuntu-latest, FC: gcc, FC_V: 12, shell: bash}
-          - {os: ubuntu-latest, FC: gcc, FC_V: 11, shell: bash}
+          - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash}
+          - {os: ubuntu-latest, compiler: gcc, version: 11, shell: bash}
           # test ifx
           - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash}
           - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh}
@@ -45,11 +45,11 @@ jobs:
           path: gridgen
 
       - uses: maxim-lobanov/setup-xcode@v1
-        if: ${{ (runner.os == 'macOS') && (matrix.FC == 'intel-classic') }}
+        if: ${{ (runner.os == 'macOS') && (matrix.compiler == 'intel-classic') }}
         with:
           xcode-version: "14.3.1"
 
-      - name: Setup ${{ matrix.FC }} ${{ matrix.FC_V }} on ${{ matrix.os }}
+      - name: Setup ${{ matrix.compiler }} ${{ matrix.version }} on ${{ matrix.os }}
         uses: fortran-lang/setup-fortran@v1
         with:
           compiler: ${{ matrix.compiler}}
