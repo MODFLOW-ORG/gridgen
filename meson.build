@@ -15,11 +15,14 @@ cc_id = cc.get_id()
 message('Compiler ID:', cc_id)
 
 compile_args = []
+link_args = []
 if cc_id == 'intel'
   compile_args += ['-frtti', '-diag-disable=10441']
+  link_args += ['-diag-disable=10441']
 endif
 
 add_project_arguments(cc.get_supported_arguments(compile_args), language: 'cpp')
+add_project_link_arguments(cc.get_supported_arguments(link_args), language: 'cpp')
 
 subdir('src')
 
