@@ -14,6 +14,13 @@ cc = meson.get_compiler('cpp')
 cc_id = cc.get_id()
 message('Compiler ID:', cc_id)
 
+compile_args = []
+if cc_id == 'intel'
+  compile_args += ['-frtti']
+endif
+
+add_project_arguments(cc.get_supported_arguments(compile_args), language: 'cpp')
+
 subdir('src')
 
 # tests
