@@ -3,7 +3,7 @@ project(
   ['cpp'],
   version: '1.0.02',
   license: 'CC0',
-  meson_version: '>= 1.1.0',
+  meson_version: '>= 1.3.1',
   default_options : [
     'b_vscrt=static_from_buildtype', # Link runtime libraries statically on Windows
     'cpp_std=c++14',

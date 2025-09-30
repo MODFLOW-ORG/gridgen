@@ -6,13 +6,14 @@ version = "1.0.02"
 
 [dependencies]
 filelock = "*"
-meson = "==1.7.1"
+meson = ">=1.3.1"
 ninja = "*"
 
 [tasks]
 
 # meson build for gridgen
-setup = { cmd = "rm -rf builddir; meson setup --prefix=$(pwd) --bindir=bin builddir", env = { PKG_CONFIG_PATH = "$CONDA_PREFIX/lib/pkgconfig" } }
+clean = { cmd = "rm -rf builddir" }
+setup = { cmd = "meson setup --prefix=$(pwd) --bindir=bin builddir", env = { PKG_CONFIG_PATH = "$CONDA_PREFIX/lib/pkgconfig" } }
 build = "meson install -C builddir"
 
 #
