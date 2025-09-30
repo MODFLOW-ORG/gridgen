@@ -28,7 +28,6 @@ jobs:
           # test intel-classic
           - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash}
           - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash}
-          - {os: windows-2022, compiler: intel-classic, version: 2021.7, shell: pwsh}
           # test previous gcc
           - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash}
           - {os: ubuntu-latest, compiler: gcc, version: 11, shell: bash}
@@ -60,12 +59,6 @@ jobs:
         with:
           pixi-version: v0.41.4
           manifest-path: "gridgen/pixi.toml"
-
-      - name: Set LDFLAGS (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          ldflags="$LDFLAGS -Wl,-ld_classic"
-          echo "LDFLAGS=$ldflags" >> $GITHUB_ENV
 
       - name: Build gridgen
         working-directory: gridgen
