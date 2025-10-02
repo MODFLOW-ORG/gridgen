@@ -92,7 +92,7 @@ jobs:
         if: matrix.release == 'yes'
         id: ostag
         run: |
-          ostag=$(python -c "from modflow_devtools.ostags import get_ostag; print(get_ostag())")
+          ostag=$(pixi run get_ostag)
           echo "ostag=$ostag" >> $GITHUB_OUTPUT
 
       # Build your artifact here (e.g., compile code, package files)
