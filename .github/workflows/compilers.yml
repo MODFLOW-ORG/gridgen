@@ -13,12 +13,10 @@ concurrency:
   cancel-in-progress: true
 env:
   PIXI_BETA_WARNING_OFF: true
-  DIST: gridgen
+  DIST: dist-gridgen
 jobs:
   build:
     name: Build and Test on ${{ matrix.os }} with ${{ matrix.compiler }} ${{ matrix.version }}
-    permissions:
-      contents: write    
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -123,6 +121,8 @@ jobs:
   release:
     name: Make release
     needs: build
+    permissions:
+      contents: write    
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -140,7 +140,7 @@ jobs:
           path: ${{ env.DIST }} 
 
       - name: List distribution files
-        run: ls -l ${{ steps.ostag.outputs.ostag }}
+        run: ls -l ${{ env.DIST }} 
 
         # create new release if manual trigger
       - name: Create release
