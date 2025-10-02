@@ -13,8 +13,9 @@ concurrency:
   cancel-in-progress: true
 env:
   PIXI_BETA_WARNING_OFF: true
+  DIST: gridgen
 jobs:
-  test:
+  build:
     name: Build and Test on ${{ matrix.os }} with ${{ matrix.compiler }} ${{ matrix.version }}
     permissions:
       contents: write    
@@ -113,11 +114,9 @@ jobs:
           Compress-Archive -Path "bin\*" -DestinationPath $ZipFileName
           ls *.zip
 
-      - name: Upload ${{ env.ostag }}.zip release asset
-        if: matrix.release == 'yes'
-        uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        
+      - name: Upload distribution archive
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: 1.0.02
-          files: gridgen/${{ env.ostag }}.zip
+          name: ${{ env.DIST }}-${{ matrix.os }}
+          path: gridgen/*.zip
+
