@@ -16,6 +16,8 @@ env:
 jobs:
   test:
     name: Build and Test on ${{ matrix.os }} with ${{ matrix.compiler }} ${{ matrix.version }}
+    permissions:
+      contents: write    
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
