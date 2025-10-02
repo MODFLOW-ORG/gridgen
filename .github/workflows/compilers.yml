@@ -96,18 +96,24 @@ jobs:
           pixi run get-ostag
           echo "ostag=$ostag" >> $GITHUB_OUTPUT
 
-      # Build your artifact here (e.g., compile code, package files)
-      - name: Build Artifact
-        if: matrix.release == 'yes'
+      - name: Build ${{ env.ostag }}.zip on ${{ matrix.os }}
+        if: ${{ matrix.release == 'yes' && runner.os != 'Windows' }}
         working-directory: gridgen
         run: |
-          echo "Building $ostag.zip..."
           zip -r $ostag.zip bin/
+
+      - name: Build ${{ env.ostag }}.zip on ${{ matrix.os }}
+        if: ${{ matrix.release == 'yes' && runner.os == 'Windows' }}
+        working-directory: gridgen
+        run: |
+          $ZipFileName = "$env:ostag.zip"
+          Compress-Archive -Path "bin\*" -DestinationPath $ZipFileName
 
       - name: Upload Release Asset
         if: matrix.release == 'yes'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: gridgen/$ostag.zip # Path to your artifact
+          tag_name: 'v1.0.02'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
