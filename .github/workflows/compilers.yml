@@ -29,8 +29,8 @@ jobs:
           # - {os: macos-14, compiler: gcc, version: 13, shell: bash, release: yes}
           - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh, release: no}
           # test intel-classic
-          # - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash, release: no}
-          - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash, release: yes}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash, release: no}
+          # - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash, release: yes}
           # test previous gcc
           - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash, release: no}
           - {os: ubuntu-latest, compiler: gcc, version: 11, shell: bash, release: no}
@@ -64,7 +64,6 @@ jobs:
           manifest-path: "gridgen/pixi.toml"
 
       - name: Set ostag
-        if: matrix.release == 'yes'
         shell: bash
         working-directory: gridgen
         id: ostag
