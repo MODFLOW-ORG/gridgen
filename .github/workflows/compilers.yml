@@ -97,7 +97,7 @@ jobs:
           echo "OSTAG=$ostag" >> $GITHUB_OUTPUT
           echo "ZIPFILENAME=$ostag.zip" >> $GITHUB_OUTPUT
 
-      - name: Build ${{ ZIPFILENAME }} on ${{ matrix.os }}
+      - name: Build ${{ env.ZIPFILENAME }}.zip on ${{ matrix.os }}
         if: matrix.release == 'yes'
         shell: bash
         working-directory: gridgen
