@@ -26,7 +26,7 @@ jobs:
           - {os: macos-14, compiler: gcc, version: 13, shell: bash, release: yes}
           - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh, release: no}
           # test intel-classic
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash, release: yes}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash, release: no}
           - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash, release: yes}
           # test previous gcc
           - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash, release: no}
@@ -101,19 +101,21 @@ jobs:
         working-directory: gridgen
         run: |
           zip -r $ostag.zip bin/
-
+          ls *.zip
+          
       - name: Build ${{ env.ostag }}.zip on ${{ matrix.os }}
         if: ${{ matrix.release == 'yes' && runner.os == 'Windows' }}
         working-directory: gridgen
         run: |
           $ZipFileName = "$env:ostag.zip"
           Compress-Archive -Path "bin\*" -DestinationPath $ZipFileName
+          ls *.zip
 
       - name: Upload Release Asset
         if: matrix.release == 'yes'
         uses: softprops/action-gh-release@v2
         with:
-          files: gridgen/$ostag.zip # Path to your artifact
-          tag_name: 'v1.0.02'
+          files: gridgen/*.zip # Path to your artifact
+          tag_name: '1.0.02'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
