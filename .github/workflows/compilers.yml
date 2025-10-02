@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - develop
+  workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -121,8 +122,6 @@ jobs:
   release:
     name: Make release
     needs: build
-    permissions:
-      contents: write    
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -144,6 +143,7 @@ jobs:
 
         # create new release if manual trigger
       - name: Create release
+        if: github.event_name == 'workflow_dispatch'
         uses: ncipollo/release-action@v1
         with:
           tag: latest_build
