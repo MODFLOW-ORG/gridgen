@@ -6,35 +6,36 @@ on:
   push:
   pull_request:
     branches:
-      - master
+      - main
       - develop
+  workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 env:
   PIXI_BETA_WARNING_OFF: true
+  DIST: dist-gridgen
 jobs:
-  test:
-    name: Test
+  build:
+    name: Build and Test on ${{ matrix.os }} with ${{ matrix.compiler }} ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           # test latest gcc
-          - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash}
-          - {os: macos-latest, compiler: gcc, version: 13, shell: bash}
-          - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh}
+          - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash, release: no}
+          # - {os: macos-14, compiler: gcc, version: 13, shell: bash, release: yes}
+          - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh, release: no}
           # test intel-classic
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash}
-          - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash}
-          - {os: windows-2022, compiler: intel-classic, version: 2021.7, shell: pwsh}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash, release: no}
+          # - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash, release: yes}
           # test previous gcc
-          - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash}
-          - {os: ubuntu-latest, compiler: gcc, version: 11, shell: bash}
+          - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash, release: no}
+          - {os: ubuntu-latest, compiler: gcc, version: 11, shell: bash, release: no}
           # test ifx
-          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash}
-          - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh}
+          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash, release: yes}
+          - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh, release: yes}
     defaults:
       run:
         shell: ${{ matrix.shell }}
@@ -61,11 +62,12 @@ jobs:
           pixi-version: v0.41.4
           manifest-path: "gridgen/pixi.toml"
 
-      - name: Set LDFLAGS (macOS)
-        if: runner.os == 'macOS'
+      - name: Set ostag
+        shell: bash
+        working-directory: gridgen
+        id: ostag
         run: |
-          ldflags="$LDFLAGS -Wl,-ld_classic"
-          echo "LDFLAGS=$ldflags" >> $GITHUB_ENV
+          echo "ostag=$(pixi run get-ostag)" >> $GITHUB_ENV
 
       - name: Build gridgen
         working-directory: gridgen
@@ -94,3 +96,59 @@ jobs:
           pixi run test-shapefile
           pixi run test-intersect
           pixi run test-vtk
+
+      - name: Create zip file on MacOS and Linux
+        if: ${{ matrix.release == 'yes' && runner.os != 'Windows' }}
+        working-directory: gridgen
+        run: |
+          zip -r -j ${ostag}.zip bin/
+          ls -lha *.zip
+
+      - name: Create zip file on Windows
+        if: ${{ matrix.release == 'yes' && runner.os == 'Windows' }}
+        working-directory: gridgen
+        run: |
+          $ZipFileName = "$env:ostag.zip"
+          Compress-Archive -Path "bin\*" -DestinationPath $ZipFileName
+          ls *.zip
+
+      - name: Upload distribution archive
+        if: matrix.release == 'yes'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.DIST }}-${{ matrix.os }}
+          path: gridgen/*.zip
+
+  release:
+    name: Make release
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Download distribution
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ env.DIST }}*
+          merge-multiple: true
+          path: ${{ env.DIST }} 
+
+      - name: List distribution files
+        run: ls -l ${{ env.DIST }} 
+
+        # create new release if manual trigger
+      - name: Create release
+        if: github.event_name == 'workflow_dispatch'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: latest_build
+          name: "GRIDGEN executables"
+          artifacts: "${{ env.DIST }}/*"
+          draft: false
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}

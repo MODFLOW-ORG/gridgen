@@ -6,19 +6,24 @@ version = "1.0.02"
 
 [dependencies]
 filelock = "*"
-meson = "==1.7.1"
+meson = ">=1.3.1"
 ninja = "*"
+modflow-devtools = "*"
 
 [tasks]
 
 # meson build for gridgen
-setup = { cmd = "rm -rf builddir; meson setup --prefix=$(pwd) --bindir=bin builddir", env = { PKG_CONFIG_PATH = "$CONDA_PREFIX/lib/pkgconfig" } }
+clean = { cmd = "rm -rf builddir" }
+setup = { cmd = "meson setup --prefix=$(pwd) --bindir=bin builddir", env = { PKG_CONFIG_PATH = "$CONDA_PREFIX/lib/pkgconfig" } }
 build = "meson install -C builddir"
 
-#
+# test gridgen
 test = { cmd = "meson test --verbose --no-rebuild -C builddir initial write_data shapefileA shapefileB shapefileC shapefileD intersectA intersectB vtkA vtkB vtkC" }
 test-initial = { cmd = "meson test --verbose --no-rebuild -C builddir initial" }
 test-write = { cmd = "meson test --verbose --no-rebuild -C builddir write_data" }
 test-shapefile = { cmd = "meson test --verbose --no-rebuild -C builddir shapefileA shapefileB shapefileC shapefileD" }
 test-intersect = { cmd = "meson test --verbose --no-rebuild -C builddir intersectA intersectB" }
 test-vtk = { cmd = "meson test --verbose --no-rebuild -C builddir vtkA vtkB vtkC" }
+
+# get ostag for system
+get-ostag = { cmd = "python -c 'from modflow_devtools.ostags import get_ostag; print(get_ostag())'"} 

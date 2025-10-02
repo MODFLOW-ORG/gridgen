@@ -3,7 +3,7 @@ project(
   ['cpp'],
   version: '1.0.02',
   license: 'CC0',
-  meson_version: '>= 1.1.0',
+  meson_version: '>= 1.3.1',
   default_options : [
     'b_vscrt=static_from_buildtype', # Link runtime libraries statically on Windows
     'cpp_std=c++14',
@@ -13,6 +13,16 @@ project(
 cc = meson.get_compiler('cpp')
 cc_id = cc.get_id()
 message('Compiler ID:', cc_id)
+
+compile_args = []
+link_args = []
+if cc_id == 'intel'
+  compile_args += ['-frtti', '-diag-disable=10441']
+  link_args += ['-diag-disable=10441']
+endif
+
+add_project_arguments(cc.get_supported_arguments(compile_args), language: 'cpp')
+add_project_link_arguments(cc.get_supported_arguments(link_args), language: 'cpp')
 
 subdir('src')
 
