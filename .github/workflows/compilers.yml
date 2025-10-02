@@ -22,21 +22,21 @@ jobs:
       matrix:
         include:
           # test latest gcc
-          - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash}
-          - {os: macos-latest, compiler: gcc, version: 13, shell: bash}
-          - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh}
+          - {os: ubuntu-latest, compiler: gcc, version: 13, release: false}
+          - {os: macos-14, compiler: gcc, version: 13, , release: true}
+          - {os: windows-latest, compiler: gcc, version: 13, release: false}
           # test intel-classic
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash}
-          - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, release: false}
+          - {os: macos-13, compiler: intel-classic, version: 2021.7, release: true}
           # test previous gcc
-          - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash}
-          - {os: ubuntu-latest, compiler: gcc, version: 11, shell: bash}
+          - {os: ubuntu-latest, compiler: gcc, version: 12, release: false}
+          - {os: ubuntu-latest, compiler: gcc, version: 11, release: false}
           # test ifx
-          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash}
-          - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh}
+          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", release: true}
+          - {os: windows-2022, compiler: intel, version: "2025.0", release: true}
     defaults:
       run:
-        shell: ${{ matrix.shell }}
+        shell: bash
     steps:
       - name: Checkout gridgen
         uses: actions/checkout@v5
@@ -87,3 +87,26 @@ jobs:
           pixi run test-shapefile
           pixi run test-intersect
           pixi run test-vtk
+
+      - name: Get OS tag
+        if: ${{ matrix.release == 'true' }}
+        id: ostag
+        run: |
+          ostag=$(python -c "from modflow_devtools.ostags import get_ostag; print(get_ostag())")
+          echo "ostag=$ostag" >> $GITHUB_OUTPUT
+
+      # Build your artifact here (e.g., compile code, package files)
+      - name: Build Artifact
+        if: ${{ matrix.release == 'true' }}
+        run: |
+          echo "Building $ostag.zip..."
+          zip -r $ostag.zip bin/
+
+      - name: Upload Release Asset
+        if: ${{ matrix.release == 'true' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: $ostag.zip # Path to your artifact
+          overwrite: true # Set to true to replace an existing artifact with the same name
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
