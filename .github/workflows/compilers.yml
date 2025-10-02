@@ -26,10 +26,10 @@ jobs:
         include:
           # test latest gcc
           - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash, release: no}
-          - {os: macos-14, compiler: gcc, version: 13, shell: bash, release: yes}
+          # - {os: macos-14, compiler: gcc, version: 13, shell: bash, release: yes}
           - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh, release: no}
           # test intel-classic
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash, release: no}
+          # - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash, release: no}
           - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash, release: yes}
           # test previous gcc
           - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash, release: no}
@@ -115,8 +115,41 @@ jobs:
           ls *.zip
 
       - name: Upload distribution archive
+        if: matrix.release == 'yes'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.DIST }}-${{ matrix.os }}
           path: gridgen/*.zip
 
+  release:
+    name: Make release
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Download distribution
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ env.DIST }}*
+          merge-multiple: true
+          path: ${{ env.DIST }} 
+
+      - name: List distribution files
+        run: ls -l ${{ steps.ostag.outputs.ostag }}
+
+        # create new release if manual trigger
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: latest_build
+          name: "GRIDGEN executables"
+          artifacts: "${{ env.DIST }}/*"
+          draft: false
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
