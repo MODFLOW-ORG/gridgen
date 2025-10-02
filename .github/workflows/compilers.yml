@@ -15,28 +15,28 @@ env:
   PIXI_BETA_WARNING_OFF: true
 jobs:
   test:
-    name: Test
+    name: Build and Test on ${{ matrix.os }} with ${{ matrix.compiler }} ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           # test latest gcc
-          - {os: ubuntu-latest, compiler: gcc, version: 13, release: false}
-          - {os: macos-14, compiler: gcc, version: 13, release: true}
-          - {os: windows-latest, compiler: gcc, version: 13, release: false}
+          - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash, release: no}
+          - {os: macos-14, compiler: gcc, version: 13, shell: bash, release: yes}
+          - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh, release: no}
           # test intel-classic
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, release: false}
-          - {os: macos-13, compiler: intel-classic, version: 2021.7, release: true}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash, release: yes}
+          - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash, release: yes}
           # test previous gcc
-          - {os: ubuntu-latest, compiler: gcc, version: 12, release: false}
-          - {os: ubuntu-latest, compiler: gcc, version: 11, release: false}
+          - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash, release: no}
+          - {os: ubuntu-latest, compiler: gcc, version: 11, shell: bash, release: no}
           # test ifx
-          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", release: true}
-          - {os: windows-2022, compiler: intel, version: "2025.0", release: true}
+          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash, release: yes}
+          - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh, release: yes}
     defaults:
       run:
-        shell: bash
+        shell: ${{ matrix.shell }}
     steps:
       - name: Checkout gridgen
         uses: actions/checkout@v5
@@ -89,7 +89,7 @@ jobs:
           pixi run test-vtk
 
       - name: Get OS tag
-        if: ${{ matrix.release == 'true' }}
+        if: matrix.release == 'yes'
         id: ostag
         run: |
           ostag=$(python -c "from modflow_devtools.ostags import get_ostag; print(get_ostag())")
@@ -97,13 +97,13 @@ jobs:
 
       # Build your artifact here (e.g., compile code, package files)
       - name: Build Artifact
-        if: ${{ matrix.release == 'true' }}
+        if: matrix.release == 'yes'
         run: |
           echo "Building $ostag.zip..."
           zip -r $ostag.zip bin/
 
       - name: Upload Release Asset
-        if: ${{ matrix.release == 'true' }}
+        if: matrix.release == 'yes'
         uses: softprops/action-gh-release@v1
         with:
           files: $ostag.zip # Path to your artifact
