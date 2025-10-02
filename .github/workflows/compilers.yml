@@ -97,12 +97,19 @@ jobs:
           pixi run test-vtk
 
       - name: Build ${{ env.ostag }}.zip on ${{ matrix.os }}
-        if: matrix.release == 'yes'
-        shell: bash
+        if: ${{ matrix.release == 'yes' && runner.os != 'Windows' }}
         working-directory: gridgen
         run: |
           zip -r -j ${ostag}.zip bin/
-          ls -lha .
+          ls -lha *.zip
+
+      - name: Build ${{ env.ostag }}.zip on ${{ matrix.os }}
+        if: ${{ matrix.release == 'yes' && runner.os == 'Windows' }}
+        working-directory: gridgen
+        run: |
+          $ZipFileName = "$env:ostag.zip"
+          Compress-Archive -Path "bin\*" -DestinationPath $ZipFileName
+          ls *.zip
 
       - name: Upload Release Asset
         if: matrix.release == 'yes'
