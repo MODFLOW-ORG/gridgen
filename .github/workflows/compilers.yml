@@ -66,10 +66,9 @@ jobs:
         working-directory: gridgen
         id: ostag
         run: |
-          pixi run get-ostag
+          ostag=$(pixi run get-ostag)
           zipfilename="${ostag}.zip"
           echo "ZIPFILENAME=$zipfilename" >> $GITHUB_OUTPUT
-
 
       - name: Build gridgen
         working-directory: gridgen
