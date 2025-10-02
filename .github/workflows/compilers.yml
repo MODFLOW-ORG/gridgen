@@ -66,8 +66,7 @@ jobs:
         working-directory: gridgen
         id: ostag
         run: |
-          ostag=$(pixi run get-ostag)
-          echo "ostag=$ostag" >> $GITHUB_OUTPUT
+          echo "ostag=$(pixi run get-ostag)" >> $GITHUB_ENV
 
       - name: Build gridgen
         working-directory: gridgen
