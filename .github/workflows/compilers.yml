@@ -23,7 +23,7 @@ jobs:
         include:
           # test latest gcc
           - {os: ubuntu-latest, compiler: gcc, version: 13, release: false}
-          - {os: macos-14, compiler: gcc, version: 13, , release: true}
+          - {os: macos-14, compiler: gcc, version: 13, release: true}
           - {os: windows-latest, compiler: gcc, version: 13, release: false}
           # test intel-classic
           - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, release: false}
