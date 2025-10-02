@@ -92,7 +92,7 @@ jobs:
         if: matrix.release == 'yes'
         id: ostag
         run: |
-          ostag=$(pixi run get_ostag)
+          pixi run get-ostag
           echo "ostag=$ostag" >> $GITHUB_OUTPUT
 
       # Build your artifact here (e.g., compile code, package files)

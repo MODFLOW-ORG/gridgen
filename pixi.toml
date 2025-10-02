@@ -26,4 +26,4 @@ test-intersect = { cmd = "meson test --verbose --no-rebuild -C builddir intersec
 test-vtk = { cmd = "meson test --verbose --no-rebuild -C builddir vtkA vtkB vtkC" }
 
 # get ostag for system
-get_ostag = { cmd = "python -c 'from modflow_devtools.ostags import get_ostag; print(get_ostag())'" } 
+get-ostag = { cmd = "python -c 'from modflow_devtools.ostags import get_ostag; print(get_ostag())'", env = { ostag = "task_value" } } 
