@@ -60,6 +60,17 @@ jobs:
           pixi-version: v0.41.4
           manifest-path: "gridgen/pixi.toml"
 
+      - name: Set ZIPFILENAME
+        if: matrix.release == 'yes'
+        shell: bash
+        working-directory: gridgen
+        id: ostag
+        run: |
+          pixi run get-ostag
+          zipfilename="${ostag}.zip"
+          echo "ZIPFILENAME=$zipfilename" >> $GITHUB_OUTPUT
+
+
       - name: Build gridgen
         working-directory: gridgen
         run: |
@@ -87,15 +98,6 @@ jobs:
           pixi run test-shapefile
           pixi run test-intersect
           pixi run test-vtk
-
-      - name: Get OS tag
-        if: matrix.release == 'yes'
-        working-directory: gridgen
-        id: ostag
-        run: |
-          pixi run get-ostag
-          echo "OSTAG=$ostag" >> $GITHUB_OUTPUT
-          echo "ZIPFILENAME=$ostag.zip" >> $GITHUB_OUTPUT
 
       - name: Build ${{ env.ZIPFILENAME }}.zip on ${{ matrix.os }}
         if: matrix.release == 'yes'
