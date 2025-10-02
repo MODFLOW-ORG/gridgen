@@ -90,6 +90,7 @@ jobs:
 
       - name: Get OS tag
         if: matrix.release == 'yes'
+        working-directory: gridgen
         id: ostag
         run: |
           pixi run get-ostag
@@ -98,6 +99,7 @@ jobs:
       # Build your artifact here (e.g., compile code, package files)
       - name: Build Artifact
         if: matrix.release == 'yes'
+        working-directory: gridgen
         run: |
           echo "Building $ostag.zip..."
           zip -r $ostag.zip bin/
@@ -106,7 +108,6 @@ jobs:
         if: matrix.release == 'yes'
         uses: softprops/action-gh-release@v1
         with:
-          files: $ostag.zip # Path to your artifact
-          overwrite: true # Set to true to replace an existing artifact with the same name
+          files: gridgen/$ostag.zip # Path to your artifact
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
