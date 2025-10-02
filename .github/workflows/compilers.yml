@@ -98,14 +98,14 @@ jobs:
           pixi run test-intersect
           pixi run test-vtk
 
-      - name: Build ${{ env.ostag }}.zip on ${{ matrix.os }}
+      - name: Create zip file on MacOS and Linux
         if: ${{ matrix.release == 'yes' && runner.os != 'Windows' }}
         working-directory: gridgen
         run: |
           zip -r -j ${ostag}.zip bin/
           ls -lha *.zip
 
-      - name: Build ${{ env.ostag }}.zip on ${{ matrix.os }}
+      - name: Create zip file on Windows
         if: ${{ matrix.release == 'yes' && runner.os == 'Windows' }}
         working-directory: gridgen
         run: |
@@ -115,8 +115,9 @@ jobs:
 
       - name: Upload ${{ env.ostag }}.zip release asset
         if: matrix.release == 'yes'
-        working-directory: gridgen
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        
-        run: |
-          gh release upload 1.0.02 *.zip --clobber
+        with:
+          tag_name: 1.0.02
+          files: gridgen/${{ env.ostag }}.zip
