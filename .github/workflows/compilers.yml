@@ -69,6 +69,13 @@ jobs:
         id: ostag
         run: |
           echo "ostag=$(pixi run get-ostag)" >> $GITHUB_ENV
+    
+      - name: Create source zip file on Linux
+        if: ${{ matrix.release == 'yes' && runner.os == 'Linux' }}
+        working-directory: ${{ env.PROGRAM_NAME }}
+        run: |
+          zip -r ${{ env.PROGRAM_NAME }}_source.zip meson.build src/ test/
+          ls -lha *.zip
 
       - name: Build ${{ env.PROGRAM_NAME }}
         working-directory: ${{ env.PROGRAM_NAME }}
@@ -97,13 +104,6 @@ jobs:
           pixi run test-shapefile
           pixi run test-intersect
           pixi run test-vtk
-    
-      - name: Create source zip file on Linux
-        if: ${{ matrix.release == 'yes' && runner.os == 'Linux' }}
-        working-directory: ${{ env.PROGRAM_NAME }}
-        run: |
-          zip -r ${{ env.PROGRAM_NAME }}_source.zip meson.build src/
-          ls -lha *.zip
 
       - name: Create zip file on MacOS and Linux
         if: ${{ matrix.release == 'yes' && runner.os != 'Windows' }}
