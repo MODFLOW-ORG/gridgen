@@ -90,7 +90,7 @@ jobs:
       
       - name: Upload build log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: meson-log.txt
           path: ${{ env.PROGRAM_NAME }}/builddir/meson-logs/meson-log.txt
@@ -122,7 +122,7 @@ jobs:
 
       - name: Upload distribution archive
         if: matrix.release == 'yes'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ env.DIST }}-${{ matrix.os }}
           path: ${{ env.PROGRAM_NAME }}/*.zip
