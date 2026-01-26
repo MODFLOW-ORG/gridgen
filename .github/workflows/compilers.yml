@@ -71,6 +71,16 @@ jobs:
           zip -r ${{ env.PROGRAM_NAME }}_source.zip meson.build src/ test/
           ls -lha *.zip
 
+      - name: Hide dylibs on macOS
+        if: runner.os == 'macOS'
+        working-directory: ${{ env.PROGRAM_NAME }}
+        run: |
+          version=${{ matrix.version }}
+          libpath="/opt/homebrew/opt/gcc@$version/lib/gcc/$version"
+          mv $libpath/libgfortran.5.dylib $libpath/libgfortran.5.dylib.bak 
+          mv $libpath/libquadmath.0.dylib $libpath/libquadmath.0.dylib.bak
+          mv $libpath/libstdc++.6.dylib $libpath/libstdc++.6.dylib.bak
+
       - name: Build ${{ env.PROGRAM_NAME }}
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
