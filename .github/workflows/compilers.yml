@@ -77,7 +77,7 @@ jobs:
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
           version=${{ matrix.version }}
-          libpath="${{ env.HOMEBREW_PREFIX }}/opt/gcc@$version/lib/gcc/$version"
+          libpath="${{ env.HOMEBREW_REPOSITORY }}/opt/gcc@$version/lib/gcc/$version"
           mv $libpath/libgfortran.5.dylib $libpath/libgfortran.5.dylib.bak 
           mv $libpath/libquadmath.0.dylib $libpath/libquadmath.0.dylib.bak
           mv $libpath/libstdc++.6.dylib $libpath/libstdc++.6.dylib.bak
