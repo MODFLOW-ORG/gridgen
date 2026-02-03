@@ -1,7 +1,7 @@
 # GRIDGEN
 A Program for Generating Unstructured Finite-Volume Grids
 
-[![gridgen compiler checks](https://github.com/MODFLOW-ORG/gridgen/actions/workflows/compilers.yml/badge.svg)](https://github.com/MODFLOW-ORG/gridgen/actions/workflows/compilers.yml)
+[![gridgen checks](https://github.com/MODFLOW-ORG/gridgen/actions/workflows/ci.yml/badge.svg)](https://github.com/MODFLOW-ORG/gridgen/actions/workflows/ci.yml)
 
 ## Overview of GRIDGEN
 GRIDGEN is a computer program for creating layered quadtree grids for use with numerical models, such as the MODFLOW-USG program for simulation of groundwater flow.
