@@ -85,11 +85,11 @@ jobs:
           mv $libpath/libquadmath.0.dylib $libpath/libquadmath.0.dylib.bak
           mv $libpath/libstdc++.6.dylib $libpath/libstdc++.6.dylib.bak
 
-      # use classic xcode linker, static link libgcc
+      # static link libgcc
       - name: Set LDFLAGS (macOS)
         if: runner.os == 'macOS'
         run: |
-          ldflags="$LDFLAGS -Wl,-ld_classic -static-libgcc"
+          ldflags="$LDFLAGS -static-libgcc"
           echo "LDFLAGS=$ldflags" >> $GITHUB_ENV
 
       - name: Build ${{ env.PROGRAM_NAME }}
