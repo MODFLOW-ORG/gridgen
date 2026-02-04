@@ -79,6 +79,7 @@ jobs:
           version=${{ matrix.version }}
           brew_prefix="$(brew --prefix)"
           libpath="$brew_prefix/opt/gcc@$version/lib/gcc/$version"
+          mv $libpath/libgcc_s.1.1.dylib $libpath/libgcc_s.1.1.dylib.bak
           mv $libpath/libgfortran.5.dylib $libpath/libgfortran.5.dylib.bak 
           mv $libpath/libquadmath.0.dylib $libpath/libquadmath.0.dylib.bak
           mv $libpath/libstdc++.6.dylib $libpath/libstdc++.6.dylib.bak
@@ -88,6 +89,13 @@ jobs:
         run: |
           pixi run setup
           pixi run build
+
+      - name: Check architecture (macOS)
+        working-directory: modflow6/bin
+        if: runner.os == 'macOS'
+        run: |
+          otool -L mf6
+          lipo -info mf6 
 
       - name: Show build log
         if: failure()
