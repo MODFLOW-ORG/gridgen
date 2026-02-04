@@ -91,11 +91,11 @@ jobs:
           pixi run build
 
       - name: Check architecture (macOS)
-        working-directory: modflow6/bin
+        working-directory: ${{ env.PROGRAM_NAME }}/bin
         if: runner.os == 'macOS'
         run: |
-          otool -L mf6
-          lipo -info mf6 
+          otool -L gridgen
+          lipo -info gridgen
 
       - name: Show build log
         if: failure()
