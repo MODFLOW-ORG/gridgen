@@ -72,22 +72,38 @@ jobs:
           zip -r ${{ env.PROGRAM_NAME }}_source.zip meson.build src/ test/
           ls -lha *.zip
 
-      - name: Hide dylibs on macOS
+      # static link gfortran libs
+      - name: Hide dylibs (macOS)
         if: runner.os == 'macOS'
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
           version=${{ matrix.version }}
           brew_prefix="$(brew --prefix)"
           libpath="$brew_prefix/opt/gcc@$version/lib/gcc/$version"
+          mv $libpath/libgcc_s.1.1.dylib $libpath/libgcc_s.1.1.dylib.bak
           mv $libpath/libgfortran.5.dylib $libpath/libgfortran.5.dylib.bak 
           mv $libpath/libquadmath.0.dylib $libpath/libquadmath.0.dylib.bak
           mv $libpath/libstdc++.6.dylib $libpath/libstdc++.6.dylib.bak
+
+      # static link libgcc
+      - name: Set LDFLAGS (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          ldflags="$LDFLAGS -static-libgcc"
+          echo "LDFLAGS=$ldflags" >> $GITHUB_ENV
 
       - name: Build ${{ env.PROGRAM_NAME }}
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
           pixi run setup
           pixi run build
+
+      - name: Check architecture (macOS)
+        working-directory: ${{ env.PROGRAM_NAME }}/bin
+        if: runner.os == 'macOS'
+        run: |
+          otool -L gridgen
+          lipo -info gridgen
 
       - name: Show build log
         if: failure()
