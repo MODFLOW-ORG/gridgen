@@ -152,19 +152,20 @@ def main():
     if args.releasemode and develop:
         parser.error(f"{version} is a development version; give a release version")
 
+    # a release already archived keeps its dates
+    released = args.releasemode and archived(version)
     if args.releasemode:
         check_release(version)
     update_version_txt(version)
     update_pixi_toml(version)
+    if released:
+        print(f"{version} is already released; release dates and README unchanged")
+        return
     update_version_tex(version, date, develop)
     if args.releasemode:
-        # a release already archived keeps its date
-        if archived(version):
-            print(f"{version} is already released; release date and README unchanged")
-        else:
-            update_meson_build(date)
-            update_readme(version, date)
-            archive_release_notes(version, date)
+        update_meson_build(date)
+        update_readme(version, date)
+        archive_release_notes(version, date)
 
 
 if __name__ == "__main__":
