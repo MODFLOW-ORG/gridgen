@@ -96,8 +96,7 @@ TEST(DefinitionParser, LayerRecordsReadIndependently)
 
 TEST(DefinitionParser, SurfaceRecordsAfterGapAreRead)
 {
-    // bottom and top records for layer 3 only, and an out-of-range layer
-    // number that must not be expanded into a loop over every layer
+    // bottom and top records for layer 3 only, and an out-of-range layer number
     std::istringstream dfn(
         "BEGIN QUADTREE_BUILDER qtb\n"
         "  MODFLOW_GRID = mfg\n"
