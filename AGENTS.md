@@ -44,4 +44,7 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Commit messages:** conventional commits (`fix:`, `feat:`, `refactor:`,
   `test:`, `docs:`, `ci:`, `chore:`).
 - **Generated files:** do not commit test outputs or `builddir/`.
+- **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
+  or `LICENSE` skip the build and tests (`paths-ignore` in
+  `.github/workflows/ci.yml`); update that list when adding non-code files.
 - **Tone:** reserve compliments for genuinely exceptional finds or ideas.
