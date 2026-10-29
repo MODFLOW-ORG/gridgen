@@ -37,8 +37,16 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 
 - The GRIDGEN report, `doc/ofr2014-1109.pdf`, documents every block and
   record; check changes to input or output against it.
-- `doc/ReleaseNotes.pdf` lists corrections to the report (e.g., the
-  `ROTATION_ANGLE` definition) and known issues.
+- The release notes, `doc/ReleaseNotes/ReleaseNotes.tex`, list corrections to
+  the report (e.g., the `ROTATION_ANGLE` definition) and known issues. Each
+  past release is in `doc/ReleaseNotes/previous/`.
+- **References:** cite with natbib (`\citet`, `\citep`) from
+  `doc/ReleaseNotes/ReleaseNotes.bib`. Write entries in the style of the
+  MODFLOW 6 bibliography (`doc/MODFLOW6References.bib` in
+  MODFLOW-ORG/modflow6), and copy an entry from there when it has one: a USGS
+  report is a `@book` with `author`, `series` (e.g., `{{U.S. Geological Survey
+  Open-File Report 2014--1109, 26 p.}}`), `title`, `url`, `urldate`, and
+  `year`, keyed like `lien2015gridgen`.
 
 ## Conventions and guardrails
 

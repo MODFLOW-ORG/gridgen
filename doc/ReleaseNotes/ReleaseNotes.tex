@@ -4,6 +4,7 @@
 \usepackage{usgsreporta}
 
 \usepackage{graphicx}
+\usepackage{natbib}
 \usepackage{enumitem}
 \usepackage[T1]{fontenc}
 \usepackage{etoolbox}
@@ -66,7 +67,7 @@
 \section*{Abstract}
 \addcontentsline{toc}{section}{Abstract}
 
-GRIDGEN is a computer program for creating layered quadtree grids for use with numerical models, such as the MODFLOW-USG program for simulation of groundwater flow. The program begins by reading a three-dimensional base grid, which can have variable row and column widths and spatially variable cell top and bottom elevations. From this base grid, GRIDGEN will continuously divide into four any cell intersecting user-provided refinement features (points, lines, and polygons) until the desired level of refinement is reached. GRIDGEN will then smooth, or balance, the grid so that no two adjacent cells, including overlying and underlying cells, differ by more than a user-specified level tolerance. Once these gridding processes are completed, GRIDGEN saves a tree structure file so that the layered quadtree grid can be quickly reconstructed as needed. Once a tree structure file has been created, GRIDGEN can then be used to (1) export the layered quadtree grid as a shapefile, (2) export grid connectivity and cell information as ASCII text files for use with MODFLOW-USG or other numerical models, and (3) intersect the grid with shapefiles of points, lines, or polygons, and save intersection output as ASCII text files and shapefiles. The GRIDGEN program is demonstrated by creating a layered quadtree grid for the Biscayne aquifer in Miami-Dade County, Florida, using hydrologic features to control where refinement is added.
+GRIDGEN is a computer program for creating layered quadtree grids for use with numerical models, such as the MODFLOW-USG program \citep{modflowusg} for simulation of groundwater flow. The program begins by reading a three-dimensional base grid, which can have variable row and column widths and spatially variable cell top and bottom elevations. From this base grid, GRIDGEN will continuously divide into four any cell intersecting user-provided refinement features (points, lines, and polygons) until the desired level of refinement is reached. GRIDGEN will then smooth, or balance, the grid so that no two adjacent cells, including overlying and underlying cells, differ by more than a user-specified level tolerance. Once these gridding processes are completed, GRIDGEN saves a tree structure file so that the layered quadtree grid can be quickly reconstructed as needed. Once a tree structure file has been created, GRIDGEN can then be used to (1) export the layered quadtree grid as a shapefile, (2) export grid connectivity and cell information as ASCII text files for use with MODFLOW-USG or other numerical models, and (3) intersect the grid with shapefiles of points, lines, or polygons, and save intersection output as ASCII text files and shapefiles. The GRIDGEN program is demonstrated by creating a layered quadtree grid for the Biscayne aquifer in Miami-Dade County, Florida, using hydrologic features to control where refinement is added.
 
 \section{Introduction}
 
@@ -88,7 +89,7 @@ GRIDGEN is distributed as assets of each release of the GRIDGEN repository on Gi
   \item ReleaseNotes.pdf---this document
 \end{itemize}
 
-The GRIDGEN report (Lien and others, 2015; see Documentation) documents the input and output of the program.
+The GRIDGEN report \citep{lien2015gridgen} documents the input and output of the program.
 
 \section{Installation}
 
@@ -129,7 +130,7 @@ GRIDGEN is compiled with the Meson build system and a C++ compiler. From the roo
 The following is a list of test problems distributed with GRIDGEN.
 
 \begin{itemize}
-  \item Biscayne aquifer test problem -- This test problem is described in Lien and others (2014).
+  \item Biscayne aquifer test problem -- This test problem is described in \citet{lien2015gridgen}.
 \end{itemize}
 
 \section{Tips and Recommendations}
@@ -150,7 +151,7 @@ The following is a list of test problems distributed with GRIDGEN.
 
 \section{Documentation}
 
-Lien, Jyh-Ming, Liu, Guilin, and Langevin, C.D., 2015, GRIDGEN version 1.0: A computer program for generating unstructured finite-volume grids: U.S. Geological Survey Open-File Report 2014-1109, 39 p., \url{http://dx.doi.org/10.3133/ofr20141109}.
+The theory and input instructions for GRIDGEN are described in \citet{lien2015gridgen}.
 
 \section{Disclaimer and Notices}
 
@@ -169,5 +170,9 @@ Mail Stop 411
 12201 Sunrise Valley Drive
 Reston, VA 20192
 \end{verbatim}
+
+\REFSECTION
+\bibliographystyle{usgs}
+\bibliography{ReleaseNotes}
 
 \end{document}
