@@ -1,7 +1,7 @@
 project(
   'gridgen',
   ['cpp'],
-  version: '1.0.02',
+  version: files('version.txt'),
   license: 'CC0',
   meson_version: '>= 1.3.1',
   default_options : [
@@ -9,6 +9,10 @@ project(
     'cpp_std=c++14',
     'buildtype=release',
 ])
+
+# release date shown by the program for a release version; set by
+# scripts/update_version.py
+release_date = 'January 6, 2017'
 
 cc = meson.get_compiler('cpp')
 cc_id = cc.get_id()
@@ -25,6 +29,9 @@ endif
 add_global_arguments(cc.get_supported_arguments(compile_args), language: 'cpp')
 add_global_link_arguments(cc.get_supported_arguments(link_args), language: 'cpp')
 
+# the python running meson, for the version suffix and the regression tests
+python = import('python').find_installation()
+
 subdir('src')
 
 # unit tests (GoogleTest 1.17 requires C++17; 1.16 is not in WrapDB)
@@ -39,7 +46,6 @@ if gtest_dep.found()
 endif
 
 # regression tests
-python = find_program('python3', 'python', required: false)
 if python.found()
   test('determinism',
        python,

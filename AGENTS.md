@@ -20,6 +20,9 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   `MODFLOW-ORG/usgslatex`): `pixi run build-release-notes`, which first runs
   `doc/ReleaseNotes/mk_releasenotes.py` to check the items and write the
   History entry for the release in progress (`develop.tex`)
+- **Set the version** (`version.txt` is the source; a version containing
+  `dev` is a development version): `pixi run update-version --version <v>`;
+  add `--date YYYY-MM-DD --releasemode` for a release
 
 ## Repository orientation
 

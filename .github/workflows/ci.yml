@@ -79,7 +79,7 @@ jobs:
         if: ${{ matrix.release == 'yes' && runner.os == 'Linux' }}
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
-          zip -r ${{ env.PROGRAM_NAME }}_source.zip meson.build meson.options subprojects/*.wrap src/ test/
+          zip -r ${{ env.PROGRAM_NAME }}_source.zip meson.build meson.options version.txt subprojects/*.wrap scripts/ src/ test/
           ls -lha *.zip
 
       # static link gfortran libs
@@ -195,10 +195,16 @@ jobs:
           path: ${{ env.PROGRAM_NAME }}
 
 
-      - name: Extract version number from the main meson.build file
+      - name: Read the version number from version.txt
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
-          echo "PROGRAM_VERSION=$(grep -oE "([0-9]{1,}\.)+[0-9]{1,}" meson.build | head -n 1)" >> $GITHUB_ENV          
+          version=$(cat version.txt)
+          # a development version cannot be released
+          if [[ "$version" == *dev* ]]; then
+            echo "version.txt has development version $version; run pixi run update-version --releasemode first"
+            exit 1
+          fi
+          echo "PROGRAM_VERSION=$version" >> $GITHUB_ENV
 
       - name: Download distribution
         uses: actions/download-artifact@v8

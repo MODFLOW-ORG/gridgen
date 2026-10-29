@@ -12,6 +12,7 @@
 
 #include "vert_pass.h"
 #include "GridToVTK.h"
+#include "gridgen_version.h"
 
 #if GL_GUI
 #include "glDraw.h"
@@ -22,14 +23,13 @@ using namespace cusg;
 
 #if 1
 
-#define GRIDGEN_VERSION "1.0"
-#define GRIDGEN_SUB_VERSION "02"
-#define GRIDGEN_DATE "January 6, 2017"
 #define GRIDGEN_COPYRIGHT "This program is public domain and is released on the condition that neither the U.S. Geological Survey nor the United States Government may be held liable for any damages resulting from their authorized or unauthorized use."
 
 int main(int argc, char ** argv)
 {
-	cout<<"GRIDGEN Version "<<GRIDGEN_VERSION<<"."<<GRIDGEN_SUB_VERSION<<" "<<GRIDGEN_DATE<<"\n";
+	cout<<"GRIDGEN Version "<<GRIDGEN_VERSION;
+	if(strlen(GRIDGEN_DATE)>0) cout<<" "<<GRIDGEN_DATE;
+	cout<<"\n";
 	cout<<"A program for generating unstructured grids.\n";
 	cout<<"\n"<<GRIDGEN_COPYRIGHT<<"\n"<<endl;
 	
