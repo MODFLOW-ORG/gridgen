@@ -55,7 +55,10 @@
 
 \begin{document}
 
-{\renewcommand{\doiagency}{}\renewcommand{\textusgs}{}%
+% the class cover without the agency logo (a blank page in place of the logo
+% file) and without the department and agency lines
+{\renewcommand{\USGSvisidname}{blank}%
+ \renewcommand{\doiagency}{}\renewcommand{\textusgs}{}%
  \ifdef{\makefrontcoveralt}{\makefrontcoveralt}{\makefrontcover}}
 \ifdef{\makefrontmatterabv}{\makefrontmatterabv}{\makefrontmatter}
 
