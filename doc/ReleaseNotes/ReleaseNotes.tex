@@ -129,16 +129,17 @@ GRIDGEN is compiled with the Meson build system and a C++ compiler. From the roo
 
 \section{Test Problems}
 
-The following is a list of test problems distributed with GRIDGEN.
+The following test problems are in the test directory of the source code archive (gridgen\_source.zip).
 
 \begin{itemize}
-  \item Biscayne aquifer test problem -- This test problem is described in \citet{lien2015gridgen}.
+  \item Biscayne aquifer test problem -- The definition files action01\_buildqtg.dfn through action05\_vtkfile.dfn build a layered quadtree grid for the Biscayne aquifer in Miami-Dade County, Florida, and write USG data, shapefiles, intersections, and VTK files. This test problem is described in \citet{lien2015gridgen}.
+  \item Additional regression cases -- action06\_buildqtg\_multilayer.dfn and action07\_multilayer.dfn build a three-layer grid with point refinement set by a shapefile attribute, interpolated elevations, vertical pass-through, and point and polygon intersections; action08\_buildqtg\_rotated.dfn and action09\_rotated.dfn build a rotated grid. Both use the inputs of the Biscayne aquifer test problem.
 \end{itemize}
 
 \section{Tips and Recommendations}
 
 \begin{enumerate}
-  \item Getting started---The best way to get started with GRIDGEN is to run the example problem in the test directory of the source code. The example problem demonstrates the sequence of steps for generating a grid, intersecting the grid, and for writing grid shapefiles, MODFLOW-USG discretization input, and VTK files. The example files for GRIDGEN can then be used as a starting point for creating new applications.
+  \item Getting started---The best way to get started with GRIDGEN is to run the Biscayne aquifer test problem (action01\_buildqtg.dfn through action05\_vtkfile.dfn in the test directory of gridgen\_source.zip). The test problem demonstrates the sequence of steps for generating a grid, intersecting the grid, and for writing grid shapefiles, MODFLOW-USG discretization input, and VTK files. The example files for GRIDGEN can then be used as a starting point for creating new applications.
   \item Vertical refinement considerations for MODFLOW-USG models---Testing with multi-layer models that have quad-based refinement has revealed oscillatory flow paths for some hydrogeologic conditions. These oscillatory flow paths are inconsistent with expected flow paths, and do not occur when the same horizontal grid is used for each layer. Use of a ghost-node correction in the vertical direction (which is not created by GRIDGEN Version 1.0.02; only horizontal ghost-node corrections are generated) can improve the simulated flows paths; however, the correction may not entirely remove the oscillations. For this reason, the current recommendation is to use the same horizontal grid for all of layers of a MODFLOW-USG model. This is achieved with GRIDGEN by listing the same set of refinement features for each model layer.
   \item For users of the PEST Groundwater Utilities, a grid specification file can be created from GRIDGEN output using the GRIDGEN2GSF program. GRIDGEN2GSF is included with the PEST Groundwater Utilities, available at: \url{http://www.pesthomepage.org/Groundwater_Utilities.php}
 \end{enumerate}
