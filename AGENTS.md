@@ -91,7 +91,7 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Formatting:** run `pixi run check-format` before committing Python;
   ruff (`ruff.toml`) formats and lints it, and codespell (`.codespellrc`)
   checks spelling in the text files other than the C++ source, data files,
-  and generated files. No formatter runs on the
+  generated files, and the archived release notes. No formatter runs on the
   C++ source yet (#64); match the layout and naming of the surrounding code.
 - **Comments and documentation:** keep code comments and docstrings short,
   stating what a function does; put the reason, when one is needed, in an
