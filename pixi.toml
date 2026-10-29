@@ -2,7 +2,7 @@
 name = "gridgen"
 channels = ["conda-forge"]
 platforms = ["win-64", "linux-64", "linux-aarch64", "osx-arm64", "osx-64"]
-version = "1.0.02"
+version = "1.0.03.dev0"
 
 [dependencies]
 filelock = "*"
@@ -35,6 +35,9 @@ compare-main = { cmd = "python test/compare_outputs.py --exe builddir/src/gridge
 
 # release notes (needs TeX Live and the USGS LaTeX class from MODFLOW-ORG/usgslatex)
 build-release-notes = { cmd = "python mk_releasenotes.py && latexmk -g -pdf -interaction=nonstopmode -halt-on-error ReleaseNotes.tex", cwd = "doc/ReleaseNotes" }
+
+# version (e.g., pixi run update-version --version 1.0.03 --date 2026-11-15 --releasemode)
+update-version = { cmd = "python scripts/update_version.py" }
 
 # ostag
 get-ostag = { cmd = "python -c 'from modflow_devtools.ostags import get_ostag; print(get_ostag())'"} 
