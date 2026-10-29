@@ -198,7 +198,13 @@ jobs:
       - name: Read the version number from version.txt
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
-          echo "PROGRAM_VERSION=$(cat version.txt)" >> $GITHUB_ENV
+          version=$(cat version.txt)
+          # a development version cannot be released
+          if [[ "$version" == *dev* ]]; then
+            echo "version.txt has development version $version; run pixi run update-version --releasemode first"
+            exit 1
+          fi
+          echo "PROGRAM_VERSION=$version" >> $GITHUB_ENV
 
       - name: Download distribution
         uses: actions/download-artifact@v8

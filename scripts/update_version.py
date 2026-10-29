@@ -63,16 +63,17 @@ def update_version_tex(version, date, develop):
     print(f"updated {path.relative_to(ROOT)}")
 
 
+# README software citation heading and text
+README_HEADING = r"^### Software/Code Citation for GRIDGEN v.*$"
+README_CITATION = r"\d{4}, GRIDGEN version \S+ -- (.*) Software Release, \d{2} \w+ \d{4},"
+
+
 def update_readme(version, date):
     path = ROOT / "README.md"
+    replace(path, README_HEADING, f"### Software/Code Citation for GRIDGEN v{version}")
     replace(
         path,
-        r"^### Software/Code Citation for GRIDGEN v.*$",
-        f"### Software/Code Citation for GRIDGEN v{version}",
-    )
-    replace(
-        path,
-        r"\d{4}, GRIDGEN version \S+ -- (.*) Software Release, \d{2} \w+ \d{4},",
+        README_CITATION,
         rf"{date.year}, GRIDGEN version {version} -- \1 Software Release, "
         f"{date:%d %B %Y},",
     )
@@ -115,11 +116,18 @@ def archive_release_notes(version, date):
     print(f"archived the release notes as previous/{name}.tex")
 
 
-def check_release_notes(version):
-    """Fail before changing anything if a release has no notes to archive."""
-    if not (NOTES_DIR / "mk_releasenotes.py").is_file():
-        return
-    if (NOTES_DIR / "previous" / f"v{version}.tex").is_file():
+def archived(version):
+    """True if the release notes for version are already archived."""
+    return (NOTES_DIR / "previous" / f"v{version}.tex").is_file()
+
+
+def check_release(version):
+    """Fail before changing anything if a release cannot be completed."""
+    readme = (ROOT / "README.md").read_text()
+    for pattern in (README_HEADING, README_CITATION):
+        if not re.search(pattern, readme, flags=re.M):
+            sys.exit(f"README.md: no match for {pattern!r}")
+    if not (NOTES_DIR / "mk_releasenotes.py").is_file() or archived(version):
         return
     if not any((NOTES_DIR / "items").glob("*.toml")):
         sys.exit("no release note items in doc/ReleaseNotes/items to archive")
@@ -145,14 +153,18 @@ def main():
         parser.error(f"{version} is a development version; give a release version")
 
     if args.releasemode:
-        check_release_notes(version)
+        check_release(version)
     update_version_txt(version)
     update_pixi_toml(version)
     update_version_tex(version, date, develop)
     if args.releasemode:
-        update_meson_build(date)
-        update_readme(version, date)
-        archive_release_notes(version, date)
+        # a release already archived keeps its date
+        if archived(version):
+            print(f"{version} is already released; release date and README unchanged")
+        else:
+            update_meson_build(date)
+            update_readme(version, date)
+            archive_release_notes(version, date)
 
 
 if __name__ == "__main__":
