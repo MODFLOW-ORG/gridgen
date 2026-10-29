@@ -1,0 +1,2 @@
+section = "documentation"
+description = "The release notes describe how GRIDGEN output defines MODFLOW 6 DISU and DISV grids and how FloPy uses GRIDGEN output to create MODFLOW-USG and MODFLOW 6 input."

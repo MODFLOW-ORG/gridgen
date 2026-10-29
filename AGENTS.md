@@ -68,8 +68,10 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   but not the author's conclusions, and post its findings as a `## Review`
   comment. Verify each finding before acting: fix the ones that hold and
   answer the rest with the reason in a `## Response` comment. Repeat until a
-  review has no actionable findings, at most three rounds; findings still in
-  dispute are left for the maintainer to decide.
+  review has no actionable findings, at most three rounds for code changes; a
+  pull request that changes only documentation (Markdown, `doc/`, comments)
+  gets one round, and its findings are addressed without another review.
+  Findings still in dispute are left for the maintainer to decide.
 - **Commit messages:** conventional commits (`fix:`, `feat:`, `refactor:`,
   `test:`, `docs:`, `ci:`, `chore:`).
 - **Output comparison:** on pull requests, CI requires every output file to
