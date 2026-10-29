@@ -10,7 +10,11 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 
 - **Configure the build directory:** `pixi run setup`
 - **Build** (installs to `bin/`): `pixi run build`
-- **Run the tests:** `pixi run test`
+- **Run the tests** (smoke, unit, and run-twice determinism): `pixi run test`
+- **Run one unit test:** `builddir/test/unit/unit_tests --gtest_filter='QuadTree.*'`
+- **Compare outputs with main** (needs a build of main at `../gridgen-main`,
+  e.g. `git worktree add ../gridgen-main main`, then `pixi run setup-main`
+  and `pixi run build-main`): `pixi run compare-main`
 - **Show the OS tag used for release archives:** `pixi run get-ostag`
 
 ## Repository orientation
@@ -20,7 +24,9 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   exporters, ghost nodes, shapefiles, vertical pass-through), and the
   `gridgenusg.cpp` driver.
 - `test/` — definition (`.dfn`) files and input shapefiles for the test cases;
-  outputs are written in place and ignored by git.
+  outputs are written in place and ignored by git. `test/compare_outputs.py`
+  runs the cases (its `CASES` list) and compares every output file;
+  `test/unit/` holds the GoogleTest unit tests.
 - `doc/` — the GRIDGEN report (OFR 2014-1109), release notes, and release note
   items.
 - `builddir/` — disposable Meson build output; never edit by hand.
@@ -43,7 +49,15 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   `doc/ReleaseNotes/items/` (see the README there).
 - **Commit messages:** conventional commits (`fix:`, `feat:`, `refactor:`,
   `test:`, `docs:`, `ci:`, `chore:`).
-- **Generated files:** do not commit test outputs or `builddir/`.
+- **Output comparison:** CI requires every output file to match a build of
+  main byte for byte. A pull request that changes output on purpose gets the
+  `output-change` label and says what changed and why.
+- **Known defects in tests:** a known defect is recorded as an entry in
+  `KNOWN_UNSTABLE` (`test/compare_outputs.py`) or a `DISABLED_` unit test, with
+  a comment naming its issue. The pull request that fixes the issue removes the
+  entry or enables the test, and adds the tests listed in the issue.
+- **Generated files:** do not commit test outputs, `builddir/`, or
+  `subprojects/` downloads.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
   or `LICENSE` skip the build and tests (`paths-ignore` in
   `.github/workflows/ci.yml`); update that list when adding non-code files.
