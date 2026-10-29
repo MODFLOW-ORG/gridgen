@@ -65,7 +65,9 @@ def update_version_tex(version, date, develop):
 
 # README software citation heading and text
 README_HEADING = r"^### Software/Code Citation for GRIDGEN v.*$"
-README_CITATION = r"\d{4}, GRIDGEN version \S+ -- (.*) Software Release, \d{2} \w+ \d{4},"
+README_CITATION = (
+    r"\d{4}, GRIDGEN version \S+ -- (.*) Software Release, \d{2} \w+ \d{4},"
+)
 
 
 def update_readme(version, date):

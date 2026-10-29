@@ -28,8 +28,9 @@ def get_suffix():
             .strip()
         )
         dirty = (
-            subprocess.run(["git", "diff", "--quiet", "HEAD"], capture_output=True)
-            .returncode
+            subprocess.run(
+                ["git", "diff", "--quiet", "HEAD"], capture_output=True
+            ).returncode
             != 0
         )
         return f"+{sha}.dirty" if dirty else f"+{sha}"

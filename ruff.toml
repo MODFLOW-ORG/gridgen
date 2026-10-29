@@ -1,0 +1,16 @@
+line-length = 88
+target-version = "py311"
+
+[lint]
+select = [
+    "E",    # pycodestyle error
+    "F",    # Pyflakes
+    "I001", # isort - unsorted-imports
+    "RUF",  # Ruff-specific rules
+    "UP",   # Pyupgrade
+]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

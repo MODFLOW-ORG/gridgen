@@ -20,6 +20,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Compare outputs with main** (needs a build of main at `../gridgen-main`,
   e.g. `git worktree add ../gridgen-main main`, then `pixi run setup-main`
   and `pixi run build-main`): `pixi run compare-main`
+- **Check Python format, lint, and spelling:** `pixi run check-format`;
+  `pixi run fix-format` applies the fixes
 - **Show the OS tag used for release archives:** `pixi run get-ostag`
 - **Build the release notes** (needs TeX Live and the USGS class from
   `MODFLOW-ORG/usgslatex`): `pixi run build-release-notes`, which first runs
@@ -86,8 +88,11 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Testing scope:** rebuild, then run the unit tests or test group that
   covers the change before the full `pixi run test`. Run
   `pixi run compare-main` when a change can alter output.
-- **Formatting:** no formatter or linter runs in CI; match the layout and
-  naming of the surrounding code.
+- **Formatting:** run `pixi run check-format` before committing Python;
+  ruff (`ruff.toml`) formats and lints it, and codespell (`.codespellrc`)
+  checks spelling in the text files other than the C++ source, data files,
+  generated files, and the archived release notes. No formatter runs on the
+  C++ source yet (#64); match the layout and naming of the surrounding code.
 - **Comments and documentation:** keep code comments and docstrings short,
   stating what a function does; put the reason, when one is needed, in an
   inline comment. Write the release notes for groundwater modelers rather
@@ -113,8 +118,10 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   build), and the versions in `pixi.toml` and `version.tex` from
   `pixi run update-version`.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
-  or `LICENSE` skip the build and tests (`paths-ignore` in
-  `.github/workflows/ci.yml`); update that list when adding non-code files.
+  `LICENSE`, or the lint configuration skip the build and tests
+  (`paths-ignore` in `.github/workflows/ci.yml`); update that list when adding
+  non-code files. `lint.yml` runs `pixi run check-format` on every push and on
+  pull requests to `main`.
   `release-notes.yml` builds the release notes on Ubuntu when
   `doc/ReleaseNotes/` changes and attaches the PDF to each GitHub release.
 - **Tone:** reserve compliments for genuinely exceptional finds or ideas.
