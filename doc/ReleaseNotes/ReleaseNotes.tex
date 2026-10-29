@@ -30,8 +30,7 @@
 \newcommand{\gridgenversion}{1.0.02}
 \newcommand{\gridgendate}{January 6, 2017}
 
-\renewcommand{\cooperator}
-{George Mason University}
+\renewcommand{\cooperator}{}
 \renewcommand{\reporttitle}
 {GRIDGEN: Release Notes}
 \renewcommand{\coverphoto}{coverimage.jpg}
@@ -39,15 +38,15 @@
 \renewcommand{\reportseries}{}
 \renewcommand{\reportnumber}{}
 \renewcommand{\reportyear}{2017}
-\ifdef{\reportversion}{\renewcommand{\reportversion}{\gridgenversion}}{}
+\ifdef{\reportversion}{\renewcommand{\reportversion}{Version \gridgenversion---\gridgendate}}{}
 \renewcommand{\theauthors}{U.S. Geological Survey}
 \renewcommand{\thetitlepageauthors}{Version \gridgenversion\ --- \gridgendate}
 \renewcommand{\reportcitingtheauthors}{U.S. Geological Survey}
 \renewcommand{\colophonmoreinfo}{}
 \renewcommand{\reportbodypages}{}
 \urlstyle{rm}
-\renewcommand{\reportwebsiteroot}{https://doi.org/10.5066/}
-\renewcommand{\reportwebsiteremainder}{F79G5JXV}
+\renewcommand{\reportwebsiteroot}{}
+\renewcommand{\reportwebsiteremainder}{}
 \ifdef{\usgsissn}{\renewcommand{\usgsissn}{}}{}
 \renewcommand{\theconventions}{}
 \definecolor{coverbar}{RGB}{0, 112, 60}
@@ -56,7 +55,8 @@
 
 \begin{document}
 
-\ifdef{\makefrontcoveralt}{\makefrontcoveralt}{\makefrontcover}
+{\renewcommand{\doiagency}{}\renewcommand{\textusgs}{}%
+ \ifdef{\makefrontcoveralt}{\makefrontcoveralt}{\makefrontcover}}
 \ifdef{\makefrontmatterabv}{\makefrontmatterabv}{\makefrontmatter}
 
 \onecolumn
@@ -163,13 +163,6 @@ References to non-USGS products, trade names, and (or) services are provided for
 
 Questions about using GRIDGEN can be submitted to the MODFLOW Google Group (\url{https://groups.google.com/g/modflow}), and errors can be reported as issues on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}).
 
-\begin{verbatim}
-Integrated Modeling and Prediction Division
-U.S. Geological Survey
-Mail Stop 411
-12201 Sunrise Valley Drive
-Reston, VA 20192
-\end{verbatim}
 
 \REFSECTION
 \bibliographystyle{usgs}
