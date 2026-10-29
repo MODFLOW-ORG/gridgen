@@ -1,0 +1,28 @@
+# rotated grid with cell sizes that are not exact in binary
+
+LOAD action01_buildqtg.dfn
+
+BEGIN MODFLOW_GRID grid04mfg
+  ROTATION_ANGLE = 17.3
+  X_OFFSET = 543750
+  Y_OFFSET = 2792250
+  LENGTH_UNIT = undefined
+  NLAY = 1
+  NROW = 100
+  NCOL = 58
+  DELR = CONSTANT 812.7
+  DELC = CONSTANT 793.3
+  TOP = CONSTANT 5.
+  BOTTOM LAYER 1 = CONSTANT -40.
+END MODFLOW_GRID
+
+BEGIN QUADTREE_BUILDER buildqtg_rotated
+  MODFLOW_GRID = grid04mfg
+  REFINEMENT_FEATURES LAYER 1 = MD_Canals chd_line well_buffer
+  SMOOTHING = full
+  SMOOTHING_LEVEL_HORIZONTAL = 1
+  SMOOTHING_LEVEL_VERTICAL = 1
+  GRID_DEFINITION_FILE = grid04qtg.dfn
+  TOP LAYER 1 = REPLICATE grid04mfg
+  BOTTOM LAYER 1 = REPLICATE grid04mfg
+END QUADTREE_BUILDER

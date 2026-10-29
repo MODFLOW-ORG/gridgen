@@ -1,0 +1,45 @@
+# three layers refined differently, interpolated elevations, and an active
+# domain in layer 2 only (for vertical pass-through); the layer 2 domain is
+# ignored until #49 is fixed
+
+LOAD action01_buildqtg.dfn
+
+BEGIN MODFLOW_GRID grid03mfg
+  ROTATION_ANGLE = 0.
+  X_OFFSET = 543750
+  Y_OFFSET = 2792250
+  LENGTH_UNIT = undefined
+  NLAY = 3
+  NROW = 100
+  NCOL = 58
+  DELR = CONSTANT 800.
+  DELC = CONSTANT 800.
+  TOP = CONSTANT 5.
+  BOTTOM LAYER 1 = CONSTANT -15.
+  BOTTOM LAYER 2 = CONSTANT -40.
+  BOTTOM LAYER 3 = CONSTANT -60.
+END MODFLOW_GRID
+
+BEGIN REFINEMENT_FEATURES wells_points
+  SHAPEFILE = shapefiles/wells_points
+  FEATURE_TYPE = point
+  REFINEMENT_LEVEL_BY_ATTRIBUTE = LEVEL
+END REFINEMENT_FEATURES
+
+BEGIN QUADTREE_BUILDER buildqtg_multilayer
+  MODFLOW_GRID = grid03mfg
+  ACTIVE_DOMAIN LAYER 2 = my_active_domain
+  REFINEMENT_FEATURES LAYER 1 = MD_Canals chd_line wells_points
+  REFINEMENT_FEATURES LAYER 2 = well_buffer
+  REFINEMENT_FEATURES LAYER 3 = wells_points
+  SMOOTHING = full
+  SMOOTHING_LEVEL_HORIZONTAL = 1
+  SMOOTHING_LEVEL_VERTICAL = 1
+  GRID_DEFINITION_FILE = grid03qtg.dfn
+  TOP LAYER 1 = INTERPOLATE grid03mfg
+  BOTTOM LAYER 1 = ASCIIGRID layer1_bottom.asc
+  TOP LAYER 2 = REPLICATE grid03mfg
+  BOTTOM LAYER 2 = INTERPOLATE grid03mfg
+  TOP LAYER 3 = REPLICATE grid03mfg
+  BOTTOM LAYER 3 = REPLICATE grid03mfg
+END QUADTREE_BUILDER

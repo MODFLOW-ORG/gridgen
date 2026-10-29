@@ -14,16 +14,24 @@ modflow-devtools = "*"
 
 # build
 clean = { cmd = "rm -rf builddir" }
-setup = { cmd = "meson setup --prefix=$(pwd) --bindir=bin builddir", env = { PKG_CONFIG_PATH = "$CONDA_PREFIX/lib/pkgconfig" } }
+setup = { cmd = "meson setup --prefix=$(pwd) --bindir=bin -Dunit_tests=enabled builddir", env = { PKG_CONFIG_PATH = "$CONDA_PREFIX/lib/pkgconfig" } }
 build = "meson install -C builddir"
 
 # test
-test = { cmd = "meson test --verbose --no-rebuild -C builddir initial write_data shapefileA shapefileB shapefileC shapefileD intersectA intersectB vtkA vtkB vtkC" }
+test = { cmd = "meson test --verbose --no-rebuild -C builddir" }
 test-initial = { cmd = "meson test --verbose --no-rebuild -C builddir initial" }
 test-write = { cmd = "meson test --verbose --no-rebuild -C builddir write_data" }
 test-shapefile = { cmd = "meson test --verbose --no-rebuild -C builddir shapefileA shapefileB shapefileC shapefileD" }
 test-intersect = { cmd = "meson test --verbose --no-rebuild -C builddir intersectA intersectB" }
 test-vtk = { cmd = "meson test --verbose --no-rebuild -C builddir vtkA vtkB vtkC" }
+test-unit = { cmd = "meson test --verbose --no-rebuild -C builddir unit" }
+test-determinism = { cmd = "meson test --verbose --no-rebuild -C builddir determinism" }
+
+# compare outputs with a build of main checked out at ../gridgen-main
+# (e.g., git worktree add ../gridgen-main main)
+setup-main = { cmd = "meson setup ../gridgen-main/builddir ../gridgen-main" }
+build-main = { cmd = "meson compile -C ../gridgen-main/builddir" }
+compare-main = { cmd = "python test/compare_outputs.py --exe builddir/src/gridgen --ref-exe ../gridgen-main/builddir/src/gridgen" }
 
 # ostag
 get-ostag = { cmd = "python -c 'from modflow_devtools.ostags import get_ostag; print(get_ostag())'"} 

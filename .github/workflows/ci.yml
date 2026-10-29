@@ -12,6 +12,8 @@ on:
       - '.github/dependabot.yml'
       - 'LICENSE'
   pull_request:
+    # labeled and unlabeled so the output-change label takes effect
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     branches:
       - main
       - develop
@@ -77,7 +79,7 @@ jobs:
         if: ${{ matrix.release == 'yes' && runner.os == 'Linux' }}
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
-          zip -r ${{ env.PROGRAM_NAME }}_source.zip meson.build src/ test/
+          zip -r ${{ env.PROGRAM_NAME }}_source.zip meson.build meson.options subprojects/*.wrap src/ test/
           ls -lha *.zip
 
       # static link gfortran libs
@@ -125,15 +127,31 @@ jobs:
           name: ${{ matrix.os }}-${{ matrix.compiler}}-${{ matrix.version }}-meson-log.txt
           path: ${{ env.PROGRAM_NAME }}/builddir/meson-logs/meson-log.txt
     
-      - name: Unit test ${{ env.PROGRAM_NAME }}
+      - name: Test ${{ env.PROGRAM_NAME }}
         if: success()
         working-directory: ${{ env.PROGRAM_NAME }}
+        run: pixi run test
+
+      # outputs are compared with the base branch on pull requests only; add the
+      # output-change label to a pull request that changes output intentionally
+      - name: Checkout ${{ env.PROGRAM_NAME }} base branch for output comparison
+        if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'output-change') }}
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.base_ref }}
+          path: ${{ env.PROGRAM_NAME }}-main
+
+      - name: Build ${{ env.PROGRAM_NAME }} base branch
+        if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'output-change') }}
+        working-directory: ${{ env.PROGRAM_NAME }}
         run: |
-          pixi run test-initial
-          pixi run test-write
-          pixi run test-shapefile
-          pixi run test-intersect
-          pixi run test-vtk
+          pixi run setup-main
+          pixi run build-main
+
+      - name: Compare outputs with ${{ env.PROGRAM_NAME }} base branch
+        if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'output-change') }}
+        working-directory: ${{ env.PROGRAM_NAME }}
+        run: pixi run compare-main
 
       - name: Create zip file on MacOS and Linux
         if: ${{ matrix.release == 'yes' && runner.os != 'Windows' }}

@@ -11,21 +11,25 @@ subdir('tools')
 subdir('grid')
 subdir('intersection')
 
+# gridgen libraries shared by the executable and the unit tests
+gridgen_dep = declare_dependency(
+                                 include_directories : [
+                                                        inc_basic,
+                                                        inc_shapefile,
+                                                        inc_shapelib,
+                                                        inc_vpass,
+                                                        inc_tools,
+                                                        inc_grid,
+                                                        inc_intersection,
+                                                       ],
+                                 link_with: [basic_lib, tools_lib, grid_lib, intersection_lib],
+                                )
 
 exe = executable(
-                 meson.project_name(), 
-                 'gridgenusg.cpp', 
-                 include_directories : [
-                                        inc_basic, 
-                                        inc_shapefile,
-                                        inc_shapelib,
-                                        inc_vpass,
-                                        inc_tools, 
-                                        inc_grid,
-                                        inc_intersection,
-                                       ],
-                 link_with: [basic_lib, tools_lib, grid_lib, intersection_lib],
-                 link_language : 'cpp',  
+                 meson.project_name(),
+                 'gridgenusg.cpp',
+                 dependencies: gridgen_dep,
+                 link_language : 'cpp',
                  install: true
                 )
 
