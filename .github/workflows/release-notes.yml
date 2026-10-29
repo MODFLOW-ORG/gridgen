@@ -44,6 +44,16 @@ jobs:
         working-directory: usgslatex/usgsLaTeX
         run: sudo ./install.sh --all-users
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # also checks every release note item against the schema
+      - name: Generate the History entry for the release in progress
+        working-directory: gridgen/doc/ReleaseNotes
+        run: python mk_releasenotes.py
+
       - name: Build release notes
         working-directory: gridgen/doc/ReleaseNotes
         run: latexmk -pdf -interaction=nonstopmode -halt-on-error ReleaseNotes.tex

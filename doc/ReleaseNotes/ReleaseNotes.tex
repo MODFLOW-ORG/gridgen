@@ -27,8 +27,7 @@
 
 \graphicspath{{./Figures/}}
 
-\newcommand{\gridgenversion}{1.0.02}
-\newcommand{\gridgendate}{January 6, 2017}
+\input{version.tex}
 
 \renewcommand{\cooperator}{}
 \renewcommand{\reporttitle}
@@ -74,7 +73,7 @@ GRIDGEN is a computer program for creating layered quadtree grids for use with n
 
 \section{Introduction}
 
-This is GRIDGEN Version \gridgenversion. Executables are provided for Linux, macOS, and Windows, together with the source code, which can be compiled on other computers.
+This is GRIDGEN Version \gridgenversion.\ifdevelopmode\ It is a development version, and the History section describes changes that have not been released.\fi\ Executables are provided for Linux, macOS, and Windows, together with the source code, which can be compiled on other computers.
 
 IMPORTANT: Users should review this document for a description of, and references for, this software. Users should also review the History section in this document, which describes changes that have been introduced into GRIDGEN with each official release; these changes may substantially affect users.
 

@@ -71,5 +71,6 @@ doc/ReleaseNotes/*.log
 doc/ReleaseNotes/*.out
 doc/ReleaseNotes/*.toc
 doc/ReleaseNotes/ReleaseNotes.pdf
+doc/ReleaseNotes/develop.tex
 doc/ReleaseNotes/*.bbl
 doc/ReleaseNotes/*.blg

@@ -17,7 +17,9 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   and `pixi run build-main`): `pixi run compare-main`
 - **Show the OS tag used for release archives:** `pixi run get-ostag`
 - **Build the release notes** (needs TeX Live and the USGS class from
-  `MODFLOW-ORG/usgslatex`): `pixi run build-release-notes`
+  `MODFLOW-ORG/usgslatex`): `pixi run build-release-notes`, which first runs
+  `doc/ReleaseNotes/mk_releasenotes.py` to check the items and write the
+  History entry for the release in progress (`develop.tex`)
 
 ## Repository orientation
 
@@ -39,7 +41,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   record; check changes to input or output against it.
 - The release notes, `doc/ReleaseNotes/ReleaseNotes.tex`, list corrections to
   the report (e.g., the `ROTATION_ANGLE` definition) and known issues. Each
-  past release is in `doc/ReleaseNotes/previous/`.
+  past release is in `doc/ReleaseNotes/previous/`; the version, date, and
+  develop mode are in `doc/ReleaseNotes/version.tex`.
 - **References:** cite with natbib (`\citet`, `\citep`) from
   `doc/ReleaseNotes/ReleaseNotes.bib`. Write entries in the style of the
   MODFLOW 6 bibliography (`doc/MODFLOW6References.bib` in
