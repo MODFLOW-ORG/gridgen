@@ -1,0 +1,7 @@
+% release notes for GRIDGEN version 1.0.01
+\item Version 1.0.01 10/30/2015
+\begin{itemize}[label=--]
+  \item For models with very large x and y offsets, some of the numbers written to the output from GRIDGEN did not contain enough precision. The precision was increased for the values written to the *.nod and quadtree grid definition file.
+  \item For grids that were rotated, the rotation origin was not being calculated correctly. This has been corrected. Note that the definition for ROTATION\_ANGLE in Table 2 of the GRIDGEN report is incorrect. The description for ROTATION\_ANGLE should be: ``Counter-clockwise rotation angle of lower left corner, in degrees.''
+  \item One of the folders in the previous release did not zip correctly, and thus could not be extracted. This has been fixed.
+\end{itemize}

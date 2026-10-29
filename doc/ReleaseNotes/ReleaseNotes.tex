@@ -118,24 +118,11 @@ As an alternative, the executable files, gridgen.exe and gridgen\_x64.exe, in th
 This section describes changes introduced into GRIDGEN with each official release. These changes may substantially affect users.
 
 \begin{itemize}
-  \item Version 1.0.02 01/6/2017
-  \begin{itemize}[label=--]
-    \item The INTERPOLATE option for calculating top and bottom elevations was not working properly in some cases. This has been fixed.
-    \item GRIDGEN would crash in some cases when saving a shared-vertex VTK file. This has been fixed.
-    \item Polygons in the shapefile were not closed in the sense that the first vertex did not equal the last vertex. This has been fixed.
-    \item A makefile has been added to the src folder for compiling on Linux and Mac operating systems.
-    \item Added a ``Known Issues'' section to this document.
-  \end{itemize}
-  \item Version 1.0.01 10/30/2015
-  \begin{itemize}[label=--]
-    \item For models with very large x and y offsets, some of the numbers written to the output from GRIDGEN did not contain enough precision. The precision was increased for the values written to the *.nod and quadtree grid definition file.
-    \item For grids that were rotated, the rotation origin was not being calculated correctly. This has been corrected. Note that the definition for ROTATION\_ANGLE in Table 2 of the GRIDGEN report is incorrect. The description for ROTATION\_ANGLE should be: ``Counter-clockwise rotation angle of lower left corner, in degrees.''
-    \item One of the folders in the previous release did not zip correctly, and thus could not be extracted. This has been fixed.
-  \end{itemize}
-  \item Version 1.0.00 2/6/2015
-  \begin{itemize}[label=--]
-    \item This is the first public release of the GRIDGEN computer program. Details on this version of the program are in described in Lien and others (2014).
-  \end{itemize}
+  % the release in progress, generated from items/*.toml
+  \IfFileExists{develop.tex}{\input{develop.tex}}{}
+  \input{previous/v1.0.02.tex}
+  \input{previous/v1.0.01.tex}
+  \input{previous/v1.0.00.tex}
 \end{itemize}
 
 \section{System Requirements}
