@@ -70,7 +70,7 @@ GRIDGEN is a computer program for creating layered quadtree grids for use with n
 
 \section{Introduction}
 
-This is GRIDGEN Version \gridgenversion. This GRIDGEN version is packaged for personal computers using the Microsoft Windows XP or 7 operating systems. Executable files for personal computers are provided as well as the source code. The source code can be compiled to run on other computers.
+This is GRIDGEN Version \gridgenversion. Executables are provided for Linux, macOS, and Windows, together with the source code, which can be compiled on other computers.
 
 IMPORTANT: Users should review this document for a description of, and references for, this software. Users should also review the History section in this document, which describes changes that have been introduced into GRIDGEN with each official release; these changes may substantially affect users.
 
@@ -78,40 +78,23 @@ Version numbers for GRIDGEN will follow a major.minor.revision format. The major
 
 Instructions for installation, execution, and testing of GRIDGEN are provided below.
 
-\section{Distribution File}
+\section{Distribution}
 
-The following distribution file is for use on personal computers: gridgen1.0.02.zip. The distribution file contains:
+GRIDGEN is distributed as assets of each release of the GRIDGEN repository on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/releases}):
 
 \begin{itemize}
-  \item Compiled Windows executables
-  \item Documentation and text files
-  \item Example problem
-  \item Microsoft Visual Studio solution and project files
-  \item Source code
+  \item linux.zip, macarm.zip, and win64.zip---the GRIDGEN executable for Linux, macOS on Apple silicon, and 64-bit Windows
+  \item gridgen\_source.zip---the source code, build files, and test problems
+  \item ReleaseNotes.pdf---this document
 \end{itemize}
 
-The distribution file is a compressed zip file. The following directory structure is incorporated in the zip file:
-
-\begin{verbatim}
-|--gridgen.1.0.02
-   |--bin       ; GRIDGEN executables for personal computers
-   |--doc       ; Documentation files
-   |--examples  ; Input files to run verification tests
-   |--msvs      ; Microsoft Visual Studio solution and project files
-   |--src       ; GRIDGEN source code for use on any computer
-\end{verbatim}
-
-It is recommended that no user files are kept in the gridgen directory structure. If you do plan to put your own files in the gridgen directory structure, do so only by creating additional subdirectories.
-
-Included in the GRIDGEN distribution are various documentation files. Some of them are Portable Document Format (PDF) files. The PDF files are readable and printable on various computer platforms using Acrobat Reader from Adobe. The Acrobat Reader is freely available from the following World Wide Web site: \url{http://www.adobe.com/}
+The GRIDGEN report (Lien and others, 2015; see Documentation) documents the input and output of the program.
 
 \section{Installation}
 
-There is no installation of GRIDGEN other than the requirement that gridgen1.00.02.zip must be unzipped into a location where it can be accessed.
+There is no installation of GRIDGEN other than unzipping the archive for your operating system into a location where it can be accessed. To make GRIDGEN accessible from any directory, add the directory containing the executable to the PATH environment variable, and remove the directory of any prior GRIDGEN release from the PATH.
 
-To make the executable versions of GRIDGEN accessible from any directory, the directory containing the executables should be included in the PATH environment variable. Also, if a prior release of GRIDGEN is installed on your system, the directory containing the executables for the prior release should be removed from the PATH environment variable.
-
-As an alternative, the executable files, gridgen.exe and gridgen\_x64.exe, in the gridgen1.0.01/bin directory can be copied into a directory already included in the PATH environment variable.
+GRIDGEN can also be installed with the get-modflow program distributed with FloPy, which downloads the executables for the current operating system.
 
 \section{History}
 
@@ -127,21 +110,19 @@ This section describes changes introduced into GRIDGEN with each official releas
 
 \section{System Requirements}
 
-GRIDGEN is written in C++. The code has been used on UNIX-based computers and personal computers running various forms of the Microsoft Windows operating system.
+GRIDGEN is written in C++. Executables are built and tested for Linux, macOS, and Windows; the source code can be compiled on other operating systems with a C++ compiler.
 
 \section{Executing GRIDGEN}
 
-Two GRIDGEN executables for use on personal computers are provided. gridgen.exe is compiled for use on 32-bit Windows systems; gridgen\_x64 is compiled for use on 64-bit versions of Windows. In general, the gridgen\_x64 executable should be used in most instances.
-
-GRIDGEN is initiated in a Windows Command-Prompt window by simply entering ``gridgen'' or ``gridgen\_x64'' followed by the appropriate command-line arguments, which are described in the user documentation.
+GRIDGEN is run from a command prompt or terminal by entering ``gridgen'' followed by an action and the name of the definition file that contains it, for example ``gridgen buildqtg action01\_buildqtg.dfn''. Actions and definition files are described in the GRIDGEN report.
 
 \section{Testing}
 
-The examples distributed with GRIDGEN can be run by navigating to the examples folder and executing the ``run.bat'' or ``run\_x64.bat'' batch files. These batch files will execute GRIDGEN multiple times in order to create a grid, create shape files, create input files for MODFLOW-USG, and intersect features with the resulting grid.
+The test problems are in the test directory of the source code. With the source code and the pixi package manager (\url{https://pixi.sh}), ``pixi run setup'' and ``pixi run build'' build GRIDGEN, and ``pixi run test'' then runs the test problems, unit tests, and a check that repeated runs produce identical output.
 
 \section{Compiling}
 
-The executable files provided in gridgen1.0.02/bin were created using the Microsoft Visual C++ compiler. Although executable versions of the program are provided, the source code is provided in the gridgen.1.0.02/src directory so that GRIDGEN can be recompiled if necessary. The Microsoft Visual Studio project files are also provided (in the msvs folder). However, the USGS cannot provide assistance to those compiling GRIDGEN. In general, the requirements are a C++ compiler and the knowledge of using the compiler.
+GRIDGEN is compiled with the Meson build system and a C++ compiler. From the root of the source code, ``pixi run setup'' and ``pixi run build'' configure the build and install the executable in the bin directory; the equivalent Meson commands can be used without pixi. However, the USGS cannot provide assistance to those compiling GRIDGEN.
 
 \section{Test Problems}
 
@@ -154,7 +135,7 @@ The following is a list of test problems distributed with GRIDGEN.
 \section{Tips and Recommendations}
 
 \begin{enumerate}
-  \item Getting started---The best way to get started with GRIDGEN is to run the example problem that is included with the distribution. The example problem demonstrates the sequence of steps for generating a grid, intersecting the grid, and for writing grid shapefiles, MODFLOW-USG discretization input, and VTK files. The example files for GRIDGEN can then be used as a starting point for creating new applications.
+  \item Getting started---The best way to get started with GRIDGEN is to run the example problem in the test directory of the source code. The example problem demonstrates the sequence of steps for generating a grid, intersecting the grid, and for writing grid shapefiles, MODFLOW-USG discretization input, and VTK files. The example files for GRIDGEN can then be used as a starting point for creating new applications.
   \item Vertical refinement considerations for MODFLOW-USG models---Testing with multi-layer models that have quad-based refinement has revealed oscillatory flow paths for some hydrogeologic conditions. These oscillatory flow paths are inconsistent with expected flow paths, and do not occur when the same horizontal grid is used for each layer. Use of a ghost-node correction in the vertical direction (which is not created by GRIDGEN Version 1.0.02; only horizontal ghost-node corrections are generated) can improve the simulated flows paths; however, the correction may not entirely remove the oscillations. For this reason, the current recommendation is to use the same horizontal grid for all of layers of a MODFLOW-USG model. This is achieved with GRIDGEN by listing the same set of refinement features for each model layer.
   \item For users of the PEST Groundwater Utilities, a grid specification file can be created from GRIDGEN output using the GRIDGEN2GSF program. GRIDGEN2GSF is included with the PEST Groundwater Utilities, available at: \url{http://www.pesthomepage.org/Groundwater_Utilities.php}
 \end{enumerate}
@@ -179,13 +160,14 @@ References to non-USGS products, trade names, and (or) services are provided for
 
 \section{Contacts}
 
+Questions about using GRIDGEN can be submitted to the MODFLOW Google Group (\url{https://groups.google.com/g/modflow}), and errors can be reported as issues on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}).
+
 \begin{verbatim}
+Integrated Modeling and Prediction Division
 U.S. Geological Survey
-Office of Groundwater
-411 National Center
+Mail Stop 411
+12201 Sunrise Valley Drive
 Reston, VA 20192
-(703) 648-5001
-ogw_webmaster@usgs.gov
 \end{verbatim}
 
 \end{document}
