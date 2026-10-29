@@ -75,8 +75,8 @@ def run_cases(exe, workdir):
 
 def compare_dirs(dir0, dir1):
     """Return a list of files that differ or exist in only one directory."""
-    files0 = {p.relative_to(dir0) for p in dir0.rglob("*") if p.is_file()}
-    files1 = {p.relative_to(dir1) for p in dir1.rglob("*") if p.is_file()}
+    files0 = {p.relative_to(dir0).as_posix() for p in dir0.rglob("*") if p.is_file()}
+    files1 = {p.relative_to(dir1).as_posix() for p in dir1.rglob("*") if p.is_file()}
     diffs = [f"only in {dir0.name}: {f}" for f in sorted(files0 - files1)]
     diffs += [f"only in {dir1.name}: {f}" for f in sorted(files1 - files0)]
     for f in sorted(files0 & files1):

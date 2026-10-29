@@ -21,8 +21,9 @@ if cc_id == 'intel'
   link_args += ['-diag-disable=10441']
 endif
 
-add_project_arguments(cc.get_supported_arguments(compile_args), language: 'cpp')
-add_project_link_arguments(cc.get_supported_arguments(link_args), language: 'cpp')
+# global so subprojects (GoogleTest) are built with the same RTTI setting
+add_global_arguments(cc.get_supported_arguments(compile_args), language: 'cpp')
+add_global_link_arguments(cc.get_supported_arguments(link_args), language: 'cpp')
 
 subdir('src')
 
