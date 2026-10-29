@@ -130,3 +130,37 @@ TEST(DefinitionParser, SurfaceRecordsAfterGapAreRead)
     ASSERT_EQ(qtg->top_str.count(1), 1u);
     ASSERT_EQ(qtg->bot_str.count(1), 1u);
 }
+
+TEST(DefinitionParser, RefinementAliasesAndTopOnlyAreRead)
+{
+    // both spellings of the refinement records, refine_by_* taking precedence,
+    // and a top record with no bottom record for the same layer
+    std::istringstream dfn(
+        "BEGIN QUADTREE_BUILDER qtb\n"
+        "  MODFLOW_GRID = mfg\n"
+        "  REFINE_BY_FEATURES LAYER 1 = wells\n"
+        "  REFINEMENT_FEATURES LAYER 1 = rivers\n"
+        "  REFINE_BY_ARRAY LAYER 2 = CONSTANT 1\n"
+        "  REFINEMENT_ARRAY LAYER 3 = CONSTANT 2\n"
+        "  TOP LAYER 2 = REPLICATE mfg\n"
+        "  GRID_DEFINITION_FILE = qtg.dfn\n"
+        "END QUADTREE_BUILDER\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+
+    quadtree_builder_raw_data * data =
+        dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+    ASSERT_NE(data, nullptr);
+
+    ASSERT_EQ(data->refine_by_features_str.count(0), 1u);
+    EXPECT_EQ(data->refine_by_features_str[0].front(), "wells");
+
+    EXPECT_EQ(data->refine_by_array_str.count(0), 0u);
+    ASSERT_EQ(data->refine_by_array_str.count(1), 1u);
+    EXPECT_EQ(data->refine_by_array_str[1].back(), "1");
+    ASSERT_EQ(data->refine_by_array_str.count(2), 1u);
+    EXPECT_EQ(data->refine_by_array_str[2].back(), "2");
+
+    ASSERT_EQ(data->top_str.count(1), 1u);
+    EXPECT_EQ(data->bot_str.count(1), 0u);
+}
