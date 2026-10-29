@@ -16,6 +16,10 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   e.g. `git worktree add ../gridgen-main main`, then `pixi run setup-main`
   and `pixi run build-main`): `pixi run compare-main`
 - **Show the OS tag used for release archives:** `pixi run get-ostag`
+- **Build the release notes** (needs TeX Live and the USGS class from
+  `MODFLOW-ORG/usgslatex`): `pixi run build-release-notes`, which first runs
+  `doc/ReleaseNotes/mk_releasenotes.py` to check the items and write the
+  History entry for the release in progress (`develop.tex`)
 
 ## Repository orientation
 
@@ -35,8 +39,17 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 
 - The GRIDGEN report, `doc/ofr2014-1109.pdf`, documents every block and
   record; check changes to input or output against it.
-- `doc/ReleaseNotes.pdf` lists corrections to the report (e.g., the
-  `ROTATION_ANGLE` definition) and known issues.
+- The release notes, `doc/ReleaseNotes/ReleaseNotes.tex`, list corrections to
+  the report (e.g., the `ROTATION_ANGLE` definition) and known issues. Each
+  past release is in `doc/ReleaseNotes/previous/`; the version, date, and
+  develop mode are in `doc/ReleaseNotes/version.tex`.
+- **References:** cite with natbib (`\citet`, `\citep`) from
+  `doc/ReleaseNotes/ReleaseNotes.bib`. Write entries in the style of the
+  MODFLOW 6 bibliography (`doc/MODFLOW6References.bib` in
+  MODFLOW-ORG/modflow6), and copy an entry from there when it has one: a USGS
+  report is a `@book` with `author`, `series` (e.g., `{{U.S. Geological Survey
+  Open-File Report 2014--1109, 26 p.}}`), `title`, `url`, `urldate`, and
+  `year`, keyed like `lien2015gridgen`.
 
 ## Conventions and guardrails
 
@@ -60,6 +73,11 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   match a build of the base branch byte for byte. A pull request that changes
   output on purpose gets the `output-change` label and says what changed and
   why.
+- **Known issues in the release notes:** the Known Issues section of
+  `doc/ReleaseNotes/ReleaseNotes.tex` lists the open defects a user can run
+  into, each in user terms with any workaround and `\ghissue{N}`. Add an
+  entry when such a bug issue is filed, and remove it in the pull request that
+  fixes the bug, which also adds a release note item.
 - **Known defects in tests:** a known defect is recorded as an entry in
   `KNOWN_UNSTABLE` (`test/compare_outputs.py`) or a `DISABLED_` unit test, with
   a comment naming its issue. The pull request that fixes the issue removes the
@@ -69,4 +87,6 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
   or `LICENSE` skip the build and tests (`paths-ignore` in
   `.github/workflows/ci.yml`); update that list when adding non-code files.
+  `release-notes.yml` builds the release notes on Ubuntu when
+  `doc/ReleaseNotes/` changes and attaches the PDF to each GitHub release.
 - **Tone:** reserve compliments for genuinely exceptional finds or ideas.

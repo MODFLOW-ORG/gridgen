@@ -33,5 +33,8 @@ setup-main = { cmd = "meson setup ../gridgen-main/builddir ../gridgen-main" }
 build-main = { cmd = "meson compile -C ../gridgen-main/builddir" }
 compare-main = { cmd = "python test/compare_outputs.py --exe builddir/src/gridgen --ref-exe ../gridgen-main/builddir/src/gridgen" }
 
+# release notes (needs TeX Live and the USGS LaTeX class from MODFLOW-ORG/usgslatex)
+build-release-notes = { cmd = "python mk_releasenotes.py && latexmk -g -pdf -interaction=nonstopmode -halt-on-error ReleaseNotes.tex", cwd = "doc/ReleaseNotes" }
+
 # ostag
 get-ostag = { cmd = "python -c 'from modflow_devtools.ostags import get_ostag; print(get_ostag())'"} 

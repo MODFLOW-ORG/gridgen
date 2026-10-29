@@ -1,0 +1,184 @@
+\documentclass[11pt,twoside,twocolumn]{usgsreport}
+\usepackage{usgsfonts}
+\usepackage{usgsgeo}
+\usepackage{usgsreporta}
+
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{enumitem}
+\usepackage[T1]{fontenc}
+\usepackage{etoolbox}
+
+\usepackage{hyperref}
+\hypersetup{
+    pdftitle={GRIDGEN Release Notes},
+    pdfauthor={U.S. Geological Survey},
+    pdfsubject={GRIDGEN Release Notes},
+    pdfkeywords={GRIDGEN, quadtree, unstructured grid, MODFLOW-USG, MODFLOW 6},
+    bookmarksnumbered=true,
+    bookmarksopen=true,
+    bookmarksopenlevel=1,
+    colorlinks=true,
+    allcolors={blue},
+    pdfstartview=Fit,
+    pdfpagemode=UseOutlines,
+    pdfpagelayout=TwoPageRight
+}
+
+\graphicspath{{./Figures/}}
+
+\input{version.tex}
+\newcommand{\ghissue}[1]{\href{https://github.com/MODFLOW-ORG/gridgen/issues/#1}{issue~#1}}
+
+\renewcommand{\cooperator}{}
+\renewcommand{\reporttitle}
+{GRIDGEN: Release Notes}
+\renewcommand{\coverphoto}{coverimage.jpg}
+\renewcommand{\GSphotocredit}{Layered quadtree grid created with GRIDGEN.}
+\renewcommand{\reportseries}{}
+\renewcommand{\reportnumber}{}
+\renewcommand{\reportyear}{2017}
+\ifdef{\reportversion}{\renewcommand{\reportversion}{Version \gridgenversion---\gridgendate}}{}
+\renewcommand{\theauthors}{U.S. Geological Survey}
+\renewcommand{\thetitlepageauthors}{Version \gridgenversion\ --- \gridgendate}
+\renewcommand{\reportcitingtheauthors}{U.S. Geological Survey}
+\renewcommand{\colophonmoreinfo}{}
+\renewcommand{\reportbodypages}{}
+\urlstyle{rm}
+\renewcommand{\reportwebsiteroot}{}
+\renewcommand{\reportwebsiteremainder}{}
+\ifdef{\usgsissn}{\renewcommand{\usgsissn}{}}{}
+\renewcommand{\theconventions}{}
+\definecolor{coverbar}{RGB}{0, 112, 60}
+\renewcommand{\bannercolor}{\color{coverbar}}
+\renewcommand{\reportrefname}{References Cited}
+
+\begin{document}
+
+% the class cover without the banner, the agency logo (a blank page in place
+% of the logo file), and the department and agency lines
+{\renewcommand{\coverruleoddpage}{}\renewcommand{\USGSvisidname}{blank}%
+ \renewcommand{\doiagency}{}\renewcommand{\textusgs}{}%
+ \ifdef{\makefrontcoveralt}{\makefrontcoveralt}{\makefrontcover}}
+\ifdef{\makefrontmatterabv}{\makefrontmatterabv}{\makefrontmatter}
+
+\onecolumn
+\pagestyle{body}
+\RaggedRight
+\setlength{\parindent}{2em}
+
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+
+GRIDGEN is a computer program for creating layered quadtree grids for use with numerical models, such as the MODFLOW-USG program \citep{modflowusg} for simulation of groundwater flow. The program begins by reading a three-dimensional base grid, which can have variable row and column widths and spatially variable cell top and bottom elevations. From this base grid, GRIDGEN will continuously divide into four any cell intersecting user-provided refinement features (points, lines, and polygons) until the desired level of refinement is reached. GRIDGEN will then smooth, or balance, the grid so that no two adjacent cells, including overlying and underlying cells, differ by more than a user-specified level tolerance. Once these gridding processes are completed, GRIDGEN saves a tree structure file so that the layered quadtree grid can be quickly reconstructed as needed. Once a tree structure file has been created, GRIDGEN can then be used to (1) export the layered quadtree grid as a shapefile, (2) export grid connectivity and cell information as ASCII text files for use with MODFLOW-USG or other numerical models, and (3) intersect the grid with shapefiles of points, lines, or polygons, and save intersection output as ASCII text files and shapefiles. The GRIDGEN program is demonstrated by creating a layered quadtree grid for the Biscayne aquifer in Miami-Dade County, Florida, using hydrologic features to control where refinement is added.
+
+\section{Introduction}
+
+This is GRIDGEN Version \gridgenversion.\ifdevelopmode\ It is a development version\IfFileExists{develop.tex}{, and the first entry in the History section describes changes that have not been released}{}.\fi\ Executables are provided for Linux, macOS on Apple silicon, and Windows, together with the source code, which can be compiled on other computers.
+
+IMPORTANT: Users should review this document for a description of, and references for, this software. Users should also review the History section in this document, which describes changes that have been introduced into GRIDGEN with each official release; these changes may substantially affect users.
+
+Version numbers for GRIDGEN will follow a major.minor.revision format. The major number will be increased when there are substantial new changes that break backward compatibility. The minor number will be increased when important, but relatively minor new functionality is added. The revision number will be added when errors are corrected in either the program or input files.
+
+Instructions for installation, execution, and testing of GRIDGEN are provided below.
+
+\section{Distribution}
+
+GRIDGEN is distributed as assets of each release of the GRIDGEN repository on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/releases}):
+
+\begin{itemize}
+  \item linux.zip, macarm.zip, and win64.zip---the GRIDGEN executable for Linux, macOS on Apple silicon, and 64-bit Windows
+  \item gridgen\_source.zip---the source code, build files, and test problems
+  \item ReleaseNotes.pdf---this document
+\end{itemize}
+
+The GRIDGEN report \citep{lien2015gridgen} documents the input and output of the program.
+
+\section{Installation}
+
+There is no installation of GRIDGEN other than unzipping the archive for your operating system into a location where it can be accessed. To make GRIDGEN accessible from any directory, add the directory containing the executable to the PATH environment variable, and remove the directory of any prior GRIDGEN release from the PATH.
+
+GRIDGEN can also be installed with the get-modflow program distributed with FloPy, which downloads the executables for the current operating system.
+
+\section{History}
+
+This section describes changes introduced into GRIDGEN with each official release. These changes may substantially affect users.
+
+\begin{itemize}
+  % the release in progress, generated from items/*.toml
+  \IfFileExists{develop.tex}{\input{develop.tex}}{}
+  \input{previous/v1.0.02.tex}
+  \input{previous/v1.0.01.tex}
+  \input{previous/v1.0.00.tex}
+\end{itemize}
+
+\section{System Requirements}
+
+GRIDGEN is written in C++. Executables are built and tested for Linux, macOS, and Windows; the source code can be compiled on other operating systems with a C++ compiler.
+
+\section{Executing GRIDGEN}
+
+GRIDGEN is run from a command prompt or terminal by entering ``gridgen'' followed by an action and the name of the definition file that contains it, for example ``gridgen buildqtg action01\_buildqtg.dfn''. Actions and definition files are described in the GRIDGEN report.
+
+\section{Testing}
+
+The test problems are in the test directory of the source code. From the source code archive (gridgen\_source.zip), ``meson setup builddir -Dunit\_tests=enabled'', ``meson compile -C builddir'', and ``meson test -C builddir'' build GRIDGEN and run the test problems, unit tests, and a check that repeated runs produce identical output. In a clone of the GRIDGEN repository, the pixi package manager (\url{https://pixi.sh}) provides the same steps as ``pixi run setup'', ``pixi run build'', and ``pixi run test''.
+
+\section{Compiling}
+
+GRIDGEN is compiled with the Meson build system and a C++ compiler. From the root of the source code archive, ``meson setup builddir'' and ``meson compile -C builddir'' build the executable in builddir/src; in a clone of the repository, ``pixi run setup'' and ``pixi run build'' configure the build and install the executable in the bin directory. However, the USGS cannot provide assistance to those compiling GRIDGEN.
+
+\section{Test Problems}
+
+The following test problems are in the test directory of the source code archive (gridgen\_source.zip).
+
+\begin{itemize}
+  \item Biscayne aquifer test problem -- The definition files action01\_buildqtg.dfn through action05\_vtkfile.dfn build a layered quadtree grid for the Biscayne aquifer in Miami-Dade County, Florida, and write USG data, shapefiles, intersections, and VTK files. This test problem is described in \citet{lien2015gridgen}.
+  \item Additional regression cases -- action06\_buildqtg\_multilayer.dfn and action07\_multilayer.dfn build a three-layer grid with point refinement set by a shapefile attribute, interpolated elevations, vertical pass-through, and point and polygon intersections; action08\_buildqtg\_rotated.dfn and action09\_rotated.dfn build a rotated grid. Both use the inputs of the Biscayne aquifer test problem.
+\end{itemize}
+
+\section{Tips and Recommendations}
+
+\begin{enumerate}
+  \item Getting started---The best way to get started with GRIDGEN is to run the Biscayne aquifer test problem (action01\_buildqtg.dfn through action05\_vtkfile.dfn in the test directory of gridgen\_source.zip). The test problem demonstrates the sequence of steps for generating a grid, intersecting the grid, and for writing grid shapefiles, MODFLOW-USG discretization input, and VTK files. The example files for GRIDGEN can then be used as a starting point for creating new applications.
+  \item Vertical refinement considerations for MODFLOW-USG models---Testing with multi-layer models that have quad-based refinement has revealed oscillatory flow paths for some hydrogeologic conditions. These oscillatory flow paths are inconsistent with expected flow paths, and do not occur when the same horizontal grid is used for each layer. Use of a ghost-node correction in the vertical direction (which is not created by GRIDGEN Version 1.0.02; only horizontal ghost-node corrections are generated) can improve the simulated flows paths; however, the correction may not entirely remove the oscillations. For this reason, the current recommendation is to use the same horizontal grid for all of layers of a MODFLOW-USG model. This is achieved with GRIDGEN by listing the same set of refinement features for each model layer.
+  \item For users of the PEST Groundwater Utilities, a grid specification file can be created from GRIDGEN output using the GRIDGEN2GSF program. GRIDGEN2GSF is included with the PEST Groundwater Utilities, available at: \url{http://www.pesthomepage.org/Groundwater_Utilities.php}
+  \item Connection count in the .nod file---GRIDGEN writes a file with a ``.nod'' extension when a GRID\_TO\_USGDATA block is executed. The first line in the .nod file has the number of cells and the number of connections. The number of connections does not include values for the node itself, and so this value does not directly correspond to the NJA value required by MODFLOW-USG. Instead, this value is equal to NJA - NODES.
+\end{enumerate}
+
+\section{Known Issues}
+
+The following defects are known in this version. Each is tracked as an issue on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}) and is removed from this list when it is fixed.
+
+\begin{itemize}
+  \item When the base grid fits entirely within a specified active domain and the base grid does not touch the active domain, GRIDGEN excludes all cells. In this case, do not specify an active domain, and all cells will be included (\ghissue{53}).
+  \item GRIDGEN includes NODATA values in the surface interpolation when the ASCIIGRID option is used. Ensure that ASCIIGRID datasets do not have NODATA values in areas where surface interpolation is used (\ghissue{54}).
+  \item An ACTIVE\_DOMAIN LAYER record is ignored unless every layer above it also has an ACTIVE\_DOMAIN LAYER record, and no message is written (\ghissue{49}).
+  \item The keywords REFINE\_LEVEL\_BY\_ATTRIBUTE, HORIZONTAL\_SMOOTHING\_LEVEL, and VERTICAL\_SMOOTHING\_LEVEL documented in the GRIDGEN report are not recognized; the first stops GRIDGEN and the others are ignored. Use REFINEMENT\_LEVEL\_BY\_ATTRIBUTE, SMOOTHING\_LEVEL\_HORIZONTAL, and SMOOTHING\_LEVEL\_VERTICAL (\ghissue{52}).
+  \item A quadtree grid built with NODE\_NUMBERING = zero-based writes a tree structure file that later actions cannot read. Use the default one-based numbering (\ghissue{50}).
+  \item GRID\_TO\_USGDATA with a MODFLOW\_GRID, rather than a QUADTREE grid, computes incorrect horizontal connection areas and stops after writing the connection files (\ghissue{46}).
+  \item Corners shared by adjacent cells in grid shapefiles can differ in their last digits when cell sizes are not exactly representable in binary and coordinates are large (for example, UTM or state plane), so shared vertices must be matched with a tolerance. VTK files write point coordinates with six significant digits (\ghissue{40}).
+  \item Vertex elevations in shared-vertex VTK files (SHARE\_VERTEX = TRUE) can be incorrect where three cells meet and can change from run to run (\ghissue{45}).
+  \item Polygon intersection output lists cells in an order that can change from run to run; the cells and values are the same (\ghissue{51}).
+\end{itemize}
+
+\section{Documentation}
+
+The theory and input instructions for GRIDGEN are described in \citet{lien2015gridgen}.
+
+\section{Disclaimer and Notices}
+
+Please refer to the USGS Software User Rights Notice (\url{http://water.usgs.gov/software/help/notice/}) for complete use, copyright, and distribution information. The USGS provides no warranty, expressed or implied, as to the correctness of the furnished software or the suitability for any purpose. The software has been tested, but as with any complex software, there could be undetected errors. Users who find errors are requested to report them to the USGS.
+
+References to non-USGS products, trade names, and (or) services are provided for information purposes only and do not constitute endorsement or warranty, express or implied, by the USGS, U.S. Department of Interior, or U.S. Government, as to their suitability, content, usefulness, functioning, completeness, or accuracy.
+
+\section{Contacts}
+
+Questions about using GRIDGEN can be submitted to the MODFLOW Google Group (\url{https://groups.google.com/g/modflow}), and errors can be reported as issues on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}).
+
+
+\REFSECTION
+\bibliographystyle{usgs}
+\bibliography{ReleaseNotes}
+
+\end{document}

@@ -1,0 +1,66 @@
+name: gridgen release notes
+on:
+  push:
+    paths:
+      - 'doc/ReleaseNotes/**'
+      - '.github/workflows/release-notes.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'doc/ReleaseNotes/**'
+      - '.github/workflows/release-notes.yml'
+  workflow_dispatch:
+  # called by the release job in ci.yml
+  workflow_call:
+jobs:
+  build:
+    name: Build release notes
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout gridgen
+        uses: actions/checkout@v5
+        with:
+          path: gridgen
+
+      - name: Checkout usgslatex
+        uses: actions/checkout@v5
+        with:
+          repository: MODFLOW-ORG/usgslatex
+          path: usgslatex
+
+      - name: Install TeX Live
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y latexmk \
+            texlive-science \
+            texlive-latex-extra \
+            texlive-font-utils \
+            texlive-fonts-recommended \
+            texlive-fonts-extra
+
+      - name: Install USGS LaTeX style files and Univers font
+        working-directory: usgslatex/usgsLaTeX
+        run: sudo ./install.sh --all-users
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # also checks every release note item against the schema
+      - name: Generate the History entry for the release in progress
+        working-directory: gridgen/doc/ReleaseNotes
+        run: python mk_releasenotes.py
+
+      - name: Build release notes
+        working-directory: gridgen/doc/ReleaseNotes
+        run: latexmk -pdf -interaction=nonstopmode -halt-on-error ReleaseNotes.tex
+
+      # the dist-path prefix matches the release job's artifact pattern in ci.yml
+      - name: Upload release notes
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist-path-release-notes
+          path: gridgen/doc/ReleaseNotes/ReleaseNotes.pdf

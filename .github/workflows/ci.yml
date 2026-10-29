@@ -175,9 +175,14 @@ jobs:
           name: ${{ env.DIST }}-${{ matrix.os }}
           path: ${{ env.PROGRAM_NAME }}/*.zip
 
+  release_notes:
+    name: Release notes
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/release-notes.yml
+
   release:
     name: Make release
-    needs: build
+    needs: [build, release_notes]
     runs-on: ubuntu-latest
     defaults:
       run:
