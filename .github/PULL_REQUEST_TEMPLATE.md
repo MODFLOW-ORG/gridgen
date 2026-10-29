@@ -3,7 +3,7 @@ Replace this paragraph with a written description of the pull request. Descripti
 Checklist of items for pull request
 
 - [ ] Replaced section above with description of pull request
-- [ ] Closed issue #xxxx
+- [ ] Closes #xxxx
 - [ ] Referenced issue or pull request #xxxx
 - [ ] Added new test or modified an existing test
 - [ ] Ran `pixi run test` after `pixi run build`
