@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "input"
+description = "Layer records in QUADTREE_BUILDER and QUADTREE blocks were ignored, without a message, after the first layer that lacked them: an ACTIVE_DOMAIN LAYER record unless every layer above it had one, and refinement feature, refinement array, TOP LAYER, and BOTTOM LAYER records after the first layer without a BOTTOM LAYER record. Each layer's records are now read independently, so a grid that names records for a lower layer only can change."
