@@ -4,10 +4,23 @@ on:
   schedule:
     - cron: '0 6 * * *' 
   push:
+    # skip changes that cannot affect the build or tests
+    paths-ignore:
+      - '**.md'
+      - 'doc/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/dependabot.yml'
+      - 'LICENSE'
   pull_request:
     branches:
       - main
       - develop
+    paths-ignore:
+      - '**.md'
+      - 'doc/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/dependabot.yml'
+      - 'LICENSE'
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

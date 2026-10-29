@@ -1,0 +1,14 @@
+# sections and subsections for the release note items in items/
+
+[sections]
+features = "NEW FUNCTIONALITY"
+fixes = "BUG FIXES AND OTHER CHANGES TO EXISTING FUNCTIONALITY"
+internal = "BUILD, TESTING, AND INTERNAL CHANGES"
+documentation = "DOCUMENTATION"
+
+[subsections]
+input = "INPUT"
+gridding = "GRID GENERATION"
+export = "GRID EXPORT"
+intersection = "GRID INTERSECTION"
+build = "BUILD AND TESTING"
