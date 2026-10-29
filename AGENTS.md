@@ -47,6 +47,13 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   template and close the issue from its checklist.
 - **Release notes:** a pull request that changes gridgen adds a TOML item in
   `doc/ReleaseNotes/items/` (see the README there).
+- **Pull request review:** after the first green CI run, have an agent on a
+  smaller model review the diff, given the pull request's intent and the files
+  but not the author's conclusions, and post its findings as a `## Review`
+  comment. Verify each finding before acting: fix the ones that hold and
+  answer the rest with the reason in a `## Response` comment. Repeat until a
+  review has no actionable findings, at most three rounds; findings still in
+  dispute are left for the maintainer to decide.
 - **Commit messages:** conventional commits (`fix:`, `feat:`, `refactor:`,
   `test:`, `docs:`, `ci:`, `chore:`).
 - **Output comparison:** CI requires every output file to match a build of
