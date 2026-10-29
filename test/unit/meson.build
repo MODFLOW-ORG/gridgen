@@ -2,6 +2,7 @@ unit_sources = files(
     'test_box.cpp',
     'test_def_parser.cpp',
     'test_ghostnode.cpp',
+    'test_intersection.cpp',
     'test_modflowgrid.cpp',
     'test_quadtree.cpp',
     'test_quadtree_io.cpp',

@@ -59,8 +59,7 @@ SKIP_PATTERNS = (
 )
 # output path prefixes that change from run to run; reported but not counted
 # as failures
-# - polygon intersection cell order depends on set<Box*> order (#51)
-KNOWN_UNSTABLE = ("output_intersection/buffer_grid03qtg_lay2_intersect.",)
+KNOWN_UNSTABLE = ()
 
 OUTPUT_DIRS = (
     "output_intersection",
