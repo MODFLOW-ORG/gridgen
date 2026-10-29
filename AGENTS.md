@@ -73,6 +73,11 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   match a build of the base branch byte for byte. A pull request that changes
   output on purpose gets the `output-change` label and says what changed and
   why.
+- **Known issues in the release notes:** the Known Issues section of
+  `doc/ReleaseNotes/ReleaseNotes.tex` lists the open defects a user can run
+  into, each in user terms with any workaround and `\ghissue{N}`. Add an
+  entry when such a bug issue is filed, and remove it in the pull request that
+  fixes the bug, which also adds a release note item.
 - **Known defects in tests:** a known defect is recorded as an entry in
   `KNOWN_UNSTABLE` (`test/compare_outputs.py`) or a `DISABLED_` unit test, with
   a comment naming its issue. The pull request that fixes the issue removes the

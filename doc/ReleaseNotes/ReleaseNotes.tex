@@ -28,6 +28,7 @@
 \graphicspath{{./Figures/}}
 
 \input{version.tex}
+\newcommand{\ghissue}[1]{\href{https://github.com/MODFLOW-ORG/gridgen/issues/#1}{issue~#1}}
 
 \renewcommand{\cooperator}{}
 \renewcommand{\reporttitle}
@@ -146,9 +147,18 @@ The following test problems are in the test directory of the source code archive
 
 \section{Known Issues}
 
+The following defects are known in this version. Each is tracked as an issue on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}) and is removed from this list when it is fixed.
+
 \begin{itemize}
-  \item When the base grid fits entirely within a specified active domain and the base grid does not touch the active domain, GRIDGEN excludes all cells. In this case, do not specify an active domain, and all cells will be included.
-  \item GRIDGEN includes NODATA values in the surface interpolation when the ASCIIGRID option is used. Ensure that ASCIIGRID datasets do not have NODATA values in areas where surface interpolation is used.
+  \item When the base grid fits entirely within a specified active domain and the base grid does not touch the active domain, GRIDGEN excludes all cells. In this case, do not specify an active domain, and all cells will be included (\ghissue{53}).
+  \item GRIDGEN includes NODATA values in the surface interpolation when the ASCIIGRID option is used. Ensure that ASCIIGRID datasets do not have NODATA values in areas where surface interpolation is used (\ghissue{54}).
+  \item An ACTIVE\_DOMAIN LAYER record is ignored unless every layer above it also has an ACTIVE\_DOMAIN LAYER record, and no message is written (\ghissue{49}).
+  \item The keywords REFINE\_LEVEL\_BY\_ATTRIBUTE, HORIZONTAL\_SMOOTHING\_LEVEL, and VERTICAL\_SMOOTHING\_LEVEL documented in the GRIDGEN report are not recognized; the first stops GRIDGEN and the others are ignored. Use REFINEMENT\_LEVEL\_BY\_ATTRIBUTE, SMOOTHING\_LEVEL\_HORIZONTAL, and SMOOTHING\_LEVEL\_VERTICAL (\ghissue{52}).
+  \item A quadtree grid built with NODE\_NUMBERING = zero-based writes a tree structure file that later actions cannot read. Use the default one-based numbering (\ghissue{50}).
+  \item GRID\_TO\_USGDATA with a MODFLOW\_GRID, rather than a QUADTREE grid, computes incorrect horizontal connection areas and stops after writing the connection files (\ghissue{46}).
+  \item Corners shared by adjacent cells in grid shapefiles can differ in their last digits when cell sizes are not exactly representable in binary and coordinates are large (for example, UTM or state plane), so shared vertices must be matched with a tolerance. VTK files write point coordinates with six significant digits (\ghissue{40}).
+  \item Vertex elevations in shared-vertex VTK files (SHARE\_VERTEX = TRUE) can be incorrect where three cells meet and can change from run to run (\ghissue{45}).
+  \item Polygon intersection output lists cells in an order that can change from run to run; the cells and values are the same (\ghissue{51}).
   \item GRIDGEN writes a file with a ``.nod'' extension when a GRID\_TO\_USG block is executed. The first line in the .nod file has the number of cells and the number of connections. The number of connections does not include values for the node itself, and so this value does not directly correspond to the NJA value required by MODFLOW-USG. Instead, this value is equal to NJA - NODES.
 \end{itemize}
 
