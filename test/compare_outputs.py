@@ -52,6 +52,7 @@ SKIP_PATTERNS = (
     "grid03qtg*",
     "grid04qtg*",
     "*.py",
+    "__pycache__",
     "compare",
     "unit",
     "builddir",
@@ -88,16 +89,32 @@ def run_cases(exe, workdir):
     """Copy the inputs to workdir and run all cases with exe."""
     shutil.copytree(TEST_DIR, workdir, ignore=_ignore)
     for action, dfn in CASES:
+        before = _snapshot(workdir)
         result = subprocess.run(
             [str(exe), action, dfn],
             cwd=workdir,
             capture_output=True,
             text=True,
+            errors="replace",
         )
         if result.returncode != 0:
             print(result.stdout)
             print(result.stderr, file=sys.stderr)
             raise RuntimeError(f"{exe} {action} {dfn} failed ({result.returncode})")
+        # an action that exits 0 without writing anything did not run
+        if _snapshot(workdir) == before:
+            print(result.stdout)
+            raise RuntimeError(f"{exe} {action} {dfn} wrote no output")
+
+
+def _snapshot(workdir):
+    """Size and modification time of every file under workdir."""
+    snap = {}
+    for p in Path(workdir).rglob("*"):
+        if p.is_file():
+            st = p.stat()
+            snap[p] = (st.st_size, st.st_mtime_ns)
+    return snap
 
 
 def compare_dirs(dir0, dir1):
@@ -125,6 +142,9 @@ def main():
 
     exe = Path(args.exe).resolve()
     ref_exe = Path(args.ref_exe).resolve() if args.ref_exe else exe
+    for e in {exe, ref_exe}:
+        if not e.exists() and not e.with_suffix(".exe").exists():
+            parser.error(f"executable not found: {e}")
 
     root = args.keep if args.keep else Path(tempfile.mkdtemp(prefix="gridgen_"))
     if args.keep:

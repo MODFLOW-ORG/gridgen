@@ -56,9 +56,10 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   dispute are left for the maintainer to decide.
 - **Commit messages:** conventional commits (`fix:`, `feat:`, `refactor:`,
   `test:`, `docs:`, `ci:`, `chore:`).
-- **Output comparison:** CI requires every output file to match a build of
-  main byte for byte. A pull request that changes output on purpose gets the
-  `output-change` label and says what changed and why.
+- **Output comparison:** on pull requests, CI requires every output file to
+  match a build of the base branch byte for byte. A pull request that changes
+  output on purpose gets the `output-change` label and says what changed and
+  why.
 - **Known defects in tests:** a known defect is recorded as an entry in
   `KNOWN_UNSTABLE` (`test/compare_outputs.py`) or a `DISABLED_` unit test, with
   a comment naming its issue. The pull request that fixes the issue removes the

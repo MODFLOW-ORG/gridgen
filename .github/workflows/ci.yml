@@ -132,21 +132,24 @@ jobs:
         working-directory: ${{ env.PROGRAM_NAME }}
         run: pixi run test
 
-      - name: Checkout ${{ env.PROGRAM_NAME }} main for output comparison
+      # outputs are compared with the base branch on pull requests only; add the
+      # output-change label to a pull request that changes output intentionally
+      - name: Checkout ${{ env.PROGRAM_NAME }} base branch for output comparison
+        if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'output-change') }}
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.base_ref || 'main' }}
+          ref: ${{ github.base_ref }}
           path: ${{ env.PROGRAM_NAME }}-main
 
-      - name: Build ${{ env.PROGRAM_NAME }} main
+      - name: Build ${{ env.PROGRAM_NAME }} base branch
+        if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'output-change') }}
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
           pixi run setup-main
           pixi run build-main
 
-      # add the output-change label to a pull request that changes output intentionally
-      - name: Compare outputs with ${{ env.PROGRAM_NAME }} main
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'output-change') }}
+      - name: Compare outputs with ${{ env.PROGRAM_NAME }} base branch
+        if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'output-change') }}
         working-directory: ${{ env.PROGRAM_NAME }}
         run: pixi run compare-main
 
