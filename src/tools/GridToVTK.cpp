@@ -1260,7 +1260,9 @@ void interpolate_z(QuadTree3D* qtree, vector<VTK_V*>& vdata, vector<VTK_E*>& eda
 	for(vector<VTK_V*>::iterator vit = vtk_vertices.begin(); vit != vtk_vertices.end(); ++vit)
 	{
 		VTK_V* v = *vit;
+		//cells in the order found, the sets only skip duplicates
 		set<Box*> bset1, bset2;
+		vector<Box*> vb1, vb2;
 		vector<double> dvals1, dvals2;
 		vector<int> depth1, depth2;
 		//vector<double> zs;
@@ -1270,7 +1272,8 @@ void interpolate_z(QuadTree3D* qtree, vector<VTK_V*>& vdata, vector<VTK_E*>& eda
 			{
 				if(bset1.find(v->box[i]) == bset1.end())
 				{
-					bset1.insert(v->box[i]); dvals1.push_back(zbot[v->box[i]->number]);
+					bset1.insert(v->box[i]); vb1.push_back(v->box[i]);
+					dvals1.push_back(zbot[v->box[i]->number]);
 					depth1.push_back(v->box[i]->depth);
 				}
 				//zs.push_back(zbot[v->box[i]->number]);
@@ -1279,7 +1282,8 @@ void interpolate_z(QuadTree3D* qtree, vector<VTK_V*>& vdata, vector<VTK_E*>& eda
 			{
 				if(bset2.find(v->box[i + 4]) == bset2.end())
 				{
-					bset2.insert(v->box[i + 4]); dvals2.push_back(ztop[v->box[i + 4]->number]);
+					bset2.insert(v->box[i + 4]); vb2.push_back(v->box[i + 4]);
+					dvals2.push_back(ztop[v->box[i + 4]->number]);
 					depth2.push_back(v->box[i + 4]->depth);
 				}
 				//zs.push_back(ztop[v->box[i + 4]->number]);
@@ -1290,13 +1294,11 @@ void interpolate_z(QuadTree3D* qtree, vector<VTK_V*>& vdata, vector<VTK_E*>& eda
 		//1
 		if(bset1.size() > 0)
 		{
-			vector<Box*> vb1(bset1.begin(), bset1.end());
 			dt[0] = smooth_interpolate(dvals1, depth1, vb1, v->pos[0], v->pos[1]);
 		}
 		//2
 		if(bset2.size() > 0)
 		{
-			vector<Box*> vb2(bset2.begin(), bset2.end());
 			dt[1] = smooth_interpolate(dvals2, depth2, vb2, v->pos[0], v->pos[1]);
 		}
 

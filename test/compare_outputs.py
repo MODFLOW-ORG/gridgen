@@ -59,10 +59,8 @@ SKIP_PATTERNS = (
 )
 # output path prefixes that change from run to run; reported but not counted
 # as failures
-# - shared-vertex VTK elevations depend on set<Box*> (address) order (#45)
 # - polygon intersection cell order depends on set<Box*> order (#51)
 KNOWN_UNSTABLE = (
-    "output_vtkfiles/grid02qtgsv.vtu",
     "output_intersection/buffer_grid03qtg_lay2_intersect.",
 )
 
