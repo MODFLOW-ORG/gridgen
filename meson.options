@@ -1,0 +1,1 @@
+option('unit_tests', type: 'feature', value: 'auto', description: 'Build the GoogleTest unit tests')

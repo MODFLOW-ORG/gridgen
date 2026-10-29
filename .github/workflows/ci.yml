@@ -125,15 +125,28 @@ jobs:
           name: ${{ matrix.os }}-${{ matrix.compiler}}-${{ matrix.version }}-meson-log.txt
           path: ${{ env.PROGRAM_NAME }}/builddir/meson-logs/meson-log.txt
     
-      - name: Unit test ${{ env.PROGRAM_NAME }}
+      - name: Test ${{ env.PROGRAM_NAME }}
         if: success()
         working-directory: ${{ env.PROGRAM_NAME }}
+        run: pixi run test
+
+      - name: Checkout ${{ env.PROGRAM_NAME }} main for output comparison
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.base_ref || 'main' }}
+          path: ${{ env.PROGRAM_NAME }}-main
+
+      - name: Build ${{ env.PROGRAM_NAME }} main
+        working-directory: ${{ env.PROGRAM_NAME }}
         run: |
-          pixi run test-initial
-          pixi run test-write
-          pixi run test-shapefile
-          pixi run test-intersect
-          pixi run test-vtk
+          pixi run setup-main
+          pixi run build-main
+
+      # add the output-change label to a pull request that changes output intentionally
+      - name: Compare outputs with ${{ env.PROGRAM_NAME }} main
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'output-change') }}
+        working-directory: ${{ env.PROGRAM_NAME }}
+        run: pixi run compare-main
 
       - name: Create zip file on MacOS and Linux
         if: ${{ matrix.release == 'yes' && runner.os != 'Windows' }}

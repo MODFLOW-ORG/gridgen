@@ -51,3 +51,10 @@ test/output_usgdata/grid*
 test/output_intersection/c*
 test/output_shapefiles/grid*
 test/output_vtkfiles/grid*
+
+# meson subproject downloads
+subprojects/*
+!subprojects/*.wrap
+
+# regression comparison output
+test/compare/
