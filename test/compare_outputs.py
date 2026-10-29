@@ -127,8 +127,9 @@ def main():
     ref_exe = Path(args.ref_exe).resolve() if args.ref_exe else exe
 
     root = args.keep if args.keep else Path(tempfile.mkdtemp(prefix="gridgen_"))
-    if root.exists() and args.keep:
-        shutil.rmtree(root)
+    if args.keep:
+        for sub in ("ref", "test"):
+            shutil.rmtree(root / sub, ignore_errors=True)
     try:
         run_cases(ref_exe, root / "ref")
         run_cases(exe, root / "test")
@@ -138,7 +139,12 @@ def main():
             shutil.rmtree(root, ignore_errors=True)
 
     label = f"{exe} vs {ref_exe}" if args.ref_exe else f"{exe} run twice"
-    known = [d for d in diffs if d.split(": ", 1)[1].startswith(KNOWN_UNSTABLE)]
+    # a known unstable file may differ but must still exist in both runs
+    known = [
+        d
+        for d in diffs
+        if d.startswith("differs: ") and d.split(": ", 1)[1].startswith(KNOWN_UNSTABLE)
+    ]
     diffs = [d for d in diffs if d not in known]
     for d in known:
         print(f"known unstable output {d}")
@@ -148,7 +154,7 @@ def main():
             print(f"  {d}")
         return 1
     nsame = nfiles - len(known)
-    print(f"{nsame} of {nfiles} files identical ({label})")
+    print(f"{nsame} of {nfiles} files identical, {len(known)} known unstable ({label})")
     return 0
 
 

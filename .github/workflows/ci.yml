@@ -12,6 +12,8 @@ on:
       - '.github/dependabot.yml'
       - 'LICENSE'
   pull_request:
+    # labeled and unlabeled so the output-change label takes effect
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     branches:
       - main
       - develop
@@ -77,7 +79,7 @@ jobs:
         if: ${{ matrix.release == 'yes' && runner.os == 'Linux' }}
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
-          zip -r ${{ env.PROGRAM_NAME }}_source.zip meson.build src/ test/
+          zip -r ${{ env.PROGRAM_NAME }}_source.zip meson.build meson.options subprojects/*.wrap src/ test/
           ls -lha *.zip
 
       # static link gfortran libs

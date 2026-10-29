@@ -46,6 +46,8 @@ if python.found()
        args : [meson.current_source_dir()/'test'/'compare_outputs.py',
                '--exe', exe],
        timeout: 600)
+else
+  warning('Python not found; the determinism test is not defined')
 endif
 
 # smoke tests share the test directory, so they run serially in order
