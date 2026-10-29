@@ -29,7 +29,8 @@ endif
 add_global_arguments(cc.get_supported_arguments(compile_args), language: 'cpp')
 add_global_link_arguments(cc.get_supported_arguments(link_args), language: 'cpp')
 
-python = find_program('python3', 'python', required: false)
+# the python running meson, for the version suffix and the regression tests
+python = import('python').find_installation()
 
 subdir('src')
 

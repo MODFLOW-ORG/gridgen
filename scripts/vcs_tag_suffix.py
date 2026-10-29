@@ -2,10 +2,12 @@
 Print the suffix meson adds to the version of a development build.
 
 The suffix is '+shortsha', '+shortsha.dirty' with uncommitted changes, or
-empty when HEAD is a tag or git is not available.
+empty for a release version (no 'dev'), when HEAD is a tag, or when git is
+not available.
 """
 
 import subprocess
+import sys
 
 
 def get_suffix():
@@ -34,4 +36,5 @@ def get_suffix():
 
 
 if __name__ == "__main__":
-    print(get_suffix(), end="")
+    version = sys.argv[1] if len(sys.argv) > 1 else ""
+    print(get_suffix() if "dev" in version else "", end="")
