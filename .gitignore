@@ -62,3 +62,12 @@ subprojects/*
 
 # regression comparison output
 test/compare/
+
+# LaTeX build files
+doc/ReleaseNotes/*.aux
+doc/ReleaseNotes/*.fdb_latexmk
+doc/ReleaseNotes/*.fls
+doc/ReleaseNotes/*.log
+doc/ReleaseNotes/*.out
+doc/ReleaseNotes/*.toc
+doc/ReleaseNotes/ReleaseNotes.pdf
