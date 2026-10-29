@@ -1,4 +1,6 @@
 #include <ctype.h>
+#include <climits>
+#include <set>
 #include "def_struct.h"
 #include "ModflowGrid.h"
 #include "QuadTree3D.h"
@@ -8,6 +10,30 @@
 
 namespace cusg
 {
+
+//indices (zero based) of the layers named in "... layer n" records
+static set<int> named_layers(map<string, list<string> >& name_value_map)
+{
+    set<int> layers;
+    for(map<string, list<string> >::iterator r=name_value_map.begin();r!=name_value_map.end();r++)
+    {
+        size_t pos=r->first.rfind(" layer ");
+        if(pos==string::npos) continue;
+        long layer=strtol(r->first.c_str()+pos+7, NULL, 10);
+        if(layer>0 && layer<=INT_MAX) layers.insert((int)layer-1);
+    }
+    return layers;
+}
+
+//value of the "<name> layer <i+1>" record, or an empty list if there is none
+static list<string> layer_record(map<string, list<string> >& name_value_map, const char * name, int i)
+{
+    char layername[64];
+    sprintf(layername,"%s layer %d",name,i+1);
+    map<string, list<string> >::iterator r=name_value_map.find(layername);
+    if(r==name_value_map.end()) return list<string>();
+    return r->second;
+}
 
 /* ********************************************************************** */
 // skip blanks, tabs, line breaks and comment lines,
@@ -429,19 +455,15 @@ bool quadtree_grid_raw_data::parse()
 		return false;
 	}
 	
-    for(int i=0;;i++)
+    //read the surfaces of each layer named, independently of the other layers
+    set<int> layers=named_layers(name_value_map);
+    for(set<int>::iterator l=layers.begin();l!=layers.end();l++)
     {
-        char layername[36];
-        //
-        sprintf(layername,"top layer %d",i+1);
-        value=name_value_map[layername];
-        if(!value.empty()) top_str[i]=value;
-        //
-        sprintf(layername,"bottom layer %d",i+1);
-        value=name_value_map[layername];
-        if(!value.empty()) bot_str[i]=value;
-        else break;
-        //
+        int i=*l;
+        list<string> v=layer_record(name_value_map,"top",i);
+        if(!v.empty()) top_str[i]=v;
+        v=layer_record(name_value_map,"bottom",i);
+        if(!v.empty()) bot_str[i]=v;
     }
 
     return true;
@@ -726,56 +748,31 @@ bool quadtree_builder_raw_data::parse()
 	value=name_value_map["autoalignment"];
 	if(!value.empty()) auto_alignment=(tolower(value.front())=="true")?true:false;
 
-    //highest layer named in any "... layer n" record, so that each layer
-    //is read independently of the layers above it
-    int nlay_named=0;
-    for(map<string, list<string> >::iterator r=name_value_map.begin();r!=name_value_map.end();r++)
+    //read the records of each layer named, independently of the other layers
+    set<int> layers=named_layers(name_value_map);
+    for(set<int>::iterator l=layers.begin();l!=layers.end();l++)
     {
-        size_t pos=r->first.rfind(" layer ");
-        if(pos==string::npos) continue;
-        int layer=atoi(r->first.c_str()+pos+7);
-        if(layer>nlay_named) nlay_named=layer;
-    }
+        int i=*l;
+        list<string> v;
 
-    for(int i=0;i<nlay_named;i++)
-    {
-        char layername[64];
+        v=layer_record(name_value_map,"active_domain",i);
+        if(!v.empty()) active_domain_str[i]=v;
 
-        //active domain
-        sprintf(layername,"active_domain layer %d",i+1);
-        value=name_value_map[layername];
-        if(!value.empty()) active_domain_str[i]=value;
+        //refinement features, also allowed as refinement_features
+        v=layer_record(name_value_map,"refine_by_features",i);
+        if(v.empty()) v=layer_record(name_value_map,"refinement_features",i);
+        if(!v.empty()) refine_by_features_str[i]=v;
 
-        //get info about refinement features
-        sprintf(layername,"refine_by_features layer %d",i+1);
-        value=name_value_map[layername];
-        if(!value.empty()) refine_by_features_str[i]=value;
-        else //we also allow refinement_features
-        {
-            sprintf(layername,"refinement_features layer %d",i+1);
-            value=name_value_map[layername];
-            if(!value.empty()) refine_by_features_str[i]=value;
-        }
+        //refinement array, also allowed as refinement_array
+        v=layer_record(name_value_map,"refine_by_array",i);
+        if(v.empty()) v=layer_record(name_value_map,"refinement_array",i);
+        if(!v.empty()) refine_by_array_str[i]=v;
 
-        //get info about refinement array
-        sprintf(layername,"refine_by_array layer %d",i+1);
-        value=name_value_map[layername];
-        if(!value.empty()) refine_by_array_str[i]=value;
-        else
-        {
-            sprintf(layername,"refinement_array layer %d",i+1);
-            value=name_value_map[layername];
-            if(!value.empty()) refine_by_array_str[i]=value;
-        }
-
-        //surface array for each layer
-        sprintf(layername,"top layer %d",i+1);
-        value=name_value_map[layername];
-        if(!value.empty()) top_str[i]=value;
-
-        sprintf(layername,"bottom layer %d",i+1);
-        value=name_value_map[layername];
-        if(!value.empty()) bot_str[i]=value;
+        //surface arrays
+        v=layer_record(name_value_map,"top",i);
+        if(!v.empty()) top_str[i]=v;
+        v=layer_record(name_value_map,"bottom",i);
+        if(!v.empty()) bot_str[i]=v;
     }
 
     return true;

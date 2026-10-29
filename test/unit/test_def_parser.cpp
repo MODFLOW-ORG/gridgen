@@ -93,3 +93,41 @@ TEST(DefinitionParser, LayerRecordsReadIndependently)
     ASSERT_EQ(data->refine_by_features_str.count(2), 1u);
     EXPECT_EQ(data->refine_by_features_str[2].front(), "wells");
 }
+
+TEST(DefinitionParser, SurfaceRecordsAfterGapAreRead)
+{
+    // bottom and top records for layer 3 only, and an out-of-range layer
+    // number that must not be expanded into a loop over every layer
+    std::istringstream dfn(
+        "BEGIN QUADTREE_BUILDER qtb\n"
+        "  MODFLOW_GRID = mfg\n"
+        "  TOP LAYER 3 = REPLICATE mfg\n"
+        "  BOTTOM LAYER 3 = INTERPOLATE mfg\n"
+        "  ACTIVE_DOMAIN LAYER 99999999 = typo\n"
+        "  GRID_DEFINITION_FILE = qtg.dfn\n"
+        "END QUADTREE_BUILDER\n"
+        "BEGIN QUADTREE qtg\n"
+        "  MODFLOW_GRID = mfg\n"
+        "  STRUCTURE_FILE = OPEN/CLOSE qtg.tsf\n"
+        "  TOP LAYER 2 = CONSTANT 0.\n"
+        "  BOTTOM LAYER 2 = CONSTANT -10.\n"
+        "END QUADTREE\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+
+    quadtree_builder_raw_data * qtb =
+        dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+    ASSERT_NE(qtb, nullptr);
+    ASSERT_EQ(qtb->top_str.count(2), 1u);
+    ASSERT_EQ(qtb->bot_str.count(2), 1u);
+    EXPECT_EQ(qtb->bot_str[2].front(), "INTERPOLATE");
+    EXPECT_EQ(qtb->bot_str.count(0), 0u);
+    EXPECT_EQ(qtb->active_domain_str.size(), 1u);
+
+    quadtree_grid_raw_data * qtg =
+        dynamic_cast<quadtree_grid_raw_data *>(parser.getBlockData("qtg"));
+    ASSERT_NE(qtg, nullptr);
+    EXPECT_EQ(qtg->top_str.count(0), 0u);
+    ASSERT_EQ(qtg->top_str.count(1), 1u);
+    ASSERT_EQ(qtg->bot_str.count(1), 1u);
+}
