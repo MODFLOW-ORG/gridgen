@@ -42,7 +42,8 @@ TEST(GhostNode, RefinedCenterCell)
         EXPECT_TRUE(connected.count(std::make_pair((int)gn.nNum, (int)gn.j1)));
         EXPECT_TRUE(connected.count(std::make_pair((int)gn.nNum, (int)gn.j2)));
 
-        // current weights: half the offset of m from n over the n-j distance
+        // characterizes the current weights (half the offset of m from n over
+        // the n-j distance), which #42 reviews
         EXPECT_DOUBLE_EQ(gn.apha1, 0.125);
         EXPECT_DOUBLE_EQ(gn.apha2, 0.125);
     }

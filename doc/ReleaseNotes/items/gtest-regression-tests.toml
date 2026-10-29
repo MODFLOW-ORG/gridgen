@@ -1,3 +1,3 @@
 section = "internal"
 subsection = "build"
-description = "GRIDGEN now has GoogleTest unit tests and regression tests that run 22 cases and compare every output file byte for byte with the previous version and with a second run of the same build, on every compiler in the continuous integration matrix. Defects found by the new tests are listed as known issues until they are fixed."
+description = "GRIDGEN now has GoogleTest unit tests and regression tests that run 22 cases on every compiler in the continuous integration matrix. Every run checks that two runs of the same build give identical output, and pull requests also compare every output file byte for byte with the base branch. Defects found by the new tests are tracked as GitHub issues."
