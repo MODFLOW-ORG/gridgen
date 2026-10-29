@@ -7,7 +7,7 @@ request number (for example `active-domain-layer.toml`).
 ```toml
 section = "fixes"
 subsection = "input"
-description = "ACTIVE_DOMAIN LAYER n was ignored unless every lower layer also had one. Each layer's active domain is now read independently."
+description = "ACTIVE_DOMAIN LAYER n was ignored unless every layer above it also had one. Each layer's active domain is now read independently."
 ```
 
 - `section` and `subsection` must be keys in `../schema.toml`; `subsection` may

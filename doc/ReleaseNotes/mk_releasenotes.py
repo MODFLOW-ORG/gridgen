@@ -14,8 +14,19 @@ from pathlib import Path
 NOTES_DIR = Path(__file__).resolve().parent
 ITEMS_DIR = NOTES_DIR / "items"
 
-# characters that are special in LaTeX outside of `code`
-LATEX_ESCAPES = {"&": r"\&", "%": r"\%", "#": r"\#", "_": r"\_", "$": r"\$"}
+# characters that are special in LaTeX, in text and in `code`
+LATEX_ESCAPES = {
+    "\\": r"\textbackslash{}",
+    "{": r"\{",
+    "}": r"\}",
+    "~": r"\textasciitilde{}",
+    "^": r"\textasciicircum{}",
+    "&": r"\&",
+    "%": r"\%",
+    "#": r"\#",
+    "_": r"\_",
+    "$": r"\$",
+}
 
 
 def load_items(sections, subsections):
@@ -23,13 +34,20 @@ def load_items(sections, subsections):
     items, errors = [], []
     for path in sorted(ITEMS_DIR.glob("*.toml")):
         try:
-            item = tomllib.loads(path.read_text())
+            item = tomllib.loads(path.read_text(encoding="utf-8"))
         except tomllib.TOMLDecodeError as e:
             errors.append(f"{path.name}: invalid TOML: {e}")
             continue
-        for key in ("section", "description"):
+        bad_type = False
+        for key in ("section", "description", "subsection"):
             if key not in item:
-                errors.append(f"{path.name}: missing required key '{key}'")
+                if key != "subsection":
+                    errors.append(f"{path.name}: missing required key '{key}'")
+            elif not isinstance(item[key], str):
+                errors.append(f"{path.name}: '{key}' must be a string")
+                bad_type = True
+        if bad_type:
+            continue
         if item.get("section") not in sections:
             errors.append(f"{path.name}: invalid section '{item.get('section')}'")
         if item.get("subsection") and item["subsection"] not in subsections:
@@ -74,12 +92,12 @@ def render(sections, subsections, items):
 
 
 def main():
-    schema = tomllib.loads((NOTES_DIR / "schema.toml").read_text())
+    schema = tomllib.loads((NOTES_DIR / "schema.toml").read_text(encoding="utf-8"))
     sections, subsections = schema["sections"], schema.get("subsections", {})
     items = load_items(sections, subsections)
     tex = NOTES_DIR / "develop.tex"
     if items:
-        tex.write_text(render(sections, subsections, items))
+        tex.write_text(render(sections, subsections, items), encoding="utf-8")
         print(f"wrote {tex.name} from {len(items)} items")
     else:
         tex.unlink(missing_ok=True)

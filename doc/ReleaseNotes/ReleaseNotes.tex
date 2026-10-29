@@ -122,11 +122,11 @@ GRIDGEN is run from a command prompt or terminal by entering ``gridgen'' followe
 
 \section{Testing}
 
-The test problems are in the test directory of the source code. With the source code and the pixi package manager (\url{https://pixi.sh}), ``pixi run setup'' and ``pixi run build'' build GRIDGEN, and ``pixi run test'' then runs the test problems, unit tests, and a check that repeated runs produce identical output.
+The test problems are in the test directory of the source code. From the source code archive (gridgen\_source.zip), ``meson setup builddir -Dunit\_tests=enabled'', ``meson compile -C builddir'', and ``meson test -C builddir'' build GRIDGEN and run the test problems, unit tests, and a check that repeated runs produce identical output. In a clone of the GRIDGEN repository, the pixi package manager (\url{https://pixi.sh}) provides the same steps as ``pixi run setup'', ``pixi run build'', and ``pixi run test''.
 
 \section{Compiling}
 
-GRIDGEN is compiled with the Meson build system and a C++ compiler. From the root of the source code, ``pixi run setup'' and ``pixi run build'' configure the build and install the executable in the bin directory; the equivalent Meson commands can be used without pixi. However, the USGS cannot provide assistance to those compiling GRIDGEN.
+GRIDGEN is compiled with the Meson build system and a C++ compiler. From the root of the source code archive, ``meson setup builddir'' and ``meson compile -C builddir'' build the executable in builddir/src; in a clone of the repository, ``pixi run setup'' and ``pixi run build'' configure the build and install the executable in the bin directory. However, the USGS cannot provide assistance to those compiling GRIDGEN.
 
 \section{Test Problems}
 
@@ -143,7 +143,7 @@ The following test problems are in the test directory of the source code archive
   \item Getting started---The best way to get started with GRIDGEN is to run the Biscayne aquifer test problem (action01\_buildqtg.dfn through action05\_vtkfile.dfn in the test directory of gridgen\_source.zip). The test problem demonstrates the sequence of steps for generating a grid, intersecting the grid, and for writing grid shapefiles, MODFLOW-USG discretization input, and VTK files. The example files for GRIDGEN can then be used as a starting point for creating new applications.
   \item Vertical refinement considerations for MODFLOW-USG models---Testing with multi-layer models that have quad-based refinement has revealed oscillatory flow paths for some hydrogeologic conditions. These oscillatory flow paths are inconsistent with expected flow paths, and do not occur when the same horizontal grid is used for each layer. Use of a ghost-node correction in the vertical direction (which is not created by GRIDGEN Version 1.0.02; only horizontal ghost-node corrections are generated) can improve the simulated flows paths; however, the correction may not entirely remove the oscillations. For this reason, the current recommendation is to use the same horizontal grid for all of layers of a MODFLOW-USG model. This is achieved with GRIDGEN by listing the same set of refinement features for each model layer.
   \item For users of the PEST Groundwater Utilities, a grid specification file can be created from GRIDGEN output using the GRIDGEN2GSF program. GRIDGEN2GSF is included with the PEST Groundwater Utilities, available at: \url{http://www.pesthomepage.org/Groundwater_Utilities.php}
-  \item Connection count in the .nod file---GRIDGEN writes a file with a ``.nod'' extension when a GRID\_TO\_USG block is executed. The first line in the .nod file has the number of cells and the number of connections. The number of connections does not include values for the node itself, and so this value does not directly correspond to the NJA value required by MODFLOW-USG. Instead, this value is equal to NJA - NODES.
+  \item Connection count in the .nod file---GRIDGEN writes a file with a ``.nod'' extension when a GRID\_TO\_USGDATA block is executed. The first line in the .nod file has the number of cells and the number of connections. The number of connections does not include values for the node itself, and so this value does not directly correspond to the NJA value required by MODFLOW-USG. Instead, this value is equal to NJA - NODES.
 \end{enumerate}
 
 \section{Known Issues}
