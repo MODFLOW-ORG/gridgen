@@ -70,7 +70,7 @@
 \section*{Abstract}
 \addcontentsline{toc}{section}{Abstract}
 
-GRIDGEN is a computer program for creating layered quadtree grids for use with numerical models, such as the MODFLOW-USG program \citep{modflowusg} for simulation of groundwater flow. The program begins by reading a three-dimensional base grid, which can have variable row and column widths and spatially variable cell top and bottom elevations. From this base grid, GRIDGEN will continuously divide into four any cell intersecting user-provided refinement features (points, lines, and polygons) until the desired level of refinement is reached. GRIDGEN will then smooth, or balance, the grid so that no two adjacent cells, including overlying and underlying cells, differ by more than a user-specified level tolerance. Once these gridding processes are completed, GRIDGEN saves a tree structure file so that the layered quadtree grid can be quickly reconstructed as needed. Once a tree structure file has been created, GRIDGEN can then be used to (1) export the layered quadtree grid as a shapefile, (2) export grid connectivity and cell information as ASCII text files for use with MODFLOW-USG or other numerical models, and (3) intersect the grid with shapefiles of points, lines, or polygons, and save intersection output as ASCII text files and shapefiles. The GRIDGEN program is demonstrated by creating a layered quadtree grid for the Biscayne aquifer in Miami-Dade County, Florida, using hydrologic features to control where refinement is added.
+GRIDGEN is a computer program for creating layered quadtree grids for use with numerical models, such as the MODFLOW-USG program \citep{modflowusg} for simulation of groundwater flow. The program begins by reading a three-dimensional base grid, which can have variable row and column widths and spatially variable cell top and bottom elevations. From this base grid, GRIDGEN will continuously divide into four any cell intersecting user-provided refinement features (points, lines, and polygons) until the desired level of refinement is reached. GRIDGEN will then smooth, or balance, the grid so that no two adjacent cells, including overlying and underlying cells, differ by more than a user-specified level tolerance. Once these gridding processes are completed, GRIDGEN saves a tree structure file so that the layered quadtree grid can be quickly reconstructed as needed. Once a tree structure file has been created, GRIDGEN can then be used to (1) export the layered quadtree grid as a shapefile, (2) export grid connectivity and cell information as ASCII text files for use with MODFLOW-USG or other numerical models, and (3) intersect the grid with shapefiles of points, lines, or polygons, and save intersection output as ASCII text files and shapefiles. The GRIDGEN program is demonstrated by creating a layered quadtree grid for the Biscayne aquifer in Miami-Dade County, Florida, using hydrologic features to control where refinement is added. Layered quadtree grids created by GRIDGEN can also be used with MODFLOW~6 \citep{modflow6gwf}.
 
 \section{Introduction}
 
@@ -79,6 +79,8 @@ This is GRIDGEN Version \gridgenversion.\ifdevelopmode\ It is a development vers
 IMPORTANT: Users should review this document for a description of, and references for, this software. Users should also review the History section in this document, which describes changes that have been introduced into GRIDGEN with each official release; these changes may substantially affect users.
 
 Version numbers for GRIDGEN will follow a major.minor.revision format. The major number will be increased when there are substantial new changes that break backward compatibility. The minor number will be increased when important, but relatively minor new functionality is added. The revision number will be added when errors are corrected in either the program or input files.
+
+The arrays written by the GRID\_TO\_USGDATA block also define the unstructured discretization (DISU) input for MODFLOW~6. The connection direction (fldr) gives the connection type (IHC), and the connection lengths (c1 and c2) give CL12. The connection area (fahl) gives HWVA for a vertical connection; for a horizontal connection, HWVA is fahl divided by the average thickness of the two connected cells. A layered quadtree grid with the same horizontal grid in every layer can also be represented with the discretization by vertices (DISV) input, using cell vertices from the grid shapefile.
 
 Instructions for installation, execution, and testing of GRIDGEN are provided below.
 
@@ -98,7 +100,11 @@ The GRIDGEN report \citep{lien2015gridgen} documents the input and output of the
 
 There is no installation of GRIDGEN other than unzipping the archive for your operating system into a location where it can be accessed. To make GRIDGEN accessible from any directory, add the directory containing the executable to the PATH environment variable, and remove the directory of any prior GRIDGEN release from the PATH.
 
-GRIDGEN can also be installed with the get-modflow program distributed with FloPy, which downloads the executables for the current operating system.
+GRIDGEN can also be installed with the get-modflow program distributed with FloPy 3.12 or later, which downloads the executable for the current operating system from the latest GRIDGEN release:
+
+\begin{verbatim}
+get-modflow --repo gridgen /path/to/bin
+\end{verbatim}
 
 \section{History}
 
@@ -144,6 +150,7 @@ The following test problems are in the test directory of the source code archive
   \item Vertical refinement considerations for MODFLOW-USG models---Testing with multi-layer models that have quad-based refinement has revealed oscillatory flow paths for some hydrogeologic conditions. These oscillatory flow paths are inconsistent with expected flow paths, and do not occur when the same horizontal grid is used for each layer. Use of a ghost-node correction in the vertical direction (which is not created by GRIDGEN Version 1.0.02; only horizontal ghost-node corrections are generated) can improve the simulated flows paths; however, the correction may not entirely remove the oscillations. For this reason, the current recommendation is to use the same horizontal grid for all of layers of a MODFLOW-USG model. This is achieved with GRIDGEN by listing the same set of refinement features for each model layer.
   \item For users of the PEST Groundwater Utilities, a grid specification file can be created from GRIDGEN output using the GRIDGEN2GSF program. GRIDGEN2GSF is included with the PEST Groundwater Utilities, available at: \url{http://www.pesthomepage.org/Groundwater_Utilities.php}
   \item Connection count in the .nod file---GRIDGEN writes a file with a ``.nod'' extension when a GRID\_TO\_USGDATA block is executed. The first line in the .nod file has the number of cells and the number of connections. The number of connections does not include values for the node itself, and so this value does not directly correspond to the NJA value required by MODFLOW-USG. Instead, this value is equal to NJA - NODES.
+  \item Using GRIDGEN with FloPy---The Gridgen class of FloPy \citep{bakker2016flopy, hughes2023flopy} runs GRIDGEN and uses its output to create MODFLOW-USG input (\texttt{get\_disu}, \texttt{get\_gridprops\_disu5}, and \texttt{get\_gridprops\_gnc5}) and MODFLOW~6 input (\texttt{get\_gridprops\_disu6}, \texttt{get\_gridprops\_disv}, and \texttt{get\_gridprops\_gnc6}), and to intersect points, lines, and polygons with the grid (\texttt{intersect}).
 \end{enumerate}
 
 \section{Known Issues}

@@ -2,7 +2,8 @@
 
 Guidance for AI agents working in the GRIDGEN repository. Keep it short and
 current; when a command or convention changes, update this file in the same
-pull request.
+pull request. It points to the documents and files that hold a procedure
+rather than repeating them; follow those instead of re-deriving a command.
 
 ## Quick commands
 
@@ -10,7 +11,11 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 
 - **Configure the build directory:** `pixi run setup`
 - **Build** (installs to `bin/`): `pixi run build`
-- **Run the tests** (smoke, unit, and run-twice determinism): `pixi run test`
+- **Run the tests** (smoke, unit, and run-twice determinism): `pixi run test`;
+  it does not rebuild, so run `pixi run build` first
+- **Run one group of tests:** `pixi run test-unit` (also `test-initial`,
+  `test-write`, `test-shapefile`, `test-intersect`, `test-vtk`, and
+  `test-determinism`; see `pixi.toml`)
 - **Run one unit test:** `builddir/test/unit/unit_tests --gtest_filter='QuadTree.*'`
 - **Compare outputs with main** (needs a build of main at `../gridgen-main`,
   e.g. `git worktree add ../gridgen-main main`, then `pixi run setup-main`
@@ -68,10 +73,26 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   but not the author's conclusions, and post its findings as a `## Review`
   comment. Verify each finding before acting: fix the ones that hold and
   answer the rest with the reason in a `## Response` comment. Repeat until a
-  review has no actionable findings, at most three rounds; findings still in
-  dispute are left for the maintainer to decide.
+  review has no actionable findings, at most three rounds for code changes; a
+  pull request that changes only documentation (Markdown, `doc/`, comments)
+  gets one round, and its findings are addressed without another review.
+  Findings still in dispute are left for the maintainer to decide.
+- **Branching:** `origin` is a fork and `upstream` is `MODFLOW-ORG/gridgen`.
+  Cut each branch from an up-to-date `upstream/main`, and read `upstream`
+  refs, not `origin` refs, for the state of the repository.
 - **Commit messages:** conventional commits (`fix:`, `feat:`, `refactor:`,
-  `test:`, `docs:`, `ci:`, `chore:`).
+  `test:`, `docs:`, `ci:`, `chore:`), kept concise: an imperative, lowercase
+  subject and a body that contrasts the previous and new behavior.
+- **Testing scope:** rebuild, then run the unit tests or test group that
+  covers the change before the full `pixi run test`. Run
+  `pixi run compare-main` when a change can alter output.
+- **Formatting:** no formatter or linter runs in CI; match the layout and
+  naming of the surrounding code.
+- **Comments and documentation:** keep code comments and docstrings short,
+  stating what a function does; put the reason, when one is needed, in an
+  inline comment. Write the release notes for groundwater modelers rather
+  than programmers, in U.S. English, with one line per paragraph in the
+  LaTeX source.
 - **Output comparison:** on pull requests, CI requires every output file to
   match a build of the base branch byte for byte. A pull request that changes
   output on purpose gets the `output-change` label and says what changed and
@@ -86,7 +107,11 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   a comment naming its issue. The pull request that fixes the issue removes the
   entry or enables the test, and adds the tests listed in the issue.
 - **Generated files:** do not commit test outputs, `builddir/`, or
-  `subprojects/` downloads.
+  `subprojects/` downloads. Do not hand-edit a generated file; edit its
+  source and regenerate: `develop.tex` comes from the release note items
+  (`mk_releasenotes.py`), `gridgen_version.h` from `version.txt` (the
+  build), and the versions in `pixi.toml` and `version.tex` from
+  `pixi run update-version`.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
   or `LICENSE` skip the build and tests (`paths-ignore` in
   `.github/workflows/ci.yml`); update that list when adding non-code files.
