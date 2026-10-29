@@ -1,2 +1,2 @@
 [codespell]
-skip = *.pdf,*.bib,*.bst,*.log,*.dfn,*.asc,*.csv,*.shp,*.shx,*.dbf,*.prj,./.pixi,./builddir,./subprojects,./bin,./src,./test/unit,./doc/ReleaseNotes/previous,./doc/ReleaseNotes/Figures,./msvs,pixi.*
+skip = *.pdf,*.bst,*.log,*.aux,*.bbl,*.blg,*.out,*.toc,*.fls,*.fdb_latexmk,*.synctex.gz,*.asc,*.csv,*.shp,*.shx,*.dbf,*.prj,./.pixi,./builddir,./subprojects,./bin,./src,./test/unit,./test/output_*,./doc/ReleaseNotes/previous,./doc/ReleaseNotes/Figures,pixi.lock
