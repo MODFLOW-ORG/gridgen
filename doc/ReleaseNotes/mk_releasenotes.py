@@ -67,6 +67,9 @@ def to_latex(text):
         if is_code:
             part = part[1:-1]
         part = "".join(LATEX_ESCAPES.get(c, c) for c in part)
+        if not is_code:
+            # straight double quotes as opening and closing quotes
+            part = re.sub(r'"([^"]*)"', r"``\1''", part)
         out.append(r"\texttt{" + part + "}" if is_code else part)
     return "".join(out)
 
