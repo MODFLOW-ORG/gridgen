@@ -118,9 +118,10 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   build), and the versions in `pixi.toml` and `version.tex` from
   `pixi run update-version`.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
-  `LICENSE`, or the lint configuration skip the build and tests (`paths-ignore` in
-  `.github/workflows/ci.yml`); update that list when adding non-code files.
-  `lint.yml` runs `pixi run check-format` on every push and pull request.
+  `LICENSE`, or the lint configuration skip the build and tests
+  (`paths-ignore` in `.github/workflows/ci.yml`); update that list when adding
+  non-code files. `lint.yml` runs `pixi run check-format` on every push and on
+  pull requests to `main`.
   `release-notes.yml` builds the release notes on Ubuntu when
   `doc/ReleaseNotes/` changes and attaches the PDF to each GitHub release.
 - **Tone:** reserve compliments for genuinely exceptional finds or ideas.
