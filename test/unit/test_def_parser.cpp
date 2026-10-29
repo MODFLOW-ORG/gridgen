@@ -66,3 +66,30 @@ TEST(DefinitionParser, UnknownBlockIsNull)
     ASSERT_TRUE(parser.parse(dfn));
     EXPECT_EQ(parser.getBlockData("missing"), nullptr);
 }
+
+TEST(DefinitionParser, LayerRecordsReadIndependently)
+{
+    // an active domain on layer 2 only and refinement on layer 3 only, with
+    // no records for layer 1 (#49)
+    std::istringstream dfn(
+        "BEGIN QUADTREE_BUILDER qtb\n"
+        "  MODFLOW_GRID = mfg\n"
+        "  ACTIVE_DOMAIN LAYER 2 = domain\n"
+        "  REFINEMENT_FEATURES LAYER 3 = wells\n"
+        "  GRID_DEFINITION_FILE = qtg.dfn\n"
+        "END QUADTREE_BUILDER\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+
+    quadtree_builder_raw_data * data =
+        dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+    ASSERT_NE(data, nullptr);
+
+    EXPECT_EQ(data->active_domain_str.count(0), 0u);
+    ASSERT_EQ(data->active_domain_str.count(1), 1u);
+    EXPECT_EQ(data->active_domain_str[1].front(), "domain");
+    EXPECT_EQ(data->active_domain_str.count(2), 0u);
+
+    ASSERT_EQ(data->refine_by_features_str.count(2), 1u);
+    EXPECT_EQ(data->refine_by_features_str[2].front(), "wells");
+}

@@ -1,6 +1,5 @@
 # three layers refined differently, interpolated elevations, and an active
-# domain in layer 2 only (for vertical pass-through); the layer 2 domain is
-# ignored until #49 is fixed
+# domain in layer 2 only (for vertical pass-through)
 
 LOAD action01_buildqtg.dfn
 

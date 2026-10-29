@@ -726,20 +726,25 @@ bool quadtree_builder_raw_data::parse()
 	value=name_value_map["autoalignment"];
 	if(!value.empty()) auto_alignment=(tolower(value.front())=="true")?true:false;
 
-    //parsing active domain
-    for(int i=0;;i++)
+    //highest layer named in any "... layer n" record, so that each layer
+    //is read independently of the layers above it
+    int nlay_named=0;
+    for(map<string, list<string> >::iterator r=name_value_map.begin();r!=name_value_map.end();r++)
     {
-        char activename[64];
-        sprintf(activename,"active_domain layer %d",i+1);
-        value=name_value_map[activename];
-        if(!value.empty()) active_domain_str[i]=value;
-        else break;
+        size_t pos=r->first.rfind(" layer ");
+        if(pos==string::npos) continue;
+        int layer=atoi(r->first.c_str()+pos+7);
+        if(layer>nlay_named) nlay_named=layer;
     }
 
-    //parsing refinement stuff
-    for(int i=0;;i++)
+    for(int i=0;i<nlay_named;i++)
     {
         char layername[64];
+
+        //active domain
+        sprintf(layername,"active_domain layer %d",i+1);
+        value=name_value_map[layername];
+        if(!value.empty()) active_domain_str[i]=value;
 
         //get info about refinement features
         sprintf(layername,"refine_by_features layer %d",i+1);
@@ -747,35 +752,30 @@ bool quadtree_builder_raw_data::parse()
         if(!value.empty()) refine_by_features_str[i]=value;
         else //we also allow refinement_features
         {
-			//
-			sprintf(layername,"refinement_features layer %d",i+1);
-			value=name_value_map[layername];
-			if(!value.empty()) refine_by_features_str[i]=value;
+            sprintf(layername,"refinement_features layer %d",i+1);
+            value=name_value_map[layername];
+            if(!value.empty()) refine_by_features_str[i]=value;
         }
-        
+
         //get info about refinement array
         sprintf(layername,"refine_by_array layer %d",i+1);
         value=name_value_map[layername];
         if(!value.empty()) refine_by_array_str[i]=value;
         else
-		{
-			sprintf(layername,"refinement_array layer %d",i+1);
-			value=name_value_map[layername];
-			if(!value.empty()) refine_by_array_str[i]=value;        
+        {
+            sprintf(layername,"refinement_array layer %d",i+1);
+            value=name_value_map[layername];
+            if(!value.empty()) refine_by_array_str[i]=value;
         }
-        
+
         //surface array for each layer
         sprintf(layername,"top layer %d",i+1);
         value=name_value_map[layername];
         if(!value.empty()) top_str[i]=value;
-        //
+
         sprintf(layername,"bottom layer %d",i+1);
         value=name_value_map[layername];
-
-        //
         if(!value.empty()) bot_str[i]=value;
-        else break;
-        //
     }
 
     return true;

@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "input"
+description = "An ACTIVE_DOMAIN LAYER record in a QUADTREE_BUILDER block was ignored, without a message, unless every layer above it also had one; refinement features for a layer were also ignored when a layer above it had no BOTTOM LAYER record. Each layer's records are now read independently, so grids built with an active domain on a lower layer only can change."
