@@ -47,8 +47,12 @@ bin/
 # test output
 *.tsf
 test/grid02qtg*.dat
+test/grid03qtg*
+test/grid04qtg*
 test/output_usgdata/grid*
 test/output_intersection/c*
+test/output_intersection/wells_*
+test/output_intersection/buffer_*
 test/output_shapefiles/grid*
 test/output_vtkfiles/grid*
 

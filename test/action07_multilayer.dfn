@@ -1,0 +1,37 @@
+LOAD grid03qtg.dfn
+
+BEGIN GRID_TO_USGDATA grid03qtg-to-usgdata
+  GRID = grid03qtg
+  USG_DATA_PREFIX = output_usgdata/grid03qtg
+END GRID_TO_USGDATA
+
+BEGIN GRID_TO_USGDATA grid03qtg-to-usgdata-vp
+  GRID = grid03qtg
+  USG_DATA_PREFIX = output_usgdata/grid03qtg_vp
+  VERTICAL_PASS_THROUGH = True
+END GRID_TO_USGDATA
+
+BEGIN GRID_TO_SHAPEFILE grid03qtg-to-polyshapefile
+  GRID = grid03qtg
+  SHAPEFILE = output_shapefiles/grid03qtg
+  FEATURE_TYPE = polygon
+END GRID_TO_SHAPEFILE
+
+BEGIN GRID_INTERSECTION wells_grid03qtg_lay3_intersect
+  GRID = grid03qtg
+  LAYER = 3
+  SHAPEFILE = shapefiles/wells_points
+  FEATURE_TYPE = point
+  OUTPUT_FILE = output_intersection/wells_grid03qtg_lay3_intersect.ifo
+  ATTRIBUTES = ID LEVEL
+  OUTPUT_SHAPEFILE = output_intersection/wells_grid03qtg_lay3_intersect.shp
+END GRID_INTERSECTION
+
+BEGIN GRID_INTERSECTION buffer_grid03qtg_lay2_intersect
+  GRID = grid03qtg
+  LAYER = 2
+  SHAPEFILE = shapefiles/wells_1000m_buffer_Multipart
+  FEATURE_TYPE = polygon
+  OUTPUT_FILE = output_intersection/buffer_grid03qtg_lay2_intersect.ifo
+  OUTPUT_SHAPEFILE = output_intersection/buffer_grid03qtg_lay2_intersect.shp
+END GRID_INTERSECTION

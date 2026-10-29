@@ -30,13 +30,40 @@ CASES = (
     ("grid01mfg-to-vtkfile", "action05_vtkfile.dfn"),
     ("grid02qtg-to-vtkfile", "action05_vtkfile.dfn"),
     ("grid02qtg-to-vtkfilesv", "action05_vtkfile.dfn"),
+    # three layers, point refinement by attribute, interpolated elevations
+    ("buildqtg_multilayer", "action06_buildqtg_multilayer.dfn"),
+    ("grid03qtg-to-usgdata", "action07_multilayer.dfn"),
+    ("grid03qtg-to-usgdata-vp", "action07_multilayer.dfn"),
+    ("grid03qtg-to-polyshapefile", "action07_multilayer.dfn"),
+    ("wells_grid03qtg_lay3_intersect", "action07_multilayer.dfn"),
+    ("buffer_grid03qtg_lay2_intersect", "action07_multilayer.dfn"),
+    # rotated grid with cell sizes that are not exact in binary
+    ("buildqtg_rotated", "action08_buildqtg_rotated.dfn"),
+    ("grid04qtg-to-usgdata", "action09_rotated.dfn"),
+    ("grid04qtg-to-polyshapefile", "action09_rotated.dfn"),
+    ("grid04qtg-to-vtkfile", "action09_rotated.dfn"),
+    ("canal_grid04qtg_lay1_intersect", "action09_rotated.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
-SKIP_PATTERNS = ("*.tsf", "grid02qtg*.dat", "*.py", "compare", "unit", "builddir")
-# outputs that change from run to run; reported but not counted as failures
+SKIP_PATTERNS = (
+    "*.tsf",
+    "grid02qtg*.dat",
+    "grid03qtg*",
+    "grid04qtg*",
+    "*.py",
+    "compare",
+    "unit",
+    "builddir",
+)
+# output path prefixes that change from run to run; reported but not counted
+# as failures
 # - shared-vertex VTK elevations depend on set<Box*> (address) order (#45)
-KNOWN_UNSTABLE = ("output_vtkfiles/grid02qtgsv.vtu",)
+# - polygon intersection cell order depends on set<Box*> order (#51)
+KNOWN_UNSTABLE = (
+    "output_vtkfiles/grid02qtgsv.vtu",
+    "output_intersection/buffer_grid03qtg_lay2_intersect.",
+)
 
 OUTPUT_DIRS = (
     "output_intersection",
@@ -111,7 +138,7 @@ def main():
             shutil.rmtree(root, ignore_errors=True)
 
     label = f"{exe} vs {ref_exe}" if args.ref_exe else f"{exe} run twice"
-    known = [d for d in diffs if d.endswith(KNOWN_UNSTABLE)]
+    known = [d for d in diffs if d.split(": ", 1)[1].startswith(KNOWN_UNSTABLE)]
     diffs = [d for d in diffs if d not in known]
     for d in known:
         print(f"known unstable output {d}")

@@ -1,0 +1,27 @@
+LOAD grid04qtg.dfn
+
+BEGIN GRID_TO_USGDATA grid04qtg-to-usgdata
+  GRID = grid04qtg
+  USG_DATA_PREFIX = output_usgdata/grid04qtg
+END GRID_TO_USGDATA
+
+BEGIN GRID_TO_SHAPEFILE grid04qtg-to-polyshapefile
+  GRID = grid04qtg
+  SHAPEFILE = output_shapefiles/grid04qtg
+  FEATURE_TYPE = polygon
+END GRID_TO_SHAPEFILE
+
+BEGIN GRID_TO_VTKFILE grid04qtg-to-vtkfile
+  GRID = grid04qtg
+  VTKFILE = output_vtkfiles/grid04qtg
+  SHARE_VERTEX = False
+END GRID_TO_VTKFILE
+
+BEGIN GRID_INTERSECTION canal_grid04qtg_lay1_intersect
+  GRID = grid04qtg
+  LAYER = 1
+  SHAPEFILE = shapefiles/MD_Canals_50m_v2
+  FEATURE_TYPE = line
+  OUTPUT_FILE = output_intersection/canal_grid04qtg_lay1_intersect.ifo
+  OUTPUT_SHAPEFILE = output_intersection/canal_grid04qtg_lay1_intersect.shp
+END GRID_INTERSECTION

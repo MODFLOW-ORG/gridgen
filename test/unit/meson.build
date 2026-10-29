@@ -4,6 +4,7 @@ unit_sources = files(
     'test_ghostnode.cpp',
     'test_modflowgrid.cpp',
     'test_quadtree.cpp',
+    'test_quadtree_io.cpp',
 )
 
 unit_exe = executable(
