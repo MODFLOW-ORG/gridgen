@@ -16,6 +16,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   e.g. `git worktree add ../gridgen-main main`, then `pixi run setup-main`
   and `pixi run build-main`): `pixi run compare-main`
 - **Show the OS tag used for release archives:** `pixi run get-ostag`
+- **Build the release notes** (needs TeX Live and the USGS class from
+  `MODFLOW-ORG/usgslatex`): `pixi run build-release-notes`
 
 ## Repository orientation
 
@@ -69,4 +71,6 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
   or `LICENSE` skip the build and tests (`paths-ignore` in
   `.github/workflows/ci.yml`); update that list when adding non-code files.
+  `release-notes.yml` builds the release notes on Ubuntu when
+  `doc/ReleaseNotes/` changes and attaches the PDF to each GitHub release.
 - **Tone:** reserve compliments for genuinely exceptional finds or ideas.
