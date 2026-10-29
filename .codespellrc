@@ -1,0 +1,2 @@
+[codespell]
+skip = *.pdf,*.bib,*.bst,*.log,*.dfn,*.asc,*.csv,*.shp,*.shx,*.dbf,*.prj,./.pixi,./builddir,./subprojects,./bin,./src,./test/unit,./doc/ReleaseNotes/previous,./doc/ReleaseNotes/Figures,./msvs,pixi.*

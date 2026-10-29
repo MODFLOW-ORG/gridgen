@@ -7,8 +7,8 @@ run-to-run differences. Both runs use the inputs in this directory.
 """
 
 import argparse
-import fnmatch
 import filecmp
+import fnmatch
 import shutil
 import subprocess
 import sys

@@ -1,0 +1,28 @@
+name: gridgen lint
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  PIXI_BETA_WARNING_OFF: true
+jobs:
+  lint:
+    name: Check Python format, lint, and spelling
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout gridgen
+        uses: actions/checkout@v5
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.11.2
+        with:
+          pixi-version: v0.82.1
+
+      - name: Check format, lint, and spelling
+        run: pixi run check-format

@@ -11,6 +11,9 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/dependabot.yml'
       - 'LICENSE'
+      - 'ruff.toml'
+      - '.codespellrc'
+      - '.github/workflows/lint.yml'
   pull_request:
     # labeled and unlabeled so the output-change label takes effect
     types: [opened, synchronize, reopened, labeled, unlabeled]
@@ -23,6 +26,9 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/dependabot.yml'
       - 'LICENSE'
+      - 'ruff.toml'
+      - '.codespellrc'
+      - '.github/workflows/lint.yml'
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
