@@ -81,7 +81,7 @@ jobs:
           xcrun --show-sdk-version
           ld -v 2>&1 | head -2
           $CXX --version | head -1
-          
+
       - name: Setup pixi
         uses: prefix-dev/setup-pixi@v0.11.2
         with:
@@ -115,7 +115,8 @@ jobs:
           mv $libpath/libquadmath.0.dylib $libpath/libquadmath.0.dylib.bak
           mv $libpath/libstdc++.6.dylib $libpath/libstdc++.6.dylib.bak
 
-      # static link libgcc and keep the release running on macOS 14
+      # static link libgcc and keep the release running on macOS 14; the
+      # linker warns that the Homebrew libstdc++.a was built for macOS 15
       - name: Set LDFLAGS (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -138,7 +139,12 @@ jobs:
             echo "error: gridgen dynamically links gcc runtime libraries"
             exit 1
           fi
-          otool -l gridgen | grep -A4 LC_BUILD_VERSION
+          minos=$(otool -l gridgen | awk '/LC_BUILD_VERSION/{f=1} f&&/minos/{print $2; exit}')
+          echo "minimum macOS version: $minos"
+          if [[ "$minos" != "$MACOSX_DEPLOYMENT_TARGET" ]]; then
+            echo "error: gridgen requires macOS $minos, not $MACOSX_DEPLOYMENT_TARGET"
+            exit 1
+          fi
           lipo -info gridgen
 
       - name: Show build log
