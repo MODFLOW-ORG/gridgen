@@ -34,11 +34,15 @@ public:
 	block_raw_data * getBlockData(const string& name) { return  m_blocks[name];}
 	map<string, block_raw_data *>& getBlockData() { return m_blocks; }
 
+	//warnings for records that a block does not recognize
+	const list<string>& getWarnings() const { return m_warnings; }
+
 protected:
     
     typedef map<string, block_raw_data*(*)(block_raw_data& block)> BLOCK_TYPE_MAP;
     BLOCK_TYPE_MAP m_block_type_map;
     map<string, block_raw_data *> m_blocks;
+    list<string> m_warnings;
 };
 
 

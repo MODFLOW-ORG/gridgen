@@ -1,7 +1,88 @@
 #include "def_parser.h"
 
+#include <cctype>
+#include <set>
+
 namespace cusg
 {
+
+//records accepted in each block type; a record given for a layer is listed
+//as "<name> layer", and both the report and the code spellings are listed
+static const map<string, set<string> >& block_records()
+{
+    static map<string, set<string> > records;
+    if(!records.empty()) return records;
+
+    const char * modflow_grid[] = {"rotation_angle", "x_offset", "y_offset",
+        "length_unit", "nlay", "nrow", "ncol", "delr", "delc", "top",
+        "bottom layer", NULL};
+    const char * quadtree[] = {"modflow_grid", "structure_file", "top layer",
+        "bottom layer", NULL};
+    const char * quadtree_builder[] = {"modflow_grid", "grid_definition_file",
+        "refinement_features layer", "refine_by_features layer",
+        "refinement_array layer", "refine_by_array layer",
+        "active_domain layer", "smoothing", "horizontal_smoothing_level",
+        "smoothing_level_horizontal", "vertical_smoothing_level",
+        "smoothing_level_vertical", "max_smoothing_level_target", "top layer",
+        "bottom layer", "autoalignment", "node_numbering", NULL};
+    const char * refinement_features[] = {"shapefile", "feature_type",
+        "refinement_level", "refine_level_by_attribute",
+        "refinement_level_by_attribute", NULL};
+    const char * active_domain[] = {"shapefile", "feature_type",
+        "include_boundary", NULL};
+    const char * grid_to_shapefile[] = {"grid", "shapefile", "feature_type",
+        "node_numbering", "without_inactive", "concide", NULL};
+    const char * grid_to_usgdata[] = {"grid", "usg_data_prefix",
+        "vertical_pass_through", NULL};
+    const char * grid_to_vtkfile[] = {"grid", "vtkfile", "share_vertex",
+        "node_numbering", "without_inactive", NULL};
+    const char * grid_intersection[] = {"grid", "layer", "shapefile",
+        "feature_type", "output_file", "output_shapefile", "output_vtkfile",
+        "attributes", NULL};
+
+    struct { const char * type; const char ** names; } blocks[] = {
+        {"modflow_grid", modflow_grid}, {"quadtree", quadtree},
+        {"quadtree_builder", quadtree_builder},
+        {"refinement_features", refinement_features},
+        {"active_domain", active_domain},
+        {"grid_to_shapefile", grid_to_shapefile},
+        {"grid_to_usgdata", grid_to_usgdata},
+        {"grid_to_vtkfile", grid_to_vtkfile},
+        {"grid_intersection", grid_intersection}};
+    for(size_t b=0;b<sizeof(blocks)/sizeof(blocks[0]);b++)
+    {
+        set<string>& known=records[blocks[b].type];
+        for(const char ** n=blocks[b].names;*n!=NULL;n++) known.insert(*n);
+    }
+    return records;
+}
+
+static string upper(string s)
+{
+    for(size_t i=0;i<s.size();i++) s[i]=(char)toupper((unsigned char)s[i]);
+    return s;
+}
+
+//a warning for each record in block that its block type does not accept
+static list<string> unrecognized_records(const block_raw_data& block)
+{
+    list<string> warnings;
+    const map<string, set<string> >& records=block_records();
+    map<string, set<string> >::const_iterator known=records.find(block.type);
+    if(known==records.end()) return warnings;
+
+    for(block_raw_data::const_iterator e=block.begin();e!=block.end();e++)
+    {
+        //a record given for a layer is matched without its layer number
+        string name=e->name;
+        size_t pos=name.rfind(" layer ");
+        if(pos!=string::npos) name=name.substr(0,pos+6);
+        if(known->second.count(name)) continue;
+        warnings.push_back("record "+upper(e->name)+" is not recognized in "
+            +upper(block.type)+" block "+block.name+" and is ignored");
+    }
+    return warnings;
+}
 
 
 //template<typename T> block_raw_data* createBlockType(block_raw_data& block) { return new T(block); }
@@ -115,6 +196,10 @@ bool DefinitionParser::parse(istream& in, string folder)
         //create block data with specific type
         if(m_block_type_map.find(block.type)!=m_block_type_map.end())
         {
+            list<string> warnings=unrecognized_records(block);
+            for(list<string>::iterator w=warnings.begin();w!=warnings.end();w++)
+                cerr<<"! Warning: "<<*w<<endl;
+            m_warnings.splice(m_warnings.end(),warnings);
             block_raw_data * ptr_block=m_block_type_map[block.type](block);
             if(ptr_block!=NULL)
             {

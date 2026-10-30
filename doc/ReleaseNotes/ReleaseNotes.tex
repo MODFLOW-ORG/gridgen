@@ -160,7 +160,6 @@ The following defects are known in this version. Each is tracked as an issue on 
 \begin{itemize}
   \item When the base grid fits entirely within a specified active domain and the base grid does not touch the active domain, GRIDGEN excludes all cells. In this case, do not specify an active domain, and all cells will be included (\ghissue{53}).
   \item GRIDGEN includes NODATA values in the surface interpolation when the ASCIIGRID option is used. Ensure that ASCIIGRID datasets do not have NODATA values in areas where surface interpolation is used (\ghissue{54}).
-  \item The keywords REFINE\_LEVEL\_BY\_ATTRIBUTE, HORIZONTAL\_SMOOTHING\_LEVEL, and VERTICAL\_SMOOTHING\_LEVEL documented in the GRIDGEN report are not recognized; the first stops GRIDGEN and the others are ignored. Use REFINEMENT\_LEVEL\_BY\_ATTRIBUTE, SMOOTHING\_LEVEL\_HORIZONTAL, and SMOOTHING\_LEVEL\_VERTICAL (\ghissue{52}).
   \item Corners shared by adjacent cells in grid shapefiles can differ in their last digits when cell sizes are not exactly representable in binary and coordinates are large (for example, UTM or state plane), so shared vertices must be matched with a tolerance. VTK files write point coordinates with six significant digits (\ghissue{40}).
 \end{itemize}
 
