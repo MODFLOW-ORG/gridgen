@@ -51,6 +51,7 @@ test/grid03qtg*
 test/grid04qtg*
 test/grid05qtg*
 test/grid06qtg*
+test/grid07qtg*
 test/output_usgdata/grid*
 test/output_intersection/c*
 test/output_intersection/wells_*
