@@ -1372,7 +1372,7 @@ namespace cusg
 	void QuadTree3D::sortareabyconid(const list<pair<int, int> >& connectionlist, vector<double>& area)
 	{
 		typedef list< pair<int,int> >::const_iterator CIT;
-		vector<pair<int, float> > sorted_area_list;
+		vector<pair<int, double> > sorted_area_list;
 		vector<double>::iterator fit = area.begin();
 		for(CIT ic = connectionlist.begin(); ic != connectionlist.end(); ++ic, ++fit)
 		{

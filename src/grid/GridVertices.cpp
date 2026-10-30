@@ -1,5 +1,6 @@
 #include "GridVertices.h"
 
+#include <cassert>
 #include <cmath>
 
 #include "ModflowGrid.h"

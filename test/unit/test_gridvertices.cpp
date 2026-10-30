@@ -329,6 +329,49 @@ TEST(Precision, ConnectionLengthsAreDouble)
     delete mfgrid;
 }
 
+TEST(SharedVertices, LineShapefileEndsAreGridCorners)
+{
+    QuadTree3D * qtree = make_refined(17.3 * PI_DOUBLE / 180.0);
+    GridVertices gv(qtree);
+    std::set<std::pair<double, double>> corners;
+    for (const Point2d & p : gv.vertices())
+        corners.insert(std::make_pair(p[0], p[1]));
+
+    std::string shp = ::testing::TempDir() + "gridgen_lines.shp";
+    writeQuadtree2Shp(qtree, shp, "line");
+    std::vector<std::pair<double, double>> xy = read_shp_vertices(shp);
+    ASSERT_FALSE(xy.empty());
+    for (const std::pair<double, double> & p : xy)
+        EXPECT_EQ(corners.count(p), 1u)
+            << "line end (" << p.first << ", " << p.second << ")";
+    delete qtree;
+}
+
+TEST(Precision, PassThroughAreasAreDouble)
+{
+    // the center cell of layer 2 is inactive, so with pass-through the
+    // center cells of layers 1 and 3 connect over the full cell area
+    QuadTree3D * qtree =
+        make_qtree(make_mfgrid(3, 3, 3, 812.7 / 16, 793.3 / 16), {});
+    ModflowGrid * mfgrid = qtree->getModflowGrid();
+    qtree->nodegroup[mfgrid->get_nodeid(1, 1, 1)]->active = false;
+    qtree->number_nodes();
+    qtree->refresh();
+    qtree->vertical_pass_through = true;
+
+    CSRData csr = qtree->get_usg_csr_data();
+    int nvert = 0;
+    for (int ipos = 0; ipos < csr.nja; ipos++)
+    {
+        if (std::abs(csr.fldr[ipos]) != 3) continue;
+        EXPECT_DOUBLE_EQ(csr.fahl[ipos], (812.7 / 16) * (793.3 / 16));
+        nvert++;
+    }
+    EXPECT_GT(nvert, 0);
+    csr.destory();
+    delete qtree;
+}
+
 TEST(Precision, VtkPointsAreGridCorners)
 {
     for (double angle : {0.0, 17.3 * PI_DOUBLE / 180.0})

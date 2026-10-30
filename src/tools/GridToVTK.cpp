@@ -1418,6 +1418,8 @@ void write_vtu_file(QuadTree3D* qtree, vector<VTK_V*>& vdata, vector<VTK_E*>& ed
 	for(vector<VTK_V*>::iterator vit = vtk_vertices.begin(); vit != vtk_vertices.end(); ++vit)
 	{
 		VTK_V* sv = *vit;
+		//points and cells both come from the active leaves
+		assert(world.count(sv));
 		const Point2d& xy = world[sv];
 
 		ofile<<round_trip(xy[0])<<"\t"<<round_trip(xy[1])<<"\t"<<round_trip(sv->pos[2] * ZSCALE)<<"\t";
