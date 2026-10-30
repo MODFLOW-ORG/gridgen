@@ -1,0 +1,16 @@
+# zero-based node numbering, read back from the tree structure file
+
+LOAD action01_buildqtg.dfn
+
+BEGIN QUADTREE_BUILDER buildqtg_zerobased
+  MODFLOW_GRID = grid01mfg
+  ACTIVE_DOMAIN LAYER 1 = my_active_domain
+  REFINEMENT_FEATURES LAYER 1 = MD_Canals chd_line well_buffer
+  SMOOTHING = full
+  SMOOTHING_LEVEL_HORIZONTAL = 1
+  SMOOTHING_LEVEL_VERTICAL = 1
+  NODE_NUMBERING = zero-based
+  GRID_DEFINITION_FILE = grid05qtg.dfn
+  TOP LAYER 1 = REPLICATE grid01mfg
+  BOTTOM LAYER 1 = REPLICATE grid01mfg
+END QUADTREE_BUILDER

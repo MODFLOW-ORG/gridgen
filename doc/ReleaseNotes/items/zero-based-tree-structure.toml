@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "gridding"
+description = "A quadtree grid built with NODE_NUMBERING = zero-based wrote a tree structure file that later actions could not read. The file now uses the one-based (layer, row, column) identifiers and quadrant numbers 1 to 4 described in the GRIDGEN report, whatever the node numbering. Grids read from the file keep zero-based numbering in the USG data, ghost node, and shapefile output. The node numbers in a zero-based tree structure file are unchanged, and output for grids built with the default one-based numbering is unchanged."

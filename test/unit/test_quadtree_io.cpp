@@ -130,6 +130,7 @@ TEST(QuadTreeIO, TreeStructureFileRoundTrip)
     qtree->set_one_based_node_numbering(true);
     QuadTree3D * rebuilt = round_trip(qtree, "gridgen_unit_roundtrip.tsf");
     ASSERT_NE(rebuilt, nullptr);
+    EXPECT_TRUE(rebuilt->get_one_based_node_numbering());
 
     CSRData a = qtree->get_usg_csr_data();
     CSRData b = rebuilt->get_usg_csr_data();
@@ -138,15 +139,14 @@ TEST(QuadTreeIO, TreeStructureFileRoundTrip)
     b.destory();
 }
 
-// disabled: a zero-based quadtree writes zero-based layer, row, and column
-// indices, which the reader cannot read back (#50)
-TEST(QuadTreeIO, DISABLED_TreeStructureFileRoundTripZeroBased)
+TEST(QuadTreeIO, TreeStructureFileRoundTripZeroBased)
 {
+    // the numbering is read back from the file (#50)
     QuadTree3D * qtree = make_refined();
     QuadTree3D * rebuilt = round_trip(qtree, "gridgen_unit_roundtrip0.tsf");
     ASSERT_NE(rebuilt, nullptr);
+    EXPECT_FALSE(rebuilt->get_one_based_node_numbering());
 
-    rebuilt->set_one_based_node_numbering(false);
     CSRData a = qtree->get_usg_csr_data();
     CSRData b = rebuilt->get_usg_csr_data();
     expect_csr_equal(a, b);
