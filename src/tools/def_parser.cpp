@@ -63,12 +63,13 @@ static string upper(string s)
     return s;
 }
 
-//warn about each record in block that its block type does not accept
-static void warn_unrecognized_records(const block_raw_data& block)
+//a warning for each record in block that its block type does not accept
+static list<string> unrecognized_records(const block_raw_data& block)
 {
+    list<string> warnings;
     const map<string, set<string> >& records=block_records();
     map<string, set<string> >::const_iterator known=records.find(block.type);
-    if(known==records.end()) return;
+    if(known==records.end()) return warnings;
 
     for(block_raw_data::const_iterator e=block.begin();e!=block.end();e++)
     {
@@ -77,9 +78,10 @@ static void warn_unrecognized_records(const block_raw_data& block)
         size_t pos=name.rfind(" layer ");
         if(pos!=string::npos) name=name.substr(0,pos+6);
         if(known->second.count(name)) continue;
-        cerr<<"! Warning: record "<<upper(e->name)<<" is not recognized in "
-            <<upper(block.type)<<" block "<<block.name<<" and is ignored"<<endl;
+        warnings.push_back("record "+upper(e->name)+" is not recognized in "
+            +upper(block.type)+" block "+block.name+" and is ignored");
     }
+    return warnings;
 }
 
 
@@ -194,7 +196,10 @@ bool DefinitionParser::parse(istream& in, string folder)
         //create block data with specific type
         if(m_block_type_map.find(block.type)!=m_block_type_map.end())
         {
-            warn_unrecognized_records(block);
+            list<string> warnings=unrecognized_records(block);
+            for(list<string>::iterator w=warnings.begin();w!=warnings.end();w++)
+                cerr<<"! Warning: "<<*w<<endl;
+            m_warnings.splice(m_warnings.end(),warnings);
             block_raw_data * ptr_block=m_block_type_map[block.type](block);
             if(ptr_block!=NULL)
             {

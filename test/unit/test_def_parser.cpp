@@ -1,4 +1,5 @@
 // Definition file parsing
+#include <list>
 #include <sstream>
 #include <string>
 
@@ -243,15 +244,14 @@ TEST(DefinitionParser, UnrecognizedRecordIsReported)
 {
     // a misspelled record is reported, and accepted records are not (#52)
     DefinitionParser parser;
-    testing::internal::CaptureStderr();
     parse_builder(parser, "  SMOOTHING = full\n"
                           "  TOP LAYER 1 = REPLICATE mfg\n"
                           "  REFINEMENT_FEATURES LAYER 2 = wells\n"
                           "  HORIZONTAL_SMOOTHING_LEVLE = 2\n");
-    std::string err = testing::internal::GetCapturedStderr();
-    EXPECT_NE(err.find("HORIZONTAL_SMOOTHING_LEVLE"), std::string::npos) << err;
-    EXPECT_EQ(err.find("SMOOTHING ="), std::string::npos) << err;
-    EXPECT_EQ(err.find("TOP LAYER"), std::string::npos) << err;
-    EXPECT_EQ(err.find("REFINEMENT_FEATURES"), std::string::npos) << err;
-    EXPECT_EQ(err.find("not recognized"), err.rfind("not recognized")) << err;
+    const std::list<std::string> & warnings = parser.getWarnings();
+    ASSERT_EQ(warnings.size(), 1u);
+    EXPECT_NE(warnings.front().find("HORIZONTAL_SMOOTHING_LEVLE"), std::string::npos)
+        << warnings.front();
+    EXPECT_NE(warnings.front().find("QUADTREE_BUILDER block qtb"), std::string::npos)
+        << warnings.front();
 }
