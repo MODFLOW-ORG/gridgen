@@ -374,7 +374,8 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
     GridVertices gv(qtree);
 
     // the northeast leaf's upper-right corner is the far grid corner, with
-    // the edges summed west to east and south to north
+    // the edges summed west to east and south to north; compared to 4 ulps,
+    // since a compiler may fuse the multiply-adds of either expression
     double xl = 0.0, yl = 0.0;
     for (int c = 0; c < 4; c++) xl += delr[c];
     for (int r = 2; r >= 0; r--) yl += delc[r];
@@ -383,8 +384,8 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
     ASSERT_FALSE(ne->isLeaf);
     while (!ne->isLeaf) ne = ne->pChildren[1];
     const Point2d & p = gv.vertices()[gv.corners(ne)[1]];
-    EXPECT_EQ(p[0], XOFF + (xl * std::cos(t) - yl * std::sin(t)));
-    EXPECT_EQ(p[1], YOFF + (xl * std::sin(t) + yl * std::cos(t)));
+    EXPECT_DOUBLE_EQ(p[0], XOFF + (xl * std::cos(t) - yl * std::sin(t)));
+    EXPECT_DOUBLE_EQ(p[1], YOFF + (xl * std::sin(t) + yl * std::cos(t)));
 
     // and every corner is one vertex
     std::map<std::pair<long long, long long>, std::set<int>> groups;
