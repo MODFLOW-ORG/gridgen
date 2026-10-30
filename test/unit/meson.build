@@ -1,4 +1,5 @@
 unit_sources = files(
+    'test_asciigrid.cpp',
     'test_box.cpp',
     'test_def_parser.cpp',
     'test_griddomain.cpp',

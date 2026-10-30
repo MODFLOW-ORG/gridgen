@@ -1,0 +1,21 @@
+# layer 2 bottom from an ASCII grid that is NODATA outside the active domain
+
+LOAD action06_buildqtg_multilayer.dfn
+
+BEGIN QUADTREE_BUILDER buildqtg_nodata
+  MODFLOW_GRID = grid03mfg
+  ACTIVE_DOMAIN LAYER 2 = my_active_domain
+  REFINEMENT_FEATURES LAYER 1 = MD_Canals chd_line wells_points
+  REFINEMENT_FEATURES LAYER 2 = well_buffer
+  REFINEMENT_FEATURES LAYER 3 = wells_points
+  SMOOTHING = full
+  SMOOTHING_LEVEL_HORIZONTAL = 1
+  SMOOTHING_LEVEL_VERTICAL = 1
+  GRID_DEFINITION_FILE = grid07qtg.dfn
+  TOP LAYER 1 = INTERPOLATE grid03mfg
+  BOTTOM LAYER 1 = ASCIIGRID layer1_bottom.asc
+  TOP LAYER 2 = REPLICATE grid03mfg
+  BOTTOM LAYER 2 = ASCIIGRID layer2_bottom_nodata.asc
+  TOP LAYER 3 = REPLICATE grid03mfg
+  BOTTOM LAYER 3 = REPLICATE grid03mfg
+END QUADTREE_BUILDER

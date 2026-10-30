@@ -1728,6 +1728,15 @@ namespace cusg
 		return bilinear_interpolation(pt, &ag);
 	}
 
+	//value, or stop with an error if it is the nodata value of ag
+	static double require_valid(double value, ascii_grid * ag, const Point2d& center, Box * box, const string & arcinfo_filename)
+	{
+		if(ag->isvalid(value)) return value;
+		cerr<<"! Error: ASCII grid "<<arcinfo_filename<<" has no valid value for the layer "
+		    <<box->layer+1<<" cell centered at ("<<center[0]<<", "<<center[1]<<")"<<endl;
+		exit(1);
+	}
+
 	//linear interploation the value of the center of the box
 	double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_filename, bool useAreaWeighted)
 	{
@@ -1748,21 +1757,21 @@ namespace cusg
 			m_str2ag[arcinfo_filename]=ag=aag;
 		}
 
+		//rotate box center if the grid is rotated...
+		Point2d center;
+		{
+			double cx, cy, rotation;
+			getModflowGrid()->getRotatePara(cx, cy, rotation);
+			double rx,ry;
+			box->rotateCtr(cx,cy,rotation,rx,ry);
+			center.set(rx,ry);
+		}
+
 		//#if 0
 		if(!useAreaWeighted)
 		{
-			//rotate box center if the grid is rotated...
-			Point2d pt;
-			{
-				double cx, cy, rotation;
-				getModflowGrid()->getRotatePara(cx, cy, rotation);
-				double rx,ry;
-				box->rotateCtr(cx,cy,rotation,rx,ry);
-				pt.set(rx,ry);
-			}
-
 			//interpolate here
-			return bilinear_interpolation(pt, ag);
+			return require_valid(bilinear_interpolation(center, ag), ag, center, box, arcinfo_filename);
 		}
 		//#endif 
 		//
@@ -1800,7 +1809,8 @@ namespace cusg
 			dminx = max(0, dminx); dmaxx = min((int)(ag->getncols() - 1), dmaxx);
 			dminy = max(0, dminy); dmaxy = min((int)(ag->getnrows() - 1), dmaxy);
 
-			double val = 0.0, totalArea = 0.0;
+			//nodata cells are left out of the average
+			double val = 0.0, totalArea = 0.0, nodataArea = 0.0;
 			for(int ix = dminx; ix <= dmaxx; ix++)
 			{
 				for(int iy = dminy; iy <= dmaxy; iy++)
@@ -1809,11 +1819,21 @@ namespace cusg
 					double area = intersectTwoBox(corners[0], corners[1], corners[2], corners[3], 
 						min(cell.x - cell.dx/2, cell.x + cell.dx/2), max(cell.x - cell.dx/2, cell.x + cell.dx/2), 
 						min(cell.y - cell.dy/2, cell.y + cell.dy/2), max(cell.y - cell.dy/2, cell.y + cell.dy/2));
-					val += area * ag->getvalue(iy, ix);
+					double value = ag->getvalue(iy, ix);
+					if(!ag->isvalid(value))
+					{
+						nodataArea += area;
+						continue;
+					}
+					val += area * value;
 
 					totalArea += area;
 				}
 			}
+
+			//a cell that lies only over nodata cells has no value
+			if(totalArea < 1e-6 && nodataArea >= 1e-6)
+				return require_valid(ag->getNoDATA_value(), ag, center, box, arcinfo_filename);
 
 			//if(totalArea != fabs(box->dx * box->dy))
 			//{
@@ -1826,14 +1846,8 @@ namespace cusg
 
 			if(totalArea < 1e-6)
 			{
-				Point2d pt;
-				double cx, cy, rotation;
-				getModflowGrid()->getRotatePara(cx, cy, rotation);
-				double rx,ry;
-				box->rotateCtr(cx,cy,rotation,rx,ry);
-				pt.set(rx,ry);
 				//interpolate here
-				return bilinear_interpolation(pt, ag);
+				return require_valid(bilinear_interpolation(center, ag), ag, center, box, arcinfo_filename);
 			}
 			else
 				return val = val / totalArea;

@@ -53,6 +53,8 @@ CASES = (
     ("grid05qtg-to-vtkfile", "action11_zerobased.dfn"),
     # an active domain that encloses the whole grid
     ("buildqtg_enclosing", "action12_buildqtg_enclosing.dfn"),
+    # an ASCII grid with NODATA values outside the active domain
+    ("buildqtg_nodata", "action13_buildqtg_nodata.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
@@ -63,6 +65,7 @@ SKIP_PATTERNS = (
     "grid04qtg*",
     "grid05qtg*",
     "grid06qtg*",
+    "grid07qtg*",
     "*.py",
     "__pycache__",
     "compare",
