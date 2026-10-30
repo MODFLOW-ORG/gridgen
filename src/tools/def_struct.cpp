@@ -573,10 +573,13 @@ Grid * quadtree_grid_raw_data::build()
 void quadtree_grid_raw_data::fillQuadTree3D()
 {
 	int count = 0;
+	bool zero_based = false;
 	for (vector<TreeStructNode>::iterator nite = allNodes.begin(); nite != allNodes.end(); ++nite, count++)
 	{
 
 		TreeStructNode& tmpNode = *nite;
+		//an active cell numbered 0 means the grid was built with zero-based numbering
+		if(tmpNode.number==0) zero_based = true;
 		int layerNum = tmpNode.layer - 1;
 		int row = tmpNode.row - 1;
 		int col = tmpNode.col - 1;
@@ -660,6 +663,8 @@ void quadtree_grid_raw_data::fillQuadTree3D()
 		}
 	}
 	//cout<<"total node number "<<count<<endl;
+
+	qtree_grid->set_one_based_node_numbering(!zero_based);
 
 	//refresh the tree to get the new node id array
 	qtree_grid->refresh();

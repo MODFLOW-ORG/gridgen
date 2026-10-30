@@ -46,6 +46,11 @@ CASES = (
     ("grid04qtg-to-polyshapefile", "action09_rotated.dfn"),
     ("grid04qtg-to-vtkfile", "action09_rotated.dfn"),
     ("canal_grid04qtg_lay1_intersect", "action09_rotated.dfn"),
+    # zero-based node numbering, read back from the tree structure file
+    ("buildqtg_zerobased", "action10_buildqtg_zerobased.dfn"),
+    ("grid05qtg-to-usgdata", "action11_zerobased.dfn"),
+    ("grid05qtg-to-polyshapefile", "action11_zerobased.dfn"),
+    ("grid05qtg-to-vtkfile", "action11_zerobased.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
@@ -54,6 +59,7 @@ SKIP_PATTERNS = (
     "grid02qtg*.dat",
     "grid03qtg*",
     "grid04qtg*",
+    "grid05qtg*",
     "*.py",
     "__pycache__",
     "compare",

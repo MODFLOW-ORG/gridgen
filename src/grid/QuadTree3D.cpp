@@ -1647,8 +1647,8 @@ namespace cusg
 				case 2: i=3; break;
 				case 3: i=2; break;
 				}
-				if(one_based_numbering) sprintf(tmp,"%d",x+1);
-				else sprintf(tmp,"%d",x);
+				//quadrants are numbered 1 to 4 whatever the node numbering
+				sprintf(tmp,"%d",x+1);
 				string mylocation=location+tmp;
 				DFSprint(out,box->pChildren[i],id,extra,mylocation,one_based_numbering);
 			}//end for i
@@ -1698,7 +1698,8 @@ namespace cusg
 				{
 					int bid=mfgrid->get_nodeid(l,r,c);
 					Box * box=grid.nodegroup[bid];
-					sprintf(extra,"(%d,%d,%d)",l+id_offset,r+id_offset,c+id_offset);
+					//layer, row, and column are one based whatever the node numbering
+					sprintf(extra,"(%d,%d,%d)",l+1,r+1,c+1);
 					string extra_str=extra;
 					string location;
 					DFSprint(out,box,id,extra_str,location,grid.one_based_node_numbering);
