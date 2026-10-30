@@ -122,3 +122,39 @@ TEST(AsciiGrid, CellBeyondGridTakesEdgeValue)
         for (int n = 0; n < qtree->nodes(); n++) EXPECT_DOUBLE_EQ(bot[n], 10.0) << n;
     }
 }
+
+TEST(AsciiGrid, AverageCoversCellThatIsNotSquare)
+{
+    // ASCII values are the column number plus 1, plus 10 times the row number
+    // from the top, so a cell covering whole 10 m ASCII cells averages to
+    // x / 10 + 55.5 - y at its center; checked for cells taller than wide and
+    // wider than tall (#73)
+    std::string path = testing::TempDir() + "gridgen_unit_xy.asc";
+    {
+        std::ofstream out(path.c_str());
+        out << "ncols 6\nnrows 6\nxllcorner 0.0\nyllcorner 0.0\ncellsize 10.0\n"
+            << "NODATA_value -9999\n";
+        for (int r = 0; r < 6; r++)
+        {
+            for (int c = 0; c < 6; c++) out << c + 1 + 10 * r << (c < 5 ? " " : "\n");
+        }
+    }
+    struct Shape
+    {
+        int nrow, ncol;
+        double delr, delc;
+    };
+    for (const Shape & s : {Shape{3, 6, 10.0, 20.0}, Shape{6, 3, 20.0, 10.0}})
+    {
+        SCOPED_TRACE("delr " + std::to_string(s.delr) + ", delc " + std::to_string(s.delc));
+        QuadTree3D * qtree = make_qtree(make_mfgrid(1, s.nrow, s.ncol, s.delr, s.delc), {});
+        qtree->setBotOperators(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR);
+        qtree->setBotSource(0, path);
+        double * bot = qtree->get_bot();
+        for (int n = 0; n < qtree->nodes(); n++)
+        {
+            Box * b = qtree->get_nodeobj(n);
+            EXPECT_NEAR(bot[n], b->x / 10.0 + 55.5 - b->y, 1e-9) << "cell " << n;
+        }
+    }
+}

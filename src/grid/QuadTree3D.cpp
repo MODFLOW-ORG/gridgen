@@ -1788,7 +1788,7 @@ namespace cusg
 			Point2d corners[4];
 			corners[0].set(min(box->x - box->dx/2, box->x + box->dx/2), min(box->y - box->dy/2, box->y + box->dy/2));
 			corners[1].set(max(box->x - box->dx/2, box->x + box->dx/2), min(box->y - box->dy/2, box->y + box->dy/2));
-			corners[2].set(max(box->x - box->dx/2, box->x + box->dy/2), max(box->y - box->dy/2, box->y + box->dy/2));
+			corners[2].set(max(box->x - box->dx/2, box->x + box->dx/2), max(box->y - box->dy/2, box->y + box->dy/2));
 			corners[3].set(min(box->x - box->dx/2, box->x + box->dx/2), max(box->y - box->dy/2, box->y + box->dy/2));
 
 			int dminx = ag->getncols() + 1, dmaxx = -1, dminy = ag->getnrows() + 1, dmaxy = -1;
