@@ -1,4 +1,4 @@
-# layer 2 bottom from an ASCII grid that is NODATA outside the active domain
+# layer 2 bottom from an ASCII grid with NODATA cells under parts of active cells
 
 LOAD action06_buildqtg_multilayer.dfn
 
