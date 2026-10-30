@@ -101,3 +101,24 @@ TEST(AsciiGrid, CellOverOnlyNodataIsAnError)
         EXPECT_EXIT(qtree->get_bot(), testing::ExitedWithCode(1), "");
     }
 }
+
+TEST(AsciiGrid, CellBeyondGridTakesEdgeValue)
+{
+    // an ASCII grid covering x 0 to 30 of the 60 m grid; cells beyond it take
+    // the value at its edge rather than the nodata value or an error (#54)
+    std::string path = testing::TempDir() + "gridgen_unit_half.asc";
+    {
+        std::ofstream out(path.c_str());
+        out << "ncols 3\nnrows 6\nxllcorner 0.0\nyllcorner 0.0\ncellsize 10.0\n"
+            << "NODATA_value -9999\n";
+        for (int r = 0; r < 6; r++) out << "10 10 10\n";
+    }
+    for (bool area_weighted : {true, false})
+    {
+        SCOPED_TRACE(area_weighted ? "area weighted" : "bilinear");
+        QuadTree3D * qtree = qtree_over(path);
+        qtree->setBotAreaWeighted(0, area_weighted);
+        double * bot = qtree->get_bot();
+        for (int n = 0; n < qtree->nodes(); n++) EXPECT_DOUBLE_EQ(bot[n], 10.0) << n;
+    }
+}
