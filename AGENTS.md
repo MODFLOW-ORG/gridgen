@@ -88,6 +88,11 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Testing scope:** rebuild, then run the unit tests or test group that
   covers the change before the full `pixi run test`. Run
   `pixi run compare-main` when a change can alter output.
+- **Error output in unit tests:** do not assert on captured stderr;
+  `testing::internal::CaptureStderr()` returns nothing on the Windows Intel
+  build. Have the code under test record what it reports (as
+  `DefinitionParser::getWarnings()` does), and check a death test by its
+  exit code (`EXPECT_EXIT(..., testing::ExitedWithCode(1), "")`).
 - **Formatting:** run `pixi run check-format` before committing Python;
   ruff (`ruff.toml`) formats and lints it, and codespell (`.codespellrc`)
   checks spelling in the text files other than the C++ source, data files,
