@@ -59,6 +59,35 @@ TEST(AsciiGrid, NodataIsLeftOutOfInterpolation)
     }
 }
 
+TEST(AsciiGrid, NodataAreaIsLeftOutOfAverage)
+{
+    // the top left 15 m cell overlaps ASCII cells (row 0, column 0) by 100 m2
+    // and (0, 1), (1, 0), and (1, 1) by 50, 50, and 25 m2; with values equal
+    // to the column number plus 1 and (1, 1) nodata, the average over the
+    // valid area is (100 * 1 + 50 * 2 + 50 * 1) / 200 = 1.25 (#54)
+    std::string path = testing::TempDir() + "gridgen_unit_nodata_weights.asc";
+    {
+        std::ofstream out(path.c_str());
+        out << "ncols 6\nnrows 6\nxllcorner 0.0\nyllcorner 0.0\ncellsize 10.0\n"
+            << "NODATA_value -9999\n";
+        for (int r = 0; r < 6; r++)
+        {
+            for (int c = 0; c < 6; c++)
+            {
+                if (r == 1 && c == 1) out << "-9999";
+                else out << c + 1;
+                out << (c < 5 ? " " : "\n");
+            }
+        }
+    }
+    QuadTree3D * qtree = qtree_over(path);
+    double * bot = qtree->get_bot();
+    Box * b = qtree->get_nodeobj(0);
+    ASSERT_DOUBLE_EQ(b->x, 7.5);
+    ASSERT_DOUBLE_EQ(b->y, 52.5);
+    EXPECT_DOUBLE_EQ(bot[0], 1.25);
+}
+
 TEST(AsciiGrid, CellOverOnlyNodataIsAnError)
 {
     // the cell from x 15 to 30 and y 30 to 45 lies inside the nodata block

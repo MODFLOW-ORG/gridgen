@@ -1728,13 +1728,19 @@ namespace cusg
 		return bilinear_interpolation(pt, &ag);
 	}
 
-	//value, or stop with an error if it is the nodata value of ag
-	static double require_valid(double value, ascii_grid * ag, const Point2d& center, Box * box, const string & arcinfo_filename)
+	//stop with an error for a cell that has no valid value in the ASCII grid
+	static void nodata_error(const Point2d& center, Box * box, const string & arcinfo_filename)
 	{
-		if(ag->isvalid(value)) return value;
 		cerr<<"! Error: ASCII grid "<<arcinfo_filename<<" has no valid value for the layer "
 		    <<box->layer+1<<" cell centered at ("<<center[0]<<", "<<center[1]<<")"<<endl;
 		exit(1);
+	}
+
+	//value, or stop with an error if it is the nodata value of ag
+	static double require_valid(double value, ascii_grid * ag, const Point2d& center, Box * box, const string & arcinfo_filename)
+	{
+		if(!ag->isvalid(value)) nodata_error(center, box, arcinfo_filename);
+		return value;
 	}
 
 	//linear interploation the value of the center of the box
@@ -1833,7 +1839,7 @@ namespace cusg
 
 			//a cell that lies only over nodata cells has no value
 			if(totalArea < 1e-6 && nodataArea >= 1e-6)
-				return require_valid(ag->getNoDATA_value(), ag, center, box, arcinfo_filename);
+				nodata_error(center, box, arcinfo_filename);
 
 			//if(totalArea != fabs(box->dx * box->dy))
 			//{
