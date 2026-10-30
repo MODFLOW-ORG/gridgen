@@ -153,3 +153,49 @@ TEST(QuadTreeIO, TreeStructureFileRoundTripZeroBased)
     a.destory();
     b.destory();
 }
+
+TEST(QuadTreeIO, TreeStructureFileIdentifiersAreOneBased)
+{
+    // the (layer, row, column) identifiers and quadrant numbers follow the
+    // report whatever the node numbering; only the node numbers differ (#50)
+    QuadTree3D * qtree = make_refined();
+    std::ostringstream zero;
+    zero << *qtree;
+    qtree->set_one_based_node_numbering(true);
+    std::ostringstream one;
+    one << *qtree;
+
+    std::istringstream zin(zero.str());
+    std::istringstream oin(one.str());
+    std::string zline, oline;
+    std::getline(zin, zline);
+    std::getline(oin, oline);
+    ASSERT_EQ(zline, oline);
+
+    int first_active = -1;
+    while (std::getline(zin, zline) && std::getline(oin, oline))
+    {
+        SCOPED_TRACE(zline);
+        std::size_t zcomma = zline.find(',');
+        std::size_t ocomma = oline.find(',');
+        ASSERT_NE(zcomma, std::string::npos);
+        EXPECT_EQ(zline.substr(zcomma), oline.substr(ocomma));
+
+        int number = std::stoi(zline.substr(0, zcomma));
+        if (number >= 0 && first_active < 0) first_active = number;
+
+        int lay = 0, row = 0, col = 0;
+        char code[32] = "";
+        int nread = std::sscanf(zline.c_str() + zcomma, ", (%d,%d,%d) %31s", &lay,
+                                &row, &col, code);
+        ASSERT_GE(nread, 3);
+        EXPECT_GE(lay, 1);
+        EXPECT_GE(row, 1);
+        EXPECT_GE(col, 1);
+        for (const char * c = code; *c; c++)
+        {
+            EXPECT_TRUE(*c >= '1' && *c <= '4') << "quadrant " << *c;
+        }
+    }
+    EXPECT_EQ(first_active, 0);
+}
