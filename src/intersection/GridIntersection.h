@@ -245,6 +245,15 @@ namespace cusg
 		bool clip_line(ModflowGrid2D * grid, const LineSeg2d& line, LineSeg2d& clipped_line);
 		bool clip_line(QuadTree3D * grid, const LineSeg2d& line, LineSeg2d& clipped_line);
 
+		//center of the grid, in the coordinates of clip_line
+		Point2d grid_center(ModflowGrid2D * grid);
+		Point2d grid_center(QuadTree3D * grid);
+
+		//cells of the whole layer if the polygon encloses the grid, when no
+		//polygon edge crosses it
+		template<typename T, typename P> void enclose_grid
+			(T * grid, const P& polygon, set<Box*>& visited, list<Box*>& enclosed_intersection);
+
 		//utility functions
 		int checkNeighbor(Box* b1, Box* b2);
 		//check box edge collinearly intersect with line
@@ -398,7 +407,13 @@ namespace cusg
 		}
 		while(ptr!=ply.getHead());
 
-		if(visited.empty()) return false;
+		//no edge crosses the grid, so the polygon encloses all of the layer or none of it
+		if(visited.empty())
+		{
+			enclose_grid(grid,ply,visited,enclosed_intersection);
+			backup.swap(m_intersection);
+			return !enclosed_intersection.empty();
+		}
 
 		//get all enclosed cells
 		list<Box*> open=bd_intersection;
@@ -453,6 +468,22 @@ namespace cusg
 	}
 
 
+	template<typename T, typename P> void GridIntersection::enclose_grid
+		(T * grid, const P& polygon, set<Box*>& visited, list<Box*>& enclosed_intersection)
+	{
+		Point2d center=grid_center(grid);
+		if(!intersect(center,polygon)) return;
+
+		//flood the layer from the cell at the center
+		vector<Box*> found;
+		found.swap(m_intersection);
+		bool r=intersect(grid,center);
+		found.swap(m_intersection);
+		if(!r || found.empty()) return;
+		visited.insert(found.back());
+		floodGrid(found.back(),visited,enclosed_intersection);
+	}
+
 	//intersection a Grid with a polygon..
 	template<typename T> bool GridIntersection::intersect
 		(T * grid, const c_polygon& polygon, list<Box*>& bd_intersection, list<Box*>& enclosed_intersection)
@@ -502,7 +533,13 @@ namespace cusg
 			while(ptr!=ply.getHead());
 		}
 
-		if(visited.empty()) return false;
+		//no edge crosses the grid, so the polygon encloses all of the layer or none of it
+		if(visited.empty())
+		{
+			enclose_grid(grid,polygon,visited,enclosed_intersection);
+			backup.swap(m_intersection);
+			return !enclosed_intersection.empty();
+		}
 
 		//get all enclosed cells
 		list<Box*> open=bd_intersection;

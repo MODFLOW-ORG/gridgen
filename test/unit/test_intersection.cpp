@@ -22,8 +22,9 @@ struct XY
     double y;
 };
 
-// cells intersected by a square polygon with the vertices in the order given
-std::vector<Box *> intersect_square(QuadTree3D * qtree, const std::vector<XY> & vertices)
+// cells intersected by a polygon with the vertices in the order given
+template <typename T>
+std::vector<Box *> intersect_square(T * grid, const std::vector<XY> & vertices)
 {
     c_ply ply(c_ply::POUT);
     ply.beginPoly();
@@ -34,10 +35,24 @@ std::vector<Box *> intersect_square(QuadTree3D * qtree, const std::vector<XY> & 
     polygon.buildBoxAndCenter();
 
     GridIntersection gi(0, 0);
-    EXPECT_TRUE(gi.intersect(qtree, polygon));
+    gi.intersect(grid, polygon);
     std::vector<Box *> cells = gi.getIntersections();
     polygon.destroy();
     return cells;
+}
+
+// a square from lo to hi in x and y
+std::vector<XY> square(double lo, double hi)
+{
+    return {{hi, lo}, {hi, hi}, {lo, hi}, {lo, lo}};
+}
+
+// every cell appears once in cells, and there are ncells of them
+void expect_each_cell_once(const std::vector<Box *> & cells, std::size_t ncells)
+{
+    std::set<Box *> unique(cells.begin(), cells.end());
+    EXPECT_EQ(unique.size(), cells.size());
+    EXPECT_EQ(cells.size(), ncells);
 }
 
 bool contains(const Box * b, const XY & p)
@@ -72,4 +87,20 @@ TEST(GridIntersection, PolygonCellsStartAtFirstVertex)
         first_cells.insert(cells.front());
     }
     EXPECT_EQ(first_cells.size(), square.size());
+}
+
+TEST(GridIntersection, PolygonEnclosingGridSelectsEveryCell)
+{
+    // a polygon around the whole grid, with no edge crossing it, selects
+    // every cell, and one beside the grid selects none (#53)
+    ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+    expect_each_cell_once(intersect_square(mfgrid, square(-50.0, 150.0)), 100);
+    EXPECT_TRUE(intersect_square(mfgrid, square(200.0, 300.0)).empty());
+
+    QuadTree3D * qtree = make_qtree(make_mfgrid(1, 10, 10, 10.0, 10.0),
+                                    {{55.0, 55.0, 2, 0}}, true);
+    std::size_t nodes = static_cast<std::size_t>(qtree->nodes());
+    ASSERT_GT(nodes, 100u);
+    expect_each_cell_once(intersect_square(qtree, square(-50.0, 150.0)), nodes);
+    EXPECT_TRUE(intersect_square(qtree, square(200.0, 300.0)).empty());
 }

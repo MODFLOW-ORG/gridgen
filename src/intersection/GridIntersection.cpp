@@ -372,6 +372,16 @@ namespace cusg
 		return clip_line((ModflowGrid2D *)grid->getModflowGrid(),line,clipped_line);
 	}
 
+	Point2d GridIntersection::grid_center(ModflowGrid2D * grid)
+	{
+		return Point2d(grid->xoffset + grid->width / 2, grid->yoffset + grid->height / 2);
+	}
+
+	Point2d GridIntersection::grid_center(QuadTree3D * grid)
+	{
+		return grid_center((ModflowGrid2D *)grid->getModflowGrid());
+	}
+
 	void GridIntersection::bracket_to_box_boundary(Box & box, Point2d& out, Point2d& in) const
 	{
 		//make sure that in point is in and out point is out of box

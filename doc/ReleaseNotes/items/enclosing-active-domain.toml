@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "gridding"
+description = "An ACTIVE_DOMAIN polygon that enclosed the whole base grid without its boundary crossing the grid made every cell inactive. Every cell is now active in that case, and the grid is the same as one built without an active domain. A polygon in a GRID_INTERSECTION block that encloses the whole grid now selects every cell in the layer instead of none."
