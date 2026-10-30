@@ -35,6 +35,16 @@ static list<string> layer_record(map<string, list<string> >& name_value_map, con
     return r->second;
 }
 
+//value of the record spelled as in the report, or else as in the code
+static list<string> record(map<string, list<string> >& name_value_map, const char * report_name, const char * code_name)
+{
+    map<string, list<string> >::iterator r=name_value_map.find(report_name);
+    if(r!=name_value_map.end() && !r->second.empty()) return r->second;
+    r=name_value_map.find(code_name);
+    if(r!=name_value_map.end()) return r->second;
+    return list<string>();
+}
+
 /* ********************************************************************** */
 // skip blanks, tabs, line breaks and comment lines,
 //  leaving us at the beginning of a token (or EOF)
@@ -719,11 +729,11 @@ bool quadtree_builder_raw_data::parse()
     list<string>& value=name_value_map["max_smoothing_level_target"];
     if(!value.empty()) smoothing_level_vertical=smoothing_level_horizontal=atoi(value.front().c_str());
 
-	value=name_value_map["smoothing_level_horizontal"];
-    if(!value.empty()) smoothing_level_horizontal=atoi(value.front().c_str());
+    list<string> level=record(name_value_map,"horizontal_smoothing_level","smoothing_level_horizontal");
+    if(!level.empty()) smoothing_level_horizontal=atoi(level.front().c_str());
 
-	value=name_value_map["smoothing_level_vertical"];
-    if(!value.empty()) smoothing_level_vertical=atoi(value.front().c_str());
+    level=record(name_value_map,"vertical_smoothing_level","smoothing_level_vertical");
+    if(!level.empty()) smoothing_level_vertical=atoi(level.front().c_str());
 
     value=name_value_map["modflow_grid"];
     if(!value.empty()) modflow_grid=value.front();
@@ -1310,16 +1320,15 @@ bool refinement_raw_data::parse()
 		return false;
     }
 
+    //a level from a shapefile attribute overrides refinement_level
     value=name_value_map["refinement_level"];
     if(!value.empty()) refinement_level=atoi(value.front().c_str());
-    else{
-        value=name_value_map["refinement_level_by_attribute"];
-        if(!value.empty()) refinement_level_by_attribute=value.front();
-        else{
-            cerr<<"! Missing refinement_level or refinement_level_by_attribute"<<endl;
-            assert(false);
-			return false;
-        }
+    list<string> attribute=record(name_value_map,"refine_level_by_attribute","refinement_level_by_attribute");
+    if(!attribute.empty()) refinement_level_by_attribute=attribute.front();
+    if(value.empty() && attribute.empty()){
+        cerr<<"! Error: missing refinement_level or refine_level_by_attribute"<<endl;
+        assert(false);
+        return false;
     }
 
 //    value=name_value_map["refinement_level_by_attribute"];

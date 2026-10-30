@@ -164,3 +164,94 @@ TEST(DefinitionParser, RefinementAliasesAndTopOnlyAreRead)
     ASSERT_EQ(data->top_str.count(1), 1u);
     EXPECT_EQ(data->bot_str.count(1), 0u);
 }
+
+namespace
+{
+
+quadtree_builder_raw_data * parse_builder(DefinitionParser & parser,
+                                          const std::string & records)
+{
+    std::istringstream dfn("BEGIN QUADTREE_BUILDER qtb\n"
+                           "  MODFLOW_GRID = mfg\n"
+                           "  GRID_DEFINITION_FILE = qtg.dfn\n" +
+                           records + "END QUADTREE_BUILDER\n");
+    EXPECT_TRUE(parser.parse(dfn));
+    return dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+}
+
+refinement_raw_data * parse_refinement(DefinitionParser & parser,
+                                       const std::string & records)
+{
+    std::istringstream dfn("BEGIN REFINEMENT_FEATURES rf\n"
+                           "  SHAPEFILE = wells\n"
+                           "  FEATURE_TYPE = point\n" +
+                           records + "END REFINEMENT_FEATURES\n");
+    EXPECT_TRUE(parser.parse(dfn));
+    return dynamic_cast<refinement_raw_data *>(parser.getBlockData("rf"));
+}
+
+} // namespace
+
+TEST(DefinitionParser, SmoothingLevelSpellings)
+{
+    // the report's spelling, the code's spelling, and both (#52)
+    const char * spellings[][2] = {
+        {"HORIZONTAL_SMOOTHING_LEVEL", "VERTICAL_SMOOTHING_LEVEL"},
+        {"SMOOTHING_LEVEL_HORIZONTAL", "SMOOTHING_LEVEL_VERTICAL"}};
+    for (const auto & s : spellings)
+    {
+        SCOPED_TRACE(s[0]);
+        DefinitionParser parser;
+        quadtree_builder_raw_data * data = parse_builder(
+            parser, std::string("  ") + s[0] + " = 3\n  " + s[1] + " = 2\n");
+        ASSERT_NE(data, nullptr);
+        EXPECT_EQ(data->smoothing_level_horizontal, 3);
+        EXPECT_EQ(data->smoothing_level_vertical, 2);
+    }
+
+    DefinitionParser parser;
+    quadtree_builder_raw_data * data =
+        parse_builder(parser, "  SMOOTHING_LEVEL_HORIZONTAL = 2\n"
+                              "  HORIZONTAL_SMOOTHING_LEVEL = 4\n");
+    ASSERT_NE(data, nullptr);
+    EXPECT_EQ(data->smoothing_level_horizontal, 4);
+}
+
+TEST(DefinitionParser, RefineLevelByAttributeSpellings)
+{
+    // either spelling, and the attribute overrides REFINEMENT_LEVEL (#52)
+    for (const char * name :
+         {"REFINE_LEVEL_BY_ATTRIBUTE", "REFINEMENT_LEVEL_BY_ATTRIBUTE"})
+    {
+        SCOPED_TRACE(name);
+        DefinitionParser parser;
+        refinement_raw_data * data = parse_refinement(
+            parser, std::string("  REFINEMENT_LEVEL = 2\n  ") + name + " = LEVEL\n");
+        ASSERT_NE(data, nullptr);
+        EXPECT_EQ(data->refinement_level_by_attribute, "LEVEL");
+    }
+
+    DefinitionParser parser;
+    refinement_raw_data * data =
+        parse_refinement(parser, "  REFINEMENT_LEVEL = 2\n");
+    ASSERT_NE(data, nullptr);
+    EXPECT_EQ(data->refinement_level, 2);
+    EXPECT_TRUE(data->refinement_level_by_attribute.empty());
+}
+
+TEST(DefinitionParser, UnrecognizedRecordIsReported)
+{
+    // a misspelled record is reported, and accepted records are not (#52)
+    DefinitionParser parser;
+    testing::internal::CaptureStderr();
+    parse_builder(parser, "  SMOOTHING = full\n"
+                          "  TOP LAYER 1 = REPLICATE mfg\n"
+                          "  REFINEMENT_FEATURES LAYER 2 = wells\n"
+                          "  HORIZONTAL_SMOOTHING_LEVLE = 2\n");
+    std::string err = testing::internal::GetCapturedStderr();
+    EXPECT_NE(err.find("HORIZONTAL_SMOOTHING_LEVLE"), std::string::npos) << err;
+    EXPECT_EQ(err.find("SMOOTHING ="), std::string::npos) << err;
+    EXPECT_EQ(err.find("TOP LAYER"), std::string::npos) << err;
+    EXPECT_EQ(err.find("REFINEMENT_FEATURES"), std::string::npos) << err;
+    EXPECT_EQ(err.find("not recognized"), err.rfind("not recognized")) << err;
+}
