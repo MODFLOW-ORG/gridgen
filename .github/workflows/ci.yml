@@ -80,7 +80,7 @@ jobs:
           xcode-select -p
           xcrun --show-sdk-version
           ld -v 2>&1 | head -2
-          ${{ env.CXX }} --version | head -1
+          $CXX --version | head -1
           
       - name: Setup pixi
         uses: prefix-dev/setup-pixi@v0.11.2
@@ -115,12 +115,13 @@ jobs:
           mv $libpath/libquadmath.0.dylib $libpath/libquadmath.0.dylib.bak
           mv $libpath/libstdc++.6.dylib $libpath/libstdc++.6.dylib.bak
 
-      # static link libgcc
+      # static link libgcc and keep the release running on macOS 14
       - name: Set LDFLAGS (macOS)
         if: runner.os == 'macOS'
         run: |
           ldflags="$LDFLAGS -static-libgcc"
           echo "LDFLAGS=$ldflags" >> $GITHUB_ENV
+          echo "MACOSX_DEPLOYMENT_TARGET=14.0" >> $GITHUB_ENV
 
       - name: Build ${{ env.PROGRAM_NAME }}
         working-directory: ${{ env.PROGRAM_NAME }}
@@ -137,6 +138,7 @@ jobs:
             echo "error: gridgen dynamically links gcc runtime libraries"
             exit 1
           fi
+          otool -l gridgen | grep -A4 LC_BUILD_VERSION
           lipo -info gridgen
 
       - name: Show build log
