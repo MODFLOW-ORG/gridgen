@@ -2,6 +2,7 @@
 #include "GridToVTK.h"
 #include "GridVertices.h"
 #include "RoundTrip.h"
+#include <cfloat>
 #include <fstream>
 #include <sstream>
 using namespace std;

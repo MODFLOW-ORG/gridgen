@@ -13,6 +13,7 @@
 #include "GridToShp.h"
 #include "GridToVTK.h"
 #include "GridVertices.h"
+#include "RoundTrip.h"
 #include "def_exporter.h"
 #include "def_parser.h"
 #include "def_struct.h"
@@ -327,6 +328,80 @@ TEST(Precision, ConnectionLengthsAreDouble)
     EXPECT_EQ(nconn, 2);
     csr.destory();
     delete mfgrid;
+}
+
+TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
+{
+    // columns and rows of different sizes, the northeast cell refined to
+    // three levels, and the grid rotated
+    const double delr[] = {812.7, 400.3, 1001.9, 650.1};
+    const double delc[] = {793.3, 1200.7, 333.1};
+    std::string dir = ::testing::TempDir();
+    {
+        std::ofstream fr((dir + "gridgen_delr.dat").c_str());
+        for (double v : delr) fr << round_trip(v) << " ";
+        std::ofstream fc((dir + "gridgen_delc.dat").c_str());
+        for (double v : delc) fc << round_trip(v) << " ";
+    }
+    std::string block =
+        "BEGIN MODFLOW_GRID mfg\n"
+        "  ROTATION_ANGLE = 17.3\n"
+        "  X_OFFSET = 543750\n"
+        "  Y_OFFSET = 2792250\n"
+        "  NLAY = 1\n"
+        "  NROW = 3\n"
+        "  NCOL = 4\n"
+        "  DELR = OPEN/CLOSE " + dir + "gridgen_delr.dat\n"
+        "  DELC = OPEN/CLOSE " + dir + "gridgen_delc.dat\n"
+        "  TOP = CONSTANT 0.\n"
+        "  BOTTOM LAYER 1 = CONSTANT -1.\n"
+        "END MODFLOW_GRID\n";
+    DefinitionParser parser;
+    modflow_grid_raw_data * data = parse_grid(parser, block);
+    ASSERT_NE(data, nullptr);
+    ModflowGrid * mfgrid = dynamic_cast<ModflowGrid *>(data->build());
+    ASSERT_NE(mfgrid, nullptr);
+    for (int c = 0; c < 4; c++) ASSERT_EQ(mfgrid->delr[c], delr[c]);
+    for (int r = 0; r < 3; r++) ASSERT_EQ(mfgrid->delc[r], delc[r]);
+
+    // refinement points in unrotated grid coordinates
+    double width = 0.0, height = 0.0;
+    for (double v : delr) width += v;
+    for (double v : delc) height += v;
+    QuadTree3D * qtree = make_qtree(
+        mfgrid, {{XOFF + width - 1.0, YOFF + height - 1.0, 3, 0},
+                 {XOFF + 900.0, YOFF + 400.0, 2, 0}});
+    GridVertices gv(qtree);
+
+    // the northeast leaf's upper-right corner is the far grid corner, with
+    // the edges summed west to east and south to north
+    double xl = 0.0, yl = 0.0;
+    for (int c = 0; c < 4; c++) xl += delr[c];
+    for (int r = 2; r >= 0; r--) yl += delc[r];
+    double t = 17.3 * PI_DOUBLE / 180.0;
+    Box * ne = qtree->nodegroup[mfgrid->get_nodeid(0, 0, 3)];
+    ASSERT_FALSE(ne->isLeaf);
+    while (!ne->isLeaf) ne = ne->pChildren[1];
+    const Point2d & p = gv.vertices()[gv.corners(ne)[1]];
+    EXPECT_EQ(p[0], XOFF + (xl * std::cos(t) - yl * std::sin(t)));
+    EXPECT_EQ(p[1], YOFF + (xl * std::sin(t) + yl * std::cos(t)));
+
+    // and every corner is one vertex
+    std::map<std::pair<long long, long long>, std::set<int>> groups;
+    for (int n = 0; n < qtree->nodes(); n++)
+    {
+        const int * ids = gv.corners(qtree->get_nodeobj(n));
+        for (int i = 0; i < 4; i++)
+        {
+            const Point2d & q = gv.vertices()[ids[i]];
+            groups[std::make_pair(std::llround(q[0] * 1e3),
+                                  std::llround(q[1] * 1e3))]
+                .insert(ids[i]);
+        }
+    }
+    for (const auto & g : groups) EXPECT_EQ(g.second.size(), 1u);
+    EXPECT_EQ(groups.size(), gv.vertices().size());
+    delete qtree;
 }
 
 TEST(SharedVertices, LineShapefileEndsAreGridCorners)
