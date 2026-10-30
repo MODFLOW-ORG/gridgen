@@ -10,3 +10,9 @@ BEGIN GRID_TO_SHAPEFILE grid05qtg-to-polyshapefile
   SHAPEFILE = output_shapefiles/grid05qtg
   FEATURE_TYPE = polygon
 END GRID_TO_SHAPEFILE
+
+BEGIN GRID_TO_VTKFILE grid05qtg-to-vtkfile
+  GRID = grid05qtg
+  VTKFILE = output_vtkfiles/grid05qtg
+  SHARE_VERTEX = False
+END GRID_TO_VTKFILE

@@ -50,6 +50,7 @@ CASES = (
     ("buildqtg_zerobased", "action10_buildqtg_zerobased.dfn"),
     ("grid05qtg-to-usgdata", "action11_zerobased.dfn"),
     ("grid05qtg-to-polyshapefile", "action11_zerobased.dfn"),
+    ("grid05qtg-to-vtkfile", "action11_zerobased.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
