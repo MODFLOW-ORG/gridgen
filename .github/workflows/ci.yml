@@ -80,7 +80,7 @@ jobs:
           xcode-select -p
           xcrun --show-sdk-version
           ld -v 2>&1 | head -2
-          $CXX --version | head -1
+          $CXX --version | sed -n 1p
 
       - name: Setup pixi
         uses: prefix-dev/setup-pixi@v0.11.2
@@ -139,7 +139,7 @@ jobs:
             echo "error: gridgen dynamically links gcc runtime libraries"
             exit 1
           fi
-          minos=$(otool -l gridgen | awk '/LC_BUILD_VERSION/{f=1} f&&/minos/{print $2; exit}')
+          minos=$(otool -l gridgen | awk '/LC_BUILD_VERSION/{f=1} f&&/minos/&&!d{print $2; d=1}')
           echo "minimum macOS version: $minos"
           if [[ "$minos" != "$MACOSX_DEPLOYMENT_TARGET" ]]; then
             echo "error: gridgen requires macOS $minos, not $MACOSX_DEPLOYMENT_TARGET"
