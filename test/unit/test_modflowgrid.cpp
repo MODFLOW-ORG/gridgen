@@ -60,17 +60,18 @@ TEST(ModflowGrid, CsrVerticalConnections)
     EXPECT_EQ(csr.nodes, 8);
 
     int nvert = 0;
-    for (int ipos = 0; ipos < csr.nja; ipos++)
+    for (int n = 0; n < csr.nodes; n++)
     {
-        if (std::abs(csr.fldr[ipos]) != 3) continue;
-        nvert++;
-        EXPECT_FLOAT_EQ(csr.cl1[ipos], 5.0f);
-        EXPECT_FLOAT_EQ(csr.cl2[ipos], 5.0f);
-        EXPECT_FLOAT_EQ(csr.fahl[ipos], 100.0f);
-        // up is +3 and down is -3, as in the quadtree export
-        int n = 0;
-        while (csr.ia[n + 1] - 1 <= ipos) n++;
-        EXPECT_EQ(csr.fldr[ipos], csr.ja[ipos] - 1 < n ? 3 : -3);
+        for (int ipos = csr.ia[n] - 1; ipos < csr.ia[n + 1] - 1; ipos++)
+        {
+            if (std::abs(csr.fldr[ipos]) != 3) continue;
+            nvert++;
+            EXPECT_FLOAT_EQ(csr.cl1[ipos], 5.0f);
+            EXPECT_FLOAT_EQ(csr.cl2[ipos], 5.0f);
+            EXPECT_FLOAT_EQ(csr.fahl[ipos], 100.0f);
+            // up is +3 and down is -3, as in the quadtree export
+            EXPECT_EQ(csr.fldr[ipos], csr.ja[ipos] - 1 < n ? 3 : -3);
+        }
     }
     EXPECT_EQ(nvert, 8);
     csr.destory();

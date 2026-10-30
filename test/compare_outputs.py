@@ -22,6 +22,8 @@ CASES = (
     ("buildqtg", "action01_buildqtg.dfn"),
     ("grid02qtg-to-usgdata", "action02_writeusgdata.dfn"),
     ("grid01mfg-to-usgdata", "action02_writeusgdata.dfn"),
+    # VERTICAL_PASS_THROUGH is ignored for a structured grid
+    ("grid01mfg-to-usgdata-vp", "action02_writeusgdata.dfn"),
     ("grid01mfg-to-polyshapefile", "action03_shapefile.dfn"),
     ("grid02qtg-to-polyshapefile", "action03_shapefile.dfn"),
     ("grid01mfg-to-pointshapefile", "action03_shapefile.dfn"),
