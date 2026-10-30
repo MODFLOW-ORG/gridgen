@@ -189,10 +189,10 @@ namespace cusg
     list< pair<int,int> >  ModflowGrid::get_node_connections(int nodeid)
     {
     	list< pair<int,int> > connections;
-    	Index3d ijk=get_indices(nodeid);
-    	int i=ijk[0];
-    	int j=ijk[1];
-    	int k=ijk[2];
+    	Index3d kij=get_indices(nodeid);
+    	int k=kij[0];
+    	int i=kij[1];
+    	int j=kij[2];
     	    	
     	//up
     	if( k > 0 )
@@ -270,7 +270,7 @@ namespace cusg
         //Go through each connection and fill the arrays.
         int japos = 0;
         int nodenumber = 0;
-        int dz = 1.0;
+        double dz = 1.0;
 
         for( int  k=0; k< nlay; k++)
         {
@@ -288,7 +288,7 @@ namespace cusg
                     iac[nodenumber] = 1;
                     japos += 1;
 
-                    int dzkij=0;
+                    double dzkij=0;
 
                     if(is3d)
                     {
@@ -299,7 +299,7 @@ namespace cusg
                     {
                         int tonodenumber = get_nodeid(k - 1, i, j);
                         ja[japos] = tonodenumber+1;
-                        fldr[japos] = -3;
+                        fldr[japos] = +3;
                         cl1[japos] = 0.5 * (botm(k,i,j) - botm(k+1,i,j));
                         cl2[japos] = 0.5 * (botm(k-1,i,j) - botm(k,i,j));
                         fahl[japos] = delr[j] * delc[i];
@@ -345,7 +345,7 @@ namespace cusg
                         cl1[japos] = 0.5 * (delr[j]);
                         cl2[japos] = 0.5 * (delr[j + 1]);
                         if(is3d)
-                            dz = 0.5 * (botm(k,i,j - 1) - botm(k + 1,i,j - 1) + dzkij);
+                            dz = 0.5 * (botm(k,i,j + 1) - botm(k + 1,i,j + 1) + dzkij);
 
                         fahl[japos] = delc[i] * dz;
                         iac[nodenumber]++;
@@ -360,7 +360,7 @@ namespace cusg
                         cl1[japos] = 0.5 * (delc[i]);
                         cl2[japos] = 0.5 * (delc[i + 1]);
                         if(is3d)
-                            dz = 0.5 * (botm(k,i,j - 1) - botm(k + 1,i,j - 1) + dzkij);
+                            dz = 0.5 * (botm(k,i + 1,j) - botm(k + 1,i + 1,j) + dzkij);
 
                         fahl[japos] = delr[j] * dz;
                         iac[nodenumber]++;
@@ -385,7 +385,7 @@ namespace cusg
             }//end for i
         }//end for k
 
-        ia[nodenumber] = japos;
+        ia[nodenumber] = japos+1;
 
         return CSRData(nodes, nja, area, ia, ja, cl1, cl2, fahl, fldr, iac);
     }

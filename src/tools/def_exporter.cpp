@@ -322,7 +322,7 @@ bool DefinitionExporter::save_node_coordinate(const string& prefix, Grid * grid)
 
 	// add rotation here: Mar 15th 2016
 	double cx, cy, rotation;
-	ModflowGrid * mfgrid=qtree_grid->getModflowGrid();
+	ModflowGrid * mfgrid=(qtree_grid != NULL) ? qtree_grid->getModflowGrid() : modflow_grid;
 	mfgrid->getRotatePara(cx, cy, rotation);
 	double padfX[5] = {0}, padfY[5] = {0}, padfZ[4] = {0}, padfM[4] = {0}, ctrX[1] = {0}, ctrY[1] = {0};
 
