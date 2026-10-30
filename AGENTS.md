@@ -88,6 +88,15 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Testing scope:** rebuild, then run the unit tests or test group that
   covers the change before the full `pixi run test`. Run
   `pixi run compare-main` when a change can alter output.
+- **Error output in unit tests:** do not assert on captured stderr.
+  `testing::internal::CaptureStderr()` returns nothing on the
+  `windows-2022 intel 2025.0` CI build, though it works on the others, so
+  such a test passes locally and fails only in CI. Have the code under test
+  record what it reports, for example with an accessor like
+  `DefinitionParser::getWarnings()` (see `UnrecognizedRecordIsReported`),
+  and check a death test by its exit code alone, with an empty message
+  matcher: `EXPECT_EXIT(..., testing::ExitedWithCode(1), "")` (see
+  `test_asciigrid.cpp`).
 - **Formatting:** run `pixi run check-format` before committing Python;
   ruff (`ruff.toml`) formats and lints it, and codespell (`.codespellrc`)
   checks spelling in the text files other than the C++ source, data files,
