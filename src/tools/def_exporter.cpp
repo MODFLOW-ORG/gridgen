@@ -234,7 +234,8 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data& data)
 		}
 	}
 
-	if(data.vertical_pass_through)
+	//vertical pass-through applies only to a quadtree grid
+	if(data.vertical_pass_through && quadGrid != NULL)
 		quadGrid->vertical_pass_through = true;
 
     //save the rest

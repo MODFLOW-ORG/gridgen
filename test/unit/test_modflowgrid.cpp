@@ -78,17 +78,23 @@ TEST(ModflowGrid, CsrVerticalConnections)
 
 TEST(ModflowGrid, CsrFaceAreaUsesBothCellThicknesses)
 {
-    // 2 x 2 cells, delr 10, delc 20, a different thickness in each cell (#46)
-    std::vector<double> thk = {4.5, 6.0, 8.0, 10.5};
+    // 2 layers of 2 x 2 cells, delr 10, delc 20, a different thickness in
+    // each cell (#46)
+    std::vector<double> thk = {4.5, 6.0, 8.0, 10.5, 3.0, 7.5, 5.0, 2.5};
     double top[4] = {0.0, 0.0, 0.0, 0.0};
-    double bot[4];
-    for (int n = 0; n < 4; n++) bot[n] = -thk[n];
-    std::vector<double *> surfaces = {top, bot};
-    ModflowGrid mfgrid(1, 2, 2, 10.0, 20.0, surfaces, 0.0, 0.0, 0.0);
+    double bot1[4];
+    double bot2[4];
+    for (int n = 0; n < 4; n++)
+    {
+        bot1[n] = top[n] - thk[n];
+        bot2[n] = bot1[n] - thk[n + 4];
+    }
+    std::vector<double *> surfaces = {top, bot1, bot2};
+    ModflowGrid mfgrid(2, 2, 2, 10.0, 20.0, surfaces, 0.0, 0.0, 0.0);
     CSRData csr = mfgrid.get_usg_csr_data();
 
     // one-based ia and ja, with ia ending at nja + 1
-    ASSERT_EQ(csr.nodes, 4);
+    ASSERT_EQ(csr.nodes, 8);
     EXPECT_EQ(csr.ia[0], 1);
     EXPECT_EQ(csr.ia[csr.nodes], csr.nja + 1);
 
@@ -97,11 +103,23 @@ TEST(ModflowGrid, CsrFaceAreaUsesBothCellThicknesses)
         for (int ipos = csr.ia[n]; ipos < csr.ia[n + 1] - 1; ipos++)
         {
             int m = csr.ja[ipos] - 1;
-            if (m == n) continue;
-            // a row face is delc wide, a column face delr
-            double width = std::abs(csr.fldr[ipos]) == 1 ? 20.0 : 10.0;
-            EXPECT_FLOAT_EQ(csr.fahl[ipos], width * 0.5 * (thk[n] + thk[m]))
-                << "node " << n + 1 << " to " << m + 1;
+            SCOPED_TRACE("node " + std::to_string(n + 1) + " to " +
+                         std::to_string(m + 1));
+            int dir = std::abs(csr.fldr[ipos]);
+            if (dir == 3)
+            {
+                EXPECT_FLOAT_EQ(csr.cl1[ipos], 0.5 * thk[n]);
+                EXPECT_FLOAT_EQ(csr.cl2[ipos], 0.5 * thk[m]);
+                EXPECT_FLOAT_EQ(csr.fahl[ipos], 200.0f);
+                continue;
+            }
+            // a column connection crosses delr through a face delc wide, a
+            // row connection the reverse
+            double length = dir == 1 ? 10.0 : 20.0;
+            double width = dir == 1 ? 20.0 : 10.0;
+            EXPECT_FLOAT_EQ(csr.cl1[ipos], 0.5 * length);
+            EXPECT_FLOAT_EQ(csr.cl2[ipos], 0.5 * length);
+            EXPECT_FLOAT_EQ(csr.fahl[ipos], width * 0.5 * (thk[n] + thk[m]));
         }
     }
     csr.destory();
