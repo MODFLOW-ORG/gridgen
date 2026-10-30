@@ -164,7 +164,6 @@ The following defects are known in this version. Each is tracked as an issue on 
   \item A quadtree grid built with NODE\_NUMBERING = zero-based writes a tree structure file that later actions cannot read. Use the default one-based numbering (\ghissue{50}).
   \item GRID\_TO\_USGDATA with a MODFLOW\_GRID, rather than a QUADTREE grid, computes incorrect horizontal connection areas and stops after writing the connection files (\ghissue{46}).
   \item Corners shared by adjacent cells in grid shapefiles can differ in their last digits when cell sizes are not exactly representable in binary and coordinates are large (for example, UTM or state plane), so shared vertices must be matched with a tolerance. VTK files write point coordinates with six significant digits (\ghissue{40}).
-  \item Polygon intersection output lists cells in an order that can change from run to run; the cells and values are the same (\ghissue{51}).
 \end{itemize}
 
 \section{Documentation}

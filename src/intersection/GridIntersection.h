@@ -388,16 +388,17 @@ namespace cusg
 					boxvertexMap[*i].push_back(ptr);
 			}
 
-			visited.insert(m_intersection.begin(),m_intersection.end());
+			//boundary cells in the order found, the set only skips duplicates
+			for(vector<Box*>::iterator ib=m_intersection.begin();ib!=m_intersection.end();ib++)
+			{
+				if(visited.insert(*ib).second) bd_intersection.push_back(*ib);
+			}
 			m_intersection.clear();
 			ptr=next;
 		}
 		while(ptr!=ply.getHead());
 
 		if(visited.empty()) return false;
-
-		//border intersections
-		bd_intersection.insert(bd_intersection.end(),visited.begin(),visited.end());
 
 		//get all enclosed cells
 		list<Box*> open=bd_intersection;
@@ -490,7 +491,11 @@ namespace cusg
 						boxvertexMap[*ib].push_back(ptr);
 				}
 
-				visited.insert(m_intersection.begin(),m_intersection.end());
+				//boundary cells in the order found, the set only skips duplicates
+				for(vector<Box*>::iterator ib=m_intersection.begin();ib!=m_intersection.end();ib++)
+				{
+					if(visited.insert(*ib).second) bd_intersection.push_back(*ib);
+				}
 				m_intersection.clear();
 				ptr=next;
 			}
@@ -498,9 +503,6 @@ namespace cusg
 		}
 
 		if(visited.empty()) return false;
-
-		//border intersections
-		bd_intersection.insert(bd_intersection.end(),visited.begin(),visited.end());
 
 		//get all enclosed cells
 		list<Box*> open=bd_intersection;
