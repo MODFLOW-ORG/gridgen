@@ -1,4 +1,5 @@
 // Grid intersection with polygons
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <set>
@@ -22,17 +23,29 @@ struct XY
     double y;
 };
 
+// a polygon from an outer ring and optional holes, vertices in the order given
+c_polygon make_polygon(const std::vector<XY> & outer,
+                       const std::vector<std::vector<XY>> & holes = {})
+{
+    c_polygon polygon;
+    for (std::size_t r = 0; r <= holes.size(); r++)
+    {
+        c_ply ply(r == 0 ? c_ply::POUT : c_ply::PIN);
+        ply.beginPoly();
+        for (const XY & v : (r == 0 ? outer : holes[r - 1])) ply.addVertex(v.x, v.y);
+        ply.endPoly();
+        polygon.push_back(ply);
+    }
+    polygon.buildBoxAndCenter();
+    return polygon;
+}
+
 // cells intersected by a polygon with the vertices in the order given
 template <typename T>
-std::vector<Box *> intersect_square(T * grid, const std::vector<XY> & vertices)
+std::vector<Box *> intersect_square(T * grid, const std::vector<XY> & vertices,
+                                    const std::vector<std::vector<XY>> & holes = {})
 {
-    c_ply ply(c_ply::POUT);
-    ply.beginPoly();
-    for (const XY & v : vertices) ply.addVertex(v.x, v.y);
-    ply.endPoly();
-    c_polygon polygon;
-    polygon.push_back(ply);
-    polygon.buildBoxAndCenter();
+    c_polygon polygon = make_polygon(vertices, holes);
 
     GridIntersection gi(0, 0);
     gi.intersect(grid, polygon);
@@ -103,4 +116,25 @@ TEST(GridIntersection, PolygonEnclosingGridSelectsEveryCell)
     ASSERT_GT(nodes, 100u);
     expect_each_cell_once(intersect_square(qtree, square(-50.0, 150.0)), nodes);
     EXPECT_TRUE(intersect_square(qtree, square(200.0, 300.0)).empty());
+}
+
+TEST(GridIntersection, HoleEnclosingGridSelectsNoCell)
+{
+    // a hole that also encloses the whole grid leaves it outside the polygon
+    ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+    std::vector<XY> hole = square(-20.0, 120.0);
+    std::reverse(hole.begin(), hole.end());
+    EXPECT_TRUE(intersect_square(mfgrid, square(-50.0, 150.0), {hole}).empty());
+}
+
+TEST(QuadTree, RefineByPolygonEnclosingGrid)
+{
+    // a refinement polygon around the whole grid refines every cell, as one
+    // crossing the grid refines the cells inside it (#53)
+    QuadTree3D * qtree = make_qtree(make_mfgrid(1, 10, 10, 10.0, 10.0), {});
+    c_polygon polygon = make_polygon(square(-50.0, 150.0));
+    qtree->refine(polygon, 1, 0);
+    polygon.destroy();
+    qtree->refresh();
+    EXPECT_EQ(qtree->nodes(), 400);
 }
