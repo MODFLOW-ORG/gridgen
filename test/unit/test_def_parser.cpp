@@ -1,4 +1,5 @@
 // Definition file parsing
+#include <cmath>
 #include <list>
 #include <sstream>
 #include <string>
@@ -56,8 +57,8 @@ TEST(DefinitionParser, ModflowGridBlock)
         EXPECT_DOUBLE_EQ(data->bot[2][i], -10.0);
     }
 
-    // degrees are converted with pi = 3.1415926
-    EXPECT_DOUBLE_EQ(data->rotation_angle, 30.0 * 2 * 3.1415926 / 360);
+    EXPECT_DOUBLE_EQ(data->rotation_angle, 30.0 * std::acos(-1.0) / 180);
+    EXPECT_EQ(data->rotation_degrees, 30.0);
 }
 
 TEST(DefinitionParser, UnknownBlockIsNull)

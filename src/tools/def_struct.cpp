@@ -277,8 +277,8 @@ bool modflow_grid_raw_data::parse()
     list<string>& value=name_value_map["rotation_angle"];
     if(!value.empty()) 
 		{
-			rotation_angle=atof(value.front().c_str());
-			rotation_angle = rotation_angle * 2 *3.1415926 /360;
+			rotation_degrees=atof(value.front().c_str());
+			rotation_angle = rotation_degrees * PI / 180;
 	}
     else{
         cerr<<"! Error: missing rotation_angle"<<endl;

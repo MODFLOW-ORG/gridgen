@@ -1068,7 +1068,7 @@ namespace cusg
 	///get box connections from id
 	///Return a sorted list of connections, where a connection is
 	///a list [tonodeid, fldir].  fldir is -1, +1, -2, +2 for -x, +x, -y, +y, -z, +z.
-	list< pair<int,int> > QuadTree3D::get_node_connections_vp(int nodenumber, vector<float>* area)
+	list< pair<int,int> > QuadTree3D::get_node_connections_vp(int nodenumber, vector<double>* area)
 	{
 		int nodeid = nodeid_array[nodenumber];
 		Box * box = nodegroup[nodeid];
@@ -1076,7 +1076,7 @@ namespace cusg
 		return get_node_connections_vp(box, area);
 	}
 
-	list< pair<int,int> > QuadTree3D::get_node_connections_vp(Box * box, vector<float>* area)
+	list< pair<int,int> > QuadTree3D::get_node_connections_vp(Box * box, vector<double>* area)
 	{
 		//neighbors from 4 sides and up and down
 		list<Box*> nei[6];
@@ -1123,7 +1123,7 @@ namespace cusg
 				//cout<<"vertical pass"<<endl;
 				assert(vpit->bSrc == box);
 				connections.push_back(make_pair(vpit->bDst->id, 3));
-				if(area != NULL) area->push_back((float)(vpit->area));
+				if(area != NULL) area->push_back(vpit->area);
 			}
 		//}
 
@@ -1142,7 +1142,7 @@ namespace cusg
 				//cout<<"vertical pass"<<endl;
 				assert(vpit->bSrc == box);
 				connections.push_back(make_pair(vpit->bDst->id, -3));
-				if(area != NULL) area->push_back((float)(vpit->area));				
+				if(area != NULL) area->push_back(vpit->area);				
 			}
 
 		return connections;
@@ -1210,7 +1210,7 @@ namespace cusg
 		{
 			nja++;
 
-			vector<float> areas;
+			vector<double> areas;
 			int csize= 0;
 			
 			if(vertical_pass_through)
@@ -1226,9 +1226,9 @@ namespace cusg
 		int * ia = new int[box_size+1];
 		int * ja = new int[nja];
 		double * area = get_cell_areas();
-		float * cl1 = new float[nja];
-		float * cl2 = new float[nja];
-		float * fahl = new float[nja];
+		double * cl1 = new double[nja];
+		double * cl2 = new double[nja];
+		double * fahl = new double[nja];
 		int * fldr = new int[nja];
 		int * iac = new int[box_size]; // number of connection +1 for each cell, array of size  nodes
 
@@ -1259,7 +1259,7 @@ namespace cusg
 			fldr[japos] = 0;
 			japos++;
 
-			vector<float> conAreas;
+			vector<double> conAreas;
 			list< pair<int,int> >  connectionlist;
 			if(vertical_pass_through)
 				connectionlist = get_node_connections_vp(nid, &conAreas);
@@ -1277,7 +1277,7 @@ namespace cusg
 
 			// go through each connection
 			typedef list< pair<int,int> >::iterator IT;
-			vector<float>::const_iterator fit = conAreas.begin();
+			vector<double>::const_iterator fit = conAreas.begin();
 			for(IT ic=connectionlist.begin();ic!=connectionlist.end();ic++)
 			{
 				int tonodeid=ic->first;
@@ -1369,11 +1369,11 @@ namespace cusg
 	}
 
 
-	void QuadTree3D::sortareabyconid(const list<pair<int, int> >& connectionlist, vector<float>& area)
+	void QuadTree3D::sortareabyconid(const list<pair<int, int> >& connectionlist, vector<double>& area)
 	{
 		typedef list< pair<int,int> >::const_iterator CIT;
 		vector<pair<int, float> > sorted_area_list;
-		vector<float>::iterator fit = area.begin();
+		vector<double>::iterator fit = area.begin();
 		for(CIT ic = connectionlist.begin(); ic != connectionlist.end(); ++ic, ++fit)
 		{
 			int tonid = get_nodenumber(ic->first);
@@ -1382,7 +1382,7 @@ namespace cusg
 		//sort by node numbers
 		sort(sorted_area_list.begin(), sorted_area_list.end());
 		//put the sorted connection back
-		vector<float> tmp;
+		vector<double> tmp;
 		int size = sorted_area_list.size();
 		for(int i = 0; i < size; i++) tmp.push_back(sorted_area_list[i].second);
 		tmp.swap(area);

@@ -3,6 +3,7 @@ unit_sources = files(
     'test_box.cpp',
     'test_def_parser.cpp',
     'test_griddomain.cpp',
+    'test_gridvertices.cpp',
     'test_ghostnode.cpp',
     'test_intersection.cpp',
     'test_modflowgrid.cpp',

@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "export"
+description = "Each cell's corners were computed from its own center and size, so a corner shared by adjacent cells could be written with coordinates that differ in their last digits when cell sizes are not exactly representable in binary and coordinates are large (for example, UTM or state plane). Shared vertices in grid shapefiles and VTK files therefore had to be matched with a tolerance, and rounding did not merge all of them. Each corner is now computed once, and every cell that shares it is written with the same coordinates. For a rotated test grid of 812.7 by 793.3 cells, the polygon shapefile now has 107,409 distinct corners, one for each corner of the grid, rather than 163,390."

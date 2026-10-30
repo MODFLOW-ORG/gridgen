@@ -65,9 +65,9 @@ TEST(QuadTree, RefineCenterCell)
             {
                 continue;
             }
-            EXPECT_FLOAT_EQ(csr.cl1[ipos], 25.0f);
-            EXPECT_FLOAT_EQ(csr.cl2[ipos], 50.0f);
-            EXPECT_FLOAT_EQ(csr.fahl[ipos], 500.0f);
+            EXPECT_DOUBLE_EQ(csr.cl1[ipos], 25.0);
+            EXPECT_DOUBLE_EQ(csr.cl2[ipos], 50.0);
+            EXPECT_DOUBLE_EQ(csr.fahl[ipos], 500.0);
         }
     }
     expect_symmetric(csr);
@@ -112,7 +112,7 @@ TEST(QuadTree, SmoothingLimitsVerticalLevelJump)
         {
             if (std::abs(csr.fldr[ipos]) != 3) continue;
             double amin = std::min(csr.area[n], csr.area[csr.ja[ipos]]);
-            EXPECT_FLOAT_EQ(csr.fahl[ipos], static_cast<float>(amin));
+            EXPECT_DOUBLE_EQ(csr.fahl[ipos], amin);
         }
     }
     csr.destory();

@@ -33,15 +33,15 @@ TEST(ModflowGrid, CsrConnectivityOneLayer)
         if (dir == 0) continue;
         if (dir == 1)
         {
-            EXPECT_FLOAT_EQ(csr.cl1[ipos], 5.0f);
-            EXPECT_FLOAT_EQ(csr.cl2[ipos], 5.0f);
-            EXPECT_FLOAT_EQ(csr.fahl[ipos], 150.0f);
+            EXPECT_DOUBLE_EQ(csr.cl1[ipos], 5.0);
+            EXPECT_DOUBLE_EQ(csr.cl2[ipos], 5.0);
+            EXPECT_DOUBLE_EQ(csr.fahl[ipos], 150.0);
         }
         else if (dir == 2)
         {
-            EXPECT_FLOAT_EQ(csr.cl1[ipos], 10.0f);
-            EXPECT_FLOAT_EQ(csr.cl2[ipos], 10.0f);
-            EXPECT_FLOAT_EQ(csr.fahl[ipos], 75.0f);
+            EXPECT_DOUBLE_EQ(csr.cl1[ipos], 10.0);
+            EXPECT_DOUBLE_EQ(csr.cl2[ipos], 10.0);
+            EXPECT_DOUBLE_EQ(csr.fahl[ipos], 75.0);
         }
         else
         {
@@ -66,9 +66,9 @@ TEST(ModflowGrid, CsrVerticalConnections)
         {
             if (std::abs(csr.fldr[ipos]) != 3) continue;
             nvert++;
-            EXPECT_FLOAT_EQ(csr.cl1[ipos], 5.0f);
-            EXPECT_FLOAT_EQ(csr.cl2[ipos], 5.0f);
-            EXPECT_FLOAT_EQ(csr.fahl[ipos], 100.0f);
+            EXPECT_DOUBLE_EQ(csr.cl1[ipos], 5.0);
+            EXPECT_DOUBLE_EQ(csr.cl2[ipos], 5.0);
+            EXPECT_DOUBLE_EQ(csr.fahl[ipos], 100.0);
             // up is +3 and down is -3, as in the quadtree export
             EXPECT_EQ(csr.fldr[ipos], csr.ja[ipos] - 1 < n ? 3 : -3);
         }
@@ -109,18 +109,18 @@ TEST(ModflowGrid, CsrFaceAreaUsesBothCellThicknesses)
             int dir = std::abs(csr.fldr[ipos]);
             if (dir == 3)
             {
-                EXPECT_FLOAT_EQ(csr.cl1[ipos], 0.5 * thk[n]);
-                EXPECT_FLOAT_EQ(csr.cl2[ipos], 0.5 * thk[m]);
-                EXPECT_FLOAT_EQ(csr.fahl[ipos], 200.0f);
+                EXPECT_DOUBLE_EQ(csr.cl1[ipos], 0.5 * thk[n]);
+                EXPECT_DOUBLE_EQ(csr.cl2[ipos], 0.5 * thk[m]);
+                EXPECT_DOUBLE_EQ(csr.fahl[ipos], 200.0);
                 continue;
             }
             // a column connection crosses delr through a face delc wide, a
             // row connection the reverse
             double length = dir == 1 ? 10.0 : 20.0;
             double width = dir == 1 ? 20.0 : 10.0;
-            EXPECT_FLOAT_EQ(csr.cl1[ipos], 0.5 * length);
-            EXPECT_FLOAT_EQ(csr.cl2[ipos], 0.5 * length);
-            EXPECT_FLOAT_EQ(csr.fahl[ipos], width * 0.5 * (thk[n] + thk[m]));
+            EXPECT_DOUBLE_EQ(csr.cl1[ipos], 0.5 * length);
+            EXPECT_DOUBLE_EQ(csr.cl2[ipos], 0.5 * length);
+            EXPECT_DOUBLE_EQ(csr.fahl[ipos], width * 0.5 * (thk[n] + thk[m]));
         }
     }
     csr.destory();

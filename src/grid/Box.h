@@ -452,9 +452,6 @@ public:
 	//bool bRegular;
 
 
-	///the coordinates of the corners after rotation
-	void rotate(double cx, double cy, double rotation, double& ldX, double& ldY, double& luX, double& luY, double& rdX, double& rdY, double& ruX, double& ruY);
-	
 	///the corrdinates of the center after rotation
 	void rotateCtr(double cx, double cy, double rotation,double& resx, double& resy);
 

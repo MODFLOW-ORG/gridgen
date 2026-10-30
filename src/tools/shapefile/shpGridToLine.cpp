@@ -1,11 +1,13 @@
 #include "shpGridToLine.h"
+#include "GridVertices.h"
 using namespace cusg;
 
-void  rotate(double cx, double cy, double rotation, double sx, double sy, double& ex, double & ey)
+//coordinates of a corner of a box, numbered clockwise from the upper left
+void cornerPoint(const GridVertices& gv, const Box* b, int corner, double& x, double& y)
 {
-	ex = cx + (sx - cx) * cos(rotation) - (sy - cy)*sin(rotation);
-	ey = cy + (sy - cy)* cos(rotation) + (sx - cx)*sin(rotation);
-
+	const Point2d& p = gv.vertices()[gv.corners(b)[corner]];
+	x = p[0];
+	y = p[1];
 }
 void prepareWriteLine(string gridShpName, SHPHandle* shd, DBFHandle* dbf, int* lyrId)
 {
@@ -45,41 +47,35 @@ void writeOneLine(int vNum, double *tmpX, double* tmpY, int lyrID, int layer, SH
 	int success = DBFWriteIntegerAttribute(dbfHandle, entityNum, lyrID, layer);
 }
 
-void writeOneMFGrid(cusg::ModflowGrid* mfgrid, SHPHandle& handler, DBFHandle& dbfHandle, int lyrId)
+//write the column and row edges of the base grid; grid holds the base cells
+void writeOneMFGrid(cusg::Grid* grid, cusg::ModflowGrid* mfgrid, const GridVertices& gv, SHPHandle& handler, DBFHandle& dbfHandle, int lyrId)
 {
-	double cx, cy, rotation;
-	mfgrid->getRotatePara(cx, cy, rotation);
-
-	double tmpX[2], tmpY[2];
 	double resX[2], resY[2];
+	int nrow = mfgrid->nrow;
+	int ncol = mfgrid->ncol;
 
 	for(int k = 0; k < mfgrid->nlay; k++)
 	{
-		//write columns
-		double * Xe = mfgrid->get_local_Xe_array();
-		double * Ye = mfgrid->get_local_Ye_array();
-		for(int i = 0; i <= mfgrid->ncol; i++)
+		//write columns, from the top of the first row to the bottom of the last
+		for(int i = 0; i <= ncol; i++)
 		{
-			tmpX[0] = mfgrid->Xe[i];
-			tmpX[1] = mfgrid->Xe[i];
-			tmpY[0] = mfgrid->Ye[0];
-			tmpY[1] = mfgrid->Ye[mfgrid->nrow];
-
-			rotate(cx, cy, rotation, tmpX[0], tmpY[0], resX[0], resY[0]);
-			rotate(cx, cy, rotation, tmpX[1], tmpY[1], resX[1], resY[1]);
+			int c = min(i, ncol - 1);
+			Box* top = grid->nodegroup[mfgrid->get_nodeid(k, 0, c)];
+			Box* bot = grid->nodegroup[mfgrid->get_nodeid(k, nrow - 1, c)];
+			cornerPoint(gv, top, (i < ncol) ? 0 : 1, resX[0], resY[0]);
+			cornerPoint(gv, bot, (i < ncol) ? 3 : 2, resX[1], resY[1]);
 
 			writeOneLine(2, resX, resY, lyrId, k, handler, dbfHandle);
 		}
 
-		for(int i = 0; i <= mfgrid->nrow; i++)
+		//write rows, from the west edge to the east edge
+		for(int i = 0; i <= nrow; i++)
 		{
-				tmpY[0]=  mfgrid->Ye[i];
-				tmpY[1] = mfgrid->Ye[i];
-				tmpX[0] = mfgrid->Xe[0];
-				tmpX[1] = mfgrid->Xe[mfgrid->ncol];
-
-				rotate(cx, cy, rotation, tmpX[0], tmpY[0], resX[0], resY[0]);
-				rotate(cx, cy, rotation, tmpX[1], tmpY[1], resX[1], resY[1]);
+				int r = min(i, nrow - 1);
+				Box* west = grid->nodegroup[mfgrid->get_nodeid(k, r, 0)];
+				Box* east = grid->nodegroup[mfgrid->get_nodeid(k, r, ncol - 1)];
+				cornerPoint(gv, west, (i < nrow) ? 0 : 3, resX[0], resY[0]);
+				cornerPoint(gv, east, (i < nrow) ? 1 : 2, resX[1], resY[1]);
 
 				writeOneLine(2, resX, resY, lyrId, k, handler, dbfHandle);
 		}
@@ -99,12 +95,9 @@ void writeQuadtree2ShpLine(cusg::QuadTree3D* qtree, string gridShpName)
 	unsigned int id = id_offset;
 	//char extra[64];
 
-	double cx, cy, rotation;
-	mfgrid->getRotatePara(cx, cy, rotation);
+	GridVertices gv(qtree);
+	writeOneMFGrid(qtree, mfgrid, gv, handler, dbfHandle, lyrId);
 
-	writeOneMFGrid(mfgrid, handler, dbfHandle, lyrId);
-
-	double tmpX[2], tmpY[2];
 	double resX[2], resY[2];
 	SHPObject* shpObj = NULL;
 	//get through each cell
@@ -113,24 +106,16 @@ void writeQuadtree2ShpLine(cusg::QuadTree3D* qtree, string gridShpName)
 		Box* b = *nit;
 		if(b->isLeaf == false)
 		{
-			tmpX[0] = b->x;
-			tmpX[1] = b->x;
-			tmpY[0] = b->y - b->dy/2;
-			tmpY[1] = b->y + b->dy/2;
-
-			rotate(cx, cy, rotation, tmpX[0], tmpY[0], resX[0], resY[0]);
-			rotate(cx, cy, rotation, tmpX[1], tmpY[1], resX[1], resY[1]);
+			//from the south edge to the north edge through the center
+			cornerPoint(gv, b->pChildren[3], 2, resX[0], resY[0]);
+			cornerPoint(gv, b->pChildren[0], 1, resX[1], resY[1]);
 
 			writeOneLine(2, resX, resY, lyrId, b->layer, handler, dbfHandle);
 
 			////////////////////////////////////////
-			tmpX[0] = b->x - b->dx/2;
-			tmpX[1] = b->x + b->dx/2;
-			tmpY[0] = b->y;
-			tmpY[1] = b->y;
-
-			rotate(cx, cy, rotation, tmpX[0], tmpY[0], resX[0], resY[0]);
-			rotate(cx, cy, rotation, tmpX[1], tmpY[1], resX[1], resY[1]);
+			//from the west edge to the east edge through the center
+			cornerPoint(gv, b->pChildren[3], 0, resX[0], resY[0]);
+			cornerPoint(gv, b->pChildren[2], 1, resX[1], resY[1]);
 
 			writeOneLine(2, resX, resY, lyrId, b->layer, handler, dbfHandle);
 		}
@@ -148,7 +133,8 @@ void writeModflowGrid2ShpLine(cusg::ModflowGrid* mfgrid, string gridShpName)
 	int lyrId;
 	prepareWriteLine(gridShpName, &handler, &dbfHandle, &lyrId);
 
-	writeOneMFGrid(mfgrid, handler, dbfHandle, lyrId);
+	GridVertices gv(mfgrid);
+	writeOneMFGrid(mfgrid, mfgrid, gv, handler, dbfHandle, lyrId);
 
 	DBFClose(dbfHandle);
 	SHPClose(handler);

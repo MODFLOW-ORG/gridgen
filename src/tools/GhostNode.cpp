@@ -1,4 +1,5 @@
 #include "GhostNode.h"
+#include "RoundTrip.h"
 #include <fstream>
 using namespace  std;
 
@@ -136,7 +137,7 @@ namespace cusg
 		for(vector<GhostNode>::iterator git = gns.begin(); git != gns.end(); ++git)
 		{
 			GhostNode& ghn = *git;
-			ofile<<ghn.nNum+offset<<"\t"<<ghn.mNum+offset<<"\t"<<ghn.j1+offset<<"\t"<<ghn.j2+offset<<"\t"<<ghn.apha1<<"\t"<<ghn.apha2<<endl;
+			ofile<<ghn.nNum+offset<<"\t"<<ghn.mNum+offset<<"\t"<<ghn.j1+offset<<"\t"<<ghn.j2+offset<<"\t"<<round_trip(ghn.apha1)<<"\t"<<round_trip(ghn.apha2)<<endl;
 		}
 		ofile.close();
 

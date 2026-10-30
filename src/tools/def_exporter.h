@@ -5,6 +5,7 @@
 
 #include "def_struct.h"
 #include "CsrData.h"
+#include "RoundTrip.h"
 
 namespace cusg
 {
@@ -127,10 +128,9 @@ protected:
     template<typename T>
     void save(ostream& out, T * A, int size)
     {
-        out.precision(10); //find a way to preserve the digit, adaptively
         for(int i=0;i<size;i++){
             if(i%m_number_per_line==0 && i>0) out<<"\n";
-            out<<A[i]<<" ";
+            out<<round_trip_value(A[i])<<" ";
         }
     }
 
@@ -140,7 +140,6 @@ protected:
     {
         int fid=0;
         int last_newline_id=0;
-        out.precision(10); //find a way to preserve the digit, adaptively
         for(int i=0;i<size;i++){
 
             //check if a new formating line is reached
@@ -153,15 +152,15 @@ protected:
             if( (i-last_newline_id)%m_number_per_line==0 && (i-last_newline_id)!=0 ) out<<"\n";
 
             //output the value
-            out<<A[i]<<" ";
+            out<<round_trip_value(A[i])<<" ";
         }
     }
 
-    void save(ostream& out, const double& data){ out<<data; }
-    void save(ostream& out, const float& data){ out<<data; }
+    void save(ostream& out, const double& data){ out<<round_trip(data); }
+    void save(ostream& out, const float& data){ out<<round_trip(data); }
     void save(ostream& out, const int& data){ out<<data; }
-    void save(ostream& out, const double * data){ out<<*data; }
-    void save(ostream& out, float * data){ out<<*data; }
+    void save(ostream& out, const double * data){ out<<round_trip(*data); }
+    void save(ostream& out, float * data){ out<<round_trip(*data); }
     void save(ostream& out, int * data){ out<<*data; }
 
 private:
