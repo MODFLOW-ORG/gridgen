@@ -4,3 +4,13 @@ BEGIN GRID_TO_USGDATA grid02qtg-to-usgdata
   USG_DATA_PREFIX = output_usgdata/grid02qtg
 END GRID_TO_USGDATA
 
+BEGIN GRID_TO_USGDATA grid01mfg-to-usgdata
+  GRID = grid01mfg
+  USG_DATA_PREFIX = output_usgdata/grid01mfg
+END GRID_TO_USGDATA
+
+BEGIN GRID_TO_USGDATA grid01mfg-to-usgdata-vp
+  GRID = grid01mfg
+  USG_DATA_PREFIX = output_usgdata/grid01mfg_vp
+  VERTICAL_PASS_THROUGH = True
+END GRID_TO_USGDATA

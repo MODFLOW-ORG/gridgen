@@ -234,8 +234,14 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data& data)
 		}
 	}
 
+	//vertical pass-through applies only to a quadtree grid
 	if(data.vertical_pass_through)
-		quadGrid->vertical_pass_through = true;
+	{
+		if(quadGrid != NULL)
+			quadGrid->vertical_pass_through = true;
+		else
+			cerr<<"! Warning: VERTICAL_PASS_THROUGH applies only to a QUADTREE grid and is ignored"<<endl;
+	}
 
     //save the rest
     assert(data.grid);
@@ -322,7 +328,7 @@ bool DefinitionExporter::save_node_coordinate(const string& prefix, Grid * grid)
 
 	// add rotation here: Mar 15th 2016
 	double cx, cy, rotation;
-	ModflowGrid * mfgrid=qtree_grid->getModflowGrid();
+	ModflowGrid * mfgrid=(qtree_grid != NULL) ? qtree_grid->getModflowGrid() : modflow_grid;
 	mfgrid->getRotatePara(cx, cy, rotation);
 	double padfX[5] = {0}, padfY[5] = {0}, padfZ[4] = {0}, padfM[4] = {0}, ctrX[1] = {0}, ctrY[1] = {0};
 
