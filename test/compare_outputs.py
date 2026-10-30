@@ -51,6 +51,8 @@ CASES = (
     ("grid05qtg-to-usgdata", "action11_zerobased.dfn"),
     ("grid05qtg-to-polyshapefile", "action11_zerobased.dfn"),
     ("grid05qtg-to-vtkfile", "action11_zerobased.dfn"),
+    # an active domain that encloses the whole grid
+    ("buildqtg_enclosing", "action12_buildqtg_enclosing.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
@@ -60,6 +62,7 @@ SKIP_PATTERNS = (
     "grid03qtg*",
     "grid04qtg*",
     "grid05qtg*",
+    "grid06qtg*",
     "*.py",
     "__pycache__",
     "compare",
