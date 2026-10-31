@@ -129,8 +129,12 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
   `LICENSE`, or the lint configuration skip the build and tests
   (`paths-ignore` in `.github/workflows/ci.yml`); update that list when adding
-  non-code files. `lint.yml` runs `pixi run check-format` on every push and on
-  pull requests to `main`.
+  non-code files. Adding or removing a label on a pull request starts a new
+  run that cancels the one in progress (`cancel-in-progress`), including the
+  labels that `gh pr create --label` applies just after opening; judge a
+  pull request by its latest run (`gh run list -b <branch>`), not by the
+  cancelled jobs `gh pr checks` reports. `lint.yml` runs
+  `pixi run check-format` on every push and on pull requests to `main`.
   `release-notes.yml` builds the release notes on Ubuntu when
   `doc/ReleaseNotes/` changes and attaches the PDF to each GitHub release.
 - **Tone:** reserve compliments for genuinely exceptional finds or ideas.
