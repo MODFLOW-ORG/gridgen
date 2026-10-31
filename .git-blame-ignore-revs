@@ -1,2 +1,5 @@
 # Commits that only reformat; use with
 #   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: format the C++ source with clang-format and normalize line endings (#87)
+33f05873bf4385edc6fc85ba28f34d0afaaa2b8a
