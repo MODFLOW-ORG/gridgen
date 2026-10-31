@@ -132,14 +132,12 @@ TEST(DefinitionParser, SurfaceRecordsAfterGapAreRead)
 
 TEST(DefinitionParser, RefinementAliasesAndTopOnlyAreRead)
 {
-    // both spellings of the refinement records, refine_by_* taking precedence,
+    // both spellings of the refinement features record, refine_by_features taking precedence,
     // and a top record with no bottom record for the same layer
     std::istringstream dfn("BEGIN QUADTREE_BUILDER qtb\n"
                            "  MODFLOW_GRID = mfg\n"
                            "  REFINE_BY_FEATURES LAYER 1 = wells\n"
                            "  REFINEMENT_FEATURES LAYER 1 = rivers\n"
-                           "  REFINE_BY_ARRAY LAYER 2 = CONSTANT 1\n"
-                           "  REFINEMENT_ARRAY LAYER 3 = CONSTANT 2\n"
                            "  TOP LAYER 2 = REPLICATE mfg\n"
                            "  GRID_DEFINITION_FILE = qtg.dfn\n"
                            "END QUADTREE_BUILDER\n");
@@ -152,12 +150,6 @@ TEST(DefinitionParser, RefinementAliasesAndTopOnlyAreRead)
 
     ASSERT_EQ(data->refine_by_features_str.count(0), 1u);
     EXPECT_EQ(data->refine_by_features_str[0].front(), "wells");
-
-    EXPECT_EQ(data->refine_by_array_str.count(0), 0u);
-    ASSERT_EQ(data->refine_by_array_str.count(1), 1u);
-    EXPECT_EQ(data->refine_by_array_str[1].back(), "1");
-    ASSERT_EQ(data->refine_by_array_str.count(2), 1u);
-    EXPECT_EQ(data->refine_by_array_str[2].back(), "2");
 
     ASSERT_EQ(data->top_str.count(1), 1u);
     EXPECT_EQ(data->bot_str.count(1), 0u);
@@ -229,6 +221,39 @@ TEST(DefinitionParser, RefineLevelByAttributeSpellings)
     ASSERT_NE(data, nullptr);
     EXPECT_EQ(data->refinement_level, 2);
     EXPECT_TRUE(data->refinement_level_by_attribute.empty());
+}
+
+TEST(DefinitionParser, RefinementArrayIsReportedAsIgnored)
+{
+    // REFINEMENT_ARRAY was read but never used, without a message (#93)
+    const char * names[] = {"REFINEMENT_ARRAY", "REFINE_BY_ARRAY"};
+    for (const char * name : names)
+    {
+        DefinitionParser parser;
+        parse_builder(parser, std::string("  ") + name + " LAYER 1 = OPEN/CLOSE refine.dat\n");
+        const std::list<std::string> & warnings = parser.getWarnings();
+        ASSERT_EQ(warnings.size(), 1u) << name;
+        EXPECT_NE(warnings.front().find(std::string(name) + " LAYER 1"), std::string::npos)
+            << warnings.front();
+        EXPECT_NE(warnings.front().find("is ignored"), std::string::npos) << warnings.front();
+    }
+}
+
+TEST(DefinitionParser, RefinementArrayFileIsNotRead)
+{
+    // an ignored refinement array whose file does not exist does not stop initialization (#93)
+    std::istringstream dfn(std::string(MFG_BLOCK) +
+                           "BEGIN QUADTREE_BUILDER qtb\n"
+                           "  MODFLOW_GRID = mfg\n"
+                           "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                           "  REFINEMENT_ARRAY LAYER 1 = OPEN/CLOSE no_such_refine.dat\n"
+                           "END QUADTREE_BUILDER\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    quadtree_builder_raw_data * data =
+        dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+    ASSERT_NE(data, nullptr);
+    EXPECT_TRUE(data->initialize(parser.getBlockData()));
 }
 
 TEST(DefinitionParser, UnrecognizedRecordIsReported)

@@ -732,11 +732,6 @@ bool quadtree_builder_raw_data::parse()
         if (v.empty()) v = layer_record(name_value_map, "refinement_features", i);
         if (!v.empty()) refine_by_features_str[i] = v;
 
-        //refinement array, also allowed as refinement_array
-        v = layer_record(name_value_map, "refine_by_array", i);
-        if (v.empty()) v = layer_record(name_value_map, "refinement_array", i);
-        if (!v.empty()) refine_by_array_str[i] = v;
-
         //surface arrays
         v = layer_record(name_value_map, "top", i);
         if (!v.empty()) top_str[i] = v;
@@ -795,10 +790,8 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
 
     // initialize refinement features
     refine_by_features.reserve(modflow_data->nlay);
-    refine_by_array.reserve(modflow_data->nlay);
     top.reserve(modflow_data->nlay);
     bot.reserve(modflow_data->nlay);
-    int ncol_nrow = modflow_data->ncol * modflow_data->nrow;
 
     //fill in missing info about the depth values of each layer
     for (int i = 0; i < modflow_data->nlay; i++)
@@ -836,10 +829,6 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
         }
 
         refine_by_features.push_back(rF);
-
-        //refine by array
-        int * R = createArray<int>(refine_by_array_str[i], ncol_nrow, getFolderPath());
-        refine_by_array.push_back(R);
 
         //surface data
         top.push_back(make_pair(tolower(top_str[i].front()), top_str[i].back()));
