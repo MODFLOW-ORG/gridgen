@@ -28,53 +28,6 @@ namespace cusg
     
 */
 
-/*! \brief Instantiate a ModflowGrid object.
-        
-        This method is used to instantiate a ModflowGrid object.  The 
-        following arguments are required:
-           \param nlay: number of layers
-           \param nrow: number of rows
-           \param ncol: number of columns
-           \param delr: a ModflowArray object of size [ncol]
-           \param delc: a ModflowArray object of size [nrow]
-           \param botm: a ModflowArray object of size [nlay + 1, nrow, ncol]
-            
-        Optional arguments that can be specified using "...":
-
-           \param xoffset: the offset of the grid in the x direction
-           \param yoffset: the offset of the grid in the y direction
-           \param rotation: the grid rotation angle in degrees relative to the lower  
-                      left corner.
-                      
-        The local coordinate system has a (0, 0) x,y location that corresponds 
-        to the lower left corner of the grid.
-        
-        \note This is a variadic function.
-    */
-ModflowGrid::ModflowGrid(int nlay, int nrow, int ncol, double * delr, double * delc,
-                         vector<vector<vector<int>>> & botm, float xoffset, float yoffset,
-                         float rotation)
-    : ModflowGrid2D(nrow, ncol, delr, delc, xoffset, yoffset, rotation)
-{
-    init(nlay, nrow, ncol, botm);
-}
-
-ModflowGrid::ModflowGrid(int nlay, int nrow, int ncol, double delr, double delc,
-                         vector<vector<vector<int>>> & botm, float xoffset, float yoffset,
-                         float rotation)
-    : ModflowGrid2D(nrow, ncol, delr, delc, xoffset, yoffset, rotation)
-{
-    init(nlay, nrow, ncol, botm);
-}
-//
-ModflowGrid::ModflowGrid(const ModflowGrid & other)
-    : ModflowGrid2D(other.nrow, other.ncol, other.delr[0], other.delc[0], other.xoffset,
-                    other.yoffset, other.rotation)
-{
-    bot = other.bot;
-    init(other.nlay, other.nrow, other.ncol, other.bot);
-}
-
 ModflowGrid::ModflowGrid(const modflow_grid_raw_data & rawdata)
     : ModflowGrid2D(rawdata.nrow, rawdata.ncol, rawdata.delr, rawdata.delc, rawdata.x_offset,
                     rawdata.y_offset, rawdata.rotation_angle)
@@ -88,10 +41,6 @@ ModflowGrid::ModflowGrid(int lay, int row, int col, double dr, double dc, vector
 {
     init(lay, row, col, bot);
 }
-
-ModflowGrid::ModflowGrid() { /* be sure to call init() once you set up the grid! */
-
-};
 
 /// Return a numpy array of size (nodes) that contains the area for all cells.
 double * ModflowGrid::get_cell_areas()
@@ -112,45 +61,6 @@ double * ModflowGrid::get_cell_areas()
     } //end k
 
     return area;
-}
-
-/*!
-        \brief Return the four vertices for the specified nodeid.
-        
-        \verbatim
-        3-------2   7-------6
-        |  top  |   |  bot  |
-        |       |   |       |
-        0-------1   4-------5
-        \endverbatim
-    */
-vector<Point3d> ModflowGrid::get_vertices(int nodeid)
-{
-    Index3d kij = get_indices(nodeid);
-    int k = kij[0];
-    int i = kij[1];
-    int j = kij[2];
-
-    vector<Point3d> vertices(8, Point3d());
-
-    double top = botm(k, i, j);
-    vertices[0].set(Xe[j], Ye[i + 1], top);
-    vertices[1].set(Xe[j + 1], Ye[i + 1], top);
-    vertices[2].set(Xe[j + 1], Ye[i], top);
-    vertices[3].set(Xe[j], Ye[i], top);
-
-    double bot = botm(k + 1, i, j);
-    vertices[4].set(Xe[j], Ye[i + 1], bot);
-    vertices[5].set(Xe[j + 1], Ye[i + 1], bot);
-    vertices[6].set(Xe[j + 1], Ye[i], bot);
-    vertices[7].set(Xe[j], Ye[i], bot);
-
-    return vertices;
-}
-
-int ModflowGrid::get_nodeid(int i, int j)
-{
-    return ModflowGrid2D::get_nodeid(i, j);
 }
 
 ///Return the nodeid for the modflow grid.
@@ -394,13 +304,6 @@ CSRData ModflowGrid::get_usg_csr_data()
     return CSRData(nodes, nja, area, ia, ja, cl1, cl2, fahl, fldr, iac);
 }
 
-///this is a temporary SWIG/Python interface. Will find a better way to handle this
-void ModflowGrid::get_usg_csr_data(void * data)
-{
-    CSRData * csr = (CSRData *)data;
-    *csr = get_usg_csr_data();
-}
-
 ///number the nodes (i.e. leaves) in the grid
 void ModflowGrid::number_nodes()
 {
@@ -417,97 +320,6 @@ void ModflowGrid::number_nodes()
             } //end c
         } //end r
     } //end l
-}
-
-void ModflowGrid::updateNeighbors()
-{
-    for (int l = 0; l < nlay; l++)
-    {
-        for (int r = 0; r < nrow; r++)
-        {
-            for (int c = 0; c < ncol; c++)
-            {
-                int bid = get_nodeid(l, r, c);
-                Box * box = nodegroup[bid];
-                //pDown and pUp
-                if (l == 0)
-                    box->pDown = NULL;
-                else
-                    box->pDown = nodegroup[get_nodeid(l - 1, r, c)];
-                if (l == nlay - 1)
-                    box->pUp = NULL;
-                else
-                    box->pUp = nodegroup[get_nodeid(l + 1, r, c)];
-
-                if (r == 0)
-                    box->pChildren[0] = NULL;
-                else
-                    box->pChildren[0] = nodegroup[get_nodeid(l, r - 1, c)];
-                if (r == nrow - 1)
-                    box->pChildren[2] = NULL;
-                else
-                    box->pChildren[2] = nodegroup[get_nodeid(l, r + 1, c)];
-
-                if (c == 0)
-                    box->pChildren[3] = NULL;
-                else
-                    box->pChildren[3] = nodegroup[get_nodeid(l, r, c - 1)];
-
-                if (c == ncol - 1)
-                    box->pChildren[1] = NULL;
-                else
-                    box->pChildren[1] = nodegroup[get_nodeid(l, r, c + 1)];
-            }
-        }
-    }
-}
-
-void ModflowGrid::init(int nlay, int nrow, int ncol, double * botm)
-{
-    //log the creation
-    cout << "- A ModflowGrid object was instantiated." << endl;
-
-    //assign the arguments to the object.
-    this->nlay = nlay;
-    this->nodes = nlay * nrow * ncol;
-
-    //copy bottom layers
-    if (botm != NULL)
-    {
-        long botsize = (nlay + 1) * nrow * ncol;
-        this->bot = new double[botsize];
-        this->top = bot;
-        assert(bot);
-        memcpy(bot, botm, botsize * sizeof(double));
-    }
-
-    create_nodes();
-}
-
-void ModflowGrid::init(int nlay, int nrow, int ncol, const vector<vector<vector<int>>> & botm)
-{
-    //log the creation
-    cout << "- A ModflowGrid object was instantiated." << endl;
-
-    //assign the arguments to the object.
-    this->nlay = nlay;
-    this->nodes = nlay * nrow * ncol;
-    if (nlay > 1 || botm.size() > 1) is3d = true;
-
-    //copy bottom layers
-    if (botm.empty() == false)
-    {
-        long botsize = (nlay + 1) * nrow * ncol;
-        this->bot = new double[botsize];
-        this->top = bot;
-        assert(bot);
-
-        for (int l = 0, id = 0; l < nlay + 1; l++)
-            for (int r = 0; r < nrow; r++)
-                for (int c = 0; c < ncol; c++) bot[id++] = botm[l][r][c];
-    }
-
-    create_nodes();
 }
 
 void ModflowGrid::init(int nlay, int nrow, int ncol, const vector<double *> & botm)

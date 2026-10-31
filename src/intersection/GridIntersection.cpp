@@ -23,19 +23,6 @@ using namespace std;
 namespace cusg
 {
 
-void destroyPlylineCell(PolylineCellIntersectionInfo & info)
-{
-    info.m_plyline->destroy();
-}
-void destroyPlygonCell(PolygonCellIntersectionInfo & info)
-{
-    for (GIS_polygon::iterator git = info.m_interPolygon->begin();
-         git != info.m_interPolygon->end(); ++git)
-    {
-        git->destroy();
-    }
-}
-
 //GridIntersection
 
 void GridIntersection::build(grid_intersection_raw_data & data)
@@ -301,33 +288,6 @@ bool GridIntersection::save(string & filename, vector<string> & attributes)
     return true;
 }
 
-//save vtk file
-bool GridIntersection::saveVTK(string & filename, vector<string> & attributes)
-{
-    //if(filename.size()!=0)
-    //{
-    //	if(m_pt_interaction_info.size() != 0){
-    //		writePntIntersect2VTK(this, filename, attributes);
-    //	}
-    //	else if(m_seg_interaction_info.size() != 0){
-    //		writeLineIntersect2VTK(this, filename, attributes);
-    //	}
-    //	else if(m_ply_interaction_info.size() != 0){
-    //		writePolyIntersect2VTK(this, filename, attributes);
-    //	}
-    //	else{
-    //		cerr<<"no data to write!\n";
-    //		return true;
-    //	}
-    //	cout<<"- Savevtk data to file: "<<filename<<endl;
-    //}
-    //else{
-    //	cerr<<"output_file is not defined!"<<endl;
-    //}
-    cerr << "Saving intersection file to VTK is not supported yet!\n";
-    return true;
-}
-
 //
 //
 // ModflowGrid2D
@@ -503,12 +463,6 @@ bool GridIntersection::intersect(QuadTree3D * grid, const Point2d & pt) //, bool
     return true;
 }
 
-//Box
-bool GridIntersection::intersect(Box * b, const Point2d & pt)
-{
-    return b->in(pt[0], pt[1]);
-}
-
 //check intersection between a box and a line
 //TODO: this can be improved
 bool GridIntersection::intersect(Box * b, const LineSeg2d & line)
@@ -553,27 +507,6 @@ bool GridIntersection::intersect(Box * b, const LineSeg2d & line)
 
     //otherwise
     return false;
-}
-
-void GridIntersection::buildIntersectionInfo(Box * box, const GIS_polygon & ply,
-                                             PolygonCellIntersectionInfo & info)
-{
-    info.box = box;
-    info.m_area = box->dx * box->dy * 2;
-    info.m_polyID = ply.m_id;
-    info.m_interPolygon = new GIS_polygon();
-
-    Point2d UL, UR, LR, LL;
-    box->getCorners(UL, UR, LR, LL);
-
-    c_ply cply(c_ply::POUT);
-    cply.beginPoly();
-    cply.addVertex(UL[0], UL[1]);
-    cply.addVertex(UR[0], UR[1]);
-    cply.addVertex(LR[0], LR[1]);
-    cply.addVertex(LL[0], LL[1]);
-    cply.endPoly();
-    info.m_interPolygon->push_back(cply);
 }
 
 void GridIntersection::buildIntersectionInfo(Box * box, const GIS_polygon & ply,

@@ -123,30 +123,6 @@ ModflowGrid2D::ModflowGrid2D(int nrow, int ncol, double * delr, double * delc, d
     init2D();
 }
 
-ModflowGrid2D::ModflowGrid2D() : Grid()
-{
-    /* be sure to call init2D() once you set up the grid! */
-    nlay = 0;
-    nlay = nrow = ncol = nodes = 0;
-    delr = delc = NULL;
-    Xe = Ye = NULL; //x/y coord of all edges
-    xoffset = 0;
-    yoffset = 0;
-    rotation = 0;
-    width = height = 0;
-}
-
-/// # of nodes in all layers (int *)
-int * ModflowGrid2D::get_nodelay()
-{
-    int * nodelay = new int[nlay];
-    assert(nodelay);
-
-    for (int k = 0; k < nlay; k++) nodelay[k] = this->nrow * this->ncol;
-
-    return nodelay;
-}
-
 ///x coords for the center of all cells
 double * ModflowGrid2D::get_local_x_array()
 {
@@ -248,43 +224,6 @@ double * ModflowGrid2D::get_cell_areas()
         0-------1
     */
 
-vector<Point2d> ModflowGrid2D::get_vertices(int nodeid)
-{
-    Index2d ij = get_indices(nodeid);
-    int i = ij[0];
-    int j = ij[1];
-
-    Point2d p0(Xe[j], Ye[i + 1]);
-    Point2d p1(Xe[j + 1], Ye[i + 1]);
-    Point2d p2(Xe[j + 1], Ye[i]);
-    Point2d p3(Xe[j], Ye[i]);
-
-    vector<Point2d> vertices;
-    vertices.push_back(p0);
-    vertices.push_back(p1);
-    vertices.push_back(p2);
-    vertices.push_back(p3);
-
-    return vertices;
-}
-
-/*! 
-        \brief Return a tuple containing two points (the lower left and the upper 
-        right) in global grid coordinates.
-    */
-pair<Point2d, Point2d> ModflowGrid2D::get_extent()
-{
-    Point2d min, max;
-
-    min[0] = Xe[0];
-    min[1] = Ye[nrow];
-
-    max[0] = Xe[ncol];
-    max[1] = Ye[0];
-
-    return make_pair(min, max);
-}
-
 ///Return the nodeid for the modflow grid.
 int ModflowGrid2D::get_nodeid(int i, int j)
 {
@@ -304,45 +243,6 @@ Index2d ModflowGrid2D::get_indices(int nodeid)
     int i = int(nodeid / this->ncol);
     int j = nodeid - i * this->ncol;
     return Index2d(i, j);
-}
-
-///get box from id
-Box * ModflowGrid2D::create_nodeobj(int nodeid)
-{
-    Index2d ij = get_indices(nodeid);
-    int i = ij[0];
-    int j = ij[1];
-    return create_nodeobj(i, j);
-}
-
-Box * ModflowGrid2D::create_nodeobj(int i, int j)
-{
-    double x = this->X[j];
-    double y = this->Y[i];
-    Point3d position(x, y, 0);
-
-    double dx = this->delr[j];
-    double dy = this->delc[i];
-    Vector3d dxdydz(dx, dy, 0);
-
-    Box * nodeobj = new Box(position, dxdydz); //(position, dxdydz, save=False);
-
-    assert(nodeobj);
-
-    return nodeobj;
-}
-
-///
-Box * ModflowGrid2D::find_nodeobj(const Point2d & pt)
-{
-    Index2d id2d = getIndex(pt);
-
-    if (id2d[0] == INT_MAX || id2d[1] == INT_MAX || id2d[0] == INT_MIN || id2d[1] == INT_MIN)
-        return NULL;
-
-    //get the box
-    int id = get_nodeid(id2d[0], id2d[1]);
-    return nodegroup[id];
 }
 
 /// return a box containtain the given id
@@ -443,38 +343,6 @@ void ModflowGrid2D::init2D()
 
     //create and connect actual nodes (boxes)
     //create_nodes();
-}
-
-///create nodes and add them to nodegroup
-void ModflowGrid2D::create_nodes()
-{
-    // Create the nodegroup.
-    nodegroup = NodeGroup(this);
-    nodegroup.nlay = 1;
-
-    for (int i = 0; i < nrow; i++)
-    {
-        double y = Y[i];
-        for (int j = 0; j < ncol; j++)
-        {
-            double x = X[j];
-
-            Point3d position;
-            Vector3d dxdydz;
-
-            double z = 0.5 * (botm(0, i, j) + botm(1, i, j));
-            double dz = (botm(0, i, j) - botm(1, i, j));
-
-            position = Point3d(x, y, z);
-            dxdydz = Vector3d(delr[j], delc[i], dz);
-            Box * nodeobj = new Box(position, dxdydz);
-            assert(nodeobj);
-            nodeobj->layer = 0;
-            nodegroup.add(nodeobj);
-        } //end i
-    } //end j
-
-    add_connections();
 }
 
 ///add connection between boxes

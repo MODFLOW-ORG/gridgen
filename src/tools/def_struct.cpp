@@ -230,26 +230,6 @@ string BaseParser::tolower(const string & s)
     }
     return lower;
 }
-//-----------------------------------------------------------------------------
-// split a string into name and value by "="
-bool BaseParser::equal(const list<string> & name, string tmp)
-{
-    const char * ignore = " \t[]()<>,!{}\r\n";
-    char * tmp2 = new char[tmp.size() + 1];
-    assert(tmp2);
-    strcpy(tmp2, tmp.c_str());
-    list<string> name2 = tokenize(tmp2, ignore);
-    delete[] tmp2;
-    if (name.size() != name2.size()) return false;
-    //
-    typedef list<string>::const_iterator IT;
-    for (IT i = name.begin(), j = name2.begin(); i != name.end(); i++, j++)
-    {
-        if ((*i) != (*j)) return false;
-    }
-    //
-    return true;
-}
 
 //-----------------------------------------------------------------------------
 //
@@ -980,68 +960,6 @@ Grid * quadtree_builder_raw_data::build()
 //
 //
 //-----------------------------------------------------------------------------
-
-bool surface_interpolation_raw_data::parse()
-{
-    map<string, list<string>> name_value_map;
-
-    for (iterator i = begin(); i != end(); i++)
-    {
-        string & name = i->name;
-        list<string> & value = i->value;
-
-        if (name.empty() || value.empty())
-        {
-            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
-            continue;
-        }
-
-        name_value_map[name] = value;
-    }
-
-    //check the names
-    list<string> & value = name_value_map["filename"];
-    if (!value.empty())
-        filename = atoi(value.front().c_str());
-    else
-    {
-        cerr << "! Error: missing filename" << endl;
-        assert(false);
-        return false;
-    }
-
-    value = name_value_map["surface_type"];
-    if (!value.empty())
-        surface_type = atoi(value.front().c_str());
-    else
-    {
-        cerr << "! Error: missing surface_type" << endl;
-        assert(false);
-        return false;
-    }
-
-    value = name_value_map["modflow_grid"];
-    if (!value.empty())
-        modflow_grid = atoi(value.front().c_str());
-    else
-    {
-        cerr << "! Error: missing modflow_grid" << endl;
-        assert(false);
-        return false;
-    }
-
-    value = name_value_map["interpolation_type"];
-    if (!value.empty())
-        interpolation_type = atoi(value.front().c_str());
-    else
-    {
-        cerr << "! Error: missing interpolation_type" << endl;
-        assert(false);
-        return false;
-    }
-
-    return true;
-}
 
 //-----------------------------------------------------------------------------
 //

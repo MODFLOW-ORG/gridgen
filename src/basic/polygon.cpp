@@ -86,41 +86,11 @@ void ply_vertex::computeExtraInfo()
     } //end if(next!=NULL)
 }
 
-void ply_vertex::negate()
-{
-    normal = -normal;
-    pos[0] = -pos[0];
-    pos[1] = -pos[1];
-}
-
 void ply_vertex::reverse()
 {
     swap(next, pre);
     //normal=-normal;
     computeExtraInfo();
-}
-
-void ply_vertex::copy(ply_vertex * other)
-{
-    pos = other->pos;
-    normal = other->normal;
-    reflex = other->reflex;
-    vid = other->vid;
-}
-
-void ply_vertex::rotate(double r)
-{
-    double cos_r = cos(r);
-    double sin_r = sin(r);
-    //rotate pos
-    double x = pos[0] * cos_r - pos[1] * sin_r;
-    double y = pos[0] * sin_r + pos[1] * cos_r;
-    pos.set(x, y);
-
-    //rotate normal
-    x = normal[0] * cos_r - normal[1] * sin_r;
-    y = normal[0] * sin_r + normal[1] * cos_r;
-    normal.set(x, y);
 }
 
 /*
@@ -202,34 +172,6 @@ void ply_vertex::rotate(double r)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-//copy from the given ply
-void c_ply::copy(const c_ply & other)
-{
-    destroy(); //destroy myself first
-
-    ply_vertex * ptr = other.head;
-    beginPoly();
-    do
-    {
-        ply_vertex * v = new ply_vertex();
-        assert(v); //check for memory
-        v->copy(ptr);
-        addVertex(v);
-        ptr = ptr->getNext();
-    } while (ptr != other.head);
-
-    //endPoly();
-    //finish up
-    tail->setNext(head);
-
-    //copy extra info
-    area = other.area;
-    center = other.center;
-    radius = other.radius;
-    type = other.type;
-    triangulation = other.triangulation;
-}
-
 // clean up the space allocated
 void c_ply::destroy()
 {
@@ -266,19 +208,6 @@ void c_ply::addVertex(double x, double y, bool remove_duplicate)
     }
 
     ply_vertex * v = new ply_vertex(pt);
-    if (tail != NULL)
-    {
-        tail->setNext(v);
-    }
-    tail = v;
-    if (head == NULL) head = tail;
-    v->setVID(all.size()); //id of the vertex in this ply
-    all.push_back(v);
-}
-
-// Add a vertex to the polygonal chian
-void c_ply::addVertex(ply_vertex * v)
-{
     if (tail != NULL)
     {
         tail->setNext(v);
@@ -391,17 +320,6 @@ const Point2d c_ply::getCenter() const
         return this->center;
 }
 
-///////////////////////////////////////////////////////////////////////////
-void c_ply::negate()
-{
-    ply_vertex * ptr = head;
-    do
-    {
-        ptr->negate();
-        ptr = ptr->getNext();
-    } while (ptr != head); //end while
-}
-
 //reverse the order of the vertices
 void c_ply::reverse()
 {
@@ -415,47 +333,6 @@ void c_ply::reverse()
     this->area = -this->area;
     all.clear();
     triangulation.clear();
-}
-
-///////////////////////////////////////////////////////////////////////////
-void c_ply::translate(const Vector2d & v)
-{
-    ply_vertex * ptr = head;
-    do
-    {
-        ptr->translate(v);
-        ptr = ptr->getNext();
-    } while (ptr != head); //end while
-}
-
-void c_ply::rotate(double radius)
-{
-    ply_vertex * ptr = head;
-    do
-    {
-        ptr->rotate(radius);
-        ptr = ptr->getNext();
-    } while (ptr != head); //end while
-}
-
-///////////////////////////////////////////////////////////////////////////
-//compute the Radius of the poly chain
-float c_ply::getRadius()
-{
-    if (radius < 0)
-    {
-        getCenter();
-        ply_vertex * ptr = head;
-        do
-        {
-            float d = (center - ptr->getPos()).normsqr();
-            if (d > radius) radius = d;
-            ptr = ptr->getNext();
-        } while (ptr != head); //end while
-        radius = sqrt(radius);
-    }
-
-    return radius;
 }
 
 float c_ply::getRadius() const
@@ -626,39 +503,6 @@ void c_ply::triangulate(vector<triangle> & tris)
 }
 #endif //TRIANGULATION
 
-//check if convex
-bool c_ply::is_convex() const
-{
-    ply_vertex * ptr = head;
-    do
-    {
-        if (ptr->isReflex()) return false;
-        ptr = ptr->getNext();
-    } while (ptr != head); //end while
-
-    return true;
-}
-
-void c_ply::delete_vertex(ply_vertex * v)
-{
-    ply_vertex * pre = v->getPre();
-    ply_vertex * next = v->getNext();
-
-    pre->setNext(next);
-    next->setPre(pre);
-    pre->computeExtraInfo(); //recompute info
-
-    if (head == v)
-    {
-        head = next;
-        tail = pre;
-    }
-    delete v;
-
-    triangulation.clear(); //not valid anymore
-    all.clear();           //not valid anymore
-}
-
 void c_ply::build_all()
 {
     uint vid = 0;
@@ -702,60 +546,6 @@ void c_plylist::buildBoxAndCenter()
         center[1] = (box[2] + box[3]) / 2;
 
         is_buildboxandcenter_called = true;
-    }
-}
-
-//
-// Compute the center and the box of a list of plys
-//
-void c_plylist::translate(const Vector2d & v)
-{
-    for (iterator i = begin(); i != end(); i++) i->translate(v);
-}
-
-//
-// rotate all polychains
-//
-void c_plylist::rotate(double r)
-{
-    for (iterator i = begin(); i != end(); i++) i->rotate(r);
-}
-
-void c_plylist::negate()
-{
-    for (iterator i = begin(); i != end(); i++) i->negate();
-}
-
-void c_polygon::reverse()
-{
-    for (iterator i = begin(); i != end(); i++) i->reverse();
-    triangulation.clear();
-    all.clear();
-}
-
-bool c_polygon::valid() //check if this is a valid polygon
-{
-    typedef list<c_ply>::iterator IT;
-    if (empty()) return false;
-    if (front().getType() != c_ply::POUT) return false;
-    for (iterator i = ++begin(); i != end(); i++)
-        if (i->getType() != c_ply::PIN) return false;
-
-    return true;
-}
-
-//copy from the given polygon
-void c_polygon::copy(const c_polygon & other)
-{
-    clear();
-    triangulation.clear();
-    all.clear();
-
-    for (const_iterator i = other.begin(); i != other.end(); i++)
-    {
-        c_ply p(c_ply::UNKNOWN);
-        p.copy(*i);
-        push_back(p);
     }
 }
 
@@ -908,32 +698,6 @@ void c_polygon::triangulate(vector<triangle> & tris)
 
 #endif //triangulation
 
-list<c_polygon> c_polygon::split()
-{
-    list<c_polygon> sub;
-    for (iterator i = begin(); i != end(); i++)
-    {
-        if (i->getType() == c_ply::POUT)
-        {
-            c_polygon tmp;
-            tmp.push_back(*i);
-            sub.push_back(tmp);
-        }
-        else
-        {
-            if (sub.empty())
-            {
-                cerr
-                    << "! Error: Invalid polygon type: Holes are defined without external boundary."
-                    << endl;
-                continue; //can't do anything about this...
-            }
-            sub.back().push_back(*i);
-        }
-    }
-    return sub;
-}
-
 void c_polygon::destroy()
 {
     for (iterator i = begin(); i != end(); i++)
@@ -943,12 +707,6 @@ void c_polygon::destroy()
     clear(); //remove all ply from this list
     all.clear();
     triangulation.clear();
-}
-
-bool c_polygon::is_convex() const
-{
-    if (size() > 1) return false; //contains hole
-    return front().is_convex();
 }
 
 void c_polygon::build_all()
@@ -1046,31 +804,6 @@ istream & operator>>(istream & is, c_plylist & p)
         }
     }
     return is;
-}
-
-ostream & operator<<(ostream & os, c_ply & p)
-{
-    os << p.getSize() << " " << ((p.type == c_ply::PIN) ? "in" : "out") << "\n";
-    ply_vertex * ptr = p.head;
-    do
-    {
-        os << ptr->getPos()[0] << " " << ptr->getPos()[1] << "\n";
-        ptr = ptr->getNext();
-    } while (ptr != p.head);
-
-    for (int i = 0; i < p.getSize(); i++) os << i + 1 << " ";
-
-    os << "\n";
-
-    return os;
-}
-
-ostream & operator<<(ostream & out, c_plylist & p)
-{
-    out << p.size() << "\n";
-    typedef c_plylist::iterator PIT;
-    for (PIT i = p.begin(); i != p.end(); i++) out << *i;
-    return out;
 }
 
 } // end namespace mksum2d

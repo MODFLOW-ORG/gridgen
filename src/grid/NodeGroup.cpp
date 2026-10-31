@@ -81,15 +81,6 @@ int NodeGroup::add(Box * box)
     return nodeid;
 }
 
-int NodeGroup::remove(Box * box)
-{
-    int nodeid = box->id;
-    (*this)[nodeid] = NULL;
-    removed_nodes.push_back(nodeid);
-    rebuild_nodeid_array = true;
-    return nodeid;
-}
-
 /*!
     Return an array of size of the number of active leaf nodes
     and include in the array the nodeid.

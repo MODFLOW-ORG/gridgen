@@ -165,8 +165,6 @@ VNode * copyOnePly(VNode * head, bool bSetVisited = false);
 
 double getRotAngle(Vector2d & v1, Vector2d & v2);
 
-bool compareTwoBPC(BoxPlyClip * b1, BoxPlyClip * b2);
-
 //make sure the min and max are in correct order
 double intersectTwoBox(Point2d ld, Point2d rd, Point2d ru, Point2d lu, double xmin2, double xmax2,
                        double ymin2, double ymax2);

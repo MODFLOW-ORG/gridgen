@@ -155,18 +155,6 @@ public:
     /// 0 = N, 1=E, 2=S, W=3 (for neighbors)
     void getNeighbors(list<Box *> & neighbors, int dir);
 
-    /// If this is a leaf node, this gives the node to the north of this box
-    void getNorthNeighbors(list<Box *> & neighbors);
-
-    /// If this is a leaf node, this gives the node to the east of this box
-    void getEastNeighbors(list<Box *> & neighbors);
-
-    /// If this is a leaf node, this gives the node to the south of this box
-    void getSouthNeighbors(list<Box *> & neighbors);
-
-    /// If this is a leaf node, this gives the node to the west of this box
-    void getWestNeighbors(list<Box *> & neighbors);
-
     /*!
 	 * determine the status of the box (ex: UNKNOWN, IN, OUT, ON)
 	 */
@@ -204,9 +192,6 @@ public:
      *     - insufficient memory
      */
     bool split(double epsilon);
-
-    /// \brief reverse operation of split
-    bool coarsen();
 
     /// Check if a given point (qx,qy) is contained in this box
     bool in(double qx, double qy)
@@ -315,13 +300,6 @@ public:
     // DATA
     //
     //-------------------------------------------------------------------------
-
-    /*!
-     * compute the corners (vertices) of this box from its center and dimensions
-     * UL: upper-left vertex, UR: upper-right vertex
-     * LR: lower-right vertex, LL: lower-left vertex
-     */
-    void getCorners(Point2d & UL, Point2d & UR, Point2d & LR, Point2d & LL) const;
 
     string info;
     friend class BoxIter;
@@ -445,9 +423,5 @@ public:
     //Vertex* vertices[8];
 };
 //end of class Box
-
-ostream & operator<<(ostream & out, const Box & box);
-
-int generateID();
 
 } //end namespace cusg

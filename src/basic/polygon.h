@@ -59,22 +59,14 @@ public:
     }
     void computeExtraInfo();
 
-    /// negate the vertex
-    void negate();
-
     /// reverse the order
     void reverse();
-
-    /// copy
-    void copy(ply_vertex * other);
 
     ///////////////////////////////////////////////////////////////////////////
     void setPos(const Point2d & p) { pos = p; }
     virtual const Point2d & getPos() const { return pos; }
 
     void translate(const Vector2d & v) { pos = pos + v; }
-
-    void rotate(double r);
 
     virtual ply_vertex * getNext() const { return next; }
     virtual ply_vertex * getPre() const { return pre; }
@@ -136,24 +128,15 @@ public:
         area = -FLT_MAX;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    void copy(const c_ply & ply); //!< copy from the other ply
     void destroy();
 
     ///////////////////////////////////////////////////////////////////////////
     /// create c_ply
     void beginPoly();
     void addVertex(double x, double y, bool remove_duplicate = false);
-    void addVertex(ply_vertex * v);
     void endPoly(bool remove_duplicate = false);
 
-    ///////////////////////////////////////////////////////////////////////////
-    void negate();
     void reverse(); //!< reverse vertex order
-
-    ///////////////////////////////////////////////////////////////////////////
-    void translate(const Vector2d & v);
-    void rotate(double radius);
 
     ///////////////////////////////////////////////////////////////////////////
     // Access
@@ -192,27 +175,17 @@ public:
     //
     const Point2d getCenter() const;
 
-    /// compute the radius of the poly chain
-    float getRadius();
-
     //
     float getRadius() const;
 
     /// area
     float getArea();
 
-    /// checks if convex
-    bool is_convex() const;
-
-    /// delete a vertex
-    void delete_vertex(ply_vertex * p);
-
     ///////////////////////////////////////////////////////////////////////////
     // Operator
     /// check if given poly line is the same as this
     bool operator==(const c_ply & other) { return other.head == head; }
     friend istream & operator>>(istream &, c_ply &);
-    friend ostream & operator<<(ostream &, c_ply &);
 
 #if TRIANGULATION
 
@@ -261,7 +234,6 @@ private:
 /// a list of \c c_ply
 class c_plylist : public list<c_ply>
 {
-    friend ostream & operator<<(ostream &, c_plylist &);
     friend istream & operator>>(istream &, c_plylist &);
 
 public:
@@ -270,10 +242,6 @@ public:
         box[0] = box[1] = box[2] = box[3] = 0;
         is_buildboxandcenter_called = false;
     }
-
-    void negate();
-    void translate(const Vector2d & v);
-    void rotate(double r);
 
     //access
     void buildBoxAndCenter();
@@ -317,15 +285,6 @@ class c_polygon : public c_plylist
 public:
     c_polygon() { area = 0; }
 
-    bool valid(); //!< check if this is a valid polygon
-
-    /// copy from the given polygon
-    void copy(const c_polygon & other);
-
-    list<c_polygon> split();
-
-    void reverse(); //!< reverse the vertex order (not the list order)
-
     /// returns the number of vertices in the polygon
     int getSize()
     {
@@ -347,9 +306,6 @@ public:
 
     /// get number of vertices
     uint getSize() const;
-
-    ///check if this polygon is convex or not
-    bool is_convex() const;
 
     ///rotate this polygon
     void rotate(double cx, double cy, double angle)

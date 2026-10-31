@@ -16,11 +16,6 @@
 
 namespace cusg
 {
-int generateID()
-{
-    static int id = 1;
-    return id++;
-}
 
 // ----------------------------------------------------------------------------
 //
@@ -227,23 +222,6 @@ void Box::getNeighbors(list<Box *> & neighbors, int dir)
     }
 }
 
-void Box::getNorthNeighbors(list<Box *> & neighbors)
-{
-    getNeighbors(neighbors, 0);
-}
-void Box::getEastNeighbors(list<Box *> & neighbors)
-{
-    getNeighbors(neighbors, 1);
-}
-void Box::getSouthNeighbors(list<Box *> & neighbors)
-{
-    getNeighbors(neighbors, 2);
-}
-void Box::getWestNeighbors(list<Box *> & neighbors)
-{
-    getNeighbors(neighbors, 3);
-}
-
 /*!  \brief Splits the box into sub-boxes
  *
  * Splits this box off into sub-boxes (one for each quadrant
@@ -441,82 +419,6 @@ bool Box::split(double epsilon)
     return true;
 }
 
-/// \brief reverse operation of split
-bool Box::coarsen()
-{
-    //log a debug message
-    //cout<< "Coarsening nodeid: "<<id<<endl;
-
-    //ensure node can be coarsened
-    if (isLeaf)
-    {
-        cerr << "! Error: node[" << id << "] is a leaf node so cannot be coarsened" << endl;
-        assert(false);
-    }
-
-    //make sure it has four branches that are leaf nodes
-    //and then collect neighbors
-
-    //Box * children[4]; //backup
-
-    for (short i = 0; i < 4; i++)
-    {
-        //find other directions
-        int next = (i + 1) % 4;
-        int cross = (i + 2) % 4;
-
-        if (pChildren[i]->isLeaf == false)
-        {
-            cerr << "! Error: node[" << id << "]: Not all children are leaves. Cannot be coarsened."
-                 << endl;
-            assert(false);
-        }
-
-        //init box neighbor iterator for direction i
-        //for each direction i, there will be two children boxes
-        for (short j = 0; j < 2; j++) //for each of these two boxes
-        {
-            Box * kid = (j == 0) ? pChildren[i] : pChildren[next];
-
-            //go through all neighboring boxes in direction i
-            BoxIter iter(kid, i);
-            Box * neighbor = iter.First();
-
-            if (neighbor == NULL) continue; //no neighbors...
-
-            do
-            {
-
-                //change pointer from kid to this
-                if (neighbor->pChildren[cross] == kid) neighbor->pChildren[cross] = this;
-                neighbor = iter.Next();
-            } while (neighbor != iter.End());
-        } //end for j
-    }
-
-    //update the pChildren link
-    for (short i = 0; i < 4; i++)
-    {
-        pChildren[i]->dirty = true; //mark for deletion
-        pChildren[i] =
-            pChildren[i]->pChildren[i]; //now, this pChildren[i] becomes the neighbor at i-direction
-    } //end for i
-
-    //reset this node to a leaf
-    isLeaf = true;
-
-    //update up and down pointers
-    for (short i = 0; i < 4; i++)
-    {
-        if (pChildren[i]->pUp != NULL)
-            if (pChildren[i]->pUp->pDown == pChildren[i]) pChildren[i]->pUp->pDown = this;
-        if (pChildren[i]->pDown != NULL)
-            if (pChildren[i]->pDown->pUp == pChildren[i]) pChildren[i]->pDown->pUp = this;
-    } //end for i
-
-    return true;
-}
-
 /*!
  * Refine pUp (this is called when pUp is at the level lower than the box but is not a leaf)
  */
@@ -566,26 +468,6 @@ bool Box::refine_pUpDown(Box ** ppbox)
     return refine_pUpDown(ppbox);
 }
 
-/*!
- * compute the corners (vertices) of this box from its center and dimensions
- * UL: upper-left vertex, UR: upper-right vertex
- * LR: lower-right vertex, LL: lower-left vertex
- */
-void Box::getCorners(Point2d & UL, Point2d & UR, Point2d & LR, Point2d & LL) const
-{
-    double w2 = dx / 2;
-    double h2 = dy / 2;
-    double x_l = x - w2;
-    double x_r = x + w2;
-    double y_l = y - h2;
-    double y_u = y + h2;
-
-    UL.set(x_l, y_u);
-    LL.set(x_l, y_l);
-    UR.set(x_r, y_u);
-    LR.set(x_r, y_l);
-}
-
 /// find a leaf box containing a given point (qx,qy)
 Box * Box::find(double qx, double qy)
 {
@@ -612,15 +494,6 @@ void Box::rotateCtr(double cx, double cy, double rotation, double & resx, double
 {
     resx = cx + (x - cx) * cos(rotation) - (y - cy) * sin(rotation);
     resy = cy + (y - cy) * cos(rotation) + (x - cx) * sin(rotation);
-}
-
-ostream & operator<<(ostream & out, const Box & box)
-{
-    Point2d UL, UR, LR, LL;
-    box.getCorners(UL, UR, LR, LL);
-    out << "Box [" << box.id << "] = (" << LL << ") * (" << UR << ") number=" << box.number
-        << " depth=" << box.depth;
-    return out;
 }
 
 } //end namespace cusg

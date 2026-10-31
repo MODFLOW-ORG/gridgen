@@ -7,44 +7,6 @@
 namespace cusg
 {
 
-///////////////////////////////////////////////////////////////////////////////
-c_plyline::c_plyline(const c_ply & ply)
-{
-    destroy(); //destroy myself first
-    ply_vertex * ptr = ply.getHead();
-    beginPoly();
-    do
-    {
-        const Point2d & pos = ptr->getPos();
-        addVertex(pos[0], pos[1]);
-        ptr = ptr->getNext();
-    } while (ptr != ply.getHead());
-
-    //add head again
-    const Point2d & head_pos = ply.getHead()->getPos();
-    addVertex(head_pos[0], head_pos[1]);
-    endPoly();
-}
-
-//copy from the given ply
-void c_plyline::copy(const c_plyline & other)
-{
-    destroy(); //destroy myself first
-
-    ply_vertex * ptr = other.head;
-    beginPoly();
-    do
-    {
-        ply_vertex * v = new ply_vertex();
-        assert(v); //check for memory
-        v->copy(ptr);
-        addVertex(v);
-        ptr = ptr->getNext();
-    } while (ptr != NULL);
-
-    endPoly();
-}
-
 // clean up the space allocated
 void c_plyline::destroy()
 {
@@ -89,19 +51,6 @@ void c_plyline::addVertex(double x, double y, bool remove_duplicate)
     all.push_back(v);
 }
 
-// Add a vertex to the polygonal chian
-void c_plyline::addVertex(ply_vertex * v)
-{
-    if (tail != NULL)
-    {
-        tail->setNext(v);
-    }
-    tail = v;
-    if (head == NULL) head = tail;
-    v->setVID(all.size()); //id of the vertex in this ply
-    all.push_back(v);
-}
-
 // finish building the polygon
 void c_plyline::endPoly()
 {
@@ -136,57 +85,6 @@ void c_plyline::doInit()
 //    ply.endPoly();
 //    return ply;
 //}
-
-///////////////////////////////////////////////////////////////////////////
-void c_plyline::negate()
-{
-    ply_vertex * ptr = head;
-    do
-    {
-        ptr->negate();
-        ptr = ptr->getNext();
-    } while (ptr != NULL); //end while
-}
-
-///////////////////////////////////////////////////////////////////////////
-void c_plyline::translate(const Vector2d & v)
-{
-    ply_vertex * ptr = head;
-    do
-    {
-        ptr->translate(v);
-        ptr = ptr->getNext();
-    } while (ptr != NULL); //end while
-}
-
-void c_plyline::rotate(double radius)
-{
-    ply_vertex * ptr = head;
-    do
-    {
-        ptr->rotate(radius);
-        ptr = ptr->getNext();
-    } while (ptr != NULL); //end while
-}
-
-void c_plyline::expand(c_plyline & plyline)
-{
-    //cout<<"my head="<<head<<" my tail="<<tail<<" other head="<<plyline.head<<" other tail="<<plyline.tail<<endl;
-
-    //remove plyline's head if tail and head coincide
-    if (tail->getPos() == plyline.head->getPos())
-    {
-        ply_vertex * new_head = plyline.head->getNext();
-        new_head->setPre(NULL);
-        delete plyline.head;
-        plyline.head = new_head;
-    }
-
-    tail->setNext(plyline.head);
-    tail->computeExtraInfo();
-    tail = plyline.tail;
-    build_all();
-}
 
 void c_plyline::build_all()
 {
@@ -357,21 +255,6 @@ istream & operator>>(istream & is, c_plyline & poly)
 //        //done
 //        return is;
 //    }
-
-ostream & operator<<(ostream & os, c_plyline & p)
-{
-    os << p.getSize() << "\n";
-    ply_vertex * ptr = p.head;
-    do
-    {
-        os << ptr->getPos()[0] << " " << ptr->getPos()[1] << "\n";
-        ptr = ptr->getNext();
-    } while (ptr != NULL);
-
-    for (int i = 0; i < p.getSize(); i++) os << i + 1 << " ";
-    os << "\n";
-    return os;
-}
 
 //    ostream& operator<<( ostream& out, c_plylinelist& p)
 //    {

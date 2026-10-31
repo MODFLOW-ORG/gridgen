@@ -6,49 +6,6 @@ using namespace std;
 
 namespace cusg
 {
-bool compareTwoV(VNode * v1, VNode * v2)
-{
-    if (fabs(v1->x - v2->x) > SMALLCOORDINATE)
-    {
-        cerr << "coordinate not equal" << endl;
-        return false;
-    }
-    if (fabs(v1->y - v2->y) > SMALLCOORDINATE)
-    {
-        cerr << "coordinate not equal" << endl;
-        return false;
-    }
-    if (v1->isInDirect != v2->isInDirect || v1->isOnline != v2->isOnline ||
-        v1->isScanPnt != v2->isScanPnt || v1->isVisited != v2->isVisited)
-    {
-        cerr << "coordinate not equal" << endl;
-        return false;
-    }
-    return true;
-}
-bool compareTwoPly(VNode * h1, VNode * h2)
-{
-    VNode *v1 = h1, *v2 = h2;
-    do
-    {
-        if (!compareTwoV(v1, v2)) return false;
-        v1 = v1->next;
-        v2 = v2->next;
-    } while (v1 != h1);
-    if (v2 != h2) return false;
-    return true;
-}
-bool compareTwoBPC(BoxPlyClip * b1, BoxPlyClip * b2)
-{
-    list<VNode *>::iterator vit1 = b1->plys.begin();
-    list<VNode *>::iterator vit2 = b2->plys.begin();
-    for (; vit1 != b1->plys.end(); ++vit1, ++vit2)
-    {
-        if (!compareTwoPly(*vit1, *vit2)) return false;
-    }
-    if (vit2 != b2->plys.end()) cout << "the ply size is not equal" << endl;
-    return true;
-}
 Point2d getCenter(VNode * head)
 {
     double x = 0, y = 0;
@@ -157,16 +114,6 @@ VNode * copyOnePly(VNode * head, bool bSetVisited)
     }
 
     return nh;
-}
-void resetBPCStatus(VNode * head)
-{
-    if (head == NULL) return;
-    VNode * vn = head;
-    do
-    {
-        vn->resetStatus();
-        vn = vn->next;
-    } while (vn != head);
 }
 BoxPlyClip * copyBoxPlyClip(BoxPlyClip * bpc, bool bSetVisited = false)
 {

@@ -47,9 +47,6 @@ protected:
     // split a string into name and value by "="
     pair<char *, char *> split(char * tmp);
 
-    //check if the contents of name and tmp are the same
-    bool equal(const list<string> & name, string tmp);
-
     //merge a list of strings in to a single string connected by del
     string merge(const list<string> & name, string del);
 
@@ -365,8 +362,6 @@ class surface_interpolation_raw_data : public block_raw_data
 {
 public:
     surface_interpolation_raw_data(block_raw_data & block) : block_raw_data(block) {}
-
-    virtual bool parse();
 
     string filename;
     string surface_type;

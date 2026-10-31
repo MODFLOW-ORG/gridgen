@@ -18,28 +18,18 @@ class c_plyline
 public:
     ///////////////////////////////////////////////////////////////////////////
     c_plyline() { head = tail = NULL; }
-    c_plyline(const c_ply & ply);
 
-    ///////////////////////////////////////////////////////////////////////////
-    void copy(const c_plyline & plyline); //copy from the other ply
     void destroy();
 
     ///////////////////////////////////////////////////////////////////////////
     // create c_ply
     void beginPoly();
     void addVertex(double x, double y, bool remove_duplicate = false);
-    void addVertex(ply_vertex * v);
     void endPoly();
 
     ///////////////////////////////////////////////////////////////////////////
     //convert plyline to ply
     c_ply toply() const;
-
-    ///////////////////////////////////////////////////////////////////////////
-    void negate();
-    void translate(const Vector2d & v);
-    void rotate(double radius);
-    void expand(c_plyline & plyline); //add the given plyline to the end of this plyline
 
     ///////////////////////////////////////////////////////////////////////////
     // Access
@@ -63,7 +53,6 @@ public:
     //check if give poly line is the same as this
     bool operator==(const c_plyline & other) { return other.head == head; }
     friend istream & operator>>(istream &, c_plyline &);
-    friend ostream & operator<<(ostream &, c_plyline &);
 
     //rotate function
     void rotate(double cx, double cy, double angle);

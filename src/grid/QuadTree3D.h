@@ -59,9 +59,7 @@ public:
 
     //
     void refine(Point2d & pt, int max_level, int at_layer = 0);
-    void refine(LineSeg2d line, int max_level, int at_layer = 0);
     void refine(c_plyline & arc, int max_level, int at_layer = 0);
-    void refine(c_ply & ply, int max_level, int at_layer = 0);
     void refine(c_polygon & pgon, int max_level, int at_layer = 0);
 
     //void refine( max_level, at_layer, Point2d);
@@ -78,12 +76,6 @@ public:
 		
 	}
 	*/
-
-    /*! 
-        \brief Return a tuple containing two points (the lower left and the upper 
-        right) in global grid coordinates.
-    */
-    pair<Point2d, Point2d> get_extent();
 
     /*
 	///Return the nodeid for the modflow grid.
@@ -116,12 +108,6 @@ public:
      */
     int * createnodenumber_array();
 
-    /*!
-        Create an array of size modflowgrid.nlay that has the number of
-        nodes in each layer.
-     */
-    void create_nodelay_array();
-
     /*! 
 	    Return an array of len(nodegroup) that contains the nodenumber for all
         active leaf nodes.  Thus the array contains:
@@ -136,12 +122,6 @@ public:
 
     ///get box from id
     Box * get_nodeobj(int nodenumber);
-
-    ///get box from id
-    void getnode(void * node, int nodenumber);
-
-    ///get number of nodes
-    int get_nodes();
 
     int get_nodenumber(int nodeid);
 
@@ -162,9 +142,6 @@ public:
 
     //return the
     list<pair<int, int>> get_node_connections_vp(Box * box, vector<double> * area);
-
-    /// direction indicator of size nja (+-1 for x, +-2 for y +-3 for z)
-    int boundayNodes(vector<int> & nodeids, int dir);
 
     /*! \brief Obtain CSRData
 
@@ -238,12 +215,6 @@ protected:
     double bilinear_interpolation(Box * box, const string & arcinfo_filename,
                                   bool useAreaWeighted = true);
 
-    //linear interpolation the value of a given point
-    double bilinear_interpolation(const Point2d & pt, double * zgrid);
-
-    //linear interpolation the value of a given point
-    double bilinear_interpolation(const Point2d & pt, const string & arcinfo_filename);
-
     ///align the elevation (z) between the shared surface (bottom of top cell and top of bottom cells) of the given box
     void align_elev(Box * top_box);
 
@@ -251,9 +222,6 @@ public:
     //linear interpolation the value of the center of the box
     //Instead of having this as static, we should move it to modflow grid...
     static double bilinear_interpolation(const Point2d & pt, ascii_grid * agrid);
-
-    //linear interpolation the value of a given point in a given layer (either top or bottom)
-    double bilinear_interpolation(const Point2d & pt, int layer, bool top);
 
 protected:
     ///modflow grid

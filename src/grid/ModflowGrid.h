@@ -35,64 +35,15 @@ namespace cusg
 class ModflowGrid : public ModflowGrid2D
 {
 public:
-    /*! \brief Instantiate a ModflowGrid object.
-        
-        This method is used to instantiate a ModflowGrid object.  The 
-        following arguments are required:
-           \param nlay: number of layers
-           \param nrow: number of rows
-           \param ncol: number of columns
-           \param delr: a ModflowArray object of size [ncol]
-           \param delc: a ModflowArray object of size [nrow]
-           \param botm: a ModflowArray object of size [nlay + 1, nrow, ncol]
-            
-        Optional arguments that can be specified using "...":
-
-           \param xoffset: the offset of the grid in the x direction
-           \param yoffset: the offset of the grid in the y direction
-           \param rotation: the grid rotation angle in degrees relative to the lower  
-                      left corner.
-                      
-        The local coordinate system has a (0, 0) x,y location that corresponds 
-        to the lower left corner of the grid.
-        
-        \note This is a variadic function.
-    */
-    ModflowGrid(int nlay, int nrow, int ncol, double * delr, double * delc,
-                vector<vector<vector<int>>> & botm, float xoffset = 0, float yoffset = 0,
-                float rotation = 0);
-
-    ModflowGrid(int nlay, int nrow, int ncol, double delr, double delc,
-                vector<vector<vector<int>>> & botm, float xoffset = 0, float yoffset = 0,
-                float rotation = 0);
-
-    ModflowGrid(const ModflowGrid & other);
-
     ModflowGrid(const modflow_grid_raw_data & rawdata);
 
     ModflowGrid(int lay, int row, int col, double dr, double dc, vector<double *> & bot,
                 double xoffset, double yoffset, double angle);
 
-    ModflowGrid();
-
     virtual ~ModflowGrid() {}
 
     /// Return a numpy array of size (nodes) that contains the area for all cells.
     double * get_cell_areas();
-
-    /*!
-        \brief Return the four vertices for the specified nodeid.
-        
-        \verbatim
-        3-------2   7-------6
-        |  top  |   |  bot  |
-        |       |   |       |
-        0-------1   4-------5
-        \endverbatim
-    */
-    vector<Point3d> get_vertices(int nodeid);
-
-    int get_nodeid(int i, int j);
 
     ///Return the nodeid for the modflow grid.
     virtual int get_nodeid(int k, int i, int j);
@@ -121,13 +72,8 @@ public:
      */
     CSRData get_usg_csr_data();
 
-    ///this is a temporary SWIG/Python interface. Will find a better way to handle this
-    void get_usg_csr_data(void * data);
-
     ///number the nodes (i.e. leaves) in the grid
     virtual void number_nodes();
-
-    void updateNeighbors();
 
     ////rotate all the boxes
     void getRotatePara(double & cx, double & cy, double & angle)
@@ -139,10 +85,6 @@ public:
     }
 
 protected:
-    void init(int nlay, int nrow, int ncol, double * botm);
-
-    void init(int nlay, int nrow, int ncol, const vector<vector<vector<int>>> & botm);
-
     void init(int nlay, int nrow, int ncol, const vector<double *> & botm);
 
     ///create nodes and add them to nodegroup

@@ -49,24 +49,6 @@ bool CPlyEnclose(const c_ply & cply, const Point2d & p2d)
     return false;
 }
 
-bool CPolygonEnclose(const c_polygon & cplygon, const Point2d & p2d)
-{
-    bool inside = true;
-    for (c_polygon::const_iterator pit = cplygon.begin(); pit != cplygon.end(); pit++)
-    {
-        const c_ply & cp = *pit;
-        if (cp.getType() == c_ply::POUT)
-        {
-            if (!CPlyEnclose(cp, p2d)) return false;
-        }
-        else
-        {
-            if (CPlyEnclose(cp, p2d)) return false;
-        }
-    }
-    return true;
-}
-
 //here we use the center of c_ply to decide the containing relationship
 bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
 {

@@ -694,15 +694,6 @@ int collectCell_share(QuadTree3D * qtree, vector<Box *> & allBoxes, vector<int> 
     return cellNum;
 }
 
-Vertex * getMid(Vertex * v1, Vertex * v2, vector<Vertex *> & vdata, int & vid)
-{
-    Vertex * nv = new Vertex((v1->pos[0] + v2->pos[0]) / 2, (v1->pos[1] + v2->pos[1]) / 2,
-                             (v1->pos[2] + v2->pos[2]) / 2, vid++);
-    vdata.push_back(nv);
-
-    return nv;
-}
-
 void rotateOnePnt(double x, double y, double cx, double cy, double rotation, double & resx,
                   double & resy)
 {
@@ -728,54 +719,7 @@ double fitZ(double ** vv, double x, double y)
     return z;
 }
 
-int getDepth(int n[4])
-{
-    if (n[0] == n[1] && n[1] == n[2] && n[2] == n[3]) return -1;
-    for (int i = 0; i < 4; i++)
-    {
-        if (n[i] > n[(i + 1) % 4]) return i;
-    }
-    assert(false);
-    return -1;
-}
-bool no_collinear_add(set<Box *> & bset, Box * b)
-{
-    if (bset.size() == 2)
-    {
-        set<Box *>::iterator bit = bset.begin();
-
-        Box * b1 = *(bset.begin());
-        Box * b2 = *(++bit);
-        if (bset.find(b) == bset.end())
-        {
-            double co_eff =
-                fabs((b2->x - b1->x) * (b->y - b1->y) - (b->x - b1->x) * (b2->y - b1->y));
-            if (co_eff < 1e-6) return false;
-        }
-    }
-    bset.insert(b);
-    return true;
-}
-
 //-------------------------------------------------------------------------------------------------
-
-//build the mfgrid ascii grid
-void build_mf_ascii(QuadTree3D * qtree, vector<mf_ascii_grid *> & top_ags,
-                    vector<mf_ascii_grid *> & bot_ags)
-{
-    ModflowGrid * mfgrid = qtree->getModflowGrid();
-
-    int csize = mfgrid->nrow * mfgrid->ncol;
-    for (int k = 0; k < mfgrid->nlay; k++)
-    {
-        double * top_zgrid = &(mfgrid->top[csize * k]);
-        double * bot_zgrid = &(mfgrid->bot[csize * k]);
-        mf_ascii_grid * top_ag = new mf_ascii_grid(mfgrid, top_zgrid, mfgrid->ncol, mfgrid->nrow);
-        mf_ascii_grid * bot_ag = new mf_ascii_grid(mfgrid, bot_zgrid, mfgrid->ncol, mfgrid->nrow);
-        top_ags.push_back(top_ag);
-        bot_ags.push_back(bot_ag);
-    }
-}
 
 //
 // for QuadTree3D sharing Vertices

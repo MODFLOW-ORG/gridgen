@@ -86,9 +86,6 @@ struct PolygonCellIntersectionInfo
     Box * box;
     GIS_polygon * m_interPolygon;
 };
-void destroyPlylineCell(PolylineCellIntersectionInfo & info);
-
-void destroyPlygonCell(PolygonCellIntersectionInfo & info);
 
 class GridIntersection
 {
@@ -142,9 +139,6 @@ public:
 
     //save the shape file
     bool saveShp(string & shpName, vector<string> & attributes);
-
-    //save the vtk file
-    bool saveVTK(string & vtkName, vector<string> & attributes);
 
     //
     bool intersect(QuadTree3D * grid, double x, double y) { return intersect(grid, Point2d(x, y)); }
@@ -213,8 +207,6 @@ public:
     bool intersect(T * grid, const c_polygon & polygon, list<Box *> & bd_intersection,
                    list<Box *> & enclosed_intersection);
 
-    ///Box
-    bool intersect(Box * b, const Point2d & pt);
     bool intersect(Box * b, const LineSeg2d & line);
     double intersect_len(Box * b, const LineSeg2d & line);
     //double intersect_polygon(Box* b, const GIS_polygon& ply, GIS_polygon& resultPly);
@@ -269,9 +261,6 @@ protected:
     void buildIntersectionInfo(Box * box, const GIS_polygon & ply,
                                vector<PolygonCellIntersectionInfo> & infoResult,
                                BoxPlyClip * bpc = NULL);
-
-    void buildIntersectionInfo(Box * box, const GIS_polygon & ply,
-                               PolygonCellIntersectionInfo & info);
 
     //void buildIntersectionInfo(Box * box, BoxPlyClip* bpc, vector<PolygonCellIntersectionInfo>& infoResult);
     SegmentCellIntersectionInfo buildIntersectionInfo(Box * box, const GIS_LineSeg2d & line);
