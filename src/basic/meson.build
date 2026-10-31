@@ -1,11 +1,8 @@
 basic_sources = files(
-    'Array3D.cpp',
     'polygon.cpp',
     'Util.cpp',
     'Basic.cpp',
     'polyline.cpp',
-    'Gauss.cpp',
-    'Quaternion.cpp',
     'Point.h',
 )
 

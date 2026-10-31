@@ -71,36 +71,6 @@ inline int round(REAL v)
 #define DegToRad(x) ((x) * DEG2RAD)
 #define RadToDeg(x) ((x) * RAD2DEG)
 
-/*
-      computes sqrt(a^2 + b^2) without destructive underflow or overflow
-    */
-REAL pythag(REAL a, REAL b);
-
-/*
-      Utility Error message routines
-    */
-// print s to stdout with trailing blank and no terminating end of line
-void prompt(char * s);
-
-// print s1, s2, s3 to stdout as blank separated fields with terminating eol
-void message(char * s1, char * s2 = NULL, char * s3 = NULL);
-
-// print Status: to stdout followed by message(s1, s2, s3)
-void status(char * s1, char * s2 = NULL, char * s3 = NULL);
-
-// print Error: followed by s1, s2 and s3 to stderr as blank separated fields
-// with terminating eol
-void error(char * s1, char * s2 = NULL, char * s3 = NULL);
-
-// print error(s1, s2, s3) and then exit program with code 1
-void abort(char * s1, char * s2 = NULL, char * s3 = NULL);
-
-///Added by Jyh-Ming Lien
-/*
-    bool getDoubleValue(char * pTag, REAL * pValue,int size);
-    bool getDoubleValue(char * pTag, REAL * pValue);
-    */
-
 #if defined(_WIN32) || defined(_WIN64)
 
 ////////////////////////////////////////////////////////////////////////////////////////

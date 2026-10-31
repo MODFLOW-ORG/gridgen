@@ -1,0 +1,3 @@
+section = "internal"
+subsection = "build"
+description = "The makefile in the src folder, which had not been updated since version 1.0.02 and no longer built GRIDGEN, was removed; GRIDGEN is built with meson. Source files and functions that GRIDGEN never used were also removed, without changing the program or its output."
