@@ -88,6 +88,13 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Testing scope:** rebuild, then run the unit tests or test group that
   covers the change before the full `pixi run test`. Run
   `pixi run compare-main` when a change can alter output.
+- **Downstream use:** FloPy (`autotest/test_gridgen.py` in modflowpy/flopy
+  `develop`) and the modflow6-examples scripts `ex-prt-mp7-p02.py` and
+  `ex-prt-mp7-p04.py` run gridgen and pass its output to MODFLOW 6 and
+  MODPATH 7. For a change to `src/` that could change behavior, run them
+  once with the branch build and once with a build of `main` first on
+  `PATH` (with `PLOT=False` for the examples), and compare what they write
+  file by file; only FloPy and MODFLOW timestamps and run times may differ.
 - **Error output in unit tests:** do not assert on captured stderr.
   `testing::internal::CaptureStderr()` returns nothing on the
   `windows-2022 intel 2025.0` CI build, though it works on the others, so
