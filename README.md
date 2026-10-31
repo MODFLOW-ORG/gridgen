@@ -25,7 +25,7 @@ This report describes the theory and input instructions at the time of the initi
 This USGS software has two citations associated with it.
 
 The report citation is for the original report or article documenting the underlying theory, methods, instructions, and (or) applications at the time the initial version of the software was released. This digital object identifier (DOI) is for the report.
-The software release citation is for the software/code itself (now referred to by USGS as a "Software Release") and references a specific version of the code and associated release date.
+The software release citation is for the software/code itself and references a specific version of the code and associated release date.
 In instances where an author is citing use of this software, it would be appropriate to cite both the report documenting the code and the specific software release version that was used.
 
 ### Report Citation for GRIDGEN
@@ -34,4 +34,4 @@ Lien, Jyh-Ming, Liu, Guilin, and Langevin, C.D., 2015, GRIDGEN version 1.0 -- A 
 
 ### Software/Code Citation for GRIDGEN v1.0.02
 
-Lien, Jyh-Ming, Liu, Guilin, and Langevin, C.D., 2017, GRIDGEN version 1.0.02 -- A computer program for generating unstructured finite-volume grids: U.S. Geological Survey Software Release, 06 January 2017.
+Lien, Jyh-Ming, Liu, Guilin, and Langevin, C.D., 2017, GRIDGEN version 1.0.02 -- A computer program for generating unstructured finite-volume grids: Software release, 06 January 2017.
