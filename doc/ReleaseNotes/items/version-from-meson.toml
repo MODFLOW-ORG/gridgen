@@ -1,3 +1,0 @@
-section = "internal"
-subsection = "build"
-description = "The version is set in `version.txt` and shown by the program, which adds the git commit to the version of a development build (for example, 1.0.03.dev0+d418a91). `pixi run update-version` updates the version in every file that holds it. The Visual Studio project files were removed; GRIDGEN is built with meson."

@@ -1,3 +1,0 @@
-section = "fixes"
-subsection = "export"
-description = "GRID_TO_USGDATA now writes correct output for a MODFLOW_GRID as well as a QUADTREE grid; the GRIDGEN report describes it only for a QUADTREE grid. For a MODFLOW_GRID, the horizontal connection areas (fahl) were wrong wherever a layer was not a whole number of length units thick or neighboring cells differed in thickness. Upward connections were also marked as downward in the connection directions (fldr), the last value of the index array (ia) was one too small, and GRIDGEN stopped before writing the node (.nod) file. VERTICAL_PASS_THROUGH applies only to a QUADTREE grid; for a MODFLOW_GRID it is ignored with a warning. Output for quadtree grids is unchanged."

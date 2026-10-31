@@ -1,3 +1,0 @@
-section = "fixes"
-subsection = "gridding"
-description = "Cell elevations read with the ASCIIGRID option and the default area weighting were averaged over a four-sided area whose upper edge extended half the cell height, rather than half the cell width, east of the cell center. For a cell that is not square, the average therefore included part of the ASCII grid beyond the cell's upper-right corner, or left out part of the cell (for example, 5.7 instead of 6.0 for a cell 10 wide and 20 tall). Each cell is now averaged over its own area. Square cells, and ASCII grids that do not vary across a cell, are unchanged."
