@@ -90,7 +90,6 @@ template <class T, int D> Vector<T, D>::Vector(const T & x, const T & y, const T
 
 template <class T, int D> Vector<T, D>::Vector(const Vector<T, D> & V)
 {
-    //memcpy(v,V.v,sizeof(T)*D);
     for (int i = 0; i < D; i++) v[i] = V.v[i];
 }
 
@@ -129,7 +128,6 @@ template <class T, int D> Vector<T, D> Vector<T, D>::normalize() const // normal
 
 template <class T, int D> const Vector<T, D> & Vector<T, D>::operator=(const Vector<T, D> & v2)
 {
-    //memcpy(v,v2.v,D*sizeof(T));
     for (int i = 0; i < D; i++) v[i] = v2.v[i];
     return *this;
 }

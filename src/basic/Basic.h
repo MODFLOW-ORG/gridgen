@@ -52,7 +52,6 @@ inline int round(REAL v)
 }
 
 #define sign(x) ((x) >= 0 ? 1 : -1)
-//#define swap(x1, x2)  {int tmp=x1; x1=x2; x2=tmp}
 #define applysign(x, y) ((y) >= 0 ? abs(x) : -abs(x))
 
 /* Angle Conversions & Constants */
@@ -70,36 +69,6 @@ inline int round(REAL v)
 
 #define DegToRad(x) ((x) * DEG2RAD)
 #define RadToDeg(x) ((x) * RAD2DEG)
-
-/*
-      computes sqrt(a^2 + b^2) without destructive underflow or overflow
-    */
-REAL pythag(REAL a, REAL b);
-
-/*
-      Utility Error message routines
-    */
-// print s to stdout with trailing blank and no terminating end of line
-void prompt(char * s);
-
-// print s1, s2, s3 to stdout as blank separated fields with terminating eol
-void message(char * s1, char * s2 = NULL, char * s3 = NULL);
-
-// print Status: to stdout followed by message(s1, s2, s3)
-void status(char * s1, char * s2 = NULL, char * s3 = NULL);
-
-// print Error: followed by s1, s2 and s3 to stderr as blank separated fields
-// with terminating eol
-void error(char * s1, char * s2 = NULL, char * s3 = NULL);
-
-// print error(s1, s2, s3) and then exit program with code 1
-void abort(char * s1, char * s2 = NULL, char * s3 = NULL);
-
-///Added by Jyh-Ming Lien
-/*
-    bool getDoubleValue(char * pTag, REAL * pValue,int size);
-    bool getDoubleValue(char * pTag, REAL * pValue);
-    */
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -121,8 +90,6 @@ extern "C"
     void srand48(long seedval);
     unsigned short * seed48(unsigned short seed16v[3]);
     void lcong48(unsigned short param[7]);
-    long nrand48(register unsigned short * xsubi);
-    long jrand48(register unsigned short * xsubi);
 
     /**Round to closest integer.
           *The rint() function rounds x to an integer value according

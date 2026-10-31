@@ -90,9 +90,6 @@ private:
     bool already_read;
 
     ////add by Guilin
-    //vector<int> m_pt_id;
-    //vector<int> m_arc_id;
-    //vector<int> m_ply_id;
 
     //field id, names and values
     vector<ShapeIntField> m_intFlds;

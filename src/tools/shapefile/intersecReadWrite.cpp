@@ -103,12 +103,6 @@ void addShpAttrVal(int iShape, GridIntersection * gridInter, vector<bool> & bInt
     }
 }
 
-//void  addShpAttrVal(GridIntersection* gridInter, 	vector<bool>& bIntFld, vector<bool>& bDBFld,vector<bool>& bStrFld, vector<bool>& bLogFld,
-//	vector<int>& ivals, vector<double>& dvals, vector<string>& svals, vector<string>& lvals)
-//{
-//
-//}
-
 void addDBHandleFields(DBFHandle & dbfhdl, int intFldNum, vector<string> & intFldNames,
                        int doubleFldNum, vector<string> & dbFldNames, vector<int> & intFldIDs,
                        vector<int> & dbFldIDs)
@@ -144,32 +138,31 @@ void writeIntDBVal(DBFHandle & dbfhdl, int entity, vector<int> & intFldIDs, vect
     int strFldNum = strVals.size();
     int logFldNum = logVals.size();
     //write integer fields
-    int success = 0;
     for (int i = 0; i < intFldNum; ++i)
     {
         if (!isTxt)
-            success = DBFWriteIntegerAttribute(dbfhdl, entity, intFldIDs[i], intVals[i]);
+            DBFWriteIntegerAttribute(dbfhdl, entity, intFldIDs[i], intVals[i]);
         else
             ofile << intVals[i] << _IFO_DEL;
     }
     for (int i = 0; i < dbFldNum; ++i)
     {
         if (!isTxt)
-            success = DBFWriteDoubleAttribute(dbfhdl, entity, dbFldIDs[i], dbVals[i]);
+            DBFWriteDoubleAttribute(dbfhdl, entity, dbFldIDs[i], dbVals[i]);
         else
             ofile << round_trip(dbVals[i]) << _IFO_DEL;
     }
     for (int i = 0; i < strFldNum; i++)
     {
         if (!isTxt)
-            success = DBFWriteStringAttribute(dbfhdl, entity, strFldIDs[i], strVals[i].c_str());
+            DBFWriteStringAttribute(dbfhdl, entity, strFldIDs[i], strVals[i].c_str());
         else
             ofile << strVals[i].c_str() << _IFO_DEL;
     }
     for (int i = 0; i < logFldNum; i++)
     {
         if (!isTxt)
-            success = DBFWriteStringAttribute(dbfhdl, entity, logFldIDs[i], logVals[i].c_str());
+            DBFWriteStringAttribute(dbfhdl, entity, logFldIDs[i], logVals[i].c_str());
         else
             ofile << logVals[i].c_str() << _IFO_DEL;
     }
@@ -192,7 +185,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             handler = SHPCreate(file.c_str(), SHPT_POINT);
         else
         {
-            //ofile.open(file.c_str(),std::ofstream::out | std::ofstream::trunc);
             ofile.open(file.c_str(), std::ofstream::out | std::ofstream::trunc);
         }
     }
@@ -245,7 +237,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
     }
     else
     {
-        int success = 0;
         ofile << "nodenumber" << _IFO_DEL;
         for (int i = 0; i < intFldNum; ++i)
         {
@@ -296,10 +287,9 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             }
 
             //write nodenumber
-            int success = 0;
             if (!isTxt)
-                success = DBFWriteIntegerAttribute(
-                    dbfhdl, entity, ndfldId, pit->box->number == -1 ? -1 : pit->box->number + 1);
+                DBFWriteIntegerAttribute(dbfhdl, entity, ndfldId,
+                                         pit->box->number == -1 ? -1 : pit->box->number + 1);
             else
                 ofile << (pit->box->number == -1 ? -1 : pit->box->number + 1) << _IFO_DEL;
             writeIntDBVal(dbfhdl, entity, intFldIDs, intVals, dbFldIDs, dbVals, strFldIDs, strVals,
@@ -351,7 +341,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             }
 
             //write nodenumber
-            int success = 0;
             if (!isTxt)
                 DBFWriteIntegerAttribute(dbfhdl, entity, ndfldId,
                                          pit->box->number == -1 ? -1 : pit->box->number + 1);
@@ -386,9 +375,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             }
             x = new double[vsize];
             y = new double[vsize];
-
-            //if(pgonInfo.m_interPolygon->size() > 1)
-            //	cerr<<pgonInfo.m_interPolygon->size()<<_IFO_DEL;
 
             //make sure the out boundary
             list<c_polygon::iterator> orderedPItrs;
@@ -435,7 +421,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
             //write nodenumber
-            int success = 0;
             if (!isTxt)
                 DBFWriteIntegerAttribute(dbfhdl, entity, ndfldId,
                                          pit->box->number == -1 ? -1 : pit->box->number + 1);
@@ -464,9 +449,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
 void writePntIntersect(GridIntersection * gridInter, string file, vector<string> & attributes,
                        FILETYPE filetype)
 {
-    //ofstream fout;
-    //if(isTxt)
-    //	fout.open(file.c_str(), std::ofstream::out | std::ofstream::trunc);
     vector<PointCellIntersectionInfo> & pntInters = gridInter->getPointIntersectionInfo();
 
     vector<string> intFldName, dbFldName, strFldName, logFldName;
@@ -631,63 +613,4 @@ void writePolyIntersect(GridIntersection * gridInter, string file, vector<string
     else
     {
     }
-}
-
-//gather the boxes
-void gatherBoxes(GridIntersection * gridInter, vector<Box *> & boxes, WRITETYPE wtype)
-{
-    //gather the boxes
-    vector<PointCellIntersectionInfo> & pntInters = gridInter->getPointIntersectionInfo();
-    vector<PolylineCellIntersectionInfo> & pcti = gridInter->getPolylineIntersectionInfo();
-    vector<PolygonCellIntersectionInfo> & sci = gridInter->getPolygonIntersectionInfo();
-    if (wtype == WRITE_POINT)
-    {
-        for (vector<PointCellIntersectionInfo>::iterator pit = pntInters.begin();
-             pit != pntInters.end(); ++pit)
-        {
-            PointCellIntersectionInfo & pci = *pit;
-            boxes.push_back(pci.box);
-        }
-    }
-    else if (wtype == WRITE_POLYLINE)
-    {
-        for (vector<PolylineCellIntersectionInfo>::iterator sit = pcti.begin(); sit != pcti.end();
-             ++sit)
-        {
-            PolylineCellIntersectionInfo & sio = *sit;
-            boxes.push_back(sio.box);
-        }
-    }
-    else if (wtype == WRITE_POLYGON)
-    {
-        for (vector<PolygonCellIntersectionInfo>::iterator pit = sci.begin(); pit != sci.end();
-             ++pit)
-        {
-            PolygonCellIntersectionInfo & pio = *pit;
-            boxes.push_back(pio.box);
-        }
-    }
-}
-
-//write the polygon and grid
-//this function omits the string type and log type fields
-void writeIntersection2VTK(string vtkfile, int intFldNum, vector<vector<int>> & intfldVals,
-                           vector<string> & intFldNames, int doubleFldNum,
-                           vector<vector<double>> & dbfldVals, vector<string> & dbFldNames,
-                           GridIntersection * gridInter, WRITETYPE wtype)
-{
-    std::cerr << "Warning: exporting VTK file would omit string type and logic type fields!\n";
-    //write the points, loop over each layer
-    stringstream ss0;
-    ss0 << vtkfile.c_str();
-    ss0 << ".vtu";
-    ofstream ofile(ss0.str().c_str());
-
-    //gather boxes
-    vector<Box *> boxes;
-    gatherBoxes(gridInter, boxes, wtype);
-
-    //todo: export the grid boxes to vtk file
-
-    std::cerr << "Exporting intersection to VTK file is not complete!\n;";
 }

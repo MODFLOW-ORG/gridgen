@@ -36,7 +36,6 @@ inline int getField(string fname, ShapeReader & shpReader)
     for (vector<ShapeIntField>::iterator sit = intFlds.begin(); sit != intFlds.end(); ++sit, ++id)
     {
         string tstr = sit->name;
-        //std::transform(sit->name.begin(), sit->name.end(), tstr.begin(), ::tolower);
         if (fname == tstr.c_str()) return id;
     }
 
@@ -119,7 +118,6 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
 
             if (bByAttribute)
             {
-                //cerr<<"refine by attribute"<<endl;
                 fid = getField(rf->refinement_level_by_attribute, shp_reader);
                 if (fid == -1)
                 {
@@ -147,7 +145,6 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
 
                     //rotate back
                     if (angle != 0) arcs[j].rotate(cx, cy, angle);
-                    //arcs[j].destroy();
                 }
             } //end if
             else if (rftype == "polygon")
@@ -169,7 +166,6 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
 
                     //rotate back
                     if (angle != 0) polygons[j].rotate(cx, cy, angle);
-                    //polygons[j].destroy();
                 }
             }
             else if (rftype == "point")

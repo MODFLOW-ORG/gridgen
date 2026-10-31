@@ -78,7 +78,6 @@ void parseTreeStructFile(string fileName, vector<TreeStructNode> & tree, string 
         cerr << "! Error: Cannot open tree structure file:" << filePath << endl;
         exit(1);
         return;
-        //return false;
     } //end good
 
     /************************************************************************/
@@ -101,8 +100,6 @@ void parseTreeStructFile(string fileName, vector<TreeStructNode> & tree, string 
         }
 
         if (nodeNumber == -INT_MAX) nodeNumber = atoi(line.c_str());
-        //else if(active_nodeNumber==-INT_MAX) active_nodeNumber = atoi(line.c_str());
-        //else if(connectionNumber==-INT_MAX) connectionNumber = atoi(line.c_str());
     }
 
     for (int i = 0; i < nodeNumber; i++)

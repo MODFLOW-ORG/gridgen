@@ -46,8 +46,6 @@ public:
 
     int add(Box * box);
 
-    int remove(Box * box);
-
     /*!
             Return an array of size of the number of active leaf nodes
             and include in the array the nodeid.

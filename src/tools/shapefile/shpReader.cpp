@@ -70,7 +70,6 @@ bool ShapeReader::read(const string & filename)
     }
 
     /************************************************************/
-#if 1
     DBFHandle hDBF = DBFOpen(filename.c_str(), "rb");
 
     //check
@@ -88,26 +87,17 @@ bool ShapeReader::read(const string & filename)
     }
 
     ////check more
-    //if( (uint)DBFGetRecordCount(hDBF)!=m_ply_list.size()){
-    //	cerr<<"! Error: Number of rows ("<<DBFGetRecordCount(hDBF)
-    //		<<") in the database does not match to the number of buildings ("
-    //		<<m_ply_list.size()<<")"<<endl;
-    //}
 
     //used for reading from db
     int nWidth, nDecimals;
 
     //position of these fields in database...
-    uint base_ele_pos = UINT_MAX;
-    uint heigh_pos = UINT_MAX;
     for (int i = 0; i < DBFGetFieldCount(hDBF); i++)
     {
         char szTitle[12];
         DBFFieldType eType = DBFGetFieldInfo(hDBF, i, szTitle, &nWidth, &nDecimals);
         if (eType != FTInteger && eType != FTDouble && eType != FTString && eType != FTLogical)
             continue; //not good...
-        if (base_elevation_tag == szTitle) base_ele_pos = i;
-        if (height_tag == szTitle) heigh_pos = i;
 
         //collect the field name and type info
         if (eType == FTInteger)
@@ -141,13 +131,7 @@ bool ShapeReader::read(const string & filename)
     }
 
     ////check if we can get the field ids for the information we wanted
-    //if(base_ele_pos==UINT_MAX)
-    //	cerr<<"! Warning: no base elevation found in the database"<<endl;
 
-    //if(heigh_pos==UINT_MAX)
-    //	cerr<<"! Warning: no height found in the database"<<endl;
-
-#endif
     /************************************************************/
 
     //Get info
@@ -174,7 +158,6 @@ bool ShapeReader::read(const string & filename)
             cerr << "panPartStart[0] = " << psShape->panPartStart[0] << ", not zero as expected.\n";
         }
 
-        //cerr<<"reading shape type : "<<psShape->nSHPType<<endl;
         switch (psShape->nSHPType)
         {
             case SHPT_POLYGON:
@@ -198,7 +181,6 @@ bool ShapeReader::read(const string & filename)
             case SHPT_MULTIPOINTM:
             case SHPT_MULTIPOINTZ:
             {
-                //cerr<<"reading shapefile with m/z \n";
                 readPts(psShape, i);
                 break;
             }
@@ -218,84 +200,16 @@ bool ShapeReader::read(const string & filename)
         //read the field values
         readAttributes(hDBF, i);
 
-        /*
-        if( bValidate )
-        {
-            int nAltered = SHPRewindObject( hSHP, psShape );
-
-            if( nAltered > 0 )
-            {
-                printf( "  %d rings wound in the wrong direction.\n",
-                        nAltered );
-                nInvalidCount++;
-            }
-        }
-        */
-
         SHPDestroyObject(psShape);
     }
 
     SHPClose(hSHP);
-
-#if 0
-    cout.precision(20);
-    cout<<"bbox[0]="<<bbox[0]<<" bbox[1]="<<bbox[1]<<" bbox[2]="<<bbox[2]<<" bbox[3]="<<bbox[3]<<endl;
-    cout<<"width="<<bbox[1]-bbox[0]<<" height="<<bbox[3]-bbox[2]<<endl;
-#endif
 
     //done readh shp file
 
     //
     //reading from database now.
     //
-    /*
-    DBFHandle hDBF = DBFOpen( filename.c_str(), "rb" );
-
-    //check
-    if( hDBF == NULL )
-    {
-        cerr<<"! Error: DBFOpen("<< filename<<") failed."<<endl;
-        return false;
-    }
-
-    //check
-    if( DBFGetFieldCount(hDBF) == 0 )
-    {
-        cerr<<"! Warning: There are no fields in this table!"<<endl;
-        return true;
-    }
-
-    //check more
-    if( (uint)DBFGetRecordCount(hDBF)!=m_ply_list.size()){
-        cerr<<"! Error: Number of rows ("<<DBFGetRecordCount(hDBF)
-            <<") in the database does not match to the number of buildings ("
-            <<m_ply_list.size()<<")"<<endl;
-    }
-
-    //used for reading from db
-    int nWidth, nDecimals;
-
-    //position of these fields in database...
-    uint base_ele_pos=UINT_MAX;
-    uint heigh_pos=UINT_MAX;
-    for(int i = 0; i < DBFGetFieldCount(hDBF); i++ )
-    {
-        char    szTitle[12];
-        DBFFieldType eType = DBFGetFieldInfo( hDBF, i, szTitle, &nWidth, &nDecimals );
-        if(eType!=FTInteger && eType!=FTDouble) continue; //not good...
-        if(base_elevation_tag==szTitle) base_ele_pos=i;
-        if(height_tag==szTitle) heigh_pos=i;
-    }
-
-    //check if we can get the field ids for the information we wanted
-    if(base_ele_pos==UINT_MAX)
-        cerr<<"! Warning: no base elevation found in the database"<<endl;
-
-    if(heigh_pos==UINT_MAX)
-        cerr<<"! Warning: no height found in the database"<<endl;
-
-    DBFClose( hDBF );
-    */
 
     already_read = true;
     return true;
@@ -309,14 +223,6 @@ void ShapeReader::readPly(SHPObject * psShape, int iShape)
     //
     c_ply ply(c_ply::POUT);
     ply.beginPoly();
-
-    /*
-   ply_extra_info& extra=ply.getExtraInfo();
-   extra.box[0]=psShape->dfXMin;
-   extra.box[1]=psShape->dfXMax;
-   extra.box[2]=psShape->dfYMin;
-   extra.box[3]=psShape->dfYMax;
-   */
 
     for (int j = 0; j < psShape->nVertices; j++)
     {
@@ -363,7 +269,6 @@ void ShapeReader::readMultiPatch(SHPObject * psShape, int iShape)
             endId = psShape->panPartStart[i + 1] - 1;
         }
         int type = psShape->panPartType[i];
-        //cerr<<"current shape type : "<<type<<endl;
         if (type == SHPT_POLYGON || type == SHPT_POLYGONM || type == SHPT_POLYGONZ)
         {
             c_ply ply(c_ply::POUT);
@@ -401,7 +306,6 @@ void ShapeReader::readMultiPatch(SHPObject * psShape, int iShape)
             }
             arc.endPoly();
             arc.m_id = iShape;
-            //arc.m_id=m_arc_list.size();
             arc.computeGeodesicDist();
             m_arc_list.push_back(arc);
         }
@@ -418,7 +322,6 @@ void ShapeReader::readMultiPatch(SHPObject * psShape, int iShape)
                 if (y > bbox[3]) bbox[3] = y;
 
                 GIS_Point2d pt(x, y);
-                //pt.m_id=m_pt_list.size();
                 pt.m_id = iShape;
                 m_pt_list.push_back(pt);
             }
@@ -451,7 +354,6 @@ void ShapeReader::readArc(SHPObject * psShape, int iShape)
             pszPartType = SHPPartTypeName(psShape->panPartType[iPart]);
             iPart++;
             arc.endPoly();
-            //arc.m_id=m_arc_list.size();
             arc.m_id = iShape;
             arc.computeGeodesicDist();
             m_arc_list.push_back(arc);
@@ -474,7 +376,6 @@ void ShapeReader::readArc(SHPObject * psShape, int iShape)
 
     arc.endPoly();
     arc.m_id = iShape;
-    //arc.m_id=m_arc_list.size();
     arc.computeGeodesicDist();
     m_arc_list.push_back(arc);
 }
@@ -493,7 +394,6 @@ void ShapeReader::readPts(SHPObject * psShape, int iShape)
         if (y > bbox[3]) bbox[3] = y;
 
         GIS_Point2d pt(x, y);
-        //pt.m_id=m_pt_list.size();
         pt.m_id = iShape;
         m_pt_list.push_back(pt);
     }
@@ -505,7 +405,6 @@ void ShapeReader::add_ply(c_ply & ply, int iShape)
     {
         //create a new polygon
         GIS_polygon polygon;
-        //polygon.m_id=m_ply_list.size();
         polygon.m_id = iShape;
         polygon.push_back(ply);
         m_ply_list.push_back(polygon);

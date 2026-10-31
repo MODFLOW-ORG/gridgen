@@ -46,15 +46,6 @@ public:
         return (row[i]);
     }
 
-    //        void print(int w = 7, int p = 3) const // print with width and precision
-    //        {
-    //            for(int i = 0; i < 2; i++){
-    //                cout << setw(w) << setprecision(p) << round(row[i][0], p) << " ";
-    //                cout << setw(w) << setprecision(p) << round(row[i][1], p);
-    //                cout << endl;
-    //            }
-    //        }
-
     void set(REAL a11 = 0, REAL a12 = 0, REAL a21 = 0, REAL a22 = 0)
     {
         row[0].set(a11, a12);
@@ -169,16 +160,6 @@ public:
         return (row[i]);
     }
 
-    //        void print(int w = 7, int p = 3) const{  // print with width and precision
-    //
-    //            for(int i = 0; i < 3; i++){
-    //                cout << setw(w) << setprecision(p) << round(row[i][0], p) << " ";
-    //                cout << setw(w) << setprecision(p) << round(row[i][1], p) << " ";
-    //                cout << setw(w) << setprecision(p) << round(row[i][2], p);
-    //                cout << endl;
-    //            }
-    //        }
-
     void set(REAL a11, REAL a12, REAL a13, REAL a21, REAL a22, REAL a23, REAL a31, REAL a32,
              REAL a33)
     {
@@ -281,8 +262,6 @@ public:
         set(a11, a12, a13, a14, a21, a22, a23, a24, a31, a32, a33, a34, a41, a42, a43, a44);
     }
 
-    //operator Matrix();
-
     Vector4d & operator[](int i)
     {
         if (i < 0 || i > 3)
@@ -304,17 +283,6 @@ public:
 
         return (row[i]);
     }
-
-    //        void print(int w = 7, int p = 3) const {  // print with width and precision
-    //
-    //            for(int i = 0; i < 4; i++){
-    //                cout << setw(w) << setprecision(p) << round(row[i][0], p) << " ";
-    //                cout << setw(w) << setprecision(p) << round(row[i][1], p) << " ";
-    //                cout << setw(w) << setprecision(p) << round(row[i][2], p) << " ";
-    //                cout << setw(w) << setprecision(p) << round(row[i][3], p);
-    //                cout << endl;
-    //            }
-    //        }
 
     void set(REAL a11, REAL a12, REAL a13, REAL a14, REAL a21, REAL a22, REAL a23, REAL a24,
              REAL a31, REAL a32, REAL a33, REAL a34, REAL a41, REAL a42, REAL a43, REAL a44)
