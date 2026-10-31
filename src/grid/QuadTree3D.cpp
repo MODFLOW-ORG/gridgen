@@ -1462,8 +1462,6 @@ double QuadTree3D::bilinear_interpolation(const Point2d & pt, ascii_grid * ag)
     //get the ag cell that contains pt
     Index2d id = ag->getIndex(pt[0], pt[1]);
 
-    // return nodata when the point is out of bound...
-
     ascii_grid_cell cell = ag->getCell(id[0], id[1]);
 
     //
@@ -1476,19 +1474,15 @@ double QuadTree3D::bilinear_interpolation(const Point2d & pt, ascii_grid * ag)
     double x = (pt[0] - cell.x) / cell.dx;
     double y = (cell.y - pt[1]) / cell.dy;
 
-    if (x < 0 || x > 1 || y < 0 || y > 1)
-    {
-        {
-            if (x < 0)
-                x = 0;
-            else if (x > 1)
-                x = 1;
-            if (y < 0)
-                y = 0;
-            else if (y > 1)
-                y = 1;
-        }
-    }
+    // clamp a point outside the cell to its edge
+    if (x < 0)
+        x = 0;
+    else if (x > 1)
+        x = 1;
+    if (y < 0)
+        y = 0;
+    else if (y > 1)
+        y = 1;
 
     return cusg::bilinear_interpolation(ag, id[0], id[1], x, y);
 }

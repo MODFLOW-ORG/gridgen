@@ -90,8 +90,6 @@ extern "C"
     void srand48(long seedval);
     unsigned short * seed48(unsigned short seed16v[3]);
     void lcong48(unsigned short param[7]);
-    long nrand48(register unsigned short * xsubi);
-    long jrand48(register unsigned short * xsubi);
 
     /**Round to closest integer.
           *The rint() function rounds x to an integer value according

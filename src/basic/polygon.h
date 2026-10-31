@@ -29,12 +29,6 @@ typedef unsigned int uint;
 
 namespace cusg
 {
-/// a triangle
-struct triangle
-{
-    uint v[3]; //!< id to the vertices
-};
-
 /// Vertex of polygon
 class ply_vertex
 {
@@ -207,9 +201,6 @@ private:
 
     /// In, out or unknown.
     POLYTYPE type;
-
-    //triangulation
-    vector<triangle> triangulation; //!< cached triangulation, calculated by triangulate
 };
 
 /// a list of \c c_ply
@@ -309,9 +300,6 @@ protected:
     void build_all();
 
     vector<ply_vertex *> all; //!< all vertices
-
-    //triangulation
-    vector<triangle> triangulation; //!< cached triangulation, calculated by triangulate
 
     float area;
 };

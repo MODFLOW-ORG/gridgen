@@ -83,7 +83,6 @@ void c_ply::destroy()
     head = tail = NULL;
 
     all.clear();
-    triangulation.clear();
 }
 
 // Create a empty polygon
@@ -91,7 +90,6 @@ void c_ply::beginPoly()
 {
     head = tail = NULL;
     all.clear();
-    triangulation.clear();
 }
 
 // Add a vertex to the polygonal chian
@@ -220,7 +218,6 @@ void c_ply::reverse()
 
     this->area = -this->area;
     all.clear();
-    triangulation.clear();
 }
 
 float c_ply::getRadius() const
@@ -317,7 +314,6 @@ void c_polygon::destroy()
     }
     clear(); //remove all ply from this list
     all.clear();
-    triangulation.clear();
 }
 
 void c_polygon::build_all()
