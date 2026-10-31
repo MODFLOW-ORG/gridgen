@@ -72,7 +72,7 @@ static const map<string, map<string, string>> & ignored_records()
 {
     static map<string, map<string, string>> records;
     if (!records.empty()) return records;
-    const char * no_array = "GRIDGEN does not refine by array";
+    const char * no_array = "GRIDGEN does not refine by array; use REFINEMENT_FEATURES";
     records["quadtree_builder"]["refinement_array layer"] = no_array;
     records["quadtree_builder"]["refine_by_array layer"] = no_array;
     return records;
