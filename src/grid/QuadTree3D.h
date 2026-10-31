@@ -138,8 +138,6 @@ public:
      */
     CSRData get_usg_csr_data();
 
-    //obtain CSRData with vertical pass
-
     ///get the underline ModflowGrid
     ModflowGrid * getModflowGrid() { return m_mfgrid; }
 
@@ -174,8 +172,6 @@ protected:
     void number_nodes(Box * box, unsigned int & number);
 
     void _add_root_nodes();
-
-    ///fldir is -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z.
 
     ///sort the given connection by the node number
     void sortconnectionbynodenumber(list<pair<int, int>> & connectionlist);
