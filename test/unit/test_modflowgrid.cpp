@@ -104,8 +104,7 @@ TEST(ModflowGrid, CsrFaceAreaUsesBothCellThicknesses)
         for (int ipos = csr.ia[n]; ipos < csr.ia[n + 1] - 1; ipos++)
         {
             int m = csr.ja[ipos] - 1;
-            SCOPED_TRACE("node " + std::to_string(n + 1) + " to " +
-                         std::to_string(m + 1));
+            SCOPED_TRACE("node " + std::to_string(n + 1) + " to " + std::to_string(m + 1));
             int dir = std::abs(csr.fldr[ipos]);
             if (dir == 3)
             {

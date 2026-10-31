@@ -26,7 +26,6 @@
 
 using namespace std;
 
-
 namespace cusg
 {
 
@@ -40,26 +39,26 @@ class Cube; //defined later in this file
  * direction (north, east, south or west).
  *
  */
- 
+
 class CubeIter
 {
 private:
-	const Cube* b;
-	int direction;
-	int prev;
-	int next;
-	int cross;
-	Cube* neighbor;
+    const Cube * b;
+    int direction;
+    int prev;
+    int next;
+    int cross;
+    Cube * neighbor;
     int layer;
+
 public:
-	
-	CubeIter(const Cube* bb, int direc, int layer);
+    CubeIter(const Cube * bb, int direc, int layer);
 
-	Cube* First();
+    Cube * First();
 
-	Cube* Next();
+    Cube * Next();
 
-	Cube* End();
+    Cube * End();
 }; //class CubeIter
 
 /*!\class Cube
@@ -72,28 +71,27 @@ public:
 class Cube
 {
 private:
-
-	/*! \brief Check if the x, y or z coord of the center of a given cube (nextCube) is outside the base cube (base)
+    /*! \brief Check if the x, y or z coord of the center of a given cube (nextCube) is outside the base cube (base)
 	 * Precondition: none
 	 * Postcondition: none
 	 * \param[in] base    The base cube
 	 * \param[in] nextCube The cube to be checked
 	 * \return true if over limit */
 
-	static bool isOverLimit(const Cube* base, const Cube* nextCube)
-	{
+    static bool isOverLimit(const Cube * base, const Cube * nextCube)
+    {
         /* My program crashes if the line below is uncommented...? */
-		if ((nextCube->x > base->x - base->dx / 2 && nextCube->x < base->x + base->dx / 2)
-			|| (nextCube->y > base->y - base->dy / 2 && nextCube->y < base->y + base->dy / 2)
-			/*|| (nextCube->z > base->z - base->dz / 2 && nextCube->z < base->z + base->dz / 2)*/)
+        if ((nextCube->x > base->x - base->dx / 2 && nextCube->x < base->x + base->dx / 2) ||
+            (nextCube->y > base->y - base->dy / 2 && nextCube->y < base->y + base->dy / 2)
+            /*|| (nextCube->z > base->z - base->dz / 2 && nextCube->z < base->z + base->dz / 2)*/)
         {
-			return false;
-		}
-		return true;
-	}
+            return false;
+        }
+        return true;
+    }
 
 public:
-	friend class CubeIter;
+    friend class CubeIter;
 
     /// number of nodes in `pChildren` items
     static const int numChildren = 4;
@@ -101,40 +99,40 @@ public:
     /// number of arrays in `pChildren`
     static const int numLayers = 2;
 
-	/// depth of the cube in the tree
-	int depth; 
-	
-	/*! \brief x coordinate of the center of the cube
+    /// depth of the cube in the tree
+    int depth;
+
+    /*! \brief x coordinate of the center of the cube
         \remarks You may ask, "Why not store the start coordinate, 
                  rather than the center coordinate?" 
                  Answer: Using the center coordinates makes it easier 
                  to split the cube into four quadrants.
     */
-	double x;
-	
-	/// y coordinate of the center of the cube
-	double y; 
-	
-	/// z coordinate of the center of the cube
-	double z; 
-	
-	/// width of the cube
-	double dx;
-	
-	/// height of the cube
-	double dy;
-	
-	/// depth of the cube
-	double dz;
-	
-    /// Allows a priority to be set when the cube is placed 
+    double x;
+
+    /// y coordinate of the center of the cube
+    double y;
+
+    /// z coordinate of the center of the cube
+    double z;
+
+    /// width of the cube
+    double dx;
+
+    /// height of the cube
+    double dy;
+
+    /// depth of the cube
+    double dz;
+
+    /// Allows a priority to be set when the cube is placed
     /// in a priority queue
     int priority;
 
-	/// a flag indicating if this cube is a leaf in the tree
-	bool isLeaf; 
-	
-	/*!
+    /// a flag indicating if this cube is a leaf in the tree
+    bool isLeaf;
+
+    /*!
 
         how pChildren points to the neighbors...
         
@@ -149,8 +147,8 @@ public:
 	             |____|
 
 	 */
-	
-	/*! Pointers to children, but when no children (i.e., leaf),
+
+    /*! Pointers to children, but when no children (i.e., leaf),
 	 *	the pointers are used as neighbor pointers
 	 * where
      *  inner index:
@@ -161,37 +159,36 @@ public:
      *  outer index:
      *   0 = front, 1 = back
 	 */
-	Cube* pChildren[numChildren][numLayers]; 
-	
+    Cube * pChildren[numChildren][numLayers];
+
     /// Releases all memory allocated for nodes in the tree.
     void deleteNodes();
 
     // Releases memory allocated for nodes under the specified cube.
     void deleteNodes(Cube *);
 
-	/// get all neighbors in direction "dir"
-	/// 0 = N, 1 = E, 2 = S, 3 = W
+    /// get all neighbors in direction "dir"
+    /// 0 = N, 1 = E, 2 = S, 3 = W
     /// (for neighbors)
-	void getNeighbors(list<Cube*>& neighbors, int dir, int layer);
+    void getNeighbors(list<Cube *> & neighbors, int dir, int layer);
 
     /// If this is a leaf node, this gives the node to the north of this cube
-	void getNorthNeighbors(list<Cube*>& neighbors);
+    void getNorthNeighbors(list<Cube *> & neighbors);
 
     /// If this is a leaf node, this gives the node to the east of this cube
-	void getEastNeighbors(list<Cube*>& neighbors);
+    void getEastNeighbors(list<Cube *> & neighbors);
 
     /// If this is a leaf node, this gives the node to the south of this cube
-	void getSouthNeighbors(list<Cube*>& neighbors);
+    void getSouthNeighbors(list<Cube *> & neighbors);
 
     /// If this is a leaf node, this gives the node to the west of this cube
-	void getWestNeighbors(list<Cube*>& neighbors);
+    void getWestNeighbors(list<Cube *> & neighbors);
 
     /// Pointer to the cube's parent in quadtree
-	Cube* pParent; 
+    Cube * pParent;
 
-	//when this dirty flag is true, this cube should be deleted
-	bool dirty;
-
+    //when this dirty flag is true, this cube should be deleted
+    bool dirty;
 
     /*!  \brief Constructor of the Cube
      *
@@ -206,19 +203,18 @@ public:
 	 * \param h   height of the cube
      * \param d   depth of the cube
      */
-	Cube(double xx, double yy, double zz, double w, double h, double d):
-	    depth(0), x(xx), y(yy), z(zz), dx(w), dy(h), dz(d),
-	    isLeaf(true), pParent(NULL), dirty(false)
-	{
-		for (int i = 0; i < numChildren; ++i)
-		{
+    Cube(double xx, double yy, double zz, double w, double h, double d)
+        : depth(0), x(xx), y(yy), z(zz), dx(w), dy(h), dz(d), isLeaf(true), pParent(NULL),
+          dirty(false)
+    {
+        for (int i = 0; i < numChildren; ++i)
+        {
             for (int j = 0; j < 2; ++j)
             {
-			    pChildren[i][j] = NULL;
+                pChildren[i][j] = NULL;
             }
-		}
-		
-	}
+        }
+    }
 
     /*!  \brief Constructor of the Cube
      *
@@ -229,44 +225,37 @@ public:
      * \param center The Cartesian coordinates of the center of the cube
 	 * \param dims   A vector specifying the width and height of the cube
      */
-	Cube(const Point3d& center, Vector3d& dims):
-	    depth(0), isLeaf(true), pParent(NULL), dirty(false)
-	{
-		x=center[0];
-		y=center[1];
-		z=center[2];
-		
-		dx=dims[0];
-		dy=dims[1];
-		dz=dims[2];
-		
-		for (int i = 0; i < numChildren; ++i)
+    Cube(const Point3d & center, Vector3d & dims)
+        : depth(0), isLeaf(true), pParent(NULL), dirty(false)
+    {
+        x = center[0];
+        y = center[1];
+        z = center[2];
+
+        dx = dims[0];
+        dy = dims[1];
+        dz = dims[2];
+
+        for (int i = 0; i < numChildren; ++i)
         {
             for (int j = 0; j < numLayers; ++j)
-		    {
-			    pChildren[i][j] = NULL;
-		    }
-	    }	
-	}
-	
+            {
+                pChildren[i][j] = NULL;
+            }
+        }
+    }
+
     virtual ~Cube();
 
-	/*!
+    /*!
 	 * determine the status of the cube (ex: UNKNOWN, IN, OUT, ON)
 	 */
 
-	void updateStatus()
-	{
-	
-	}
+    void updateStatus() {}
 
-    
-     /// This function is not implemented yet.
-     void remove()
-     {
-        assert(false);
-     }
-        
+    /// This function is not implemented yet.
+    void remove() { assert(false); }
+
     /*!  \brief Splits the cube into sub-cubes
      *
      * Splits this cube off into sub-cubes (one for each quadrant
@@ -284,35 +273,36 @@ public:
      *     - this cube is an internal node, so it has already been split
      *     - insufficient memory
      */
-	virtual bool split(Vector3d epsilons);
+    virtual bool split(Vector3d epsilons);
 
     /// \brief reverse operation of split
     /// This function is not implemented yet.
-	bool coarsen();
-	
+    bool coarsen();
+
     /// Check if a given point `q` is contained in this cube
-	bool in(Point3d q)
-	{
-	    if(q[0]<x-dx/2 || q[0]>x+dx/2) return false;
-	    if(q[1]<y-dy/2 || q[1]>y+dy/2) return false;
-        if(q[2]<z-dz/2 || q[2]>z+dz/2) return false;
-	    return true;
-	}
+    bool in(Point3d q)
+    {
+        if (q[0] < x - dx / 2 || q[0] > x + dx / 2) return false;
+        if (q[1] < y - dy / 2 || q[1] > y + dy / 2) return false;
+        if (q[2] < z - dz / 2 || q[2] > z + dz / 2) return false;
+        return true;
+    }
 
     /// find a leaf cube containing a given point `q`
-	Cube * find(Point3d q)
-	{
-	    if(isLeaf && in(q)) return this;
+    Cube * find(Point3d q)
+    {
+        if (isLeaf && in(q)) return this;
 
-	    for(int i=0;i<numChildren;i++){
-            for (int j=0;j<numLayers;j++) {
-                if(pChildren[i][j]->in(q))
-                    return pChildren[i][j]->find(q);
+        for (int i = 0; i < numChildren; i++)
+        {
+            for (int j = 0; j < numLayers; j++)
+            {
+                if (pChildren[i][j]->in(q)) return pChildren[i][j]->find(q);
             }
-	    }
+        }
 
-	    return NULL;
-	}
+        return NULL;
+    }
 
     /*!\brief recursively obtain all leaves of this cube
      
@@ -322,21 +312,24 @@ public:
         will contain the pointer for all the leaves of this cube.
 
      */
-     
-	void getLeaves(list<Cube*>& leaves)
-	{
-	    if(isLeaf){
-	        leaves.push_back(this);
-	        return;
-	    }
 
-        for(int i=0;i<numChildren;i++) {
-            for (int j=0;j<numLayers;j++) {
+    void getLeaves(list<Cube *> & leaves)
+    {
+        if (isLeaf)
+        {
+            leaves.push_back(this);
+            return;
+        }
+
+        for (int i = 0; i < numChildren; i++)
+        {
+            for (int j = 0; j < numLayers; j++)
+            {
                 pChildren[i][j]->getLeaves(leaves);
             }
-        }    
-	}
-	
+        }
+    }
+
     /*! \brief Connects this cube to another cube.
      *
      * Connects this cube to the cube pointed to by `nei`. The
@@ -346,27 +339,27 @@ public:
      *              w.r.t. this cube:
      *              -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z
      */
-	void addConnection(Cube * nei, int dir)
-	{
-		assert(isLeaf);
-		switch(dir)
-		{
-			case -1: pChildren[3][0]=nei; break;
-			case  1: pChildren[1][0]=nei; break;
-			case -2: pChildren[2][0]=nei; break;
-			case  2: pChildren[0][0]=nei; break;
-			case -3: assert(false); break;
-			case  3: assert(false); break;
-			default:
-				assert(false); break;
-		}
-	}
+    void addConnection(Cube * nei, int dir)
+    {
+        assert(isLeaf);
+        switch (dir)
+        {
+            case -1: pChildren[3][0] = nei; break;
+            case 1: pChildren[1][0] = nei; break;
+            case -2: pChildren[2][0] = nei; break;
+            case 2: pChildren[0][0] = nei; break;
+            case -3: assert(false); break;
+            case 3: assert(false); break;
+            default: assert(false); break;
+        }
+    }
 
     /*! \brief Compare cube pointers by depth
     
         \returns \b True if the depth of `a` is less than the depth of `b`
-    */                 
-    static bool comparePtrDepths(const Cube *a, const Cube *b) {
+    */
+    static bool comparePtrDepths(const Cube * a, const Cube * b)
+    {
         if (!a || !b) return false;
         return a->depth < b->depth;
     }
@@ -376,8 +369,7 @@ public:
 
 protected:
     /// Creates new child nodes within this cube
-    virtual Cube **spawn(int back);
-};//end of class Cube
-
+    virtual Cube ** spawn(int back);
+}; //end of class Cube
 
 } //end namespace cusg

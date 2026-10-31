@@ -12,36 +12,39 @@ namespace cusg
 {
 
 //indices (zero based) of the layers named in "... layer n" records
-static set<int> named_layers(map<string, list<string> >& name_value_map)
+static set<int> named_layers(map<string, list<string>> & name_value_map)
 {
     set<int> layers;
-    for(map<string, list<string> >::iterator r=name_value_map.begin();r!=name_value_map.end();r++)
+    for (map<string, list<string>>::iterator r = name_value_map.begin(); r != name_value_map.end();
+         r++)
     {
-        size_t pos=r->first.rfind(" layer ");
-        if(pos==string::npos) continue;
-        long layer=strtol(r->first.c_str()+pos+7, NULL, 10);
-        if(layer>0 && layer<=INT_MAX) layers.insert((int)layer-1);
+        size_t pos = r->first.rfind(" layer ");
+        if (pos == string::npos) continue;
+        long layer = strtol(r->first.c_str() + pos + 7, NULL, 10);
+        if (layer > 0 && layer <= INT_MAX) layers.insert((int)layer - 1);
     }
     return layers;
 }
 
 //value of the "<name> layer <i+1>" record, or an empty list if there is none
-static list<string> layer_record(map<string, list<string> >& name_value_map, const char * name, int i)
+static list<string> layer_record(map<string, list<string>> & name_value_map, const char * name,
+                                 int i)
 {
     char layername[64];
-    sprintf(layername,"%s layer %d",name,i+1);
-    map<string, list<string> >::iterator r=name_value_map.find(layername);
-    if(r==name_value_map.end()) return list<string>();
+    sprintf(layername, "%s layer %d", name, i + 1);
+    map<string, list<string>>::iterator r = name_value_map.find(layername);
+    if (r == name_value_map.end()) return list<string>();
     return r->second;
 }
 
 //value of the record spelled as in the report, or else as in the code
-static list<string> record(map<string, list<string> >& name_value_map, const char * report_name, const char * code_name)
+static list<string> record(map<string, list<string>> & name_value_map, const char * report_name,
+                           const char * code_name)
 {
-    map<string, list<string> >::iterator r=name_value_map.find(report_name);
-    if(r!=name_value_map.end() && !r->second.empty()) return r->second;
-    r=name_value_map.find(code_name);
-    if(r!=name_value_map.end()) return r->second;
+    map<string, list<string>>::iterator r = name_value_map.find(report_name);
+    if (r != name_value_map.end() && !r->second.empty()) return r->second;
+    r = name_value_map.find(code_name);
+    if (r != name_value_map.end()) return r->second;
     return list<string>();
 }
 
@@ -49,48 +52,50 @@ static list<string> record(map<string, list<string> >& name_value_map, const cha
 // skip blanks, tabs, line breaks and comment lines,
 //  leaving us at the beginning of a token (or EOF)
 //  (This code is taken from CORE lib)
-inline int skip_comment_line (std::ifstream & in)
+inline int skip_comment_line(std::ifstream & in)
 {
-      int c;
+    int c;
 
-      do {
+    do
+    {
         c = in.get();
-        while ( c == '#' ) {
-          do {// ignore the rest of this line
-            c = in.get();
-          } while ( c != '\n' );
-          c = in.get(); // now, reach the beginning of the next line
+        while (c == '#')
+        {
+            do
+            { // ignore the rest of this line
+                c = in.get();
+            } while (c != '\n');
+            c = in.get(); // now, reach the beginning of the next line
         }
-      } while (c == ' ' || c == '\t' || c == '\n' || c == '\r'); //ignore white spaces and newlines
+    } while (c == ' ' || c == '\t' || c == '\n' || c == '\r'); //ignore white spaces and newlines
 
-      if (c == EOF)
-        std::cout << "! Warning: Unexpected end of file." << std::endl;
+    if (c == EOF) std::cout << "! Warning: Unexpected end of file." << std::endl;
 
-      in.putback(c);  // this is non-white and non-comment char!
-      return c;
+    in.putback(c); // this is non-white and non-comment char!
+    return c;
 
-}//skip_comment_line
+} //skip_comment_line
 
 // skips '\' followed by '\n'
 //  NOTE: this assumes a very special file format (e.g., our BigInt File format)
 //  in which the only legitimate appearance of '\' is when it is followed
 //  by '\n' immediately!
 //  (This code is taken from CORE lib)
-inline int skip_backslash_new_line (std::istream & in)
+inline int skip_backslash_new_line(std::istream & in)
 {
-      int c = in.get();
+    int c = in.get();
 
-      while (c == '\\') {
+    while (c == '\\')
+    {
         c = in.get();
 
         if (c == '\n' || c == '\r')
-          c = in.get();
+            c = in.get();
         else // assuming the very special file format noted above!
-          cout<< "! Warning: continuation line \\ must be immediately followed by new line.\n";
-      }//while
-      return c;
-}//skip_backslash_new_line
-
+            cout << "! Warning: continuation line \\ must be immediately followed by new line.\n";
+    } //while
+    return c;
+} //skip_backslash_new_line
 
 //-----------------------------------------------------------------------------
 //
@@ -100,150 +105,150 @@ inline int skip_backslash_new_line (std::istream & in)
 //
 //-----------------------------------------------------------------------------
 
-bool BaseParser::readBlock(istream& in, block_raw_data& block)
+bool BaseParser::readBlock(istream & in, block_raw_data & block)
 {
-    const int size=1024;
-    const char * ignore=" \t[]()<>,!{}\r\n";
-    char * tmp=new char[size];
-    
-    //
-    while(!in.eof())
-    {
-        in.getline(tmp,size);
+    const int size = 1024;
+    const char * ignore = " \t[]()<>,!{}\r\n";
+    char * tmp = new char[size];
 
-        if(strlen(tmp)==0) continue;
+    //
+    while (!in.eof())
+    {
+        in.getline(tmp, size);
+
+        if (strlen(tmp) == 0) continue;
         //cout<<"get line="<<tmp<<endl;
 
-        pair<char*,char*> name_value=split(tmp);
+        pair<char *, char *> name_value = split(tmp);
 
-        list<string> name=tokenize(name_value.first,ignore);
-        
-        if( name.empty() )
+        list<string> name = tokenize(name_value.first, ignore);
+
+        if (name.empty())
         {
-        	continue;
+            continue;
         }
-        
-        string label=name.front();
-        if(label[0]=='#') continue; //comment
 
-        label=tolower(label);
+        string label = name.front();
+        if (label[0] == '#') continue; //comment
 
-		/**********************************************************************/
-		//here we simply regard "load" as a type 
-		if(label == "load")
-		{
-			block.type="load";
-			block.name = name.back();
-			return true;
-		}
+        label = tolower(label);
 
-        if(label=="begin")
+        /**********************************************************************/
+        //here we simply regard "load" as a type
+        if (label == "load")
+        {
+            block.type = "load";
+            block.name = name.back();
+            return true;
+        }
+
+        if (label == "begin")
         {
             name.pop_front();
-            block.type=tolower(name.front());
-            block.name=name.back();
+            block.type = tolower(name.front());
+            block.name = name.back();
         }
-        else if(label=="end")
+        else if (label == "end")
         {
             name.pop_front();
-            string end_type=tolower(name.front());
-        	if( block.type!=end_type )
-        	{
-        		cerr<<"! Error: block starts with type="<<block.type
-        		    <<" but ends with a different type="<<end_type<<endl;
-        	}
-        	
-        	break; //we are done for this block
+            string end_type = tolower(name.front());
+            if (block.type != end_type)
+            {
+                cerr << "! Error: block starts with type=" << block.type
+                     << " but ends with a different type=" << end_type << endl;
+            }
+
+            break; //we are done for this block
         }
         else
         {
-        	entry_raw_data data;
-        	data.name=tolower(merge(name," "));
+            entry_raw_data data;
+            data.name = tolower(merge(name, " "));
 
-        	//cout<<"data.name="<<data.name<<endl;
+            //cout<<"data.name="<<data.name<<endl;
 
-			data.value=tokenize(name_value.second,ignore);
-			block.push_back(data);
+            data.value = tokenize(name_value.second, ignore);
+            block.push_back(data);
         }
-    }//end while
+    } //end while
 
-    delete [] tmp;
+    delete[] tmp;
 
-	if(block.name.empty()) return false; //read nothing...
+    if (block.name.empty()) return false; //read nothing...
 
-	return true;
+    return true;
 }
-
 
 //convert a string to a list of tokens
 list<string> BaseParser::tokenize(char * tmp, const char * ignore)
 {
     list<string> tokens;
-    char * tok=strtok (tmp,ignore);
-    while(tok!=NULL)
+    char * tok = strtok(tmp, ignore);
+    while (tok != NULL)
     {
         tokens.push_back(tok);
-        tok=strtok(NULL,ignore);
+        tok = strtok(NULL, ignore);
     }
     return tokens;
 }
 
 // split a string into name and value by "="
-pair<char*,char*> BaseParser::split(char * tmp)
+pair<char *, char *> BaseParser::split(char * tmp)
 {
-	 char * pos=strchr(tmp,'=');
-	 if(pos!=NULL){
-	     *pos='\0';
-	     pos++;
-	     //cout<<"tmp="<<tmp<<", pos="<<pos<<"#"<<endl;
-	 }
+    char * pos = strchr(tmp, '=');
+    if (pos != NULL)
+    {
+        *pos = '\0';
+        pos++;
+        //cout<<"tmp="<<tmp<<", pos="<<pos<<"#"<<endl;
+    }
 
-	 return make_pair(tmp,pos);
+    return make_pair(tmp, pos);
 }
 
-string BaseParser::merge(const list<string>& name, string del)
+string BaseParser::merge(const list<string> & name, string del)
 {
     string merged;
     typedef list<string>::const_iterator IT;
-    IT last=--name.end();
-    for(IT i=name.begin();i!=name.end();i++)
+    IT last = --name.end();
+    for (IT i = name.begin(); i != name.end(); i++)
     {
-        merged+=(*i);
-        if(i!=last) merged+=del;
+        merged += (*i);
+        if (i != last) merged += del;
     }
 
     return merged;
 }
 
-string BaseParser::tolower(const string& s)
+string BaseParser::tolower(const string & s)
 {
     string lower;
-    for(string::const_iterator i=s.begin();i!=s.end();i++)
+    for (string::const_iterator i = s.begin(); i != s.end(); i++)
     {
-        char c=::tolower(*i);
+        char c = ::tolower(*i);
         lower.push_back(c);
     }
     return lower;
 }
 //-----------------------------------------------------------------------------
 // split a string into name and value by "="
-bool BaseParser::equal(const list<string>& name, string tmp)
+bool BaseParser::equal(const list<string> & name, string tmp)
 {
-	const char * ignore=" \t[]()<>,!{}\r\n";
-	char * tmp2=new char[tmp.size()+1];
-	assert(tmp2);
-	strcpy(tmp2,tmp.c_str());
-	list<string> name2=tokenize(tmp2, ignore);
-	delete [] tmp2;
-	if( name.size()!=name2.size() )  return false;
-	//
-	typedef list<string>::const_iterator IT;
-	for(IT i=name.begin(), j=name2.begin();i!=name.end();i++,j++)
-	{
-		if( (*i)!=(*j) ) return false;
-	}
-	//
-	return true;
+    const char * ignore = " \t[]()<>,!{}\r\n";
+    char * tmp2 = new char[tmp.size() + 1];
+    assert(tmp2);
+    strcpy(tmp2, tmp.c_str());
+    list<string> name2 = tokenize(tmp2, ignore);
+    delete[] tmp2;
+    if (name.size() != name2.size()) return false;
+    //
+    typedef list<string>::const_iterator IT;
+    for (IT i = name.begin(), j = name2.begin(); i != name.end(); i++, j++)
+    {
+        if ((*i) != (*j)) return false;
+    }
+    //
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -256,165 +261,182 @@ bool BaseParser::equal(const list<string>& name, string tmp)
 
 bool modflow_grid_raw_data::parse()
 {
-    map<string, list<string> > name_value_map;
+    map<string, list<string>> name_value_map;
 
-    for(iterator i=begin(); i!=end(); i++)
+    for (iterator i = begin(); i != end(); i++)
     {
-        string& name=i->name;
-        list<string>& value=i->value;
+        string & name = i->name;
+        list<string> & value = i->value;
 
-        if( name.empty() || value.empty() )
+        if (name.empty() || value.empty())
         {
-            cerr<<"! Error: Cannot parse record: empty name or empty value"<<endl;
+            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
             continue;
         }
 
-        name_value_map[name]=value;
+        name_value_map[name] = value;
     }
-
 
     //check the names
-    list<string>& value=name_value_map["rotation_angle"];
-    if(!value.empty()) 
-		{
-			rotation_degrees=atof(value.front().c_str());
-			rotation_angle = rotation_degrees * PI / 180;
-	}
-    else{
-        cerr<<"! Error: missing rotation_angle"<<endl;
-        assert(false);
-		return false;
+    list<string> & value = name_value_map["rotation_angle"];
+    if (!value.empty())
+    {
+        rotation_degrees = atof(value.front().c_str());
+        rotation_angle = rotation_degrees * PI / 180;
     }
-
-    value=name_value_map["x_offset"];
-    if(!value.empty()) x_offset=atof(value.front().c_str());
-    else{
-        cerr<<"! Error: missing x_offset"<<endl;
-        assert(false);
-		return false;
-    }
-
-    value=name_value_map["y_offset"];
-    if(!value.empty()) y_offset=atof(value.front().c_str());
-    else{
-        cerr<<"! Error: missing y_offset"<<endl;
-        assert(false);
-		return false;
-    }
-
-	
-    value=name_value_map["length_unit"];
-    if(!value.empty()) length_unit=value.front();
     else
-	{
+    {
+        cerr << "! Error: missing rotation_angle" << endl;
+        assert(false);
+        return false;
+    }
+
+    value = name_value_map["x_offset"];
+    if (!value.empty())
+        x_offset = atof(value.front().c_str());
+    else
+    {
+        cerr << "! Error: missing x_offset" << endl;
+        assert(false);
+        return false;
+    }
+
+    value = name_value_map["y_offset"];
+    if (!value.empty())
+        y_offset = atof(value.front().c_str());
+    else
+    {
+        cerr << "! Error: missing y_offset" << endl;
+        assert(false);
+        return false;
+    }
+
+    value = name_value_map["length_unit"];
+    if (!value.empty())
+        length_unit = value.front();
+    else
+    {
         //cerr<<"! Error: missing length_unit"<<endl;
         //assert(false);
-		//return false;
+        //return false;
     }
 
-    value=name_value_map["nlay"];
-    if(!value.empty()) nlay=atoi(value.front().c_str());
-    else{
-        cerr<<"! Error: missing nlay"<<endl;
+    value = name_value_map["nlay"];
+    if (!value.empty())
+        nlay = atoi(value.front().c_str());
+    else
+    {
+        cerr << "! Error: missing nlay" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["nrow"];
-    if(!value.empty()) nrow=atoi(value.front().c_str());
-    else{
-        cerr<<"! Error: missing nrow"<<endl;
+    value = name_value_map["nrow"];
+    if (!value.empty())
+        nrow = atoi(value.front().c_str());
+    else
+    {
+        cerr << "! Error: missing nrow" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["ncol"];
-    if(!value.empty()) ncol=atoi(value.front().c_str());
-    else{
-        cerr<<"! Error: missing ncol"<<endl;
+    value = name_value_map["ncol"];
+    if (!value.empty())
+        ncol = atoi(value.front().c_str());
+    else
+    {
+        cerr << "! Error: missing ncol" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["delr"];
-    if(!value.empty()){
-        delr_str=value;
+    value = name_value_map["delr"];
+    if (!value.empty())
+    {
+        delr_str = value;
     }
-    else{
-        cerr<<"! Error: missing delr"<<endl;
+    else
+    {
+        cerr << "! Error: missing delr" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["delc"];
-    if(!value.empty()){
-        delc_str=value;
+    value = name_value_map["delc"];
+    if (!value.empty())
+    {
+        delc_str = value;
     }
-    else{
-        cerr<<"! Error: missing delc"<<endl;
+    else
+    {
+        cerr << "! Error: missing delc" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["top"];
-    if(!value.empty()){
-        top_str=value;
+    value = name_value_map["top"];
+    if (!value.empty())
+    {
+        top_str = value;
     }
-    else{
-        cerr<<"! Error: missing top layer"<<endl;
+    else
+    {
+        cerr << "! Error: missing top layer" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-
-    for(int i=0;i<nlay;i++)
+    for (int i = 0; i < nlay; i++)
     {
         char layername[36];
-        sprintf(layername,"bottom layer %d",i+1);
-        value=name_value_map[layername];
-        if(!value.empty()){
-            bot_str[i]=value;
-			//relative path
+        sprintf(layername, "bottom layer %d", i + 1);
+        value = name_value_map[layername];
+        if (!value.empty())
+        {
+            bot_str[i] = value;
+            //relative path
         }
-        else{
-            cerr<<"! Error: missing bottom layer "<<i + 1 << "("<<i<<" for 0 based numbering)"<<endl;
+        else
+        {
+            cerr << "! Error: missing bottom layer " << i + 1 << "(" << i
+                 << " for 0 based numbering)" << endl;
             assert(false);
-			return false;
+            return false;
         }
     }
-
 
     return true;
 }
 
-bool modflow_grid_raw_data::initialize(map<string, block_raw_data *>& blocks)
+bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if(m_initizlied) return true;
+    if (m_initizlied) return true;
 
-    delr=createArray<REAL>(delr_str,ncol, getFolderPath());
-    delc=createArray<REAL>(delc_str,nrow, getFolderPath());
-    top=createArray<REAL>(top_str,ncol*nrow, getFolderPath());
+    delr = createArray<REAL>(delr_str, ncol, getFolderPath());
+    delc = createArray<REAL>(delc_str, nrow, getFolderPath());
+    top = createArray<REAL>(top_str, ncol * nrow, getFolderPath());
 
-    bot.reserve(nlay+1);
+    bot.reserve(nlay + 1);
     bot.push_back(top);
-    for(int i=0;i<nlay;i++)
+    for (int i = 0; i < nlay; i++)
     {
-        REAL * B=createArray<REAL>(bot_str[i],ncol*nrow, getFolderPath());
+        REAL * B = createArray<REAL>(bot_str[i], ncol * nrow, getFolderPath());
         bot.push_back(B);
     }
 
-    m_initizlied=true;
+    m_initizlied = true;
 
     return true;
 }
 
 Grid * modflow_grid_raw_data::build()
 {
-    if(mfgrid==NULL)
+    if (mfgrid == NULL)
     {
-        mfgrid=new ModflowGrid(*this);
+        mfgrid = new ModflowGrid(*this);
         assert(mfgrid);
-        mfgrid->name=this->name;
+        mfgrid->name = this->name;
     }
 
     return (Grid *)mfgrid;
@@ -430,83 +452,83 @@ Grid * modflow_grid_raw_data::build()
 
 bool quadtree_grid_raw_data::parse()
 {
-    map<string, list<string> > name_value_map;
+    map<string, list<string>> name_value_map;
 
-    for(iterator i=begin(); i!=end(); i++)
+    for (iterator i = begin(); i != end(); i++)
     {
-        string& name=i->name;
-        list<string>& value=i->value;
+        string & name = i->name;
+        list<string> & value = i->value;
 
-        if( name.empty() || value.empty() )
+        if (name.empty() || value.empty())
         {
-            cerr<<"! Error: Cannot parse record: empty name or empty value"<<endl;
+            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
             continue;
         }
 
-        name_value_map[name]=value;
+        name_value_map[name] = value;
     }
-
 
     //check the names
-    list<string>& value=name_value_map["modflow_grid"];
-    if(!value.empty()) modflow_grid=value.front();
-    else{
-        cerr<<"! Error: missing modflow_grid"<<endl;
+    list<string> & value = name_value_map["modflow_grid"];
+    if (!value.empty())
+        modflow_grid = value.front();
+    else
+    {
+        cerr << "! Error: missing modflow_grid" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-	value = name_value_map["structure_file"];
-	if(!value.empty()) tree_structure_file = value.back();//value.front();
-	else
-	{
-		cerr<<"! Error: missing tree_structure_file"<<endl;
-		assert(false);
-		return false;
-	}
-	
-    //read the surfaces of each layer named, independently of the other layers
-    set<int> layers=named_layers(name_value_map);
-    for(set<int>::iterator l=layers.begin();l!=layers.end();l++)
+    value = name_value_map["structure_file"];
+    if (!value.empty())
+        tree_structure_file = value.back(); //value.front();
+    else
     {
-        int i=*l;
-        list<string> v=layer_record(name_value_map,"top",i);
-        if(!v.empty()) top_str[i]=v;
-        v=layer_record(name_value_map,"bottom",i);
-        if(!v.empty()) bot_str[i]=v;
+        cerr << "! Error: missing tree_structure_file" << endl;
+        assert(false);
+        return false;
+    }
+
+    //read the surfaces of each layer named, independently of the other layers
+    set<int> layers = named_layers(name_value_map);
+    for (set<int>::iterator l = layers.begin(); l != layers.end(); l++)
+    {
+        int i = *l;
+        list<string> v = layer_record(name_value_map, "top", i);
+        if (!v.empty()) top_str[i] = v;
+        v = layer_record(name_value_map, "bottom", i);
+        if (!v.empty()) bot_str[i] = v;
     }
 
     return true;
 }
 
-
-bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *>& blocks)
+bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if(m_initizlied) return true;
+    if (m_initizlied) return true;
 
-    this->modflow_data=dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
+    this->modflow_data = dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
 
-    if(modflow_data==NULL)
+    if (modflow_data == NULL)
     {
-        cerr<<"! Error: Cannot resolve referenced modflow_grid name: "<<modflow_grid<<endl;
+        cerr << "! Error: Cannot resolve referenced modflow_grid name: " << modflow_grid << endl;
         return false;
     }
 
-    if(modflow_data->isInitialized()==false)
+    if (modflow_data->isInitialized() == false)
     {
-       if( modflow_data->initialize(blocks)==false )
-           return false;
+        if (modflow_data->initialize(blocks) == false) return false;
     }
 
     //read/open this->tree_structure_file here
-	parseTreeStructFile(tree_structure_file,allNodes, getFolderPath());
+    parseTreeStructFile(tree_structure_file, allNodes, getFolderPath());
 
-//    nodesperlay=createArray<int>(nodesperlay_str,modflow_data->nlay, getFolderPath());
-//    ia=createArray<int>(ia_str,this->nodes+1, getFolderPath());
-//    ja=createArray<int>(ja_str,this->ncon, getFolderPath());
-//    connection_direction_array=createArray<int>(connection_direction_array_str,this->ncon, getFolderPath());
+    //    nodesperlay=createArray<int>(nodesperlay_str,modflow_data->nlay, getFolderPath());
+    //    ia=createArray<int>(ia_str,this->nodes+1, getFolderPath());
+    //    ja=createArray<int>(ja_str,this->ncon, getFolderPath());
+    //    connection_direction_array=createArray<int>(connection_direction_array_str,this->ncon, getFolderPath());
 
-	/*
+    /*
     top.reserve(modflow_data->nlay);
     bot.reserve(modflow_data->nlay);
     
@@ -522,59 +544,59 @@ bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *>& blocks)
     }
 	*/
 
-    m_initizlied=true;
+    m_initizlied = true;
     return true;
 }
 
 Grid * quadtree_grid_raw_data::build()
 {
     //
-    if(this->modflow_data==NULL)
+    if (this->modflow_data == NULL)
     {
-        cerr<<"! Error: Cannot resolve referenced modflow_grid name: "<<modflow_grid<<endl;
+        cerr << "! Error: Cannot resolve referenced modflow_grid name: " << modflow_grid << endl;
         return NULL;
     }
 
-    if(qtree_grid==NULL) //if it's not already built
+    if (qtree_grid == NULL) //if it's not already built
     {
-        ModflowGrid * modflowGrid=dynamic_cast<ModflowGrid*>(modflow_data->build());
-		if(modflowGrid==NULL)
-		{
-			cerr<<"! Error: quadtree_grid_raw_data::build: Cannot retrieve ModflowGrid"<<endl;
-			return NULL; 
-		}
+        ModflowGrid * modflowGrid = dynamic_cast<ModflowGrid *>(modflow_data->build());
+        if (modflowGrid == NULL)
+        {
+            cerr << "! Error: quadtree_grid_raw_data::build: Cannot retrieve ModflowGrid" << endl;
+            return NULL;
+        }
 
-        qtree_grid=new QuadTree3D(modflowGrid);
+        qtree_grid = new QuadTree3D(modflowGrid);
         assert(qtree_grid);
 
         //fill the QuadTree3d
         fillQuadTree3D();
 
-		//copy surface data from top/bottom to those in qtree_grid
-		int nodesize=qtree_grid->nodes();
-		if(qtree_grid->top!=NULL) delete [] qtree_grid->top;
-		if(qtree_grid->bot!=NULL) delete [] qtree_grid->bot;
-		qtree_grid->top=new double[nodesize];
-		qtree_grid->bot=new double[nodesize];
-		assert(qtree_grid->top && qtree_grid->bot);
-		int index=0;
-		for(int layer=0;layer<modflowGrid->nlay;layer++)
-		{
-			int node_per_layer = qtree_grid->nodegroup.nodelay_array[layer];
-			
-			double * top_tmp=createArray<REAL>(top_str[layer],node_per_layer, getFolderPath());
-			memcpy( &qtree_grid->top[index], top_tmp, sizeof(double)*node_per_layer );
-			delete [] top_tmp;//free data
+        //copy surface data from top/bottom to those in qtree_grid
+        int nodesize = qtree_grid->nodes();
+        if (qtree_grid->top != NULL) delete[] qtree_grid->top;
+        if (qtree_grid->bot != NULL) delete[] qtree_grid->bot;
+        qtree_grid->top = new double[nodesize];
+        qtree_grid->bot = new double[nodesize];
+        assert(qtree_grid->top && qtree_grid->bot);
+        int index = 0;
+        for (int layer = 0; layer < modflowGrid->nlay; layer++)
+        {
+            int node_per_layer = qtree_grid->nodegroup.nodelay_array[layer];
 
-			double * bot_tmp=createArray<REAL>(bot_str[layer],node_per_layer, getFolderPath());
-			memcpy( &qtree_grid->bot[index], bot_tmp, sizeof(double)*node_per_layer );
-			delete [] bot_tmp;//free data
+            double * top_tmp = createArray<REAL>(top_str[layer], node_per_layer, getFolderPath());
+            memcpy(&qtree_grid->top[index], top_tmp, sizeof(double) * node_per_layer);
+            delete[] top_tmp; //free data
 
-			index+=node_per_layer;
-		}//end for layer
+            double * bot_tmp = createArray<REAL>(bot_str[layer], node_per_layer, getFolderPath());
+            memcpy(&qtree_grid->bot[index], bot_tmp, sizeof(double) * node_per_layer);
+            delete[] bot_tmp; //free data
 
-		//done
-        qtree_grid->name=this->name;
+            index += node_per_layer;
+        } //end for layer
+
+        //done
+        qtree_grid->name = this->name;
     }
 
     return (Grid *)qtree_grid;
@@ -582,121 +604,121 @@ Grid * quadtree_grid_raw_data::build()
 
 void quadtree_grid_raw_data::fillQuadTree3D()
 {
-	int count = 0;
-	bool zero_based = false;
-	for (vector<TreeStructNode>::iterator nite = allNodes.begin(); nite != allNodes.end(); ++nite, count++)
-	{
+    int count = 0;
+    bool zero_based = false;
+    for (vector<TreeStructNode>::iterator nite = allNodes.begin(); nite != allNodes.end();
+         ++nite, count++)
+    {
 
-		TreeStructNode& tmpNode = *nite;
-		//an active cell numbered 0 means the grid was built with zero-based numbering
-		if(tmpNode.number==0) zero_based = true;
-		int layerNum = tmpNode.layer - 1;
-		int row = tmpNode.row - 1;
-		int col = tmpNode.col - 1;
+        TreeStructNode & tmpNode = *nite;
+        //an active cell numbered 0 means the grid was built with zero-based numbering
+        if (tmpNode.number == 0) zero_based = true;
+        int layerNum = tmpNode.layer - 1;
+        int row = tmpNode.row - 1;
+        int col = tmpNode.col - 1;
 
-//		Index2d id2d=getIndex(qtree_grid->getModflowGrid(),test);
-//		int id=mf->get_nodeid(layerNum,id2d[1],id2d[0]);
-//		Box * box=grid->nodegroup[id];
+        //		Index2d id2d=getIndex(qtree_grid->getModflowGrid(),test);
+        //		int id=mf->get_nodeid(layerNum,id2d[1],id2d[0]);
+        //		Box * box=grid->nodegroup[id];
 
-		
-		int nodeid = qtree_grid->getModflowGrid()->get_nodeid(layerNum, row, col);
-		Box* nodeobj = qtree_grid->nodegroup[nodeid];
+        int nodeid = qtree_grid->getModflowGrid()->get_nodeid(layerNum, row, col);
+        Box * nodeobj = qtree_grid->nodegroup[nodeid];
 
-		if( (strcmp(tmpNode.code.c_str(),"")== 0) || tmpNode.code.empty())
-		{
-			nodeobj->number = tmpNode.number;
-			nodeobj->isLeaf = true;
-			if(nodeobj->number==-1) nodeobj->active=false;
-		}
-		else
-		{
-			Box* tmpNodeBoxObj = nodeobj;
-			int codeDepth = tmpNode.code.size();
-			int depthIdx = 0;
-			while(depthIdx < codeDepth)
-			{
-				if(tmpNodeBoxObj->isLeaf)
-				{
-					bool r = tmpNodeBoxObj->split(0);
-					assert(r);
+        if ((strcmp(tmpNode.code.c_str(), "") == 0) || tmpNode.code.empty())
+        {
+            nodeobj->number = tmpNode.number;
+            nodeobj->isLeaf = true;
+            if (nodeobj->number == -1) nodeobj->active = false;
+        }
+        else
+        {
+            Box * tmpNodeBoxObj = nodeobj;
+            int codeDepth = tmpNode.code.size();
+            int depthIdx = 0;
+            while (depthIdx < codeDepth)
+            {
+                if (tmpNodeBoxObj->isLeaf)
+                {
+                    bool r = tmpNodeBoxObj->split(0);
+                    assert(r);
 
-					for (int c = 0;c < 4; c++)
-					{
-					    int id=c;
-					    if(c==3) id=2;
-					    if(c==2) id=3;
-						tmpNodeBoxObj->pChildren[id]->isLeaf = true;
-						tmpNodeBoxObj->pChildren[id]->updateStatus();
-						qtree_grid->nodegroup.add(tmpNodeBoxObj->pChildren[id]);
-					}
-					tmpNodeBoxObj->isLeaf = false;
-				}
-				char t = tmpNode.code[depthIdx];
-				switch (t)
-				{
-				case '1':
-					{
-						tmpNodeBoxObj = tmpNodeBoxObj->pChildren[0];
-						break;
-					}
-				case '2':
-					{
-						tmpNodeBoxObj = tmpNodeBoxObj->pChildren[1];
-						break;
-					}
-				case '3':
-					{
-					    tmpNodeBoxObj = tmpNodeBoxObj->pChildren[3];
-						break;
-					}
-				case '4':
-					{
-					    tmpNodeBoxObj = tmpNodeBoxObj->pChildren[2];
-						break;
-					}
-				default:
-					{
-						cerr<<"! Error: splitting box error!"<<endl;
-						break;
-					}
-				}
-				depthIdx++;
-			}
+                    for (int c = 0; c < 4; c++)
+                    {
+                        int id = c;
+                        if (c == 3) id = 2;
+                        if (c == 2) id = 3;
+                        tmpNodeBoxObj->pChildren[id]->isLeaf = true;
+                        tmpNodeBoxObj->pChildren[id]->updateStatus();
+                        qtree_grid->nodegroup.add(tmpNodeBoxObj->pChildren[id]);
+                    }
+                    tmpNodeBoxObj->isLeaf = false;
+                }
+                char t = tmpNode.code[depthIdx];
+                switch (t)
+                {
+                    case '1':
+                    {
+                        tmpNodeBoxObj = tmpNodeBoxObj->pChildren[0];
+                        break;
+                    }
+                    case '2':
+                    {
+                        tmpNodeBoxObj = tmpNodeBoxObj->pChildren[1];
+                        break;
+                    }
+                    case '3':
+                    {
+                        tmpNodeBoxObj = tmpNodeBoxObj->pChildren[3];
+                        break;
+                    }
+                    case '4':
+                    {
+                        tmpNodeBoxObj = tmpNodeBoxObj->pChildren[2];
+                        break;
+                    }
+                    default:
+                    {
+                        cerr << "! Error: splitting box error!" << endl;
+                        break;
+                    }
+                }
+                depthIdx++;
+            }
 
-			tmpNodeBoxObj->number = tmpNode.number;
-			tmpNodeBoxObj->isLeaf = true;
-			if(tmpNodeBoxObj->number==-1) tmpNodeBoxObj->active=false;
+            tmpNodeBoxObj->number = tmpNode.number;
+            tmpNodeBoxObj->isLeaf = true;
+            if (tmpNodeBoxObj->number == -1) tmpNodeBoxObj->active = false;
 
-			//if(!(tmpNodeBoxObj->isLeaf && tmpNodeBoxObj->number!=0))
-			//	cout<<"error"<<endl;
-			//count++;
-		}
-	}
-	//cout<<"total node number "<<count<<endl;
+            //if(!(tmpNodeBoxObj->isLeaf && tmpNodeBoxObj->number!=0))
+            //	cout<<"error"<<endl;
+            //count++;
+        }
+    }
+    //cout<<"total node number "<<count<<endl;
 
-	qtree_grid->set_one_based_node_numbering(!zero_based);
+    qtree_grid->set_one_based_node_numbering(!zero_based);
 
-	//refresh the tree to get the new node id array
-	qtree_grid->refresh();
+    //refresh the tree to get the new node id array
+    qtree_grid->refresh();
 
-	/********************************************************************/
-	//check whether the quadtree is built successfully
+    /********************************************************************/
+    //check whether the quadtree is built successfully
 #if DEBUG
-	cout<<"********************************************************"<<endl;
-	int size = qtree_grid->nodegroup.size();
-	cout<<"The total number of size is : "<<size<<endl;
-	int showNum = 0;
-	for(int i=0;i<size;i++)
-	{
-		Box * box=qtree_grid->nodegroup[i];
-		if(box->isLeaf){
-			showNum++;
-		}
-	}
-	cout<<"The leaf nodes' number is : "<<showNum<<endl;
-	cout<<"********************************************************"<<endl;
+    cout << "********************************************************" << endl;
+    int size = qtree_grid->nodegroup.size();
+    cout << "The total number of size is : " << size << endl;
+    int showNum = 0;
+    for (int i = 0; i < size; i++)
+    {
+        Box * box = qtree_grid->nodegroup[i];
+        if (box->isLeaf)
+        {
+            showNum++;
+        }
+    }
+    cout << "The leaf nodes' number is : " << showNum << endl;
+    cout << "********************************************************" << endl;
 #endif
-
 }
 //-----------------------------------------------------------------------------
 //
@@ -708,131 +730,140 @@ void quadtree_grid_raw_data::fillQuadTree3D()
 
 bool quadtree_builder_raw_data::parse()
 {
-    map<string, list<string> > name_value_map;
+    map<string, list<string>> name_value_map;
 
-    for(iterator i=begin(); i!=end(); i++)
+    for (iterator i = begin(); i != end(); i++)
     {
-        string& name=i->name;
-        list<string>& value=i->value;
+        string & name = i->name;
+        list<string> & value = i->value;
 
-        if( name.empty() || value.empty() )
+        if (name.empty() || value.empty())
         {
-            cerr<<"! Error: Cannot parse record: empty name or empty value"<<endl;
+            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
             continue;
         }
 
-        name_value_map[name]=value;
+        name_value_map[name] = value;
     }
-
 
     //check the names
-    list<string>& value=name_value_map["max_smoothing_level_target"];
-    if(!value.empty()) smoothing_level_vertical=smoothing_level_horizontal=atoi(value.front().c_str());
+    list<string> & value = name_value_map["max_smoothing_level_target"];
+    if (!value.empty())
+        smoothing_level_vertical = smoothing_level_horizontal = atoi(value.front().c_str());
 
-    list<string> level=record(name_value_map,"horizontal_smoothing_level","smoothing_level_horizontal");
-    if(!level.empty()) smoothing_level_horizontal=atoi(level.front().c_str());
+    list<string> level =
+        record(name_value_map, "horizontal_smoothing_level", "smoothing_level_horizontal");
+    if (!level.empty()) smoothing_level_horizontal = atoi(level.front().c_str());
 
-    level=record(name_value_map,"vertical_smoothing_level","smoothing_level_vertical");
-    if(!level.empty()) smoothing_level_vertical=atoi(level.front().c_str());
+    level = record(name_value_map, "vertical_smoothing_level", "smoothing_level_vertical");
+    if (!level.empty()) smoothing_level_vertical = atoi(level.front().c_str());
 
-    value=name_value_map["modflow_grid"];
-    if(!value.empty()) modflow_grid=value.front();
-    else{
-        cerr<<"! Error: missing modflow_grid"<<endl;
+    value = name_value_map["modflow_grid"];
+    if (!value.empty())
+        modflow_grid = value.front();
+    else
+    {
+        cerr << "! Error: missing modflow_grid" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["grid_definition_file"];
-    if(!value.empty()) grid_definition_file=value.front();
-    else{
-        cerr<<"! Error: missing grid_definition_file"<<endl;
+    value = name_value_map["grid_definition_file"];
+    if (!value.empty())
+        grid_definition_file = value.front();
+    else
+    {
+        cerr << "! Error: missing grid_definition_file" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["smoothing"];
-    if(!value.empty()) smoothing=(tolower(value.front())=="full")?true:false;
+    value = name_value_map["smoothing"];
+    if (!value.empty()) smoothing = (tolower(value.front()) == "full") ? true : false;
 
-    value=name_value_map["node_numbering"];
-    if(!value.empty()){
-        if(tolower(value.front())=="zero-based")
-            one_based_node_numbering=false;
+    value = name_value_map["node_numbering"];
+    if (!value.empty())
+    {
+        if (tolower(value.front()) == "zero-based") one_based_node_numbering = false;
     }
 
-	value=name_value_map["autoalignment"];
-	if(!value.empty()) auto_alignment=(tolower(value.front())=="true")?true:false;
+    value = name_value_map["autoalignment"];
+    if (!value.empty()) auto_alignment = (tolower(value.front()) == "true") ? true : false;
 
     //read the records of each layer named, independently of the other layers
-    set<int> layers=named_layers(name_value_map);
-    for(set<int>::iterator l=layers.begin();l!=layers.end();l++)
+    set<int> layers = named_layers(name_value_map);
+    for (set<int>::iterator l = layers.begin(); l != layers.end(); l++)
     {
-        int i=*l;
+        int i = *l;
         list<string> v;
 
-        v=layer_record(name_value_map,"active_domain",i);
-        if(!v.empty()) active_domain_str[i]=v;
+        v = layer_record(name_value_map, "active_domain", i);
+        if (!v.empty()) active_domain_str[i] = v;
 
         //refinement features, also allowed as refinement_features
-        v=layer_record(name_value_map,"refine_by_features",i);
-        if(v.empty()) v=layer_record(name_value_map,"refinement_features",i);
-        if(!v.empty()) refine_by_features_str[i]=v;
+        v = layer_record(name_value_map, "refine_by_features", i);
+        if (v.empty()) v = layer_record(name_value_map, "refinement_features", i);
+        if (!v.empty()) refine_by_features_str[i] = v;
 
         //refinement array, also allowed as refinement_array
-        v=layer_record(name_value_map,"refine_by_array",i);
-        if(v.empty()) v=layer_record(name_value_map,"refinement_array",i);
-        if(!v.empty()) refine_by_array_str[i]=v;
+        v = layer_record(name_value_map, "refine_by_array", i);
+        if (v.empty()) v = layer_record(name_value_map, "refinement_array", i);
+        if (!v.empty()) refine_by_array_str[i] = v;
 
         //surface arrays
-        v=layer_record(name_value_map,"top",i);
-        if(!v.empty()) top_str[i]=v;
-        v=layer_record(name_value_map,"bottom",i);
-        if(!v.empty()) bot_str[i]=v;
+        v = layer_record(name_value_map, "top", i);
+        if (!v.empty()) top_str[i] = v;
+        v = layer_record(name_value_map, "bottom", i);
+        if (!v.empty()) bot_str[i] = v;
     }
 
     return true;
 }
 
-bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *>& blocks)
+bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if(m_initizlied) return true;
+    if (m_initizlied) return true;
 
     //initialize modflow_data if it has not been initialized yet
-    this->modflow_data=dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
-    if(modflow_data==NULL)
+    this->modflow_data = dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
+    if (modflow_data == NULL)
     {
-        cerr<<"! Error: InQuadtree Builder: Cannot resolve referenced modflow_grid name: "<<modflow_grid<<endl;
+        cerr << "! Error: InQuadtree Builder: Cannot resolve referenced modflow_grid name: "
+             << modflow_grid << endl;
         return false;
     }
 
-    if(modflow_data->isInitialized()==false)
+    if (modflow_data->isInitialized() == false)
     {
-       if( modflow_data->initialize(blocks)==false )
-           return false;
+        if (modflow_data->initialize(blocks) == false) return false;
     }
 
     // initialize return false;
     active_domain_data.reserve(modflow_data->nlay);
-    for(int i=0;i<modflow_data->nlay;i++)
+    for (int i = 0; i < modflow_data->nlay; i++)
     {
-        list<active_domain_raw_data*> aF;
-        list<string>& aF_str=active_domain_str[i];
-        for(list<string>::iterator s=aF_str.begin();s!=aF_str.end();s++)
+        list<active_domain_raw_data *> aF;
+        list<string> & aF_str = active_domain_str[i];
+        for (list<string>::iterator s = aF_str.begin(); s != aF_str.end(); s++)
         {
-            active_domain_raw_data* af=dynamic_cast<active_domain_raw_data *>(blocks[*s]);
-            if(af!=NULL){
-                if(af->initialize(blocks)==false)
+            active_domain_raw_data * af = dynamic_cast<active_domain_raw_data *>(blocks[*s]);
+            if (af != NULL)
+            {
+                if (af->initialize(blocks) == false)
                 {
                     return false;
                 }
-                else aF.push_back(af);
+                else
+                    aF.push_back(af);
             }
-            else{
-                cerr<<"! Error: Quadtree Builder: Block "<<*s<<" is referenced but not defined"<<endl;
-				assert(false);
-				return false;
+            else
+            {
+                cerr << "! Error: Quadtree Builder: Block " << *s
+                     << " is referenced but not defined" << endl;
+                assert(false);
+                return false;
             }
-        }// end for s
+        } // end for s
         active_domain_data.push_back(aF);
     }
 
@@ -841,90 +872,102 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *>& blocks
     refine_by_array.reserve(modflow_data->nlay);
     top.reserve(modflow_data->nlay);
     bot.reserve(modflow_data->nlay);
-    int ncol_nrow=modflow_data->ncol*modflow_data->nrow;
+    int ncol_nrow = modflow_data->ncol * modflow_data->nrow;
 
-	//fill in missing info about the depth values of each layer
-	for(int i=0;i<modflow_data->nlay;i++)
-	{
-		if(top_str[i].empty()){ top_str[i].push_back("replicate"); top_str[i].push_back(modflow_data->name); }
-		if(bot_str[i].empty()){ bot_str[i].push_back("replicate"); bot_str[i].push_back(modflow_data->name); }
-	}
+    //fill in missing info about the depth values of each layer
+    for (int i = 0; i < modflow_data->nlay; i++)
+    {
+        if (top_str[i].empty())
+        {
+            top_str[i].push_back("replicate");
+            top_str[i].push_back(modflow_data->name);
+        }
+        if (bot_str[i].empty())
+        {
+            bot_str[i].push_back("replicate");
+            bot_str[i].push_back(modflow_data->name);
+        }
+    }
 
-	//process each layer now
-    for(int i=0;i<modflow_data->nlay;i++)
+    //process each layer now
+    for (int i = 0; i < modflow_data->nlay; i++)
     {
         //refine by features
-        list<refinement_raw_data*> rF;
-        list<string>& rF_str=refine_by_features_str[i];
-        for(list<string>::iterator s=rF_str.begin();s!=rF_str.end();s++)
+        list<refinement_raw_data *> rF;
+        list<string> & rF_str = refine_by_features_str[i];
+        for (list<string>::iterator s = rF_str.begin(); s != rF_str.end(); s++)
         {
-            refinement_raw_data * rf=dynamic_cast<refinement_raw_data *>(blocks[*s]);
-            if(rf!=NULL) rF.push_back(rf);
-			else
-			{
-				cerr<<"! Error: Quadtree Builder: There is no refinement feature named "<<*s<<endl;
-				assert(false);
-				return false;
-			}
+            refinement_raw_data * rf = dynamic_cast<refinement_raw_data *>(blocks[*s]);
+            if (rf != NULL)
+                rF.push_back(rf);
+            else
+            {
+                cerr << "! Error: Quadtree Builder: There is no refinement feature named " << *s
+                     << endl;
+                assert(false);
+                return false;
+            }
         }
 
         refine_by_features.push_back(rF);
 
         //refine by array
-        int *  R=createArray<int>(refine_by_array_str[i],ncol_nrow, getFolderPath());
+        int * R = createArray<int>(refine_by_array_str[i], ncol_nrow, getFolderPath());
         refine_by_array.push_back(R);
 
-		//surface data
-		top.push_back( make_pair( tolower(top_str[i].front()), top_str[i].back()) );
-		bot.push_back( make_pair( tolower(bot_str[i].front()),bot_str[i].back()) );
+        //surface data
+        top.push_back(make_pair(tolower(top_str[i].front()), top_str[i].back()));
+        bot.push_back(make_pair(tolower(bot_str[i].front()), bot_str[i].back()));
 
-		//interpolation mode
-		if(top_str[i].size() == 3)
-		{
-			vector<string> vs(top_str[i].begin(), top_str[i].end());
-			if(tolower(vs[1]) == "area_weighted")
-				top_area_weighted.insert(make_pair(i, true));
-			else if(tolower(vs[1]) == "no_area_weighted")
-				top_area_weighted.insert(make_pair(i, false));
-		}
-		if(bot_str[i].size() == 3)
-		{
-			vector<string> vs(bot_str[i].begin(), bot_str[i].end());
-			if(tolower(vs[1]) == "area_weighted")
-				bot_area_weighted.insert(make_pair(i, true));
-			else if(tolower(vs[1]) == "no_area_weighted")
-				bot_area_weighted.insert(make_pair(i, false));
-		}
+        //interpolation mode
+        if (top_str[i].size() == 3)
+        {
+            vector<string> vs(top_str[i].begin(), top_str[i].end());
+            if (tolower(vs[1]) == "area_weighted")
+                top_area_weighted.insert(make_pair(i, true));
+            else if (tolower(vs[1]) == "no_area_weighted")
+                top_area_weighted.insert(make_pair(i, false));
+        }
+        if (bot_str[i].size() == 3)
+        {
+            vector<string> vs(bot_str[i].begin(), bot_str[i].end());
+            if (tolower(vs[1]) == "area_weighted")
+                bot_area_weighted.insert(make_pair(i, true));
+            else if (tolower(vs[1]) == "no_area_weighted")
+                bot_area_weighted.insert(make_pair(i, false));
+        }
     }
 
-    m_initizlied=true;
+    m_initizlied = true;
     return true;
 }
 
 Grid * quadtree_builder_raw_data::build()
 {
     //
-    if(this->modflow_data==NULL)
+    if (this->modflow_data == NULL)
     {
-        cerr<<"! Error: Quadtree Builder: Cannot resolve referenced modflow_grid name: "<<modflow_grid<<endl;
+        cerr << "! Error: Quadtree Builder: Cannot resolve referenced modflow_grid name: "
+             << modflow_grid << endl;
         return NULL;
     }
 
-    if(qtree_grid==NULL) //if it's not already built
+    if (qtree_grid == NULL) //if it's not already built
     {
-        Grid * modflowGrid=modflow_data->build();
+        Grid * modflowGrid = modflow_data->build();
 
-        qtree_grid=new QuadTree3D((ModflowGrid*)modflowGrid);
+        qtree_grid = new QuadTree3D((ModflowGrid *)modflowGrid);
         assert(qtree_grid);
-        if(this->grid_definition_file.empty()) //no name defined...
-            qtree_grid->name=this->name;
-        else{
-            int pos=this->grid_definition_file.find_last_of('.');
-            qtree_grid->name=this->grid_definition_file.substr(0,pos);
+        if (this->grid_definition_file.empty()) //no name defined...
+            qtree_grid->name = this->name;
+        else
+        {
+            int pos = this->grid_definition_file.find_last_of('.');
+            qtree_grid->name = this->grid_definition_file.substr(0, pos);
         }
 
         Quadtree_Builder builder;
-        builder.build(qtree_grid,*this);
+        builder.build(qtree_grid, *this);
     }
 
     return (Grid *)qtree_grid;
@@ -940,54 +983,61 @@ Grid * quadtree_builder_raw_data::build()
 
 bool surface_interpolation_raw_data::parse()
 {
-    map<string, list<string> > name_value_map;
+    map<string, list<string>> name_value_map;
 
-    for(iterator i=begin(); i!=end(); i++)
+    for (iterator i = begin(); i != end(); i++)
     {
-        string& name=i->name;
-        list<string>& value=i->value;
+        string & name = i->name;
+        list<string> & value = i->value;
 
-        if( name.empty() || value.empty() )
+        if (name.empty() || value.empty())
         {
-            cerr<<"! Error: Cannot parse record: empty name or empty value"<<endl;
+            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
             continue;
         }
 
-        name_value_map[name]=value;
+        name_value_map[name] = value;
     }
-
 
     //check the names
-    list<string>& value=name_value_map["filename"];
-    if(!value.empty()) filename=atoi(value.front().c_str());
-    else{
-        cerr<<"! Error: missing filename"<<endl;
+    list<string> & value = name_value_map["filename"];
+    if (!value.empty())
+        filename = atoi(value.front().c_str());
+    else
+    {
+        cerr << "! Error: missing filename" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["surface_type"];
-    if(!value.empty()) surface_type=atoi(value.front().c_str());
-    else{
-        cerr<<"! Error: missing surface_type"<<endl;
+    value = name_value_map["surface_type"];
+    if (!value.empty())
+        surface_type = atoi(value.front().c_str());
+    else
+    {
+        cerr << "! Error: missing surface_type" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["modflow_grid"];
-    if(!value.empty()) modflow_grid=atoi(value.front().c_str());
-    else{
-        cerr<<"! Error: missing modflow_grid"<<endl;
+    value = name_value_map["modflow_grid"];
+    if (!value.empty())
+        modflow_grid = atoi(value.front().c_str());
+    else
+    {
+        cerr << "! Error: missing modflow_grid" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["interpolation_type"];
-    if(!value.empty()) interpolation_type=atoi(value.front().c_str());
-    else{
-        cerr<<"! Error: missing interpolation_type"<<endl;
+    value = name_value_map["interpolation_type"];
+    if (!value.empty())
+        interpolation_type = atoi(value.front().c_str());
+    else
+    {
+        cerr << "! Error: missing interpolation_type" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
     return true;
@@ -1003,169 +1053,173 @@ bool surface_interpolation_raw_data::parse()
 
 bool grid_intersection_raw_data::parse()
 {
-    map<string, list<string> > name_value_map;
+    map<string, list<string>> name_value_map;
 
-    for(iterator i=begin(); i!=end(); i++)
+    for (iterator i = begin(); i != end(); i++)
     {
-        string& name=i->name;
-        list<string>& value=i->value;
+        string & name = i->name;
+        list<string> & value = i->value;
 
-        if( name.empty() || value.empty() )
+        if (name.empty() || value.empty())
         {
-            cerr<<"! Error: Cannot parse record: empty name or empty value"<<endl;
+            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
             continue;
         }
 
-        name_value_map[name]=value;
+        name_value_map[name] = value;
     }
-
 
     //check the names
-    list<string>& value=name_value_map["grid"];
-    if(!value.empty()) grid_name=value.front();
-    else{
-        cerr<<"! Error: missing grid"<<endl;
+    list<string> & value = name_value_map["grid"];
+    if (!value.empty())
+        grid_name = value.front();
+    else
+    {
+        cerr << "! Error: missing grid" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["shapefile"];
-    if(!value.empty())
-	{
-			shapefile=value.front();
-			//replace the '\\'
-			string fullpath = getFolderPath();
-			fullpath += shapefile;
-			shapefile = fullpath;
+    value = name_value_map["shapefile"];
+    if (!value.empty())
+    {
+        shapefile = value.front();
+        //replace the '\\'
+        string fullpath = getFolderPath();
+        fullpath += shapefile;
+        shapefile = fullpath;
 
-			int pathsize = shapefile.size();
-			for (int i = 0;i < pathsize; i++)
-			{
-				if(shapefile[i] =='\\')
-					shapefile[i] = '/';
-			}
-	}
-    else{
-        cerr<<"! Error: missing shapefile"<<endl;
+        int pathsize = shapefile.size();
+        for (int i = 0; i < pathsize; i++)
+        {
+            if (shapefile[i] == '\\') shapefile[i] = '/';
+        }
+    }
+    else
+    {
+        cerr << "! Error: missing shapefile" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["feature_type"];
-    if(!value.empty()) feature_type=value.front();
-    else{
-        cerr<<"! Error: missing feature_type"<<endl;
+    value = name_value_map["feature_type"];
+    if (!value.empty())
+        feature_type = value.front();
+    else
+    {
+        cerr << "! Error: missing feature_type" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["output_file"];
-    if(!value.empty())
-	{
-			output_file=value.front();
-			string fullpath = getFolderPath();
-			fullpath +=output_file;
-			output_file = fullpath;
-			
-			int pathsize = output_file.size();
-			for(int i = 0; i< pathsize; i++)
-			{
-				if(output_file[i] =='\\')
-					output_file[i] = '/';
-			}
-	}
-    else{
-        cerr<<"! Error: missing output_file"<<endl;
+    value = name_value_map["output_file"];
+    if (!value.empty())
+    {
+        output_file = value.front();
+        string fullpath = getFolderPath();
+        fullpath += output_file;
+        output_file = fullpath;
+
+        int pathsize = output_file.size();
+        for (int i = 0; i < pathsize; i++)
+        {
+            if (output_file[i] == '\\') output_file[i] = '/';
+        }
+    }
+    else
+    {
+        cerr << "! Error: missing output_file" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-	value= name_value_map["output_shapefile"];
-	if(!value.empty())
-	{
-			output_shapefile = value.front();
-			string fullpath = getFolderPath();
-			fullpath +=output_shapefile;
-			
-			output_shapefile = fullpath;
-			int pathsize = output_shapefile.size();
-			for (int i = 0; i < pathsize; i++)
-			{
-				if(output_shapefile[i] == '\\')
-						output_shapefile[i] = '/';
-			}
-	}
+    value = name_value_map["output_shapefile"];
+    if (!value.empty())
+    {
+        output_shapefile = value.front();
+        string fullpath = getFolderPath();
+        fullpath += output_shapefile;
 
-	value = name_value_map["output_vtkfile"];
-	if(!value.empty())
-	{
-			output_vtkfile = value.front();
-			string fullpath = getFolderPath();
-			fullpath +=output_vtkfile;
-			
-			output_vtkfile = fullpath;
-			int pathsize = output_vtkfile.size();
-			for (int i = 0; i < pathsize; i++)
-			{
-				if(output_vtkfile[i] == '\\')
-						output_vtkfile[i] = '/';
-			}
-	}
-
-    value=name_value_map["layer"];
-    if(!value.empty()) layer=atoi(value.front().c_str())-1;
-    else{
-        cerr<<"! Error: missing layer"<<endl;
-        assert(false);
-		return false;
+        output_shapefile = fullpath;
+        int pathsize = output_shapefile.size();
+        for (int i = 0; i < pathsize; i++)
+        {
+            if (output_shapefile[i] == '\\') output_shapefile[i] = '/';
+        }
     }
 
-	value = name_value_map["attributes"];
-	if(!value.empty())
-	{
-		attributes.insert(attributes.end(), value.begin(), value.end());
-	}
-	else
-	{
-		attributes.push_back("all");
-	}
+    value = name_value_map["output_vtkfile"];
+    if (!value.empty())
+    {
+        output_vtkfile = value.front();
+        string fullpath = getFolderPath();
+        fullpath += output_vtkfile;
+
+        output_vtkfile = fullpath;
+        int pathsize = output_vtkfile.size();
+        for (int i = 0; i < pathsize; i++)
+        {
+            if (output_vtkfile[i] == '\\') output_vtkfile[i] = '/';
+        }
+    }
+
+    value = name_value_map["layer"];
+    if (!value.empty())
+        layer = atoi(value.front().c_str()) - 1;
+    else
+    {
+        cerr << "! Error: missing layer" << endl;
+        assert(false);
+        return false;
+    }
+
+    value = name_value_map["attributes"];
+    if (!value.empty())
+    {
+        attributes.insert(attributes.end(), value.begin(), value.end());
+    }
+    else
+    {
+        attributes.push_back("all");
+    }
 
     return true;
 }
 
-bool grid_intersection_raw_data::initialize(map<string, block_raw_data *>& blocks)
+bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if(m_initizlied) return true;
+    if (m_initizlied) return true;
 
     //get the grid
-    block_raw_data * block=blocks[grid_name];
+    block_raw_data * block = blocks[grid_name];
 
-    grid_raw_data* grid=dynamic_cast<grid_raw_data*>(block);
-    if( grid==NULL )
+    grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
+    if (grid == NULL)
     {
-        cerr<<"! Error: "<<grid_name<<" is not a grid"<<endl;
+        cerr << "! Error: " << grid_name << " is not a grid" << endl;
         return false;
     }
 
     //initialize the grid if necessary
-    bool r=grid->initialize(blocks);
-    if(r==false){
-        cerr<<"! Error: initialize "<<grid_name<<" failed"<<endl;
+    bool r = grid->initialize(blocks);
+    if (r == false)
+    {
+        cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
     }
 
     //should we check if the grid is built...
     //it's safe to built a grid multiple times anyway...
-    this->grid=grid->build();
+    this->grid = grid->build();
 
     //check again
-    if(this->grid==NULL)
+    if (this->grid == NULL)
     {
-        cerr<<"! Error: build "<<grid_name<<" failed"<<endl;
+        cerr << "! Error: build " << grid_name << " failed" << endl;
         return false;
     }
 
-    m_initizlied=true;
+    m_initizlied = true;
 
     return true;
 }
@@ -1180,98 +1234,101 @@ bool grid_intersection_raw_data::initialize(map<string, block_raw_data *>& block
 
 bool active_domain_raw_data::parse()
 {
-    map<string, list<string> > name_value_map;
+    map<string, list<string>> name_value_map;
 
-    for(iterator i=begin(); i!=end(); i++)
+    for (iterator i = begin(); i != end(); i++)
     {
-        string& name=i->name;
-        list<string>& value=i->value;
+        string & name = i->name;
+        list<string> & value = i->value;
 
-        if( name.empty() || value.empty() )
+        if (name.empty() || value.empty())
         {
-            cerr<<"! Error: Cannot parse record: empty name or empty value"<<endl;
+            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
             continue;
         }
 
-        name_value_map[name]=value;
+        name_value_map[name] = value;
     }
-
 
     //check the names
-//    list<string>& value=name_value_map["grid"];
-//    if(!value.empty()) grid_name=value.front();
-//    else{
-//        cerr<<"! Error: missing grid"<<endl;
-//        assert(false);
-//    }
+    //    list<string>& value=name_value_map["grid"];
+    //    if(!value.empty()) grid_name=value.front();
+    //    else{
+    //        cerr<<"! Error: missing grid"<<endl;
+    //        assert(false);
+    //    }
 
-    list<string>& value=name_value_map["shapefile"];
-    if(!value.empty()) shapefile=value.front();
-    else{
-        cerr<<"! Error: missing shapefile"<<endl;
+    list<string> & value = name_value_map["shapefile"];
+    if (!value.empty())
+        shapefile = value.front();
+    else
+    {
+        cerr << "! Error: missing shapefile" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["feature_type"];
-    if(!value.empty()) feature_type=value.front();
-    else{
-        cerr<<"! Error: missing feature_type"<<endl;
+    value = name_value_map["feature_type"];
+    if (!value.empty())
+        feature_type = value.front();
+    else
+    {
+        cerr << "! Error: missing feature_type" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-//    value=name_value_map["layer"];
-//    if(!value.empty()){
-//        for(list<string>::iterator i=value.begin();i!=value.end();i++)
-//        {
-//            layers.push_back( atoi(i->c_str()) );
-//        }
-//    }
-//    else{
-//        cerr<<"! Error: missing layer"<<endl;
-//        assert(false);
-//    }
+    //    value=name_value_map["layer"];
+    //    if(!value.empty()){
+    //        for(list<string>::iterator i=value.begin();i!=value.end();i++)
+    //        {
+    //            layers.push_back( atoi(i->c_str()) );
+    //        }
+    //    }
+    //    else{
+    //        cerr<<"! Error: missing layer"<<endl;
+    //        assert(false);
+    //    }
 
-    value=name_value_map["include_boundary"];
-    if(!value.empty()) include_boundary=(::tolower(value.front()[0])=='f')?false:true;
+    value = name_value_map["include_boundary"];
+    if (!value.empty()) include_boundary = (::tolower(value.front()[0]) == 'f') ? false : true;
 
     return true;
 }
 
-bool active_domain_raw_data::initialize(map<string, block_raw_data *>& blocks)
+bool active_domain_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if(m_initizlied) return true;
+    if (m_initizlied) return true;
 
-//    //get the grid
-//    block_raw_data * block=blocks[grid_name];
-//
-//    grid_raw_data* grid=dynamic_cast<grid_raw_data*>(block);
-//    if( grid==NULL )
-//    {
-//        cerr<<"! Error: "<<grid_name<<" is not a grid"<<endl;
-//        return false;
-//    }
-//
-//    //initialize the grid if necessary
-//    bool r=grid->initialize(blocks);
-//    if(r==false){
-//        cerr<<"! Error: initialize "<<grid_name<<" failed"<<endl;
-//        return false;
-//    }
-//
-//    //should we check if the grid is built...
-//    //it's safe to built a grid multiple times anyway...
-//    this->grid=grid->build();
-//
-//    //check again
-//    if(this->grid==NULL)
-//    {
-//        cerr<<"! Error: build "<<grid_name<<" failed"<<endl;
-//        return false;
-//    }
+    //    //get the grid
+    //    block_raw_data * block=blocks[grid_name];
+    //
+    //    grid_raw_data* grid=dynamic_cast<grid_raw_data*>(block);
+    //    if( grid==NULL )
+    //    {
+    //        cerr<<"! Error: "<<grid_name<<" is not a grid"<<endl;
+    //        return false;
+    //    }
+    //
+    //    //initialize the grid if necessary
+    //    bool r=grid->initialize(blocks);
+    //    if(r==false){
+    //        cerr<<"! Error: initialize "<<grid_name<<" failed"<<endl;
+    //        return false;
+    //    }
+    //
+    //    //should we check if the grid is built...
+    //    //it's safe to built a grid multiple times anyway...
+    //    this->grid=grid->build();
+    //
+    //    //check again
+    //    if(this->grid==NULL)
+    //    {
+    //        cerr<<"! Error: build "<<grid_name<<" failed"<<endl;
+    //        return false;
+    //    }
 
-    m_initizlied=true;
+    m_initizlied = true;
 
     return true;
 }
@@ -1286,57 +1343,62 @@ bool active_domain_raw_data::initialize(map<string, block_raw_data *>& blocks)
 
 bool refinement_raw_data::parse()
 {
-    map<string, list<string> > name_value_map;
+    map<string, list<string>> name_value_map;
 
-    for(iterator i=begin(); i!=end(); i++)
+    for (iterator i = begin(); i != end(); i++)
     {
-        string& name=i->name;
-        list<string>& value=i->value;
+        string & name = i->name;
+        list<string> & value = i->value;
 
-        if( name.empty() || value.empty() )
+        if (name.empty() || value.empty())
         {
-            cerr<<"! Error: Cannot parse record: empty name or empty value"<<endl;
+            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
             continue;
         }
 
-        name_value_map[name]=value;
+        name_value_map[name] = value;
     }
-
 
     //check the names
-    list<string>& value=name_value_map["shapefile"];
-    if(!value.empty()) shapefile=value.front();
-    else{
-        cerr<<"! Error: missing shapefile"<<endl;
-        assert(false);
-		return false;
-    }
-
-    value=name_value_map["feature_type"];
-    if(!value.empty()) featuretype=value.front();
-    else{
-        cerr<<"! Error: missing feature_type"<<endl;
-        assert(false);
-		return false;
-    }
-
-    //a level from a shapefile attribute overrides refinement_level
-    value=name_value_map["refinement_level"];
-    if(!value.empty()) refinement_level=atoi(value.front().c_str());
-    list<string> attribute=record(name_value_map,"refine_level_by_attribute","refinement_level_by_attribute");
-    if(!attribute.empty()) refinement_level_by_attribute=attribute.front();
-    if(value.empty() && attribute.empty()){
-        cerr<<"! Error: missing refinement_level or refine_level_by_attribute"<<endl;
+    list<string> & value = name_value_map["shapefile"];
+    if (!value.empty())
+        shapefile = value.front();
+    else
+    {
+        cerr << "! Error: missing shapefile" << endl;
         assert(false);
         return false;
     }
 
-//    value=name_value_map["refinement_level_by_attribute"];
-//    if(!value.empty()) refinement_level_by_attribute=value.front();
-//    else{
-//        cerr<<"! Error: missing refinement_level_by_attribute"<<endl;
-//        assert(false);
-//    }
+    value = name_value_map["feature_type"];
+    if (!value.empty())
+        featuretype = value.front();
+    else
+    {
+        cerr << "! Error: missing feature_type" << endl;
+        assert(false);
+        return false;
+    }
+
+    //a level from a shapefile attribute overrides refinement_level
+    value = name_value_map["refinement_level"];
+    if (!value.empty()) refinement_level = atoi(value.front().c_str());
+    list<string> attribute =
+        record(name_value_map, "refine_level_by_attribute", "refinement_level_by_attribute");
+    if (!attribute.empty()) refinement_level_by_attribute = attribute.front();
+    if (value.empty() && attribute.empty())
+    {
+        cerr << "! Error: missing refinement_level or refine_level_by_attribute" << endl;
+        assert(false);
+        return false;
+    }
+
+    //    value=name_value_map["refinement_level_by_attribute"];
+    //    if(!value.empty()) refinement_level_by_attribute=value.front();
+    //    else{
+    //        cerr<<"! Error: missing refinement_level_by_attribute"<<endl;
+    //        assert(false);
+    //    }
 
     return true;
 }
@@ -1351,84 +1413,87 @@ bool refinement_raw_data::parse()
 
 bool grid_to_usgdata_raw_data::parse()
 {
-    map<string, list<string> > name_value_map;
+    map<string, list<string>> name_value_map;
 
-    for(iterator i=begin(); i!=end(); i++)
+    for (iterator i = begin(); i != end(); i++)
     {
-        string& name=i->name;
-        list<string>& value=i->value;
+        string & name = i->name;
+        list<string> & value = i->value;
 
-        if( name.empty() || value.empty() )
+        if (name.empty() || value.empty())
         {
-            cerr<<"! Error: Cannot parse record: empty name or empty value"<<endl;
+            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
             continue;
         }
 
-        name_value_map[name]=value;
+        name_value_map[name] = value;
     }
-
 
     //check the names
-    list<string>& value=name_value_map["grid"];
-    if(!value.empty()) grid_name=value.front();
-    else{
-        cerr<<"! Error: missing grid"<<endl;
+    list<string> & value = name_value_map["grid"];
+    if (!value.empty())
+        grid_name = value.front();
+    else
+    {
+        cerr << "! Error: missing grid" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-    value=name_value_map["usg_data_prefix"];
-    if(!value.empty()) usg_data_prefix=value.front();
-    else{
-        cerr<<"! Error: missing usg_data_prefix"<<endl;
+    value = name_value_map["usg_data_prefix"];
+    if (!value.empty())
+        usg_data_prefix = value.front();
+    else
+    {
+        cerr << "! Error: missing usg_data_prefix" << endl;
         assert(false);
-		return false;
+        return false;
     }
 
-	value = name_value_map["vertical_pass_through"];
-	if(!value.empty())
-	{
-		string vs = tolower(value.front());
-		if(vs == "true")
-			vertical_pass_through = true;
-	}
+    value = name_value_map["vertical_pass_through"];
+    if (!value.empty())
+    {
+        string vs = tolower(value.front());
+        if (vs == "true") vertical_pass_through = true;
+    }
 
     return true;
 }
 
-bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *>& blocks)
+bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if(m_initizlied) return true;
+    if (m_initizlied) return true;
 
     //get the grid
-    block_raw_data * block=blocks[grid_name];
+    block_raw_data * block = blocks[grid_name];
 
-    grid_raw_data* grid=dynamic_cast<grid_raw_data*>(block);
-    if( grid==NULL )
+    grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
+    if (grid == NULL)
     {
-        cerr<<"! Error: "<<grid_name<<" is not a grid"<<endl;
+        cerr << "! Error: " << grid_name << " is not a grid" << endl;
         return false;
     }
 
     //initialize the grid if necessary
-    bool r=grid->initialize(blocks);
-    if(r==false){
-        cerr<<"! Error: initialize "<<grid_name<<" failed"<<endl;
+    bool r = grid->initialize(blocks);
+    if (r == false)
+    {
+        cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
     }
 
     //should we check if the grid is built...
     //it's safe to built a grid multiple times anyway...
-    this->grid=grid->build();
+    this->grid = grid->build();
 
     //check again
-    if(this->grid==NULL)
+    if (this->grid == NULL)
     {
-        cerr<<"! Error: build "<<grid_name<<" failed"<<endl;
+        cerr << "! Error: build " << grid_name << " failed" << endl;
         return false;
     }
 
-    m_initizlied=true;
+    m_initizlied = true;
 
     return true;
 }
@@ -1441,121 +1506,122 @@ bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *>& blocks)
 //
 //-----------------------------------------------------------------------------
 
-
-
 bool gridtoshape_raw_data::parse()
 {
-	map<string, list<string> > name_value_map;
+    map<string, list<string>> name_value_map;
 
-	for(iterator i=begin(); i!=end(); i++)
-	{
-        string& name=i->name;
-		list<string>& value=i->value;
+    for (iterator i = begin(); i != end(); i++)
+    {
+        string & name = i->name;
+        list<string> & value = i->value;
 
-		if( name.empty() || value.empty() )
-		{
-			cerr<<"! Error: Cannot parse record: empty name or empty value"<<endl;
-			continue;
-		}
+        if (name.empty() || value.empty())
+        {
+            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
+            continue;
+        }
 
-		name_value_map[name]=value;
-	}
-
-
-	//check the names
-	list<string>& value=name_value_map["grid"];
-	if(!value.empty()) grid_name=value.front();
-	else{
-		cerr<<"! Error: missing grid"<<endl;
-		assert(false);
-		return false;
-	}
-
-	value = name_value_map["shapefile"];
-	if(!value.empty())
-	{		
-			shapefile = value.back();//value.front();
-			string fullpath = getFolderPath();
-			fullpath += shapefile;
-			shapefile = fullpath;
-
-			int pathsize = shapefile.size();
-			for(int i = 0; i < pathsize; i++)
-			{
-				if(shapefile[i] =='\\')
-					shapefile[i] = '/';
-			}
-	}
-	else
-	{
-		cerr<<"! Error: missing shapefile"<<endl;
-		assert(false);
-		return false;
-	}
-
-	value=name_value_map["node_numbering"];
-    if(!value.empty()){
-        if(tolower(value.front())=="zero-based")
-            one_based_node_numbering=false;
+        name_value_map[name] = value;
     }
 
-	value=name_value_map["without_inactive"];
-    if(!value.empty()){
-        if(tolower(value.front())=="false")
-            without_inactive=false;
+    //check the names
+    list<string> & value = name_value_map["grid"];
+    if (!value.empty())
+        grid_name = value.front();
+    else
+    {
+        cerr << "! Error: missing grid" << endl;
+        assert(false);
+        return false;
     }
 
-	value=name_value_map["concide"];
-    if(!value.empty()){
-        if(tolower(value.front())=="false")
-            concide=false;
+    value = name_value_map["shapefile"];
+    if (!value.empty())
+    {
+        shapefile = value.back(); //value.front();
+        string fullpath = getFolderPath();
+        fullpath += shapefile;
+        shapefile = fullpath;
+
+        int pathsize = shapefile.size();
+        for (int i = 0; i < pathsize; i++)
+        {
+            if (shapefile[i] == '\\') shapefile[i] = '/';
+        }
+    }
+    else
+    {
+        cerr << "! Error: missing shapefile" << endl;
+        assert(false);
+        return false;
     }
 
-	value=name_value_map["feature_type"];
-	//if(!value.empty()) feature_type=atoi(value.front().c_str());
-	if(!value.empty()) feature_type = value.front();
-	else{
-		cerr<<"! Error: missing feature_type"<<endl;
-		assert(false);
-		return false;
-	}
+    value = name_value_map["node_numbering"];
+    if (!value.empty())
+    {
+        if (tolower(value.front()) == "zero-based") one_based_node_numbering = false;
+    }
 
-	return true;
+    value = name_value_map["without_inactive"];
+    if (!value.empty())
+    {
+        if (tolower(value.front()) == "false") without_inactive = false;
+    }
+
+    value = name_value_map["concide"];
+    if (!value.empty())
+    {
+        if (tolower(value.front()) == "false") concide = false;
+    }
+
+    value = name_value_map["feature_type"];
+    //if(!value.empty()) feature_type=atoi(value.front().c_str());
+    if (!value.empty())
+        feature_type = value.front();
+    else
+    {
+        cerr << "! Error: missing feature_type" << endl;
+        assert(false);
+        return false;
+    }
+
+    return true;
 }
-bool gridtoshape_raw_data::initialize(map<string, block_raw_data *>& blocks)
+bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-	if(m_initizlied) return true;
+    if (m_initizlied) return true;
 
     //get the grid
-    block_raw_data * block=blocks[grid_name];
+    block_raw_data * block = blocks[grid_name];
 
-    grid_raw_data* grid=dynamic_cast<grid_raw_data*>(block);
-    if( grid==NULL )
+    grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
+    if (grid == NULL)
     {
-        cerr<<"! Error: "<<grid_name<<" is not a grid"<<endl;
+        cerr << "! Error: " << grid_name << " is not a grid" << endl;
         return false;
     }
 
     //initialize the grid if necessary
-    bool r=grid->initialize(blocks);
-    if(r==false){
-        cerr<<"! Error: initialize "<<grid_name<<" failed"<<endl;
+    bool r = grid->initialize(blocks);
+    if (r == false)
+    {
+        cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
     }
 
     //should we check if the grid is built...
     //it's safe to built a grid multiple times anyway...
-    this->grid=grid->build();
+    this->grid = grid->build();
 
     //check again
-    if(this->grid==NULL)
+    if (this->grid == NULL)
     {
-        cerr<<"! Error: build "<<grid_name<<" failed"<<endl;
+        cerr << "! Error: build " << grid_name << " failed" << endl;
         return false;
     }
 
-	m_initizlied=true;
-	return true;
+    m_initizlied = true;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -1566,112 +1632,108 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *>& blocks)
 //
 //-----------------------------------------------------------------------------
 
-
 bool gridtovtk_raw_data::parse()
 {
-	map<string, list<string> > name_value_map;
+    map<string, list<string>> name_value_map;
 
-	for(iterator i=begin(); i!=end(); i++)
-	{
-        string& name=i->name;
-		list<string>& value=i->value;
+    for (iterator i = begin(); i != end(); i++)
+    {
+        string & name = i->name;
+        list<string> & value = i->value;
 
-		if( name.empty() || value.empty() )
-		{
-			cerr<<"! Error: Cannot parse record: empty name or empty value"<<endl;
-			continue;
-		}
+        if (name.empty() || value.empty())
+        {
+            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
+            continue;
+        }
 
-		name_value_map[name]=value;
-	}
-
-
-	//check the names
-	list<string>& value=name_value_map["grid"];
-	if(!value.empty()) grid_name=value.front();
-	else{
-		cerr<<"! Error: missing grid"<<endl;
-		assert(false);
-		return false;
-	}
-
-	value = name_value_map["vtkfile"];
-	if(!value.empty())
-	{		
-			vtkfile = value.back();//value.front();
-			string fullpath = getFolderPath();
-			fullpath += vtkfile;
-			vtkfile = fullpath;
-
-			int pathsize = vtkfile.size();
-			for(int i = 0; i < pathsize; i++)
-			{
-				if(vtkfile[i] =='\\')
-					vtkfile[i] = '/';
-			}
-	}
-	else
-	{
-		cerr<<"! Error: missing vtkfile"<<endl;
-		assert(false);
-		return false;
-	}
-		
-	value=name_value_map["without_inactive"];
-    if(!value.empty()){
-        if(tolower(value.front())=="false")
-            without_inactive=false;
+        name_value_map[name] = value;
     }
 
-	value=name_value_map["node_numbering"];
-    if(!value.empty()){
-        if(tolower(value.front())=="zero-based")
-            one_based_node_numbering=false;
+    //check the names
+    list<string> & value = name_value_map["grid"];
+    if (!value.empty())
+        grid_name = value.front();
+    else
+    {
+        cerr << "! Error: missing grid" << endl;
+        assert(false);
+        return false;
     }
 
-	value=name_value_map["share_vertex"];
-	if(!value.empty()) b_share_vertex=(tolower(value.front())=="true")?true:false;
+    value = name_value_map["vtkfile"];
+    if (!value.empty())
+    {
+        vtkfile = value.back(); //value.front();
+        string fullpath = getFolderPath();
+        fullpath += vtkfile;
+        vtkfile = fullpath;
 
-	return true;
+        int pathsize = vtkfile.size();
+        for (int i = 0; i < pathsize; i++)
+        {
+            if (vtkfile[i] == '\\') vtkfile[i] = '/';
+        }
+    }
+    else
+    {
+        cerr << "! Error: missing vtkfile" << endl;
+        assert(false);
+        return false;
+    }
+
+    value = name_value_map["without_inactive"];
+    if (!value.empty())
+    {
+        if (tolower(value.front()) == "false") without_inactive = false;
+    }
+
+    value = name_value_map["node_numbering"];
+    if (!value.empty())
+    {
+        if (tolower(value.front()) == "zero-based") one_based_node_numbering = false;
+    }
+
+    value = name_value_map["share_vertex"];
+    if (!value.empty()) b_share_vertex = (tolower(value.front()) == "true") ? true : false;
+
+    return true;
 }
-bool gridtovtk_raw_data::initialize(map<string, block_raw_data *>& blocks)
+bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-	if(m_initizlied) return true;
+    if (m_initizlied) return true;
 
     //get the grid
-    block_raw_data * block=blocks[grid_name];
+    block_raw_data * block = blocks[grid_name];
 
-    grid_raw_data* grid=dynamic_cast<grid_raw_data*>(block);
-    if( grid==NULL )
+    grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
+    if (grid == NULL)
     {
-        cerr<<"! Error: "<<grid_name<<" is not a grid"<<endl;
+        cerr << "! Error: " << grid_name << " is not a grid" << endl;
         return false;
     }
 
     //initialize the grid if necessary
-    bool r=grid->initialize(blocks);
-    if(r==false){
-        cerr<<"! Error: initialize "<<grid_name<<" failed"<<endl;
+    bool r = grid->initialize(blocks);
+    if (r == false)
+    {
+        cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
     }
 
     //should we check if the grid is built...
     //it's safe to built a grid multiple times anyway...
-    this->grid=grid->build();
+    this->grid = grid->build();
 
     //check again
-    if(this->grid==NULL)
+    if (this->grid == NULL)
     {
-        cerr<<"! Error: build "<<grid_name<<" failed"<<endl;
+        cerr << "! Error: build " << grid_name << " failed" << endl;
         return false;
     }
 
-	m_initizlied=true;
-	return true;
+    m_initizlied = true;
+    return true;
 }
 
-
-
-}//end of namespace
-
-
+} //end of namespace

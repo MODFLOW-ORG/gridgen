@@ -52,8 +52,7 @@ QuadTree3D * round_trip(QuadTree3D * qtree, const std::string & name)
     for (int k = 0; k < 2; k++)
     {
         dfn << "  TOP LAYER " << k + 1 << " = CONSTANT " << -10.0 * k << "\n"
-            << "  BOTTOM LAYER " << k + 1 << " = CONSTANT " << -10.0 * (k + 1)
-            << "\n";
+            << "  BOTTOM LAYER " << k + 1 << " = CONSTANT " << -10.0 * (k + 1) << "\n";
     }
     dfn << "END QUADTREE\n";
 
@@ -186,8 +185,8 @@ TEST(QuadTreeIO, TreeStructureFileIdentifiersAreOneBased)
 
         int lay = 0, row = 0, col = 0;
         char code[32] = "";
-        int nread = std::sscanf(zline.c_str() + zcomma, ", (%d,%d,%d) %31s", &lay,
-                                &row, &col, code);
+        int nread =
+            std::sscanf(zline.c_str() + zcomma, ", (%d,%d,%d) %31s", &lay, &row, &col, code);
         ASSERT_GE(nread, 3);
         EXPECT_GE(lay, 1);
         EXPECT_GE(row, 1);

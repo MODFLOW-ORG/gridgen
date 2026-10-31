@@ -10,7 +10,7 @@
 */
 
 //   $Id: $
-        
+
 #pragma once
 
 #include <vector>
@@ -18,13 +18,12 @@ using namespace std;
 
 #include "Box.h"
 
-
 namespace cusg
 {
 
-    class Grid; //defined in Grid.h
+class Grid; //defined in Grid.h
 
-    /*!
+/*!
 
         This object emulates a container by storing references to all node
         objects.  This object manages all of the node objects and stores
@@ -39,26 +38,25 @@ namespace cusg
         is set to true indicating that the nodes need to be renumbered.
 
     */
-    class NodeGroup : public vector<Box*>
-    {
-    public:
+class NodeGroup : public vector<Box *>
+{
+public:
+    //constructor
+    NodeGroup(Grid * g = NULL);
 
-        //constructor
-        NodeGroup(Grid * g=NULL);
+    int add(Box * box);
 
-        int add(Box * box);
+    int remove(Box * box);
 
-        int remove(Box * box);
-
-        /*!
+    /*!
             Return an array of size of the number of active leaf nodes
             and include in the array the nodeid.
 
             nodeid_array[nodenumber] = nodeid
         */
-        int * get_nodeid_array();
+    int * get_nodeid_array();
 
-        /*!
+    /*!
          * return a nodelay_array, which contains the number of
             nodes per layer:
             nodelay_array[layer] = nodes in layer
@@ -66,47 +64,43 @@ namespace cusg
             lowest layer number.
          *
          */
-        int * get_nodelay_array();
+    int * get_nodelay_array();
 
+    ///make all nodes in the given layer as disabled
+    void disable_nodes_in_layer(int layer);
 
-        ///make all nodes in the given layer as disabled
-        void disable_nodes_in_layer(int layer);
+    ///number of active leaf nodes in this group
+    size_type node_size();
 
-        ///number of active leaf nodes in this group
-        size_type node_size();
+    ///get the total number of leaf size including inactive leaves
+    size_type get_total_leaf_size();
 
-        ///get the total number of leaf size including inactive leaves
-        size_type get_total_leaf_size();
+    //
+    //
+    // Data (TODO: move these to protected section)
+    //
+    //
+    Grid * grid;         //the hosting Grid
+    int * nodeid_array;  //node ids (mapping node number to node id)
+    int * nodelay_array; //number of nodes per layer
+    int nlay;            //total number of layers
 
-        //
-        //
-        // Data (TODO: move these to protected section)
-        //
-        //
-        Grid * grid;          //the hosting Grid
-        int * nodeid_array;   //node ids (mapping node number to node id)
-        int * nodelay_array;  //number of nodes per layer
-        int nlay;             //total number of layers
+    bool rebuild_nodeid_array; //rebuild node id
 
-        bool rebuild_nodeid_array; //rebuild node id
+    int nextnodenumber;
 
-        int nextnodenumber;
+    int chunksize; ///what is a chunk size??
+    list<int> removed_nodes;
 
+protected:
+    int total_leaf_number;  //number of leaves store in this group (totoal number of leaves)
+    int active_leaf_number; //number of leaves store in this group (active nodes only)
 
-        int chunksize; ///what is a chunk size??
-        list<int> removed_nodes;
-
-    protected:
-
-        int total_leaf_number; //number of leaves store in this group (totoal number of leaves)
-        int active_leaf_number; //number of leaves store in this group (active nodes only)
-
-        /*!
+    /*!
          * build information of nodelay_array and nodeid_array
          *
          */
-        void build_node_info();
-    };
+    void build_node_info();
+};
 
 } // end namespace cusg
-

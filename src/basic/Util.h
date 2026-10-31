@@ -26,7 +26,7 @@ namespace cusg
     @return         A pointer to the new array. If the input array is 
                     empty, a null reference is returned.
 */
-double *clone_array(double *a, int n);
+double * clone_array(double * a, int n);
 
 /**
     \brief Clones a C-style array of integers.
@@ -40,21 +40,21 @@ double *clone_array(double *a, int n);
     @return         A pointer to the new array. If the input array is 
                     empty, a null reference is returned.
 */
-int *clone_array(int *a, int n);
+int * clone_array(int * a, int n);
 
 /**
     \brief Creates an array of zeros
 
     Creates a `double` array of the specified size, consisting of all zeros.
 */
-double *doubleZeros(int n);
+double * doubleZeros(int n);
 
 /** 
     \brief Creates an array of zeros
     
     Creates an integer array of the specified size, consisting of all zeros.
-*/    
-int *intZeros(int n);
+*/
+int * intZeros(int n);
 }
 
 // Define types used by SWIG

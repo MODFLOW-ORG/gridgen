@@ -15,25 +15,31 @@ using namespace std;
 
 enum WRITETYPE
 {
-	WRITE_POINT, WRITE_POLYLINE, WRITE_POLYGON
+    WRITE_POINT,
+    WRITE_POLYLINE,
+    WRITE_POLYGON
 };
 
 enum FILETYPE
 {
-	WRITE_TXT, WRITE_SHP, WRITE_VTK
+    WRITE_TXT,
+    WRITE_SHP,
+    WRITE_VTK
 };
 
 //check whether the array attributes contain the given attribute
-bool checkAttributesContain(const char* attriName, vector<string>& attributes);
+bool checkAttributesContain(const char * attriName, vector<string> & attributes);
 
 //write the grid and point intersection
-void writePntIntersect(GridIntersection* gridInter, string file, vector<string>& attributes, FILETYPE filetype);
+void writePntIntersect(GridIntersection * gridInter, string file, vector<string> & attributes,
+                       FILETYPE filetype);
 
 //write the line and grid intersection
-void writeLineIntersect(GridIntersection* gridInter, string file, vector<string>& attributes, FILETYPE filetype);
+void writeLineIntersect(GridIntersection * gridInter, string file, vector<string> & attributes,
+                        FILETYPE filetype);
 
 //writhe the polygon and grid intersection
-void writePolyIntersect(GridIntersection* griInter, string file, vector<string>& attributes, FILETYPE filetype);
-
+void writePolyIntersect(GridIntersection * griInter, string file, vector<string> & attributes,
+                        FILETYPE filetype);
 
 #endif

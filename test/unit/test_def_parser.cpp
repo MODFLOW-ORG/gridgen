@@ -14,21 +14,20 @@ using namespace cusg;
 namespace
 {
 
-const char * MFG_BLOCK =
-    "BEGIN MODFLOW_GRID mfg\n"
-    "  ROTATION_ANGLE = 30\n"
-    "  X_OFFSET = 1000.5\n"
-    "  Y_OFFSET = 2000.25\n"
-    "  LENGTH_UNIT = meters\n"
-    "  NLAY = 2\n"
-    "  NROW = 3\n"
-    "  NCOL = 4\n"
-    "  DELR = CONSTANT 50.\n"
-    "  DELC = CONSTANT 25.\n"
-    "  TOP = CONSTANT 10.\n"
-    "  BOTTOM LAYER 1 = CONSTANT 0.\n"
-    "  BOTTOM LAYER 2 = CONSTANT -10.\n"
-    "END MODFLOW_GRID\n";
+const char * MFG_BLOCK = "BEGIN MODFLOW_GRID mfg\n"
+                         "  ROTATION_ANGLE = 30\n"
+                         "  X_OFFSET = 1000.5\n"
+                         "  Y_OFFSET = 2000.25\n"
+                         "  LENGTH_UNIT = meters\n"
+                         "  NLAY = 2\n"
+                         "  NROW = 3\n"
+                         "  NCOL = 4\n"
+                         "  DELR = CONSTANT 50.\n"
+                         "  DELC = CONSTANT 25.\n"
+                         "  TOP = CONSTANT 10.\n"
+                         "  BOTTOM LAYER 1 = CONSTANT 0.\n"
+                         "  BOTTOM LAYER 2 = CONSTANT -10.\n"
+                         "END MODFLOW_GRID\n";
 
 } // namespace
 
@@ -73,13 +72,12 @@ TEST(DefinitionParser, LayerRecordsReadIndependently)
 {
     // an active domain on layer 2 only and refinement on layer 3 only, with
     // no records for layer 1 (#49)
-    std::istringstream dfn(
-        "BEGIN QUADTREE_BUILDER qtb\n"
-        "  MODFLOW_GRID = mfg\n"
-        "  ACTIVE_DOMAIN LAYER 2 = domain\n"
-        "  REFINEMENT_FEATURES LAYER 3 = wells\n"
-        "  GRID_DEFINITION_FILE = qtg.dfn\n"
-        "END QUADTREE_BUILDER\n");
+    std::istringstream dfn("BEGIN QUADTREE_BUILDER qtb\n"
+                           "  MODFLOW_GRID = mfg\n"
+                           "  ACTIVE_DOMAIN LAYER 2 = domain\n"
+                           "  REFINEMENT_FEATURES LAYER 3 = wells\n"
+                           "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                           "END QUADTREE_BUILDER\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
@@ -99,20 +97,19 @@ TEST(DefinitionParser, LayerRecordsReadIndependently)
 TEST(DefinitionParser, SurfaceRecordsAfterGapAreRead)
 {
     // bottom and top records for layer 3 only, and an out-of-range layer number
-    std::istringstream dfn(
-        "BEGIN QUADTREE_BUILDER qtb\n"
-        "  MODFLOW_GRID = mfg\n"
-        "  TOP LAYER 3 = REPLICATE mfg\n"
-        "  BOTTOM LAYER 3 = INTERPOLATE mfg\n"
-        "  ACTIVE_DOMAIN LAYER 99999999 = typo\n"
-        "  GRID_DEFINITION_FILE = qtg.dfn\n"
-        "END QUADTREE_BUILDER\n"
-        "BEGIN QUADTREE qtg\n"
-        "  MODFLOW_GRID = mfg\n"
-        "  STRUCTURE_FILE = OPEN/CLOSE qtg.tsf\n"
-        "  TOP LAYER 2 = CONSTANT 0.\n"
-        "  BOTTOM LAYER 2 = CONSTANT -10.\n"
-        "END QUADTREE\n");
+    std::istringstream dfn("BEGIN QUADTREE_BUILDER qtb\n"
+                           "  MODFLOW_GRID = mfg\n"
+                           "  TOP LAYER 3 = REPLICATE mfg\n"
+                           "  BOTTOM LAYER 3 = INTERPOLATE mfg\n"
+                           "  ACTIVE_DOMAIN LAYER 99999999 = typo\n"
+                           "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                           "END QUADTREE_BUILDER\n"
+                           "BEGIN QUADTREE qtg\n"
+                           "  MODFLOW_GRID = mfg\n"
+                           "  STRUCTURE_FILE = OPEN/CLOSE qtg.tsf\n"
+                           "  TOP LAYER 2 = CONSTANT 0.\n"
+                           "  BOTTOM LAYER 2 = CONSTANT -10.\n"
+                           "END QUADTREE\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
@@ -137,16 +134,15 @@ TEST(DefinitionParser, RefinementAliasesAndTopOnlyAreRead)
 {
     // both spellings of the refinement records, refine_by_* taking precedence,
     // and a top record with no bottom record for the same layer
-    std::istringstream dfn(
-        "BEGIN QUADTREE_BUILDER qtb\n"
-        "  MODFLOW_GRID = mfg\n"
-        "  REFINE_BY_FEATURES LAYER 1 = wells\n"
-        "  REFINEMENT_FEATURES LAYER 1 = rivers\n"
-        "  REFINE_BY_ARRAY LAYER 2 = CONSTANT 1\n"
-        "  REFINEMENT_ARRAY LAYER 3 = CONSTANT 2\n"
-        "  TOP LAYER 2 = REPLICATE mfg\n"
-        "  GRID_DEFINITION_FILE = qtg.dfn\n"
-        "END QUADTREE_BUILDER\n");
+    std::istringstream dfn("BEGIN QUADTREE_BUILDER qtb\n"
+                           "  MODFLOW_GRID = mfg\n"
+                           "  REFINE_BY_FEATURES LAYER 1 = wells\n"
+                           "  REFINEMENT_FEATURES LAYER 1 = rivers\n"
+                           "  REFINE_BY_ARRAY LAYER 2 = CONSTANT 1\n"
+                           "  REFINEMENT_ARRAY LAYER 3 = CONSTANT 2\n"
+                           "  TOP LAYER 2 = REPLICATE mfg\n"
+                           "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                           "END QUADTREE_BUILDER\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
@@ -170,8 +166,7 @@ TEST(DefinitionParser, RefinementAliasesAndTopOnlyAreRead)
 namespace
 {
 
-quadtree_builder_raw_data * parse_builder(DefinitionParser & parser,
-                                          const std::string & records)
+quadtree_builder_raw_data * parse_builder(DefinitionParser & parser, const std::string & records)
 {
     std::istringstream dfn("BEGIN QUADTREE_BUILDER qtb\n"
                            "  MODFLOW_GRID = mfg\n"
@@ -181,8 +176,7 @@ quadtree_builder_raw_data * parse_builder(DefinitionParser & parser,
     return dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
 }
 
-refinement_raw_data * parse_refinement(DefinitionParser & parser,
-                                       const std::string & records)
+refinement_raw_data * parse_refinement(DefinitionParser & parser, const std::string & records)
 {
     std::istringstream dfn("BEGIN REFINEMENT_FEATURES rf\n"
                            "  SHAPEFILE = wells\n"
@@ -197,24 +191,22 @@ refinement_raw_data * parse_refinement(DefinitionParser & parser,
 TEST(DefinitionParser, SmoothingLevelSpellings)
 {
     // the report's spelling, the code's spelling, and both (#52)
-    const char * spellings[][2] = {
-        {"HORIZONTAL_SMOOTHING_LEVEL", "VERTICAL_SMOOTHING_LEVEL"},
-        {"SMOOTHING_LEVEL_HORIZONTAL", "SMOOTHING_LEVEL_VERTICAL"}};
+    const char * spellings[][2] = {{"HORIZONTAL_SMOOTHING_LEVEL", "VERTICAL_SMOOTHING_LEVEL"},
+                                   {"SMOOTHING_LEVEL_HORIZONTAL", "SMOOTHING_LEVEL_VERTICAL"}};
     for (const auto & s : spellings)
     {
         SCOPED_TRACE(s[0]);
         DefinitionParser parser;
-        quadtree_builder_raw_data * data = parse_builder(
-            parser, std::string("  ") + s[0] + " = 3\n  " + s[1] + " = 2\n");
+        quadtree_builder_raw_data * data =
+            parse_builder(parser, std::string("  ") + s[0] + " = 3\n  " + s[1] + " = 2\n");
         ASSERT_NE(data, nullptr);
         EXPECT_EQ(data->smoothing_level_horizontal, 3);
         EXPECT_EQ(data->smoothing_level_vertical, 2);
     }
 
     DefinitionParser parser;
-    quadtree_builder_raw_data * data =
-        parse_builder(parser, "  SMOOTHING_LEVEL_HORIZONTAL = 2\n"
-                              "  HORIZONTAL_SMOOTHING_LEVEL = 4\n");
+    quadtree_builder_raw_data * data = parse_builder(parser, "  SMOOTHING_LEVEL_HORIZONTAL = 2\n"
+                                                             "  HORIZONTAL_SMOOTHING_LEVEL = 4\n");
     ASSERT_NE(data, nullptr);
     EXPECT_EQ(data->smoothing_level_horizontal, 4);
 }
@@ -222,8 +214,7 @@ TEST(DefinitionParser, SmoothingLevelSpellings)
 TEST(DefinitionParser, RefineLevelByAttributeSpellings)
 {
     // either spelling, and the attribute overrides REFINEMENT_LEVEL (#52)
-    for (const char * name :
-         {"REFINE_LEVEL_BY_ATTRIBUTE", "REFINEMENT_LEVEL_BY_ATTRIBUTE"})
+    for (const char * name : {"REFINE_LEVEL_BY_ATTRIBUTE", "REFINEMENT_LEVEL_BY_ATTRIBUTE"})
     {
         SCOPED_TRACE(name);
         DefinitionParser parser;
@@ -234,8 +225,7 @@ TEST(DefinitionParser, RefineLevelByAttributeSpellings)
     }
 
     DefinitionParser parser;
-    refinement_raw_data * data =
-        parse_refinement(parser, "  REFINEMENT_LEVEL = 2\n");
+    refinement_raw_data * data = parse_refinement(parser, "  REFINEMENT_LEVEL = 2\n");
     ASSERT_NE(data, nullptr);
     EXPECT_EQ(data->refinement_level, 2);
     EXPECT_TRUE(data->refinement_level_by_attribute.empty());

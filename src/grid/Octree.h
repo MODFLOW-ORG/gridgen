@@ -41,50 +41,46 @@ namespace cusg
 class Octree : public Grid
 {
 public:
-
-	CubeQueue* PQ;   //!< a priority queue used to store the tree data structure
-	Cube* pRoot;     //!< the root of the Octree
-	Vector3d epsilons; //!< minimum width/height/depth of a cube before it will split
+    CubeQueue * PQ;    //!< a priority queue used to store the tree data structure
+    Cube * pRoot;      //!< the root of the Octree
+    Vector3d epsilons; //!< minimum width/height/depth of a cube before it will split
 
     /*!
         Initialize the octree with a cube.
         \param root the root of the new Octree
         \param e    epsilons, the minimum width/height/depth of a cube node in the tree
 	*/
-	Octree(Cube* root, Vector3d e);
-	
+    Octree(Cube * root, Vector3d e);
+
     /*!
         Initialize the octree with a cube.
         \param root the root of the new Octree
         \param e    epsilon, the minimum width, height and depth
                     of a cube node in the tree
 	*/
-    Octree(Cube* root, REAL e);
+    Octree(Cube * root, REAL e);
 
-	virtual ~Octree()
-	{
+    virtual ~Octree() {}
 
-	}
-    
     void _add_root_nodes();
     void _add_rootnode_connections();
 
-	///
-	/// balance the quadtree so that the depth difference of leaves
-	/// is at most 1
-	///
-	/// this is called "smooth" in the python code
-	///
-	void balancePhase();
+    ///
+    /// balance the quadtree so that the depth difference of leaves
+    /// is at most 1
+    ///
+    /// this is called "smooth" in the python code
+    ///
+    void balancePhase();
 
-	/*!
+    /*!
 	    \brief Create a nodenumber_array of size nodegroup with the following:
         
         node number is the id of the node in CSR or Coo array
 
         nodenumber_array[nodeid] = nodenumber
-     */	
-	int *createnodenumber_array();
+     */
+    int * createnodenumber_array();
 
     /*! \brief Finds the leaf node containing the specified point
      *
@@ -95,7 +91,7 @@ public:
      * \return A pointer to the node containing the point, or a null reference
      *         if the point cannot be found.
      */
-	Cube* getCube(Cube* root, Point3d &q);
+    Cube * getCube(Cube * root, Point3d & q);
 
     /*! Finds the leaf node containing the specified point
      *
@@ -105,18 +101,16 @@ public:
      * \return A pointer to the node containing the point, or a null reference
      *         if the point cannot be found.
      */
-	Cube* getCube(Point3d &q) {
-		return getCube(pRoot, q);
-	}
+    Cube * getCube(Point3d & q) { return getCube(pRoot, q); }
 
     /*! \brief Gets box connections, based on the node number.
         \returns A sorted list of connections. A connection is the pair
                 `(tonodeid, fldir)`. 
                 `fldir` is -1, +1, -2, +2 for -x, +x, -y, +y, -z, +z.
     */
-    list< pair<int,int> > get_node_connections(int nodenumber);
+    list<pair<int, int>> get_node_connections(int nodenumber);
 
-	/*! 
+    /*! 
         Return an array of size nodes that contains the nodeid for all
         active leaf nodes.  Thus the array contains:
         
@@ -125,10 +119,10 @@ public:
         Note that this array is rebuilt, but only if the
         nodegroup.rebuild_nodeid_array flag is True.  This flag is set to
         true anytime quadtree nodes are added or removed.
-    */  
+    */
     int * getnodeid_array();
 
-	/*! 
+    /*! 
 	    Return an array of len(nodegroup) that contains the nodenumber for all
         active leaf nodes.  Thus the array contains:
         
@@ -145,40 +139,36 @@ public:
                  could not be expanded. For example, if the leaf nodes are
                  already smaller than `epsilon`, the tree will not be expanded.
      */
-	bool expand ();
-	
-	void intersection(int layer=0)
-	{
-	
-	}
+    bool expand();
 
-	////
-	/// iteratively expanding the cubes in the tree
-	///
-	void subdividePhase();
+    void intersection(int layer = 0) {}
+
+    ////
+    /// iteratively expanding the cubes in the tree
+    ///
+    void subdividePhase();
 
     /// Returns the height of the octree
     int treeHeight();
 
     ///number the nodes (i.e. leaves) in the grid
-    void number_nodes(){}
+    void number_nodes() {}
 
 protected:
     void initOctree();
 
     /// The underlying Modflow grid
-    ModflowGrid * m_mfgrid; 
+    ModflowGrid * m_mfgrid;
 
-	int * nodenumber_array;
-	int * nodeid_array;
-	int * nodelay_array;
-	bool rebuild_nodenumber_array;
-	bool rebuild_nodeid_array;
+    int * nodenumber_array;
+    int * nodeid_array;
+    int * nodelay_array;
+    bool rebuild_nodenumber_array;
+    bool rebuild_nodeid_array;
 
 private:
-
-	///insert Node to PQ
-    void insertNode(Cube *c);
+    ///insert Node to PQ
+    void insertNode(Cube * c);
 };
 
-}//end namespace cusg
+} //end namespace cusg

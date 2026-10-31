@@ -50,8 +50,7 @@ private:
         Point2d center;
     };
 
-    void add_box(const Box * box, int col, int srow, long long ix,
-                 long long iy, int depth);
+    void add_box(const Box * box, int col, int srow, long long ix, long long iy, int depth);
     int vertex(const EdgeKey & kx, const EdgeKey & ky);
     double local_x(const EdgeKey & k) const;
     double local_y(const EdgeKey & k) const;

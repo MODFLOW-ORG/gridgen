@@ -59,8 +59,7 @@ inline void expect_symmetric(const CSRData & csr)
 // on a fully active grid of thickness thk, the faces on each side of a cell
 // that has neighbors on that side add up to the side length times thk (or
 // the cell area for vertical faces)
-inline void expect_faces_cover_sides(QuadTree3D * qtree, const CSRData & csr,
-                                     double thk)
+inline void expect_faces_cover_sides(QuadTree3D * qtree, const CSRData & csr, double thk)
 {
     for (int n = 0; n < csr.nodes; n++)
     {

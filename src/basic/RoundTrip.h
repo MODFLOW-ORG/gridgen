@@ -30,8 +30,14 @@ inline std::ostream & operator<<(std::ostream & out, const round_trip & r)
 }
 
 /// real numbers are written to round trip; other values as they are
-inline round_trip round_trip_value(double v) { return round_trip(v); }
-inline round_trip round_trip_value(float v) { return round_trip(v); }
+inline round_trip round_trip_value(double v)
+{
+    return round_trip(v);
+}
+inline round_trip round_trip_value(float v)
+{
+    return round_trip(v);
+}
 template <typename T> inline const T & round_trip_value(const T & v)
 {
     return v;

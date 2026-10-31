@@ -31,13 +31,12 @@ using namespace std;
 namespace cusg
 {
 
-typedef Point<int,2> Index2d; //!< 2d index
-typedef Point<int,3> Index3d; //!< 3d index
+typedef Point<int, 2> Index2d; //!< 2d index
+typedef Point<int, 3> Index3d; //!< 3d index
 
 //class GridIntersection;
 class ModflowGrid;
 class Box; //defined later in this file
-
 
 /*!\class BoxIter
  * \brief Iterator for box nodes
@@ -47,29 +46,27 @@ class Box; //defined later in this file
  * direction (north, east, south or west).
  *
  */
- 
+
 class BoxIter
 {
 public:
-	
-	BoxIter(const Box* bb, int direc);
+    BoxIter(const Box * bb, int direc);
 
-	Box* First();
+    Box * First();
 
-	Box* Next();
+    Box * Next();
 
-	Box* End();
+    Box * End();
 
 private:
-
-    const Box* b;
+    const Box * b;
 
     int direction;
     int prev;
     int next;
     int cross;
 
-    Box* neighbor;
+    Box * neighbor;
 }; //class BoxIter
 
 /*!\class Box
@@ -84,7 +81,6 @@ private:
 class Box
 {
 public:
-	
     /*! \brief Check if the x coord or y coord of the center of a given box (nextBox) is outside the base box (base)
 	 * Precondition: none
 	 * Postcondition: none
@@ -92,8 +88,7 @@ public:
 	 * \param[in] nextBox The box to be checked
 	 * \return true if over limit */
 
-
-	static bool isOverLimit(const Box* base, const Box* nextBox);
+    static bool isOverLimit(const Box * base, const Box * nextBox);
 
     /*!  \brief Constructor of the Box
      *
@@ -106,21 +101,21 @@ public:
      * \param w   width of the box
      * \param h   height of the box
      */
-    Box(double xx, double yy, double w, double h):
-        depth(0), x(xx), y(yy), z(0), dx(w), dy(h), dz(0),
-        isLeaf(true), pParent(NULL), dirty(false), number(0),
-        layer(0), locator(0), id(0), active(true)//, childmfgrid(NULL), bRegular(true)
+    Box(double xx, double yy, double w, double h)
+        : depth(0), x(xx), y(yy), z(0), dx(w), dy(h), dz(0), isLeaf(true), pParent(NULL),
+          dirty(false), number(0), layer(0), locator(0), id(0),
+          active(true) //, childmfgrid(NULL), bRegular(true)
     {
         for (int i = 0; i < 4; ++i)
         {
             pChildren[i] = NULL;
         }
 
-        pUp=pDown=NULL;
-        priority=0;
+        pUp = pDown = NULL;
+        priority = 0;
 
-		//flag=-1;
-		//ldX = ldY = luX = luY = rdX = rdY = ruX = ruY = 0.0;
+        //flag=-1;
+        //ldX = ldY = luX = luY = rdX = rdY = ruX = ruY = 0.0;
     }
 
     /*!  \brief Constructor of the Box
@@ -132,61 +127,56 @@ public:
      * \param center The Cartesian coordinates of the center of the box
      * \param dims   A vector specifying the width and height of the box
      */
-    Box(const Point3d& center, Vector3d& dims):
-        depth(0), isLeaf(true), pParent(NULL), dirty(false), number(0),
-        layer(0), locator(0), id(0), active(true)//, childmfgrid(NULL), bRegular(true)
+    Box(const Point3d & center, Vector3d & dims)
+        : depth(0), isLeaf(true), pParent(NULL), dirty(false), number(0), layer(0), locator(0),
+          id(0), active(true) //, childmfgrid(NULL), bRegular(true)
     {
-        x=center[0];
-        y=center[1];
-        z=center[2];
+        x = center[0];
+        y = center[1];
+        z = center[2];
 
-        dx=dims[0];
-        dy=dims[1];
-        dz=dims[2];
+        dx = dims[0];
+        dy = dims[1];
+        dz = dims[2];
 
         for (int i = 0; i < 4; ++i)
         {
             pChildren[i] = NULL;
         }
 
-        pUp=pDown=NULL;
-        priority=0;
+        pUp = pDown = NULL;
+        priority = 0;
 
-		//flag=-1;
-		//ldX = ldY = luX = luY = rdX = rdY = ruX = ruY = 0.0;
+        //flag=-1;
+        //ldX = ldY = luX = luY = rdX = rdY = ruX = ruY = 0.0;
     }
-	
-	/// get all neighbors in direction "dir"
-	/// 0 = N, 1=E, 2=S, W=3 (for neighbors)
-	void getNeighbors(list<Box*>& neighbors, int dir);
+
+    /// get all neighbors in direction "dir"
+    /// 0 = N, 1=E, 2=S, W=3 (for neighbors)
+    void getNeighbors(list<Box *> & neighbors, int dir);
 
     /// If this is a leaf node, this gives the node to the north of this box
-	void getNorthNeighbors(list<Box*>& neighbors);
+    void getNorthNeighbors(list<Box *> & neighbors);
 
     /// If this is a leaf node, this gives the node to the east of this box
-	void getEastNeighbors(list<Box*>& neighbors);
+    void getEastNeighbors(list<Box *> & neighbors);
 
     /// If this is a leaf node, this gives the node to the south of this box
-	void getSouthNeighbors(list<Box*>& neighbors);
+    void getSouthNeighbors(list<Box *> & neighbors);
 
     /// If this is a leaf node, this gives the node to the west of this box
-	void getWestNeighbors(list<Box*>& neighbors);
-	
-	
-	/*!
+    void getWestNeighbors(list<Box *> & neighbors);
+
+    /*!
 	 * determine the status of the box (ex: UNKNOWN, IN, OUT, ON)
 	 */
 
-	void updateStatus()
-	{
-	
-	}
+    void updateStatus() {}
 
-    
-     /// This function is not implemented yet. see node.py for detail.
-     void remove()
-     {
-         /* remove the box from a group
+    /// This function is not implemented yet. see node.py for detail.
+    void remove()
+    {
+        /* remove the box from a group
 
             def remove(self):
                 '''
@@ -196,9 +186,9 @@ public:
                 return
 
                 We may implement this some place else...
-         */   
-     }
-        
+         */
+    }
+
     /*!  \brief Splits the box into sub-boxes
      *
      * Splits this box off into sub-boxes (one for each quadrant
@@ -213,36 +203,34 @@ public:
      *     - this box is an internal node, so it has already been split
      *     - insufficient memory
      */
-	bool split(double epsilon);
+    bool split(double epsilon);
 
     /// \brief reverse operation of split
-	bool coarsen();
-	
+    bool coarsen();
+
     /// Check if a given point (qx,qy) is contained in this box
-	bool in(double qx, double qy)
-	{
-	    if( dx >0 &&(qx<x-dx/2 - INEPSION || qx>x+dx/2 + INEPSION)) return false;
-		if(dx <0 &&(qx <x+dx/2 - INEPSION || qx >x -dx/2 + INEPSION)) return false;
-	    if(dy >0 &&(qy<y-dy/2 - INEPSION || qy>y+dy/2 + INEPSION)) return false;
-		if(dy <0 &&(qy<y+dy/2 - INEPSION ||qy>y-dy/2 + INEPSION)) return false;
-	    return true;
-	}
+    bool in(double qx, double qy)
+    {
+        if (dx > 0 && (qx < x - dx / 2 - INEPSION || qx > x + dx / 2 + INEPSION)) return false;
+        if (dx < 0 && (qx < x + dx / 2 - INEPSION || qx > x - dx / 2 + INEPSION)) return false;
+        if (dy > 0 && (qy < y - dy / 2 - INEPSION || qy > y + dy / 2 + INEPSION)) return false;
+        if (dy < 0 && (qy < y + dy / 2 - INEPSION || qy > y - dy / 2 + INEPSION)) return false;
+        return true;
+    }
 
-	//Given the point is in box, test whether the point is on the boundaries of the box
-	bool onBound(double qx, double qy)
-	{
-		if( fabs(qx - (x-dx/2)) < INEPSION) return true;
-		if( fabs(qx - (x+dx/2)) < INEPSION) return true;
-		if( fabs(qy - (y+dy/2)) < INEPSION) return true;
-		if(fabs(qy-(y-dy/2)) < INEPSION) return true;
-		return false;
-		//if((fabs(qx - dx/2) < INEPSION) || (fabs(qx)
-	}
-
+    //Given the point is in box, test whether the point is on the boundaries of the box
+    bool onBound(double qx, double qy)
+    {
+        if (fabs(qx - (x - dx / 2)) < INEPSION) return true;
+        if (fabs(qx - (x + dx / 2)) < INEPSION) return true;
+        if (fabs(qy - (y + dy / 2)) < INEPSION) return true;
+        if (fabs(qy - (y - dy / 2)) < INEPSION) return true;
+        return false;
+        //if((fabs(qx - dx/2) < INEPSION) || (fabs(qx)
+    }
 
     /// find a leaf box containing a given point (qx,qy)
-	Box * find(double qx, double qy);
-
+    Box * find(double qx, double qy);
 
     /*!\brief recursively obtain all leaves of this box
      
@@ -252,18 +240,19 @@ public:
         will contain the pointer for all the leaves of this box.
 
      */
-     
-	void getLeaves(list<Box*>& leaves)
-	{
-	    if(isLeaf){
-	        leaves.push_back(this);
-	        return;
-	    }
 
-        for(int i=0;i<4;i++) pChildren[i]->getLeaves(leaves);
-	}
-	
-	/*!
+    void getLeaves(list<Box *> & leaves)
+    {
+        if (isLeaf)
+        {
+            leaves.push_back(this);
+            return;
+        }
+
+        for (int i = 0; i < 4; i++) pChildren[i]->getLeaves(leaves);
+    }
+
+    /*!
         Recursive method for finding any node that has at least one child node
         that is a leafnode. The leafnodeparent list should be None when first 
         called.  This method is useful for node coarsening and drawing grids,
@@ -273,14 +262,14 @@ public:
         
         This function is not implemented yet. see node.py for detail.
     */
-    
-	void getleafParents(list<Box*>& parents, bool exclusive=false)
-	{
-		//not implemented yet
-	    cerr<<"! Error: getleafParents is not implemented"<<endl;
-		//see node.py
-	}
-	
+
+    void getleafParents(list<Box *> & parents, bool exclusive = false)
+    {
+        //not implemented yet
+        cerr << "! Error: getleafParents is not implemented" << endl;
+        //see node.py
+    }
+
     /*! \brief Connects this box to another box.
      *
      * Connects this box to the box pointed to by `nei`. The
@@ -291,49 +280,48 @@ public:
      *              -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z
      */
 
-	void addConnection(Box * nei, int dir)
-	{
-		//assert(isLeaf);//comment by Guilin
-		switch(dir)
-		{
-			case -1: pChildren[3]=nei; break;
-			case  1: pChildren[1]=nei; break;
-			case -2: pChildren[2]=nei; break;
-			case  2: pChildren[0]=nei; break;
-			case -3: pDown=nei; break;
-			case  3: pUp=nei; break;
-			default:
-				assert(false); break;
-		}
-	}
+    void addConnection(Box * nei, int dir)
+    {
+        //assert(isLeaf);//comment by Guilin
+        switch (dir)
+        {
+            case -1: pChildren[3] = nei; break;
+            case 1: pChildren[1] = nei; break;
+            case -2: pChildren[2] = nei; break;
+            case 2: pChildren[0] = nei; break;
+            case -3: pDown = nei; break;
+            case 3: pUp = nei; break;
+            default: assert(false); break;
+        }
+    }
 
-	/*!
+    /*!
 	 * Refine pUp (this is called when pUp is at the level lower than the box but is not a leaf)
 	 * Don't confuse this with split (sometime it's called refine too...)
 	 */
-	bool refine_pUp();
+    bool refine_pUp();
 
-	/*!
+    /*!
      * Refine pDown (this is called when pUp is at the level lower than the box but is not a leaf)
      * Don't confuse this with split (sometime it's called refine too...)
      */
-	bool refine_pDown();
+    bool refine_pDown();
 
-	///this implements refine_pUp and refine_pDown
-	bool refine_pUpDown(Box ** ppbox);
+    ///this implements refine_pUp and refine_pDown
+    bool refine_pUpDown(Box ** ppbox);
 
-	//-------------------------------------------------------------------------
-	//
-	// DATA
-	//
-	//-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //
+    // DATA
+    //
+    //-------------------------------------------------------------------------
 
     /*!
      * compute the corners (vertices) of this box from its center and dimensions
      * UL: upper-left vertex, UR: upper-right vertex
      * LR: lower-right vertex, LL: lower-left vertex
      */
-    void getCorners(Point2d& UL, Point2d& UR, Point2d& LR, Point2d& LL ) const;
+    void getCorners(Point2d & UL, Point2d & UR, Point2d & LR, Point2d & LL) const;
 
     string info;
     friend class BoxIter;
@@ -379,7 +367,6 @@ public:
     /// is this an active box?
     bool active;
 
-
     /*! \brief location of this box
 
         locator based on following numbering scheme:
@@ -422,8 +409,8 @@ public:
      *  0 = NW, 1 = NE, 2 = SE, 3 = SW (if pChildren are kids)
      *  0 = N, 1=E, 2=S, W=3 (for neighbors)
      */
-    Box* pChildren[4];
-    
+    Box * pChildren[4];
+
     /*! Pointer to an adjacent box in a higher layer
      * pUp must be at the same depth or  at a lower depth of this box in the quadtree grid
      *
@@ -441,28 +428,26 @@ public:
     Box * pDown;
 
     /// Pointer to the box's parent in quadtree
-    Box* pParent;
+    Box * pParent;
 
     //when this dirty flag is true, this box should be deleted
     bool dirty;
 
-	//the child modflow grid,used in LGR_Grid
-	//ModflowGrid * childmfgrid;
+    //the child modflow grid,used in LGR_Grid
+    //ModflowGrid * childmfgrid;
 
-	//bool bRegular;
+    //bool bRegular;
 
+    ///the coordinates of the center after rotation
+    void rotateCtr(double cx, double cy, double rotation, double & resx, double & resy);
 
-	///the coordinates of the center after rotation
-	void rotateCtr(double cx, double cy, double rotation,double& resx, double& resy);
-
-	//int flag;
-	//Vertex* vertices[8];
+    //int flag;
+    //Vertex* vertices[8];
 };
 //end of class Box
 
-ostream& operator<<(ostream& out, const Box& box);
+ostream & operator<<(ostream & out, const Box & box);
 
 int generateID();
-
 
 } //end namespace cusg

@@ -35,8 +35,8 @@ GridVertices::EdgeKey reduce(long long edge, long long num, long long depth)
 GridVertices::GridVertices(Grid * grid)
 {
     QuadTree3D * qtree = dynamic_cast<QuadTree3D *>(grid);
-    ModflowGrid * mfgrid = (qtree != NULL) ? qtree->getModflowGrid()
-                                           : dynamic_cast<ModflowGrid *>(grid);
+    ModflowGrid * mfgrid =
+        (qtree != NULL) ? qtree->getModflowGrid() : dynamic_cast<ModflowGrid *>(grid);
     assert(mfgrid);
 
     int nrow = mfgrid->nrow;
@@ -65,8 +65,8 @@ GridVertices::GridVertices(Grid * grid)
             }
 }
 
-void GridVertices::add_box(const Box * box, int col, int srow, long long ix,
-                           long long iy, int depth)
+void GridVertices::add_box(const Box * box, int col, int srow, long long ix, long long iy,
+                           int depth)
 {
     if (!box->isLeaf)
     {
@@ -74,8 +74,7 @@ void GridVertices::add_box(const Box * box, int col, int srow, long long ix,
         const int east[4] = {0, 1, 1, 0};
         const int north[4] = {1, 1, 0, 0};
         for (int i = 0; i < 4; i++)
-            add_box(box->pChildren[i], col, srow, 2 * ix + east[i],
-                    2 * iy + north[i], depth + 1);
+            add_box(box->pChildren[i], col, srow, 2 * ix + east[i], 2 * iy + north[i], depth + 1);
     }
 
     EdgeKey west = reduce(col, ix, depth);
@@ -118,8 +117,7 @@ double GridVertices::local_y(const EdgeKey & k) const
 
 Point2d GridVertices::to_world(double xl, double yl) const
 {
-    return Point2d(m_xoffset + (xl * m_cos - yl * m_sin),
-                   m_yoffset + (xl * m_sin + yl * m_cos));
+    return Point2d(m_xoffset + (xl * m_cos - yl * m_sin), m_yoffset + (xl * m_sin + yl * m_cos));
 }
 
 const int * GridVertices::corners(const Box * box) const

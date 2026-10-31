@@ -19,14 +19,13 @@ inline double getTime() //in millisecond
 {
 #ifdef WIN32 || _WIN64
     return timeGetTime();
-#else 
+#else
     //assuming unix-type systems
     //timezone tz;
-    timeval  tv;
+    timeval tv;
     gettimeofday(&tv, NULL);
-    return (tv.tv_sec*1000000+tv.tv_usec)*1.0/1000;
+    return (tv.tv_sec * 1000000 + tv.tv_usec) * 1.0 / 1000;
 #endif
 }
 
 #endif //_GETTIME_H_
-

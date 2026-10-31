@@ -8,7 +8,6 @@
 \bug    No known bugs.
 */
 
-
 #pragma once
 
 #include "ModflowGrid2D.h"
@@ -36,8 +35,7 @@ namespace cusg
 class ModflowGrid : public ModflowGrid2D
 {
 public:
-	
-	/*! \brief Instantiate a ModflowGrid object.
+    /*! \brief Instantiate a ModflowGrid object.
         
         This method is used to instantiate a ModflowGrid object.  The 
         following arguments are required:
@@ -60,24 +58,29 @@ public:
         
         \note This is a variadic function.
     */
-	ModflowGrid(int nlay, int nrow, int ncol, double * delr, double * delc, vector< vector< vector<int> > >& botm,  float xoffset=0, float yoffset=0, float rotation=0);
-   
-	ModflowGrid(int nlay, int nrow, int ncol, double delr, double delc, vector< vector< vector<int> > >& botm,  float xoffset=0, float yoffset=0, float rotation=0);
-   
-    ModflowGrid(const ModflowGrid &other);
-        
-    ModflowGrid(const modflow_grid_raw_data &rawdata);
+    ModflowGrid(int nlay, int nrow, int ncol, double * delr, double * delc,
+                vector<vector<vector<int>>> & botm, float xoffset = 0, float yoffset = 0,
+                float rotation = 0);
 
-	ModflowGrid(int lay,int row,int col,double dr,double dc, vector<double*>& bot,double xoffset,double yoffset,double angle);
-    
+    ModflowGrid(int nlay, int nrow, int ncol, double delr, double delc,
+                vector<vector<vector<int>>> & botm, float xoffset = 0, float yoffset = 0,
+                float rotation = 0);
+
+    ModflowGrid(const ModflowGrid & other);
+
+    ModflowGrid(const modflow_grid_raw_data & rawdata);
+
+    ModflowGrid(int lay, int row, int col, double dr, double dc, vector<double *> & bot,
+                double xoffset, double yoffset, double angle);
+
     ModflowGrid();
 
-    virtual ~ModflowGrid(){}
-    
-	/// Return a numpy array of size (nodes) that contains the area for all cells.
-	double *  get_cell_areas();
-        
-	/*!
+    virtual ~ModflowGrid() {}
+
+    /// Return a numpy array of size (nodes) that contains the area for all cells.
+    double * get_cell_areas();
+
+    /*!
         \brief Return the four vertices for the specified nodeid.
         
         \verbatim
@@ -86,29 +89,28 @@ public:
         |       |   |       |
         0-------1   4-------5
         \endverbatim
-    */    
-	vector<Point3d> get_vertices(int nodeid);
-	
-	int get_nodeid(int i, int j);
+    */
+    vector<Point3d> get_vertices(int nodeid);
 
-	///Return the nodeid for the modflow grid.
-	virtual int get_nodeid(int k, int i, int j);
+    int get_nodeid(int i, int j);
 
-	virtual int getFirstNLayer();
-    
+    ///Return the nodeid for the modflow grid.
+    virtual int get_nodeid(int k, int i, int j);
+
+    virtual int getFirstNLayer();
+
     ///Return the 3D indices for the specified nodeid.
     Index3d get_indices(int nodeid);
-        
-	///get box from id
+
+    ///get box from id
     Box * get_nodeobj(int nodeid);
 
     virtual Box * get_nodeobj(int i, int j, int k);
-    
+
     ///get box connections from id
     ///Return a sorted list of connections, where a connection is
     ///a list [tonodeid, fldir].  fldir is -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z.
-    list< pair<int,int> >  get_node_connections(int nodeid);
-
+    list<pair<int, int>> get_node_connections(int nodeid);
 
     /*! \brief Obtain CSRData
 
@@ -118,32 +120,30 @@ public:
         not implemented yet
      */
     CSRData get_usg_csr_data();
-    
-	///this is a temporary SWIG/Python interface. Will find a better way to handle this
-	void get_usg_csr_data(void * data);
 
-	///number the nodes (i.e. leaves) in the grid
+    ///this is a temporary SWIG/Python interface. Will find a better way to handle this
+    void get_usg_csr_data(void * data);
+
+    ///number the nodes (i.e. leaves) in the grid
     virtual void number_nodes();
 
-	void updateNeighbors();
+    void updateNeighbors();
 
-	////rotate all the boxes
-	void getRotatePara(double& cx, double& cy, double& angle)
-	{
-		cx = this->X[0] - 0.5 * delr[0]; 
-		cy = this->Y[nrow - 1]  - 0.5 * delc[nrow - 1];
-		//cy = this->Y[nrow - 1]  + 0.5 * delc[nrow - 1];//- 0.5 * delc[nrow - 1];
-		angle = rotation;
-	}	
-
+    ////rotate all the boxes
+    void getRotatePara(double & cx, double & cy, double & angle)
+    {
+        cx = this->X[0] - 0.5 * delr[0];
+        cy = this->Y[nrow - 1] - 0.5 * delc[nrow - 1];
+        //cy = this->Y[nrow - 1]  + 0.5 * delc[nrow - 1];//- 0.5 * delc[nrow - 1];
+        angle = rotation;
+    }
 
 protected:
-
     void init(int nlay, int nrow, int ncol, double * botm);
 
-	void init(int nlay, int nrow, int ncol, const vector< vector< vector<int> > > &botm);
+    void init(int nlay, int nrow, int ncol, const vector<vector<vector<int>>> & botm);
 
-    void init(int nlay, int nrow, int ncol, const vector<double*> &botm);
+    void init(int nlay, int nrow, int ncol, const vector<double *> & botm);
 
     ///create nodes and add them to nodegroup
     void create_nodes();
@@ -151,9 +151,6 @@ protected:
     ///add connection between boxes
     ///fldir is -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z
     void add_connections_3d();
-
 };
 
-
 } //namespace cusg
-

@@ -24,12 +24,16 @@
 
 namespace cusg
 {
-	REAL gauss(REAL mean, REAL std);
+REAL gauss(REAL mean, REAL std);
 
-	inline REAL gauss(REAL mean, REAL std, int seed)
-	{
-		static bool first_time=true;
-		if( first_time ){ srand48(seed); first_time=false; }
-		return gauss(mean,std);
-	}
+inline REAL gauss(REAL mean, REAL std, int seed)
+{
+    static bool first_time = true;
+    if (first_time)
+    {
+        srand48(seed);
+        first_time = false;
+    }
+    return gauss(mean, std);
+}
 }

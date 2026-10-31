@@ -14,7 +14,6 @@ namespace cusg
 class DefinitionParser : public BaseParser
 {
 public:
-
     //constructor
     DefinitionParser();
     virtual ~DefinitionParser();
@@ -22,35 +21,33 @@ public:
     //parsing the definition file
     bool parse(string filename);
 
-	//
-	virtual bool parse(istream& in, string folder="");
-	
-	//does nothing...
-	virtual bool parse(block_raw_data& block){ return true; }
-	
-	//
-	// access functions
-	//
-	block_raw_data * getBlockData(const string& name) { return  m_blocks[name];}
-	map<string, block_raw_data *>& getBlockData() { return m_blocks; }
+    //
+    virtual bool parse(istream & in, string folder = "");
 
-	//warnings for records that a block does not recognize
-	const list<string>& getWarnings() const { return m_warnings; }
+    //does nothing...
+    virtual bool parse(block_raw_data & block) { return true; }
+
+    //
+    // access functions
+    //
+    block_raw_data * getBlockData(const string & name) { return m_blocks[name]; }
+    map<string, block_raw_data *> & getBlockData() { return m_blocks; }
+
+    //warnings for records that a block does not recognize
+    const list<string> & getWarnings() const { return m_warnings; }
 
 protected:
-    
-    typedef map<string, block_raw_data*(*)(block_raw_data& block)> BLOCK_TYPE_MAP;
+    typedef map<string, block_raw_data * (*)(block_raw_data & block)> BLOCK_TYPE_MAP;
     BLOCK_TYPE_MAP m_block_type_map;
     map<string, block_raw_data *> m_blocks;
     list<string> m_warnings;
 };
 
-
-
-template<typename T> block_raw_data* createBlockType(block_raw_data& block) { return new T(block); }
+template <typename T> block_raw_data * createBlockType(block_raw_data & block)
+{
+    return new T(block);
+}
 
 } //namespace cusg
 
 #endif //CUSG_DEF_PARSER_H
-
-
