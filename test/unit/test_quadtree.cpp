@@ -211,3 +211,14 @@ TEST(QuadTree, LineAlongEdgeRefinesCellsOnBothSides)
 {
     EXPECT_EQ(line_refined_cells({{100.0, 250.0}, {100.0, 150.0}}), (std::set<int>{0, 1, 3, 4}));
 }
+
+TEST(QuadTree, LineEqualToEdgeRefinesCellsOnBothSides)
+{
+    EXPECT_EQ(line_refined_cells({{100.0, 200.0}, {100.0, 100.0}}), (std::set<int>{3, 4}));
+}
+
+TEST(QuadTree, PolylineVertexOnEdgeRefinesCellsEachSegmentEnters)
+{
+    EXPECT_EQ(line_refined_cells({{150.0, 250.0}, {150.0, 200.0}, {250.0, 150.0}}),
+              (std::set<int>{1, 4, 5}));
+}
