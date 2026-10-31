@@ -13,7 +13,7 @@ env:
   PIXI_BETA_WARNING_OFF: true
 jobs:
   lint:
-    name: Check Python format, lint, and spelling
+    name: Check format, lint, and spelling
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout gridgen

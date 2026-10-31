@@ -1,0 +1,3 @@
+# shapelib is vendored; keep it as upstream wrote it
+DisableFormat: true
+SortIncludes: Never

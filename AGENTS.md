@@ -20,7 +20,7 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Compare outputs with main** (needs a build of main at `../gridgen-main`,
   e.g. `git worktree add ../gridgen-main main`, then `pixi run setup-main`
   and `pixi run build-main`): `pixi run compare-main`
-- **Check Python format, lint, and spelling:** `pixi run check-format`;
+- **Check format, lint, and spelling** (Python and C++): `pixi run check-format`;
   `pixi run fix-format` applies the fixes
 - **Show the OS tag used for release archives:** `pixi run get-ostag`
 - **Build the release notes** (needs TeX Live and the USGS class from
@@ -97,11 +97,18 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   and check a death test by its exit code alone, with an empty message
   matcher: `EXPECT_EXIT(..., testing::ExitedWithCode(1), "")` (see
   `test_asciigrid.cpp`).
-- **Formatting:** run `pixi run check-format` before committing Python;
-  ruff (`ruff.toml`) formats and lints it, and codespell (`.codespellrc`)
-  checks spelling in the text files other than the C++ source, data files,
-  generated files, and the archived release notes. No formatter runs on the
-  C++ source yet (#64); match the layout and naming of the surrounding code.
+- **Formatting:** run `pixi run check-format` before committing; ruff
+  (`ruff.toml`) formats and lints the Python, clang-format (`.clang-format`)
+  formats the C++ in `src/` and `test/unit/` except the vendored
+  `src/tools/shapefile/shapelib/`, and codespell (`.codespellrc`) checks
+  spelling in everything but data files, generated files, shapelib, and the
+  archived release notes. `pixi run fix-format` applies all three. Add a
+  misspelled identifier to `ignore-words-list` rather than renaming it in an
+  unrelated change. Text files are stored with LF endings (`.gitattributes`);
+  `test/action01_buildqtg.dfn` keeps CRLF so that reading input written on
+  Windows stays tested. Commits that only reformat are listed in
+  `.git-blame-ignore-revs` (`git config blame.ignoreRevsFile
+  .git-blame-ignore-revs`).
 - **Comments and documentation:** keep code comments and docstrings short,
   stating what a function does; put the reason, when one is needed, in an
   inline comment. Write the release notes for groundwater modelers rather
@@ -127,7 +134,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   build), and the versions in `pixi.toml` and `version.tex` from
   `pixi run update-version`.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
-  `LICENSE`, or the lint configuration skip the build and tests
+  `LICENSE`, the lint configuration, `.clangd`, or
+  `.git-blame-ignore-revs` skip the build and tests
   (`paths-ignore` in `.github/workflows/ci.yml`); update that list when adding
   non-code files. Adding or removing a label on a pull request starts a new
   run that cancels the one in progress (`cancel-in-progress`), including the

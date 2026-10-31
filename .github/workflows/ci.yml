@@ -13,6 +13,9 @@ on:
       - 'LICENSE'
       - 'ruff.toml'
       - '.codespellrc'
+      - '.clang-format'
+      - '.clangd'
+      - '.git-blame-ignore-revs'
       - '.github/workflows/lint.yml'
   pull_request:
     # labeled and unlabeled so the output-change label takes effect
@@ -28,6 +31,9 @@ on:
       - 'LICENSE'
       - 'ruff.toml'
       - '.codespellrc'
+      - '.clang-format'
+      - '.clangd'
+      - '.git-blame-ignore-revs'
       - '.github/workflows/lint.yml'
   workflow_dispatch:
 concurrency:

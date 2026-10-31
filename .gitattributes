@@ -1,0 +1,16 @@
+# normalize text files to LF in the repository and the working tree
+* text=auto eol=lf
+
+# binary inputs and documents
+*.shp binary
+*.shx binary
+*.dbf binary
+*.sbn binary
+*.sbx binary
+*.qix binary
+*.fix binary
+*.pdf binary
+*.jpg binary
+
+# keep one definition file with CRLF so that reading input edited on Windows stays tested
+test/action01_buildqtg.dfn eol=crlf
