@@ -9,7 +9,6 @@
 
 */
 
-
 #pragma once
 
 #include <cassert>
@@ -27,11 +26,12 @@ namespace cusg
  */
 struct CooData
 {
-	///
-	CooData(){ } 
+    ///
+    CooData() {}
 
     ///Constructor
-    CooData(int nodes, int ncon, int * coorow, int * coocol, int * indptr, double * area, double * cl1, double * cl2, double * fahl, int * fldr)
+    CooData(int nodes, int ncon, int * coorow, int * coocol, int * indptr, double * area,
+            double * cl1, double * cl2, double * fahl, int * fldr)
     {
         this->nodes = nodes;
         this->ncon = ncon;
@@ -50,21 +50,21 @@ struct CooData
     {
         int * coorow = new int[csr.nja];
         int * coocol = new int[csr.nja];
-        int *  indptr = new int[csr.nodes+1];
+        int * indptr = new int[csr.nodes + 1];
 
         assert(coorow && coocol && indptr);
 
         int ipos = 0;
-        for( int n=0; n<csr.nodes; n++)
+        for (int n = 0; n < csr.nodes; n++)
         {
             indptr[n] = ipos;
 
-            for(int j=csr.ia[n];j<csr.ia[n + 1];j++)
+            for (int j = csr.ia[n]; j < csr.ia[n + 1]; j++)
             {
-                int m = csr.ja[j-1]; //TODO:  -1 b/c csr is 1-based
+                int m = csr.ja[j - 1]; //TODO:  -1 b/c csr is 1-based
                 coorow[ipos] = n;
-                coocol[ipos] = m-1; //TODO:  -1 b/c csr is 1-based
-				//cout<<ipos<<" ";
+                coocol[ipos] = m - 1; //TODO:  -1 b/c csr is 1-based
+                                      //cout<<ipos<<" ";
                 ipos += 1;
             }
         }
@@ -86,9 +86,9 @@ struct CooData
     {
         //count nondiagonal entries and reallocate
         int ncon = 0;
-        for( int i=0;i<this->ncon;i++)
+        for (int i = 0; i < this->ncon; i++)
         {
-            if( this->coorow[i] != this->coocol[i]) ncon += 1;
+            if (this->coorow[i] != this->coocol[i]) ncon += 1;
         }
 
         int * coorow = new int[ncon];
@@ -103,9 +103,9 @@ struct CooData
         //reassign
         int inewpos = 0;
         int lastn = -1;
-        for( int i=0;i<this->ncon;i++)
+        for (int i = 0; i < this->ncon; i++)
         {
-            if( this->coorow[i] == this->coocol[i] ) continue;
+            if (this->coorow[i] == this->coocol[i]) continue;
             coorow[inewpos] = this->coorow[i];
             coocol[inewpos] = this->coocol[i];
             cl1[inewpos] = this->cl1[i];
@@ -114,7 +114,7 @@ struct CooData
             fldr[inewpos] = this->fldr[i];
             //update the indptr array;
             int n = coorow[inewpos];
-            if( n != lastn )
+            if (n != lastn)
             {
                 this->indptr[n] = inewpos;
                 lastn = n;
@@ -132,64 +132,62 @@ struct CooData
         this->fldr = fldr;
     }
 
-	/// data for Coo format 
-	int ncon;
-	int * coorow;
-	int * coocol;
-	int * indptr;
-        
-	/// total # of cells
-	int nodes;
-	
+    /// data for Coo format
+    int ncon;
+    int * coorow;
+    int * coocol;
+    int * indptr;
+
+    /// total # of cells
+    int nodes;
+
     /// size of nja storing distance to the shared of each connection
-	double * cl1;
-	
-	/// size of nja storing reversed distance to the shared from each connection
-	double * cl2;
-	
-	/// area of the connection of size nja
+    double * cl1;
+
+    /// size of nja storing reversed distance to the shared from each connection
+    double * cl2;
+
+    /// area of the connection of size nja
     double * fahl;
-    
+
     /// direction indicator of size nja (+-1 for x, +-2 for y +-3 for z)
-    int  * fldr;
+    int * fldr;
 
     /// surface area from a plane view
     double * areas;
 };
 
-
-inline
-ostream&  operator<<(ostream& out, CooData& data)
+inline ostream & operator<<(ostream & out, CooData & data)
 {
-    out<<"nodes="<<data.nodes<<endl;
-    out<<"ncon="<<data.ncon<<endl;
-    out<<"coorow=(";
-    for(int i=0;i<data.ncon;i++) out<<data.coorow[i]<<",";
-    out<<")"<<endl;
+    out << "nodes=" << data.nodes << endl;
+    out << "ncon=" << data.ncon << endl;
+    out << "coorow=(";
+    for (int i = 0; i < data.ncon; i++) out << data.coorow[i] << ",";
+    out << ")" << endl;
 
-    out<<"coocol=(";
-    for(int i=0;i<data.ncon;i++) out<<data.coocol[i]<<",";
-    out<<")"<<endl;
+    out << "coocol=(";
+    for (int i = 0; i < data.ncon; i++) out << data.coocol[i] << ",";
+    out << ")" << endl;
 
-    out<<"area=(";
-    for(int i=0;i<data.nodes;i++) out<<data.areas[i]<<",";
-    out<<")"<<endl;
+    out << "area=(";
+    for (int i = 0; i < data.nodes; i++) out << data.areas[i] << ",";
+    out << ")" << endl;
 
-    out<<"cl1=(";
-    for(int i=0;i<data.ncon;i++) out<<data.cl1[i]<<",";
-    out<<")"<<endl;
+    out << "cl1=(";
+    for (int i = 0; i < data.ncon; i++) out << data.cl1[i] << ",";
+    out << ")" << endl;
 
-    out<<"cl2=(";
-    for(int i=0;i<data.ncon;i++) out<<data.cl2[i]<<",";
-    out<<")"<<endl;
+    out << "cl2=(";
+    for (int i = 0; i < data.ncon; i++) out << data.cl2[i] << ",";
+    out << ")" << endl;
 
-    out<<"fahl=(";
-    for(int i=0;i<data.ncon;i++) out<<data.fahl[i]<<",";
-    out<<")"<<endl;
+    out << "fahl=(";
+    for (int i = 0; i < data.ncon; i++) out << data.fahl[i] << ",";
+    out << ")" << endl;
 
-    out<<"fldr=(";
-    for(int i=0;i<data.ncon;i++) out<<data.fldr[i]<<",";
-    out<<")"<<endl;
+    out << "fldr=(";
+    for (int i = 0; i < data.ncon; i++) out << data.fldr[i] << ",";
+    out << ")" << endl;
 
     return out;
 }

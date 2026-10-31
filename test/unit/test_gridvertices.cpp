@@ -34,11 +34,9 @@ const double YOFF = 2792250.0;
 // coordinate offsets, refined to three levels around two points
 QuadTree3D * make_refined(double angle)
 {
-    ModflowGrid * mfgrid =
-        make_mfgrid(1, 6, 6, 812.7, 793.3, 10.0, XOFF, YOFF, angle);
-    return make_qtree(mfgrid, {{XOFF + 1700.0, YOFF + 2500.0, 3, 0},
-                               {XOFF + 3900.0, YOFF + 1100.0, 2, 0}},
-                      true);
+    ModflowGrid * mfgrid = make_mfgrid(1, 6, 6, 812.7, 793.3, 10.0, XOFF, YOFF, angle);
+    return make_qtree(
+        mfgrid, {{XOFF + 1700.0, YOFF + 2500.0, 3, 0}, {XOFF + 3900.0, YOFF + 1100.0, 2, 0}}, true);
 }
 
 // polygon vertices of a shapefile
@@ -65,12 +63,9 @@ std::vector<std::pair<double, double>> read_shp_vertices(const std::string & shp
 std::map<std::pair<long long, long long>, std::set<std::pair<double, double>>>
 group_corners(const std::vector<std::pair<double, double>> & xy)
 {
-    std::map<std::pair<long long, long long>,
-             std::set<std::pair<double, double>>> groups;
+    std::map<std::pair<long long, long long>, std::set<std::pair<double, double>>> groups;
     for (const std::pair<double, double> & p : xy)
-        groups[std::make_pair(std::llround(p.first * 1e3),
-                              std::llround(p.second * 1e3))]
-            .insert(p);
+        groups[std::make_pair(std::llround(p.first * 1e3), std::llround(p.second * 1e3))].insert(p);
     return groups;
 }
 
@@ -84,8 +79,7 @@ void expect_one_coordinate_per_corner(double angle, const std::string & name)
     ASSERT_FALSE(xy.empty());
     for (const auto & g : group_corners(xy))
         EXPECT_EQ(g.second.size(), 1u)
-            << "corner near (" << g.first.first / 1e3 << ", "
-            << g.first.second / 1e3 << ")";
+            << "corner near (" << g.first.first / 1e3 << ", " << g.first.second / 1e3 << ")";
     delete qtree;
 }
 
@@ -112,21 +106,18 @@ int nearest_corner(const GridVertices & gv, const Box * b, double x, double y)
 std::vector<std::pair<double, double>> read_vtu_xy(const std::string & path)
 {
     std::ifstream fin(path.c_str());
-    std::string text((std::istreambuf_iterator<char>(fin)),
-                     std::istreambuf_iterator<char>());
+    std::string text((std::istreambuf_iterator<char>(fin)), std::istreambuf_iterator<char>());
     std::vector<std::pair<double, double>> xy;
     size_t start = text.find("<Points>");
     if (start == std::string::npos) return xy;
     start = text.find(">", text.find("<DataArray", start)) + 1;
-    std::istringstream ss(
-        text.substr(start, text.find("</DataArray>", start) - start));
+    std::istringstream ss(text.substr(start, text.find("</DataArray>", start) - start));
     double x, y, z;
     while (ss >> x >> y >> z) xy.push_back(std::make_pair(x, y));
     return xy;
 }
 
-modflow_grid_raw_data * parse_grid(DefinitionParser & parser,
-                                   const std::string & block)
+modflow_grid_raw_data * parse_grid(DefinitionParser & parser, const std::string & block)
 {
     std::istringstream dfn(block);
     if (!parser.parse(dfn)) return NULL;
@@ -137,19 +128,18 @@ modflow_grid_raw_data * parse_grid(DefinitionParser & parser,
 }
 
 // a grid one cell wide, 110 km long, rotated 17.3 degrees
-const char * LONG_GRID =
-    "BEGIN MODFLOW_GRID mfg\n"
-    "  ROTATION_ANGLE = 17.3\n"
-    "  X_OFFSET = 543750\n"
-    "  Y_OFFSET = 2792250\n"
-    "  NLAY = 1\n"
-    "  NROW = 1\n"
-    "  NCOL = 1\n"
-    "  DELR = CONSTANT 110000.\n"
-    "  DELC = CONSTANT 1.\n"
-    "  TOP = CONSTANT 0.\n"
-    "  BOTTOM LAYER 1 = CONSTANT -1.\n"
-    "END MODFLOW_GRID\n";
+const char * LONG_GRID = "BEGIN MODFLOW_GRID mfg\n"
+                         "  ROTATION_ANGLE = 17.3\n"
+                         "  X_OFFSET = 543750\n"
+                         "  Y_OFFSET = 2792250\n"
+                         "  NLAY = 1\n"
+                         "  NROW = 1\n"
+                         "  NCOL = 1\n"
+                         "  DELR = CONSTANT 110000.\n"
+                         "  DELC = CONSTANT 1.\n"
+                         "  TOP = CONSTANT 0.\n"
+                         "  BOTTOM LAYER 1 = CONSTANT -1.\n"
+                         "END MODFLOW_GRID\n";
 
 } // namespace
 
@@ -160,8 +150,7 @@ TEST(SharedVertices, ShapefileCornersAreIdenticalUnrotated)
 
 TEST(SharedVertices, ShapefileCornersAreIdenticalRotated)
 {
-    expect_one_coordinate_per_corner(17.3 * PI_DOUBLE / 180.0,
-                                     "gridgen_corners_rotated");
+    expect_one_coordinate_per_corner(17.3 * PI_DOUBLE / 180.0, "gridgen_corners_rotated");
 }
 
 TEST(SharedVertices, AdjacentCellsShareVertexIndex)
@@ -180,9 +169,8 @@ TEST(SharedVertices, AdjacentCellsShareVertexIndex)
             for (int i = 0; i < 4; i++)
             {
                 const Point2d & p = gv.vertices()[ids[i]];
-                groups[std::make_pair(std::llround(p[0] * 1e3),
-                                      std::llround(p[1] * 1e3))]
-                    .insert(ids[i]);
+                groups[std::make_pair(std::llround(p[0] * 1e3), std::llround(p[1] * 1e3))].insert(
+                    ids[i]);
             }
         }
         for (const auto & g : groups) EXPECT_EQ(g.second.size(), 1u);
@@ -202,8 +190,7 @@ TEST(SharedVertices, AdjacentCellsShareVertexIndex)
                     Box * o = qtree->get_nodeobj(m);
                     int j = nearest_corner(gv, o, p[0], p[1]);
                     const Point2d & q = gv.vertices()[j];
-                    if (std::hypot(q[0] - p[0], q[1] - p[1]) < 1e-3)
-                        EXPECT_EQ(j, ids[i]);
+                    if (std::hypot(q[0] - p[0], q[1] - p[1]) < 1e-3) EXPECT_EQ(j, ids[i]);
                 }
             }
         }
@@ -214,8 +201,7 @@ TEST(SharedVertices, AdjacentCellsShareVertexIndex)
 TEST(SharedVertices, QuarterTurnAboutLowerLeftCorner)
 {
     // one 4 x 2 cell with its lower-left corner at (8, 19)
-    ModflowGrid * mfgrid =
-        make_mfgrid(1, 1, 1, 4.0, 2.0, 10.0, 8.0, 19.0, 0.5 * PI_DOUBLE);
+    ModflowGrid * mfgrid = make_mfgrid(1, 1, 1, 4.0, 2.0, 10.0, 8.0, 19.0, 0.5 * PI_DOUBLE);
     GridVertices gv(mfgrid);
     double x[4], y[4];
     gv.get_corners(mfgrid->nodegroup[0], x, y);
@@ -286,8 +272,7 @@ TEST(SharedVertices, RotationAngleRoundTrips)
     std::ostringstream out;
     DefinitionExporter exporter;
     exporter.save(out, *data);
-    EXPECT_NE(out.str().find("\tROTATION_ANGLE = 17.3\n"), std::string::npos)
-        << out.str();
+    EXPECT_NE(out.str().find("\tROTATION_ANGLE = 17.3\n"), std::string::npos) << out.str();
 }
 
 TEST(Precision, ArraysRoundTrip)
@@ -299,8 +284,7 @@ TEST(Precision, ArraysRoundTrip)
     exporter.save(path, ptr, 5);
 
     std::ifstream fin(path.c_str());
-    std::string text((std::istreambuf_iterator<char>(fin)),
-                     std::istreambuf_iterator<char>());
+    std::string text((std::istreambuf_iterator<char>(fin)), std::istreambuf_iterator<char>());
     std::istringstream in(text);
     for (double v : values)
     {
@@ -343,19 +327,22 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
         std::ofstream fc((dir + "gridgen_delc.dat").c_str());
         for (double v : delc) fc << round_trip(v) << " ";
     }
-    std::string block =
-        "BEGIN MODFLOW_GRID mfg\n"
-        "  ROTATION_ANGLE = 17.3\n"
-        "  X_OFFSET = 543750\n"
-        "  Y_OFFSET = 2792250\n"
-        "  NLAY = 1\n"
-        "  NROW = 3\n"
-        "  NCOL = 4\n"
-        "  DELR = OPEN/CLOSE " + dir + "gridgen_delr.dat\n"
-        "  DELC = OPEN/CLOSE " + dir + "gridgen_delc.dat\n"
-        "  TOP = CONSTANT 0.\n"
-        "  BOTTOM LAYER 1 = CONSTANT -1.\n"
-        "END MODFLOW_GRID\n";
+    std::string block = "BEGIN MODFLOW_GRID mfg\n"
+                        "  ROTATION_ANGLE = 17.3\n"
+                        "  X_OFFSET = 543750\n"
+                        "  Y_OFFSET = 2792250\n"
+                        "  NLAY = 1\n"
+                        "  NROW = 3\n"
+                        "  NCOL = 4\n"
+                        "  DELR = OPEN/CLOSE " +
+                        dir +
+                        "gridgen_delr.dat\n"
+                        "  DELC = OPEN/CLOSE " +
+                        dir +
+                        "gridgen_delc.dat\n"
+                        "  TOP = CONSTANT 0.\n"
+                        "  BOTTOM LAYER 1 = CONSTANT -1.\n"
+                        "END MODFLOW_GRID\n";
     DefinitionParser parser;
     modflow_grid_raw_data * data = parse_grid(parser, block);
     ASSERT_NE(data, nullptr);
@@ -368,9 +355,8 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
     double width = 0.0, height = 0.0;
     for (double v : delr) width += v;
     for (double v : delc) height += v;
-    QuadTree3D * qtree = make_qtree(
-        mfgrid, {{XOFF + width - 1.0, YOFF + height - 1.0, 3, 0},
-                 {XOFF + 900.0, YOFF + 400.0, 2, 0}});
+    QuadTree3D * qtree = make_qtree(mfgrid, {{XOFF + width - 1.0, YOFF + height - 1.0, 3, 0},
+                                             {XOFF + 900.0, YOFF + 400.0, 2, 0}});
     GridVertices gv(qtree);
 
     // the northeast leaf's upper-right corner is the far grid corner, with
@@ -395,9 +381,8 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
         for (int i = 0; i < 4; i++)
         {
             const Point2d & q = gv.vertices()[ids[i]];
-            groups[std::make_pair(std::llround(q[0] * 1e3),
-                                  std::llround(q[1] * 1e3))]
-                .insert(ids[i]);
+            groups[std::make_pair(std::llround(q[0] * 1e3), std::llround(q[1] * 1e3))].insert(
+                ids[i]);
         }
     }
     for (const auto & g : groups) EXPECT_EQ(g.second.size(), 1u);
@@ -410,16 +395,14 @@ TEST(SharedVertices, LineShapefileEndsAreGridCorners)
     QuadTree3D * qtree = make_refined(17.3 * PI_DOUBLE / 180.0);
     GridVertices gv(qtree);
     std::set<std::pair<double, double>> corners;
-    for (const Point2d & p : gv.vertices())
-        corners.insert(std::make_pair(p[0], p[1]));
+    for (const Point2d & p : gv.vertices()) corners.insert(std::make_pair(p[0], p[1]));
 
     std::string shp = ::testing::TempDir() + "gridgen_lines.shp";
     writeQuadtree2Shp(qtree, shp, "line");
     std::vector<std::pair<double, double>> xy = read_shp_vertices(shp);
     ASSERT_FALSE(xy.empty());
     for (const std::pair<double, double> & p : xy)
-        EXPECT_EQ(corners.count(p), 1u)
-            << "line end (" << p.first << ", " << p.second << ")";
+        EXPECT_EQ(corners.count(p), 1u) << "line end (" << p.first << ", " << p.second << ")";
     delete qtree;
 }
 
@@ -427,8 +410,7 @@ TEST(Precision, PassThroughAreasAreDouble)
 {
     // the center cell of layer 2 is inactive, so with pass-through the
     // center cells of layers 1 and 3 connect over the full cell area
-    QuadTree3D * qtree =
-        make_qtree(make_mfgrid(3, 3, 3, 812.7 / 16, 793.3 / 16), {});
+    QuadTree3D * qtree = make_qtree(make_mfgrid(3, 3, 3, 812.7 / 16, 793.3 / 16), {});
     ModflowGrid * mfgrid = qtree->getModflowGrid();
     qtree->nodegroup[mfgrid->get_nodeid(1, 1, 1)]->active = false;
     qtree->number_nodes();
@@ -455,8 +437,7 @@ TEST(Precision, VtkPointsAreGridCorners)
         QuadTree3D * qtree = make_refined(angle);
         GridVertices gv(qtree);
         std::set<std::pair<double, double>> corners;
-        for (const Point2d & p : gv.vertices())
-            corners.insert(std::make_pair(p[0], p[1]));
+        for (const Point2d & p : gv.vertices()) corners.insert(std::make_pair(p[0], p[1]));
 
         // every x and y written, with and without shared vertices, is a grid
         // corner
@@ -465,8 +446,7 @@ TEST(Precision, VtkPointsAreGridCorners)
         std::vector<std::pair<double, double>> xy = read_vtu_xy(name + ".vtu");
         EXPECT_EQ(xy.size(), 8u * qtree->nodes());
         for (const std::pair<double, double> & p : xy)
-            EXPECT_EQ(corners.count(p), 1u)
-                << "point (" << p.first << ", " << p.second << ")";
+            EXPECT_EQ(corners.count(p), 1u) << "point (" << p.first << ", " << p.second << ")";
 
         writeQuadtreeGrid2VTK_shareV(qtree, name + "_sv");
         xy = read_vtu_xy(name + "_sv.vtu");

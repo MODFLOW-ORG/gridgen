@@ -2,132 +2,125 @@
 #include "vert_pass.h"
 //int vpnum = 0;
 
-void determineArea(VPassBox& vpb)
+void determineArea(VPassBox & vpb)
 {
-	double area = (double)(FLT_MAX);
-	double r = fabs(vpb.bSrc->dx * vpb.bSrc->dy) ;
-	if(r < area)
-		area  =r;
+    double area = (double)(FLT_MAX);
+    double r = fabs(vpb.bSrc->dx * vpb.bSrc->dy);
+    if (r < area) area = r;
 
-	r = fabs(vpb.bDst->dx * vpb.bDst->dy);
-	if(r< area)
-		area = r;
-	for(list<Box*>::iterator bit = vpb.bPssList.begin(); bit != vpb.bPssList.end(); ++bit)
-	{
-		Box* tb = *bit;
-		r = fabs(tb->dx * tb->dy);
-		if( r< area)
-			area = r;
-	}
-	vpb.area = area;
+    r = fabs(vpb.bDst->dx * vpb.bDst->dy);
+    if (r < area) area = r;
+    for (list<Box *>::iterator bit = vpb.bPssList.begin(); bit != vpb.bPssList.end(); ++bit)
+    {
+        Box * tb = *bit;
+        r = fabs(tb->dx * tb->dy);
+        if (r < area) area = r;
+    }
+    vpb.area = area;
 }
-void genOneVP(list<Box*>& bl, vector<VPassBox>& vpbl)
+void genOneVP(list<Box *> & bl, vector<VPassBox> & vpbl)
 {
-	if(bl.size() >= 3)
-	{
-		//assert(bl.front()->active && bl.back()->active);
-		VPassBox vpb;
-		vpb.bSrc = bl.front();
-		bl.pop_front();
+    if (bl.size() >= 3)
+    {
+        //assert(bl.front()->active && bl.back()->active);
+        VPassBox vpb;
+        vpb.bSrc = bl.front();
+        bl.pop_front();
 
-		vpb.bDst = bl.back();
-		bl.pop_back();
+        vpb.bDst = bl.back();
+        bl.pop_back();
 
-		vpb.bPssList.insert(vpb.bPssList.end(), bl.begin(), bl.end());
-		determineArea(vpb);
+        vpb.bPssList.insert(vpb.bPssList.end(), bl.begin(), bl.end());
+        determineArea(vpb);
 
-		vpbl.push_back(vpb);
+        vpbl.push_back(vpb);
 
-		//vpnum++;
-		//cout<<vpnum<<"----vertical pass--id :"<<vpb.bSrc->id<<"\t"<<vpb.bDst->id<<"\t"<<vpb.bPssList.front()->id<<endl;
-	}
+        //vpnum++;
+        //cout<<vpnum<<"----vertical pass--id :"<<vpb.bSrc->id<<"\t"<<vpb.bDst->id<<"\t"<<vpb.bPssList.front()->id<<endl;
+    }
 }
 //exploration in two vertical directions
-void verticalExplore(Box* tb, list<Box*>& bl, vector<VPassBox>& vpbl,  bool topToDown = true)
+void verticalExplore(Box * tb, list<Box *> & bl, vector<VPassBox> & vpbl, bool topToDown = true)
 {
-	list<Box*> nei;
+    list<Box *> nei;
 
-	if(topToDown && tb->pDown != NULL)
-		tb->pDown->getLeaves(nei);
-	else if( (!topToDown) && (tb->pUp != NULL))
-		tb->pUp->getLeaves(nei);
+    if (topToDown && tb->pDown != NULL)
+        tb->pDown->getLeaves(nei);
+    else if ((!topToDown) && (tb->pUp != NULL))
+        tb->pUp->getLeaves(nei);
 
-
-	for(list<Box*>::iterator bit = nei.begin(); bit != nei.end();++bit)
-	{
-		Box* pb = *bit;
-		assert(pb != tb);
-		if(pb == NULL || !(pb->isLeaf))
-			continue;
-		if(pb->active)
-		{
-			if(bl.size() >= 2)
-			{
-				list<Box*> tlist(bl.begin(), bl.end());
-				tlist.push_back(pb);
-				genOneVP(tlist, vpbl);
-			}
-		}
-		else
-		{
-			list<Box*> tlist(bl.begin(), bl.end());
-			tlist.push_back(pb);
-			verticalExplore(pb, tlist, vpbl, topToDown);
-		}
-	}
+    for (list<Box *>::iterator bit = nei.begin(); bit != nei.end(); ++bit)
+    {
+        Box * pb = *bit;
+        assert(pb != tb);
+        if (pb == NULL || !(pb->isLeaf)) continue;
+        if (pb->active)
+        {
+            if (bl.size() >= 2)
+            {
+                list<Box *> tlist(bl.begin(), bl.end());
+                tlist.push_back(pb);
+                genOneVP(tlist, vpbl);
+            }
+        }
+        else
+        {
+            list<Box *> tlist(bl.begin(), bl.end());
+            tlist.push_back(pb);
+            verticalExplore(pb, tlist, vpbl, topToDown);
+        }
+    }
 }
 
-void boxVPConnection(Box* b, vector<VPassBox>& vpbl, bool topToDown)
+void boxVPConnection(Box * b, vector<VPassBox> & vpbl, bool topToDown)
 {
-	if(b == NULL || (!(b->isLeaf)) || (b->active == false))
-		return;
+    if (b == NULL || (!(b->isLeaf)) || (b->active == false)) return;
 
-	list<Box*> bl;
-	bl.push_back(b);
-	verticalExplore(b, bl, vpbl,  topToDown);
+    list<Box *> bl;
+    bl.push_back(b);
+    verticalExplore(b, bl, vpbl, topToDown);
 }
 
-void getVPT(Box* b, vector<VPTPair>& vpts, bool topToDown)
+void getVPT(Box * b, vector<VPTPair> & vpts, bool topToDown)
 {
-	if(b == NULL || (!(b->isLeaf)) || (b->active == false))
-		return;
+    if (b == NULL || (!(b->isLeaf)) || (b->active == false)) return;
 
-	vector<VPassBox> vpbs;
-	boxVPConnection(b, vpbs, topToDown);
-	for(vector<VPassBox>::iterator vit = vpbs.begin(); vit != vpbs.end(); ++vit)
-	{
-		Box* b1 = vit->bSrc; 
-		Box* b2 = vit->bDst;
+    vector<VPassBox> vpbs;
+    boxVPConnection(b, vpbs, topToDown);
+    for (vector<VPassBox>::iterator vit = vpbs.begin(); vit != vpbs.end(); ++vit)
+    {
+        Box * b1 = vit->bSrc;
+        Box * b2 = vit->bDst;
 
-		vector<VPassBox>::iterator jit = vit;
-		++jit;
-		for(; jit != vpbs.end(); )
-		{
-			if(b1 == jit->bSrc && b2 == jit->bDst)
-			{
-				vit->area += jit->area;
-				jit = vpbs.erase(jit);
-			}
-			else
-			{
-				++jit;
-			}
-		}
-	}
+        vector<VPassBox>::iterator jit = vit;
+        ++jit;
+        for (; jit != vpbs.end();)
+        {
+            if (b1 == jit->bSrc && b2 == jit->bDst)
+            {
+                vit->area += jit->area;
+                jit = vpbs.erase(jit);
+            }
+            else
+            {
+                ++jit;
+            }
+        }
+    }
 
-	//coy the final results
-	for(vector<VPassBox>::iterator vit = vpbs.begin(); vit != vpbs.end(); ++vit)
-	{
-		VPTPair vpt(vit->bSrc, vit->bDst, vit->area);
-		vpts.push_back(vpt);
-	}
+    //coy the final results
+    for (vector<VPassBox>::iterator vit = vpbs.begin(); vit != vpbs.end(); ++vit)
+    {
+        VPTPair vpt(vit->bSrc, vit->bDst, vit->area);
+        vpts.push_back(vpt);
+    }
 
-	////////////////////////////////////////////
-	//for testing
-	//cout<<"total vertical pass through : "<<vpnum<<endl;
+    ////////////////////////////////////////////
+    //for testing
+    //cout<<"total vertical pass through : "<<vpnum<<endl;
 }
 
-////this function 
+////this function
 //void VerticalPass(Grid* grid, vector<VPassBox>& vpbl)
 //{
 //	//cast
@@ -142,7 +135,7 @@ void getVPT(Box* b, vector<VPTPair>& vpts, bool topToDown)
 //	Box* tb = NULL;
 //	for(NodeGroup::iterator nit = grid->nodegroup.begin(); nit != grid->nodegroup.end(); ++nit)
 //	{
-//		tb = *nit;	
+//		tb = *nit;
 //
 //		if(tb == NULL || (!(tb->isLeaf)) || (tb->active == false))
 //			continue;
@@ -167,5 +160,5 @@ void getVPT(Box* b, vector<VPTPair>& vpts, bool topToDown)
 //		//cout<<vit->bSrc->id<<"\t";
 //	}
 //	cout<<endl;
-//	
+//
 //}

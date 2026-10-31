@@ -14,7 +14,6 @@ using namespace std;
 #include <Point>
 using namespace mathtool;
 
-
 namespace cusg
 {
 
@@ -26,48 +25,32 @@ namespace cusg
 class Mesh
 {
 public:
+    /// Open the file, read the number of vertices and number of cells and
+    /// allocate arrays.
+    Mesh(const string & filename) {}
 
-	/// Open the file, read the number of vertices and number of cells and
-	/// allocate arrays.
-	Mesh(const string & filename)
-	{
-	
-	}
-	
-	
-	void create_connectivity()
-	{
-	}
-	
-	double get_cell_area(int nodeid)
-	{
-	
-	}
-	
-	Point2d get_cell_centroid(int nodeid)
-	{
-		Point2d o;
-		return o;
-	}
-	
-	Point2d get_cell_circumcenter(int nodeid)
-	{
-		Point2d o;
-		return o;
-	}
-	
-	void draw()
-	{
-	
-	}
-	
-	void get_usg_csr_data(bool storediagonal=false)
-	{
-	
-	}
+    void create_connectivity() {}
+
+    double get_cell_area(int nodeid) {}
+
+    Point2d get_cell_centroid(int nodeid)
+    {
+        Point2d o;
+        return o;
+    }
+
+    Point2d get_cell_circumcenter(int nodeid)
+    {
+        Point2d o;
+        return o;
+    }
+
+    void draw() {}
+
+    void get_usg_csr_data(bool storediagonal = false) {}
 };
 
-}//end namespace cusg
+} //end namespace cusg
 
 /*
 class Mesh(object):

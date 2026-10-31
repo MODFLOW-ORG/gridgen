@@ -16,20 +16,19 @@ class c_plyline
 {
 
 public:
+    ///////////////////////////////////////////////////////////////////////////
+    c_plyline() { head = tail = NULL; }
+    c_plyline(const c_ply & ply);
 
     ///////////////////////////////////////////////////////////////////////////
-    c_plyline(){ head=tail=NULL; }
-    c_plyline(const c_ply& ply);
-
-    ///////////////////////////////////////////////////////////////////////////
-    void copy(const c_plyline& plyline); //copy from the other ply
+    void copy(const c_plyline & plyline); //copy from the other ply
     void destroy();
 
     ///////////////////////////////////////////////////////////////////////////
     // create c_ply
     void beginPoly();
-    void addVertex( double x, double y, bool remove_duplicate=false );
-    void addVertex( ply_vertex * v );
+    void addVertex(double x, double y, bool remove_duplicate = false);
+    void addVertex(ply_vertex * v);
     void endPoly();
 
     ///////////////////////////////////////////////////////////////////////////
@@ -38,37 +37,38 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////
     void negate();
-    void translate(const Vector2d& v);
+    void translate(const Vector2d & v);
     void rotate(double radius);
-    void expand(c_plyline& plyline); //add the given plyline to the end of this plyline
+    void expand(c_plyline & plyline); //add the given plyline to the end of this plyline
 
     ///////////////////////////////////////////////////////////////////////////
     // Access
     ply_vertex * getHead() const { return head; }
     ply_vertex * getTail() const { return tail; }
 
-    int getSize() {
-        if(all.empty()) build_all();
+    int getSize()
+    {
+        if (all.empty()) build_all();
         return all.size();
     }
 
-    ply_vertex * operator[](unsigned int id){
-        if(all.empty()) build_all();
+    ply_vertex * operator[](unsigned int id)
+    {
+        if (all.empty()) build_all();
         return all[id];
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Operator
     //check if give poly line is the same as this
-    bool operator==( const c_plyline& other ){ return other.head==head; }
-    friend istream& operator>>( istream&, c_plyline& );
-    friend ostream& operator<<( ostream&, c_plyline& );
+    bool operator==(const c_plyline & other) { return other.head == head; }
+    friend istream & operator>>(istream &, c_plyline &);
+    friend ostream & operator<<(ostream &, c_plyline &);
 
-	//rotate function
-	void rotate(double cx, double cy, double angle);
+    //rotate function
+    void rotate(double cx, double cy, double angle);
 
 protected:
-
     ///////////////////////////////////////////////////////////////////////////
     void doInit(); /*return # of vertice in this poly*/
 
@@ -78,15 +78,14 @@ protected:
     ply_vertex * head; //the head of vertex list
     ply_vertex * tail; //end of the vertex list
 
-    vector<ply_vertex*> all; //all vertices
+    vector<ply_vertex *> all; //all vertices
 };
 
 class GIS_plyline : public c_plyline
 {
 public:
-
-    GIS_plyline() : c_plyline(){ m_id=0; }
-    GIS_plyline(const GIS_plyline& other): c_plyline((c_plyline&)other){ m_id=other.m_id; }
+    GIS_plyline() : c_plyline() { m_id = 0; }
+    GIS_plyline(const GIS_plyline & other) : c_plyline((c_plyline &)other) { m_id = other.m_id; }
 
     //return the i-th line segment from this polyline
     GIS_LineSeg2d getLineSegment(int i);
@@ -97,8 +96,6 @@ public:
     //store attributes from GIS
     int m_id;
     vector<double> geodesic_dist; ///geodesic distance of each vertex
-
-
 };
 
 //    //a c_plylist is a list of c_ply
@@ -129,9 +126,6 @@ public:
 //        bool is_buildboxandcenter_called;
 //    };
 
-
 } //end of namespace cusg
 
 #endif //_POLYLINE_H_
-
-

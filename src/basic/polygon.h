@@ -29,342 +29,382 @@ typedef unsigned int uint;
 
 namespace cusg
 {
-    /// a triangle
-    struct triangle
+/// a triangle
+struct triangle
+{
+    uint v[3]; //!< id to the vertices
+};
+
+/// Vertex of polygon
+class ply_vertex
+{
+public:
+    ///////////////////////////////////////////////////////////////////////////
+    ply_vertex() { init(); }
+    ply_vertex(const Point2d & p)
     {
-        uint v[3]; //!< id to the vertices
+        pos = p;
+        init();
+    }
+    virtual ~ply_vertex();
+    void setNext(ply_vertex * n)
+    {
+        next = n;
+        if (n != NULL) n->pre = this;
+    }
+    void setPre(ply_vertex * n)
+    {
+        pre = n;
+        if (n != NULL) n->next = this;
+    }
+    void computeExtraInfo();
+
+    /// negate the vertex
+    void negate();
+
+    /// reverse the order
+    void reverse();
+
+    /// copy
+    void copy(ply_vertex * other);
+
+    ///////////////////////////////////////////////////////////////////////////
+    void setPos(const Point2d & p) { pos = p; }
+    virtual const Point2d & getPos() const { return pos; }
+
+    void translate(const Vector2d & v) { pos = pos + v; }
+
+    void rotate(double r);
+
+    virtual ply_vertex * getNext() const { return next; }
+    virtual ply_vertex * getPre() const { return pre; }
+
+    const Vector2d & getNormal() const { return normal; }
+    bool isReflex() const { return reflex; }
+
+    /// get extra information
+    uint getVID() const { return vid; }
+    void setVID(uint id) { vid = id; }
+
+private:
+    void init()
+    {
+        next = pre = NULL;
+        reflex = false;
+        vid = UINT_MAX;
+    }
+
+    //basic info
+    Point2d pos;       //!< position
+    ply_vertex * next; //!< next vertex in the polygon
+    ply_vertex * pre;  //!< previous vertex in the polygon
+    Vector2d normal;   //!< normal, the segment normal from this v to the next.
+    bool reflex;
+    uint vid;
+
+public:
+    void rotate(double cx, double cy, double angle) { pos.rotate(cx, cy, angle); }
+};
+
+/// Polygon chain
+class c_ply
+{
+public:
+    enum POLYTYPE
+    {
+        UNKNOWN,
+        PIN,
+        POUT
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+    //c_ply(const c_ply& cp);//add
 
-    /// Vertex of polygon
-    class ply_vertex
+    ///////////////////////////////////////////////////////////////////////////
+    c_ply()
     {
-    public:
+        head = tail = NULL;
+        type = UNKNOWN;
+        radius = -1;
+        area = -FLT_MAX;
+    }
+    c_ply(POLYTYPE t)
+    {
+        head = tail = NULL;
+        type = t;
+        radius = -1;
+        area = -FLT_MAX;
+    }
 
-        ///////////////////////////////////////////////////////////////////////////
-        ply_vertex(){ init(); }
-        ply_vertex( const Point2d& p ){ pos=p; init(); }
-        virtual ~ply_vertex();
-        void setNext(ply_vertex * n){next=n; if(n!=NULL) n->pre=this; }
-        void setPre(ply_vertex * n){pre=n; if(n!=NULL) n->next=this; }
-        void computeExtraInfo();
+    ///////////////////////////////////////////////////////////////////////////
+    void copy(const c_ply & ply); //!< copy from the other ply
+    void destroy();
 
-        /// negate the vertex
-        void negate();
+    ///////////////////////////////////////////////////////////////////////////
+    /// create c_ply
+    void beginPoly();
+    void addVertex(double x, double y, bool remove_duplicate = false);
+    void addVertex(ply_vertex * v);
+    void endPoly(bool remove_duplicate = false);
 
-        /// reverse the order
-        void reverse();
+    ///////////////////////////////////////////////////////////////////////////
+    void negate();
+    void reverse(); //!< reverse vertex order
 
-        /// copy
-        void copy(ply_vertex * other);
+    ///////////////////////////////////////////////////////////////////////////
+    void translate(const Vector2d & v);
+    void rotate(double radius);
 
-        ///////////////////////////////////////////////////////////////////////////
-        void setPos(const Point2d& p) { pos=p; }
-        virtual const Point2d& getPos() const { return pos; }
-
-        void translate(const Vector2d& v){ pos=pos+v; }
-
-        void rotate(double r);
-
-        virtual ply_vertex * getNext() const { return next; }
-        virtual ply_vertex * getPre() const { return pre; }
-
-        const Vector2d& getNormal() const { return normal; }
-        bool isReflex() const { return reflex; }
-
-        /// get extra information
-        uint getVID() const { return vid; }
-        void setVID(uint id) {vid=id;}
-
-    private:
-
-        void init(){
-            next=pre=NULL;
-            reflex=false;
-            vid=UINT_MAX;
+    ///////////////////////////////////////////////////////////////////////////
+    // Access
+    ply_vertex * getHead() const { return head; }
+    POLYTYPE getType() const { return type; }
+    void set(POLYTYPE t, ply_vertex * h)
+    {
+        type = t;
+        head = h;
+        if (h != NULL)
+        {
+            tail = h->getPre();
         }
-
-        //basic info
-        Point2d pos;       //!< position
-        ply_vertex * next; //!< next vertex in the polygon
-        ply_vertex * pre;  //!< previous vertex in the polygon
-        Vector2d normal;   //!< normal, the segment normal from this v to the next.
-        bool reflex;
-        uint vid;
-
-	public:
-		void rotate(double cx, double cy, double angle)
-		{
-			pos.rotate(cx, cy, angle);
-		}
-    };
-
-    /// Polygon chain
-    class c_ply{
-    public:
-
-        enum POLYTYPE { UNKNOWN, PIN, POUT };
-
-		///////////////////////////////////////////////////////////////////////////
-		//c_ply(const c_ply& cp);//add
-
-        ///////////////////////////////////////////////////////////////////////////
-        c_ply(){ head=tail=NULL; type=UNKNOWN; radius=-1; area=-FLT_MAX; }
-        c_ply(POLYTYPE t){ head=tail=NULL; type=t; radius=-1; area=-FLT_MAX; }
-
-        ///////////////////////////////////////////////////////////////////////////
-        void copy(const c_ply& ply); //!< copy from the other ply
-        void destroy();
-
-        ///////////////////////////////////////////////////////////////////////////
-        /// create c_ply
-        void beginPoly();
-        void addVertex( double x, double y, bool remove_duplicate=false );
-        void addVertex( ply_vertex * v );
-        void endPoly(bool remove_duplicate=false);
-
-        ///////////////////////////////////////////////////////////////////////////
-        void negate();
-        void reverse(); //!< reverse vertex order
-
-        ///////////////////////////////////////////////////////////////////////////
-        void translate(const Vector2d& v);
-        void rotate(double radius);
-
-        ///////////////////////////////////////////////////////////////////////////
-        // Access
-        ply_vertex * getHead() const { return head; }
-        POLYTYPE getType() const { return type; }
-        void set(POLYTYPE t,ply_vertex * h){
-            type=t; head=h;
-            if(h!=NULL){ tail=h->getPre(); }
-            else{ tail=NULL; }
+        else
+        {
+            tail = NULL;
         }
+    }
 
-        int getSize() {
-            if(all.empty()) build_all();
-            return all.size();
-        }
+    int getSize()
+    {
+        if (all.empty()) build_all();
+        return all.size();
+    }
 
-        ply_vertex * operator[](unsigned int id){
-            if(all.empty()) build_all();
-            return all[id];
-        }
+    ply_vertex * operator[](unsigned int id)
+    {
+        if (all.empty()) build_all();
+        return all[id];
+    }
 
-        ///////////////////////////////////////////////////////////////////////////
-        // additional functions
-        const Point2d& getCenter();
+    ///////////////////////////////////////////////////////////////////////////
+    // additional functions
+    const Point2d & getCenter();
 
-        //
-        const Point2d getCenter() const;
+    //
+    const Point2d getCenter() const;
 
-        /// compute the radius of the poly chain
-        float getRadius();
+    /// compute the radius of the poly chain
+    float getRadius();
 
-        //
-        float getRadius() const;
+    //
+    float getRadius() const;
 
-        /// area
-        float getArea();
+    /// area
+    float getArea();
 
-        /// checks if convex
-        bool is_convex() const;
+    /// checks if convex
+    bool is_convex() const;
 
-        /// delete a vertex
-        void delete_vertex(ply_vertex * p);
+    /// delete a vertex
+    void delete_vertex(ply_vertex * p);
 
-        ///////////////////////////////////////////////////////////////////////////
-        // Operator
-        /// check if given poly line is the same as this
-        bool operator==( const c_ply& other ){ return other.head==head; }
-        friend istream& operator>>( istream&, c_ply& );
-        friend ostream& operator<<( ostream&, c_ply& );
+    ///////////////////////////////////////////////////////////////////////////
+    // Operator
+    /// check if given poly line is the same as this
+    bool operator==(const c_ply & other) { return other.head == head; }
+    friend istream & operator>>(istream &, c_ply &);
+    friend ostream & operator<<(ostream &, c_ply &);
 
 #if TRIANGULATION
 
-        ///////////////////////////////////////////////////////////////////////////
-        // functionality provided if triangulation is available.
-        
-        /// find a point that is enclosed by this polychain
-        Point2d findEnclosedPt(); 
+    ///////////////////////////////////////////////////////////////////////////
+    // functionality provided if triangulation is available.
 
-        /// triangulate the polygon
-        void triangulate(vector<triangle>& tris);
+    /// find a point that is enclosed by this polychain
+    Point2d findEnclosedPt();
 
-        /*! \brief check if a point is enclosed
+    /// triangulate the polygon
+    void triangulate(vector<triangle> & tris);
+
+    /*! \brief check if a point is enclosed
             \remarks the behavior is unknown if pt is 
                      on the boundary of the polygon
         */
-        bool enclosed(const Point2d& pt);
-        
+    bool enclosed(const Point2d & pt);
+
 #endif //TRIANGULATION
 
-    protected:
+protected:
+    ///////////////////////////////////////////////////////////////////////////
+    void doInit(); /*return # of vertice in this poly*/
 
-        ///////////////////////////////////////////////////////////////////////////
-        void doInit(); /*return # of vertice in this poly*/
+    /// build elements in vector<ply_vertex*> all
+    void build_all();
 
-        /// build elements in vector<ply_vertex*> all
-        void build_all();
+private:
+    ply_vertex * head; //!< the head of vertex list
+    ply_vertex * tail; //!< end of the vertex list
 
-    private:
+    vector<ply_vertex *> all; //!< all vertices
 
-        ply_vertex * head; //!< the head of vertex list
-        ply_vertex * tail; //!< end of the vertex list
+    //additional info
+    Point2d center;
+    float radius;
+    float area;
 
-        vector<ply_vertex*> all; //!< all vertices
+    /// In, out or unknown.
+    POLYTYPE type;
 
-        //additional info
-        Point2d center;
-        float radius;
-        float area;
+    //triangulation
+    vector<triangle> triangulation; //!< cached triangulation, calculated by triangulate
+};
 
-        /// In, out or unknown.
-        POLYTYPE type;
+/// a list of \c c_ply
+class c_plylist : public list<c_ply>
+{
+    friend ostream & operator<<(ostream &, c_plylist &);
+    friend istream & operator>>(istream &, c_plylist &);
 
-        //triangulation
-        vector<triangle> triangulation; //!< cached triangulation, calculated by triangulate
-    };
-
-
-    /// a list of \c c_ply
-    class c_plylist : public list<c_ply>
+public:
+    c_plylist()
     {
-        friend ostream& operator<<( ostream&, c_plylist& );
-        friend istream& operator>>( istream&, c_plylist& );
+        box[0] = box[1] = box[2] = box[3] = 0;
+        is_buildboxandcenter_called = false;
+    }
 
-    public:
+    void negate();
+    void translate(const Vector2d & v);
+    void rotate(double r);
 
-        c_plylist()
-        {
-            box[0]=box[1]=box[2]=box[3]=0;
-            is_buildboxandcenter_called=false;
-        }
+    //access
+    void buildBoxAndCenter();
+    double * getBBox()
+    {
+        buildBoxAndCenter();
+        return box;
+    }
+    const double * getBBox() const
+    {
+        assert(is_buildboxandcenter_called);
+        return box;
+    }
+    const Point2d & getCenter()
+    {
+        buildBoxAndCenter();
+        return center;
+    }
+    const Point2d & getCenter() const
+    {
+        assert(is_buildboxandcenter_called);
+        return center;
+    }
 
-        void negate();
-        void translate(const Vector2d& v);
-        void rotate(double r);
+protected:
+    Point2d center;
+    double box[4]; //min_x, max_x, min_y, max_y
 
-        //access
-        void buildBoxAndCenter();
-		double * getBBox() { buildBoxAndCenter(); return box; }
-        const double * getBBox() const { assert(is_buildboxandcenter_called); return box; }
-        const Point2d& getCenter() { buildBoxAndCenter(); return center; }
-        const Point2d& getCenter() const { assert(is_buildboxandcenter_called); return center; }
+private:
+    bool is_buildboxandcenter_called;
+};
 
-    protected:
-
-        Point2d center;
-        double box[4];   //min_x, max_x, min_y, max_y
-
-    private:
-    
-        bool is_buildboxandcenter_called;
-    };
-    
-    /*! \brief a restricted kind of \c c_plylist
+/*! \brief a restricted kind of \c c_plylist
      
         this defines a simple polygon so that
         the first element must be a \c POUT \c c_ply and
         the rest ply lines are a list of holes
-    */  
-    class c_polygon : public c_plylist
+    */
+class c_polygon : public c_plylist
+{
+public:
+    c_polygon() { area = 0; }
+
+    bool valid(); //!< check if this is a valid polygon
+
+    /// copy from the given polygon
+    void copy(const c_polygon & other);
+
+    list<c_polygon> split();
+
+    void reverse(); //!< reverse the vertex order (not the list order)
+
+    /// returns the number of vertices in the polygon
+    int getSize()
     {
-    public:
+        if (all.empty()) build_all();
+        return all.size();
+    }
 
-        c_polygon() { area=0; }
+    /// access the vertices of the polygon as an array
+    ply_vertex * operator[](unsigned int id)
+    {
+        if (all.empty()) build_all();
+        return all[id];
+    }
 
-        bool valid(); //!< check if this is a valid polygon
+    double getArea();
 
-        /// copy from the given polygon
-        void copy(const c_polygon& other);
+    /// destroy
+    void destroy();
 
-        list<c_polygon> split();
+    /// get number of vertices
+    uint getSize() const;
 
-        void reverse(); //!< reverse the vertex order (not the list order)
+    ///check if this polygon is convex or not
+    bool is_convex() const;
 
-        /// returns the number of vertices in the polygon
-        int getSize()
+    ///rotate this polygon
+    void rotate(double cx, double cy, double angle)
+    {
+        list<c_ply>::iterator pit = this->begin();
+        for (; pit != this->end(); ++pit)
         {
-            if(all.empty()) build_all();
-            return all.size();
+            c_ply & ply = *pit;
+            ply_vertex * phead = ply.getHead();
+            ply_vertex * pcur = phead;
+            do
+            {
+                pcur->rotate(cx, cy, angle);
+                pcur = pcur->getNext();
+            } while (pcur != phead);
         }
+    }
 
-        /// access the vertices of the polygon as an array
-        ply_vertex * operator[](unsigned int id){
-            if(all.empty()) build_all();
-            return all[id];
-        }
-
-        double getArea();
-
-        /// destroy
-        void destroy();
-        
-        /// get number of vertices
-        uint getSize() const;
-
-		///check if this polygon is convex or not
-        bool is_convex() const;
-
-		///rotate this polygon
-		void rotate(double cx, double cy, double angle)
-		{
-			 list<c_ply>::iterator pit = this->begin();
-			 for (; pit != this->end(); ++pit)
-			 {
-				 c_ply& ply = *pit;
-				 ply_vertex* phead = ply.getHead();
-				 ply_vertex* pcur = phead;
-				 do 
-				 {
-					 pcur->rotate(cx, cy, angle);
-					 pcur = pcur->getNext();
-				 } while (pcur != phead);
-			 }
-		}
-        
 #if TRIANGULATION
 
-        ///////////////////////////////////////////////////////////////////////////
-        // functionality provided if triangulation is available.
+    ///////////////////////////////////////////////////////////////////////////
+    // functionality provided if triangulation is available.
 
-        /// triangulate the polygon
-        void triangulate(vector<triangle>& tris);
+    /// triangulate the polygon
+    void triangulate(vector<triangle> & tris);
 
-        /*! \brief check if a point is enclosed
+    /*! \brief check if a point is enclosed
             \remarks the behavior is unknown if pt 
                      is on the boundary of the polygon
-        */             
-        bool enclosed(const Point2d& pt);
+        */
+    bool enclosed(const Point2d & pt);
 
-        /// find a point inside the polygon
-        Point2d findEnclosedPt();
+    /// find a point inside the polygon
+    Point2d findEnclosedPt();
 
 #endif //TRIANGULATION
 
-    protected:
+protected:
+    void build_all();
 
-        void build_all();
+    vector<ply_vertex *> all; //!< all vertices
 
-        vector<ply_vertex*> all; //!< all vertices
+    //triangulation
+    vector<triangle> triangulation; //!< cached triangulation, calculated by triangulate
 
-        //triangulation
-        vector<triangle> triangulation; //!< cached triangulation, calculated by triangulate
+    float area;
+};
 
-        float area;
+class GIS_polygon : public c_polygon
+{
+public:
+    GIS_polygon() : c_polygon() { m_id = 0; }
+    int m_id;
+};
 
-    };
-
-    class GIS_polygon : public c_polygon
-    {
-        public:
-        GIS_polygon() : c_polygon() { m_id=0; }
-        int m_id;
-    };
-
-}//namespace cusg
+} //namespace cusg
 
 #endif //_CUSG_POLYGON_H_
-
-

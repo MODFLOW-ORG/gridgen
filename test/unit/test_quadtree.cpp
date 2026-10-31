@@ -77,14 +77,14 @@ TEST(QuadTree, RefineCenterCell)
 
 TEST(QuadTree, SmoothingLimitsHorizontalLevelJump)
 {
-    QuadTree3D * rough = make_qtree(make_mfgrid(1, 5, 5, 100.0, 100.0),
-                                    {{250.0, 250.0, 3, 0}}, false);
+    QuadTree3D * rough =
+        make_qtree(make_mfgrid(1, 5, 5, 100.0, 100.0), {{250.0, 250.0, 3, 0}}, false);
     CSRData csr = rough->get_usg_csr_data();
     EXPECT_GT(max_level_jump(rough, csr, false), 1);
     csr.destory();
 
-    QuadTree3D * smooth = make_qtree(make_mfgrid(1, 5, 5, 100.0, 100.0),
-                                     {{250.0, 250.0, 3, 0}}, true);
+    QuadTree3D * smooth =
+        make_qtree(make_mfgrid(1, 5, 5, 100.0, 100.0), {{250.0, 250.0, 3, 0}}, true);
     csr = smooth->get_usg_csr_data();
     EXPECT_EQ(max_level_jump(smooth, csr, false), 1);
     expect_faces_cover_sides(smooth, csr, 10.0);

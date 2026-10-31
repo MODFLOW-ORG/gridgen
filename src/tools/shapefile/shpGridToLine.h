@@ -9,7 +9,6 @@
 //
 //};
 
+void writeQuadtree2ShpLine(cusg::QuadTree3D * qtree, string gridShpName);
 
-void writeQuadtree2ShpLine(cusg::QuadTree3D* qtree, string gridShpName);
-
-void writeModflowGrid2ShpLine(cusg::ModflowGrid* modflow, string gridShpName);
+void writeModflowGrid2ShpLine(cusg::ModflowGrid * modflow, string gridShpName);

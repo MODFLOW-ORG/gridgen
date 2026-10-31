@@ -11,6 +11,7 @@ ninja = "*"
 modflow-devtools = "*"
 ruff = "*"
 codespell = "*"
+clang-format = "23.1.*"
 
 [tasks]
 
@@ -41,9 +42,9 @@ build-release-notes = { cmd = "python mk_releasenotes.py && latexmk -g -pdf -int
 # version (e.g., pixi run update-version --version 1.0.03 --date 2026-11-15 --releasemode)
 update-version = { cmd = "python scripts/update_version.py" }
 
-# style (ruff.toml, .codespellrc)
-check-format = { cmd = "ruff format --check . && ruff check . && codespell" }
-fix-format = { cmd = "ruff format . && ruff check --fix . && codespell --write-changes" }
+# style (ruff.toml, .codespellrc, .clang-format)
+check-format = { cmd = "ruff format --check . && ruff check . && codespell && python scripts/clang_format.py" }
+fix-format = { cmd = "ruff format . && ruff check --fix . && codespell --write-changes && python scripts/clang_format.py --fix" }
 
 # ostag
 get-ostag = { cmd = "python -c 'from modflow_devtools.ostags import get_ostag; print(get_ostag())'"} 

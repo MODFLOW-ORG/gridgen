@@ -110,8 +110,7 @@ TEST(GridIntersection, PolygonEnclosingGridSelectsEveryCell)
     expect_each_cell_once(intersect_square(mfgrid, square(-50.0, 150.0)), 100);
     EXPECT_TRUE(intersect_square(mfgrid, square(200.0, 300.0)).empty());
 
-    QuadTree3D * qtree = make_qtree(make_mfgrid(1, 10, 10, 10.0, 10.0),
-                                    {{55.0, 55.0, 2, 0}}, true);
+    QuadTree3D * qtree = make_qtree(make_mfgrid(1, 10, 10, 10.0, 10.0), {{55.0, 55.0, 2, 0}}, true);
     std::size_t nodes = static_cast<std::size_t>(qtree->nodes());
     ASSERT_GT(nodes, 100u);
     expect_each_cell_once(intersect_square(qtree, square(-50.0, 150.0)), nodes);

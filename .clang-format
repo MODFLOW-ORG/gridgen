@@ -1,0 +1,22 @@
+# C++ style for src/ and test/unit/; pixi run check-format checks it
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+BreakBeforeBraces: Allman
+AccessModifierOffset: -4
+IndentCaseLabels: true
+NamespaceIndentation: None
+FixNamespaceComments: false
+DerivePointerAlignment: false
+PointerAlignment: Middle
+ReferenceAlignment: Pointer
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+SortIncludes: Never
+ReflowComments: false
+BreakStringLiterals: false
+LineEnding: LF

@@ -19,7 +19,6 @@ using namespace std;
 namespace cusg
 {
 
-
 // ----------------------------------------------------------------------------
 //
 //
@@ -29,7 +28,6 @@ namespace cusg
 //
 //
 // ----------------------------------------------------------------------------
-
 
 /*!
 
@@ -64,7 +62,6 @@ namespace cusg
 
  */
 
-
 /*! \brief Creates a new cube neighbor iterator.
  *
  * Cube neighbor iterator constructor. Runs through QuadTree
@@ -79,12 +76,12 @@ namespace cusg
  *                     (0 for the front layer, 1 for the back)
  *
  */
-CubeIter::CubeIter(const Cube* bb, int direc, int layer_in)
- : b(bb), direction(direc), neighbor(0), layer(layer_in)
+CubeIter::CubeIter(const Cube * bb, int direc, int layer_in)
+    : b(bb), direction(direc), neighbor(0), layer(layer_in)
 {
-	prev = (direc + 3) % 4;
-	next = (direc + 1) % 4;
-	cross = (direc + 2) % 4;
+    prev = (direc + 3) % 4;
+    next = (direc + 1) % 4;
+    cross = (direc + 2) % 4;
 }
 
 //double Cube::r0 = 0;
@@ -95,9 +92,9 @@ CubeIter::CubeIter(const Cube* bb, int direc, int layer_in)
  *           traveled (as specified when the iterator was instantiated).
  *           If there are no nodes adjacent to the given cube
  *           in that direction, a null reference is returned.
- */           
+ */
 
-Cube* CubeIter::First()
+Cube * CubeIter::First()
 {
     // Get the first cube in the node walk.
     //
@@ -108,23 +105,23 @@ Cube* CubeIter::First()
     //
     // If 'b' is an internal node, then pChildren, as the name implies,
     // holds pointers to the child nodes. For pChildren: 0 = NW, 1 = NE,
-    // 2 = SE, 3 = SW. 
-	Cube* n;
+    // 2 = SE, 3 = SW.
+    Cube * n;
     n = b->pChildren[direction][layer];
 
-	if (!n)
-	{
+    if (!n)
+    {
         // There's no nodes when we walk in this direction,
         // so return a null pointer.
-		return 0;
-	}
+        return 0;
+    }
 
     // If 'b' is a leaf node, its depth will be the same as the
     // node from pChildren, since pChildren is holding neighbor nodes.
     // In that case, we're done; n points to the neighbor node in
     // the direction to walk, and we'll return n.
-	if (n->depth > b->depth)
-	{
+    if (n->depth > b->depth)
+    {
         // If 'n' is outside the start cube 'b', something's wrong.
         assert(!Cube::isOverLimit(b, n));
 
@@ -139,13 +136,14 @@ Cube* CubeIter::First()
             assert(n != 0);
 
             //when the n->pChildren[next] is out of bound of b
-            if (n->pChildren[next][layer]==NULL || Cube::isOverLimit(b, n->pChildren[next][layer]))
+            if (n->pChildren[next][layer] == NULL ||
+                Cube::isOverLimit(b, n->pChildren[next][layer]))
             {
                 break;
             }
 
             //when the n->pChildren[next] is bigger...
-            if(n->pChildren[next][layer]->depth < b->depth)
+            if (n->pChildren[next][layer]->depth < b->depth)
             {
                 break;
             }
@@ -163,39 +161,39 @@ Cube* CubeIter::First()
             }
             n = n->pChildren[cross][layer];
         }
-	}
+    }
 
-	neighbor = n;
-	return neighbor;
+    neighbor = n;
+    return neighbor;
 }
 
 /*! \brief    Gets the end of the node walk 
  *  \returns  The cube node at the end of the walk, or a null reference
  *            if the walk contains no nodes.
- */            
-Cube* CubeIter::End()
+ */
+Cube * CubeIter::End()
 {
-	if (b->pChildren[direction][layer]!=NULL)
-	{
+    if (b->pChildren[direction][layer] != NULL)
+    {
         return b->pChildren[direction][layer]->pChildren[prev][layer];
-	}
+    }
 
-	return 0;
+    return 0;
 }
 
 /*! \brief   Advances to the next neighboring cube node
  *  \returns A pointer to the next neighbor, or a null reference
  *           if there are no more nodes in the node walk.
- */           
-Cube* CubeIter::Next()
+ */
+Cube * CubeIter::Next()
 {
-	if (!neighbor)
-	{
-		return 0;
-	}
+    if (!neighbor)
+    {
+        return 0;
+    }
 
     neighbor = neighbor->pChildren[prev][layer];
-	return neighbor;
+    return neighbor;
 }
 
 // ----------------------------------------------------------------------------
@@ -208,22 +206,29 @@ Cube* CubeIter::Next()
 //
 // ----------------------------------------------------------------------------
 
-Cube::~Cube() {
+Cube::~Cube()
+{
     deleteNodes();
 }
 
-void Cube::deleteNodes() {
+void Cube::deleteNodes()
+{
     deleteNodes(this);
 }
 
-void Cube::deleteNodes(Cube *c) {
-    if (!c || c->isLeaf) {
+void Cube::deleteNodes(Cube * c)
+{
+    if (!c || c->isLeaf)
+    {
         return;
     }
 
-    for (short i = 0; i < numChildren; i++) {
-        for (short j = 0; j < numLayers; j++) {
-            if (c->pChildren[i][j]) {
+    for (short i = 0; i < numChildren; i++)
+    {
+        for (short j = 0; j < numLayers; j++)
+        {
+            if (c->pChildren[i][j])
+            {
                 deleteNodes(c->pChildren[i][j]);
                 delete c->pChildren[i][j];
                 c->pChildren[i][j] = NULL;
@@ -236,41 +241,49 @@ void Cube::deleteNodes(Cube *c) {
 // dir: 0:north, 1 east, 2 south, 3 west
 // layer: 0:front, 1 back
 //
-void Cube::getNeighbors(list<Cube*>& neighbors, int dir, int layer)
+void Cube::getNeighbors(list<Cube *> & neighbors, int dir, int layer)
 {
     //go through all neighboring cubes in direction i
     CubeIter iter(this, dir, layer);
-    Cube* neighbor = iter.First();
+    Cube * neighbor = iter.First();
 
-    if (neighbor==NULL) return; //no neighbors...
+    if (neighbor == NULL) return; //no neighbors...
 
-    while(neighbor != iter.End())
+    while (neighbor != iter.End())
     {
         neighbors.push_back(neighbor);
         neighbor = iter.Next();
     }
 }
 
-void Cube::getNorthNeighbors(list<Cube*>& neighbors) { getNeighbors(neighbors,0,0); }
-void Cube::getEastNeighbors(list<Cube*>& neighbors)   { getNeighbors(neighbors,1,0); }
-void Cube::getSouthNeighbors(list<Cube*>& neighbors)  { getNeighbors(neighbors,2,0); }
-void Cube::getWestNeighbors(list<Cube*>& neighbors)   { getNeighbors(neighbors,3,0); }
+void Cube::getNorthNeighbors(list<Cube *> & neighbors)
+{
+    getNeighbors(neighbors, 0, 0);
+}
+void Cube::getEastNeighbors(list<Cube *> & neighbors)
+{
+    getNeighbors(neighbors, 1, 0);
+}
+void Cube::getSouthNeighbors(list<Cube *> & neighbors)
+{
+    getNeighbors(neighbors, 2, 0);
+}
+void Cube::getWestNeighbors(list<Cube *> & neighbors)
+{
+    getNeighbors(neighbors, 3, 0);
+}
 
-Cube **Cube::spawn(int back) {
-    Cube **children = new Cube*[numChildren];
+Cube ** Cube::spawn(int back)
+{
+    Cube ** children = new Cube *[numChildren];
     double newz = back ? z + dz / 4 : z - dz / 4;
 
-    children[0] = new Cube(x - dx / 4, y + dy / 4, newz, 
-        dx / 2, dy / 2, dz / 2);
-    children[1] = new Cube(x + dx / 4, y + dy / 4, newz,
-        dx / 2, dy / 2, dz / 2);
-    children[2] = new Cube(x + dx / 4, y - dy / 4, newz,
-        dx / 2, dy / 2, dz / 2);
-    children[3] = new Cube(x - dx / 4, y - dy / 4, newz,
-        dx / 2, dy / 2, dz / 2);
+    children[0] = new Cube(x - dx / 4, y + dy / 4, newz, dx / 2, dy / 2, dz / 2);
+    children[1] = new Cube(x + dx / 4, y + dy / 4, newz, dx / 2, dy / 2, dz / 2);
+    children[2] = new Cube(x + dx / 4, y - dy / 4, newz, dx / 2, dy / 2, dz / 2);
+    children[3] = new Cube(x - dx / 4, y - dy / 4, newz, dx / 2, dy / 2, dz / 2);
 
     return children;
-
 }
 
 /*!  \brief Splits the cube into sub-cubes
@@ -289,7 +302,7 @@ Cube **Cube::spawn(int back) {
  */
 bool Cube::split(Vector3d epsilons)
 {
-    if ((epsilons[0] <= 0 || this->dx < epsilons[0]) && 
+    if ((epsilons[0] <= 0 || this->dx < epsilons[0]) &&
         (epsilons[1] <= 0 || this->dy < epsilons[1]) &&
         (epsilons[2] <= 0 || this->dz < epsilons[2]))
     {
@@ -307,13 +320,13 @@ bool Cube::split(Vector3d epsilons)
     //
     for (int j = 0; j < numLayers; j++)
     {
-        Cube **children = spawn(j);
+        Cube ** children = spawn(j);
 
         for (int i = 0; i < numChildren; ++i)
         {
-            if(children[i]==NULL)
+            if (children[i] == NULL)
             {
-                cerr<<"! Error: Cube::split: Not enough memory"<<endl;
+                cerr << "! Error: Cube::split: Not enough memory" << endl;
                 return false;
             }
 
@@ -334,7 +347,7 @@ bool Cube::split(Vector3d epsilons)
 
             //init cube neighbor iterator for direction i
             CubeIter iter(this, i, j);
-            Cube* neighbor = iter.First();
+            Cube * neighbor = iter.First();
 
             if (!neighbor)
             {
@@ -357,14 +370,14 @@ bool Cube::split(Vector3d epsilons)
                 continue;
             }
 
-            Cube* prevNeighbor = neighbor;
+            Cube * prevNeighbor = neighbor;
 
             //indicate if we go across the boundary between child 'i'
             //and 'next' the first time
             bool firstTimeCrossBetweenChildren = true;
 
             //if neighbor smaller
-            while(neighbor != iter.End())
+            while (neighbor != iter.End())
             {
                 //within the strip of child next, neighbor's cross direction
                 //should point to next
@@ -394,7 +407,7 @@ bool Cube::split(Vector3d epsilons)
 
                 prevNeighbor = neighbor;
                 neighbor = iter.Next();
-            }//end while
+            } //end while
         }
 
         //setup the children/parent relation
@@ -403,13 +416,12 @@ bool Cube::split(Vector3d epsilons)
             this->pChildren[i][j] = children[i];
             this->pChildren[i][j]->pParent = this;
         }
-    }        
+    }
 
     this->isLeaf = false;
 
     return true;
 }
-
 
 /// \brief reverse operation of split
 /// This function is not implemented yet. see node.py for detail.
@@ -422,66 +434,68 @@ bool Cube::coarsen()
     //ng = self.nodegroup
 
     //ensure node can be coarsened
-    if(isLeaf){
-        cerr<<"! Error: node is a leaf node so cannot be coarsened"<<endl;
+    if (isLeaf)
+    {
+        cerr << "! Error: node is a leaf node so cannot be coarsened" << endl;
         assert(false);
     }
 
-
     //make sure it has four branches that are leaf nodes
     //and then collect neighbors
-    for(short x=0;x<numLayers;x++)
+    for (short x = 0; x < numLayers; x++)
     {
-        for(short i=0;i<numChildren;i++)
+        for (short i = 0; i < numChildren; i++)
         {
             //find other directions
             int next = (i + 1) % 4;
             int cross = (i + 2) % 4;
 
-            if( pChildren[i][x]->isLeaf==false ){
-                cerr<<"! Error: node: Not all children are leaves. Cannot be coarsened."<<endl;
+            if (pChildren[i][x]->isLeaf == false)
+            {
+                cerr << "! Error: node: Not all children are leaves. Cannot be coarsened." << endl;
                 assert(false);
             }
 
             //init cube neighbor iterator for direction i
             //for each direction i, there will be two children cubes
-            for(short j=0;j<2;j++) //for each of these two cubes
+            for (short j = 0; j < 2; j++) //for each of these two cubes
             {
-                Cube * kid=(j==0)?pChildren[i][x]:pChildren[next][x];
+                Cube * kid = (j == 0) ? pChildren[i][x] : pChildren[next][x];
 
                 //go through all neighboring cubes in direction i
                 CubeIter iter(kid, i, x);
-                Cube* neighbor = iter.First();
+                Cube * neighbor = iter.First();
 
-                if (neighbor==NULL) continue; //no neighbors...
+                if (neighbor == NULL) continue; //no neighbors...
 
-
-                do{
+                do
+                {
 
                     //change pointer from kid to this
-                    if(neighbor->pChildren[cross][x]==kid)
-                        neighbor->pChildren[cross][x]=this;
+                    if (neighbor->pChildren[cross][x] == kid) neighbor->pChildren[cross][x] = this;
                     neighbor = iter.Next();
-                }
-                while(neighbor != iter.End());
-            }//end for j
+                } while (neighbor != iter.End());
+            } //end for j
         }
 
         //update the pChildren link
-        for(short i=0;i<numChildren;i++)
+        for (short i = 0; i < numChildren; i++)
         {
-            pChildren[i][x]->dirty=true; //mark for deletion
-            pChildren[i][x]=pChildren[i][x]->pChildren[i][x]; //now, this pChildren[i] becomes the neighbor at i-direction
-        }//end for i
+            pChildren[i][x]->dirty = true; //mark for deletion
+            pChildren[i][x] =
+                pChildren[i][x]
+                    ->pChildren[i][x]; //now, this pChildren[i] becomes the neighbor at i-direction
+        } //end for i
     }
 
     //reset this node to a leaf
-    isLeaf=true;
+    isLeaf = true;
 
     return true;
 }
 
-string Cube::str() {
+string Cube::str()
+{
     ostringstream os;
 
     os << dx << 'x' << dy << 'x' << dz << " cube with center (";
@@ -489,4 +503,4 @@ string Cube::str() {
 
     return os.str();
 }
-}//end namespace cusg
+} //end namespace cusg

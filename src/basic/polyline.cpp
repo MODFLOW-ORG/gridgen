@@ -7,41 +7,40 @@
 namespace cusg
 {
 
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
-c_plyline::c_plyline(const c_ply& ply)
+c_plyline::c_plyline(const c_ply & ply)
 {
-    destroy();//detroy myself first
-    ply_vertex* ptr=ply.getHead();
+    destroy(); //destroy myself first
+    ply_vertex * ptr = ply.getHead();
     beginPoly();
-    do{
-        const Point2d& pos=ptr->getPos();
-        addVertex(pos[0],pos[1]);
-        ptr=ptr->getNext();
-    }while( ptr!=ply.getHead() );
+    do
+    {
+        const Point2d & pos = ptr->getPos();
+        addVertex(pos[0], pos[1]);
+        ptr = ptr->getNext();
+    } while (ptr != ply.getHead());
 
     //add head again
-    const Point2d& head_pos = ply.getHead()->getPos();
+    const Point2d & head_pos = ply.getHead()->getPos();
     addVertex(head_pos[0], head_pos[1]);
     endPoly();
 }
-    
-//copy from the given ply
-void c_plyline::copy(const c_plyline& other)
-{
-    destroy();//detroy myself first
 
-    ply_vertex* ptr=other.head;
+//copy from the given ply
+void c_plyline::copy(const c_plyline & other)
+{
+    destroy(); //destroy myself first
+
+    ply_vertex * ptr = other.head;
     beginPoly();
-    do{
-        ply_vertex * v=new ply_vertex();
+    do
+    {
+        ply_vertex * v = new ply_vertex();
         assert(v); //check for memory
         v->copy(ptr);
         addVertex(v);
-        ptr=ptr->getNext();
-    }while( ptr!=NULL );
+        ptr = ptr->getNext();
+    } while (ptr != NULL);
 
     endPoly();
 }
@@ -49,14 +48,15 @@ void c_plyline::copy(const c_plyline& other)
 // clean up the space allocated
 void c_plyline::destroy()
 {
-    if( head==NULL ) return;
-    ply_vertex* ptr=head;
-    do{
-        ply_vertex * n=ptr->getNext();
+    if (head == NULL) return;
+    ply_vertex * ptr = head;
+    do
+    {
+        ply_vertex * n = ptr->getNext();
         delete ptr;
-        ptr=n;
-    }while( ptr!=NULL );
-    head=tail=NULL;
+        ptr = n;
+    } while (ptr != NULL);
+    head = tail = NULL;
 
     all.clear();
 }
@@ -64,38 +64,40 @@ void c_plyline::destroy()
 // Create a empty polygon
 void c_plyline::beginPoly()
 {
-    head=tail=NULL;
+    head = tail = NULL;
     all.clear();
 }
 
 // Add a vertex to the polygonal chian
-void c_plyline::addVertex( double x, double y, bool remove_duplicate )
+void c_plyline::addVertex(double x, double y, bool remove_duplicate)
 {
-    Point2d pt(x,y);
+    Point2d pt(x, y);
 
-    if(tail!=NULL){
-        if(tail->getPos()==pt && remove_duplicate) return; //don't add
+    if (tail != NULL)
+    {
+        if (tail->getPos() == pt && remove_duplicate) return; //don't add
     }
 
-    ply_vertex * v=new ply_vertex(pt);
-    if( tail!=NULL ){
+    ply_vertex * v = new ply_vertex(pt);
+    if (tail != NULL)
+    {
         tail->setNext(v);
     }
-    tail=v;
-    if( head==NULL ) head=tail;
+    tail = v;
+    if (head == NULL) head = tail;
     v->setVID(all.size()); //id of the vertex in this ply
     all.push_back(v);
-
 }
 
 // Add a vertex to the polygonal chian
-void c_plyline::addVertex( ply_vertex * v )
+void c_plyline::addVertex(ply_vertex * v)
 {
-    if( tail!=NULL ){
+    if (tail != NULL)
+    {
         tail->setNext(v);
     }
-    tail=v;
-    if( head==NULL ) head=tail;
+    tail = v;
+    if (head == NULL) head = tail;
     v->setVID(all.size()); //id of the vertex in this ply
     all.push_back(v);
 }
@@ -111,12 +113,12 @@ void c_plyline::endPoly()
 void c_plyline::doInit()
 {
     //compute normals
-    ply_vertex* ptr=head;
-    do{
+    ply_vertex * ptr = head;
+    do
+    {
         ptr->computeExtraInfo();
-        ptr=ptr->getNext();
-    }
-    while( ptr!=NULL );
+        ptr = ptr->getNext();
+    } while (ptr != NULL);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -138,98 +140,103 @@ void c_plyline::doInit()
 ///////////////////////////////////////////////////////////////////////////
 void c_plyline::negate()
 {
-    ply_vertex * ptr=head;
-    do{
+    ply_vertex * ptr = head;
+    do
+    {
         ptr->negate();
-        ptr=ptr->getNext();
-    }while(ptr!=NULL); //end while
+        ptr = ptr->getNext();
+    } while (ptr != NULL); //end while
 }
 
 ///////////////////////////////////////////////////////////////////////////
-void c_plyline::translate(const Vector2d& v)
+void c_plyline::translate(const Vector2d & v)
 {
-    ply_vertex * ptr=head;
-    do{
+    ply_vertex * ptr = head;
+    do
+    {
         ptr->translate(v);
-        ptr=ptr->getNext();
-    }while(ptr!=NULL); //end while
+        ptr = ptr->getNext();
+    } while (ptr != NULL); //end while
 }
 
 void c_plyline::rotate(double radius)
 {
-    ply_vertex * ptr=head;
-    do{
+    ply_vertex * ptr = head;
+    do
+    {
         ptr->rotate(radius);
-        ptr=ptr->getNext();
-    }while(ptr!=NULL); //end while
+        ptr = ptr->getNext();
+    } while (ptr != NULL); //end while
 }
 
-void c_plyline::expand(c_plyline& plyline)
+void c_plyline::expand(c_plyline & plyline)
 {
     //cout<<"my head="<<head<<" my tail="<<tail<<" other head="<<plyline.head<<" other tail="<<plyline.tail<<endl;
 
     //remove plyline's head if tail and head coincide
-    if(tail->getPos()==plyline.head->getPos()){
-        ply_vertex * new_head=plyline.head->getNext();
+    if (tail->getPos() == plyline.head->getPos())
+    {
+        ply_vertex * new_head = plyline.head->getNext();
         new_head->setPre(NULL);
         delete plyline.head;
-        plyline.head=new_head;
+        plyline.head = new_head;
     }
-
 
     tail->setNext(plyline.head);
     tail->computeExtraInfo();
-    tail=plyline.tail;
+    tail = plyline.tail;
     build_all();
 }
 
 void c_plyline::build_all()
 {
-    uint vid=0;
+    uint vid = 0;
     all.clear();
-    ply_vertex * ptr=head;
-    do{
+    ply_vertex * ptr = head;
+    do
+    {
         ptr->setVID(vid++);
         all.push_back(ptr);
-        ptr=ptr->getNext();
-    }
-    while(ptr!=NULL); //end while
+        ptr = ptr->getNext();
+    } while (ptr != NULL); //end while
 }
 
 //return the i-th line segment from this polyline
 GIS_LineSeg2d GIS_plyline::getLineSegment(int i)
 {
-    int vsize=getSize();
-    if(i>=vsize){
-        cerr<<"! Error: GIS_plyline::getLineSegment index out of bound i="<<i<<" polyline seg size="<<vsize-1<<endl;
+    int vsize = getSize();
+    if (i >= vsize)
+    {
+        cerr << "! Error: GIS_plyline::getLineSegment index out of bound i=" << i
+             << " polyline seg size=" << vsize - 1 << endl;
         assert(false);
     }
 
-    if(geodesic_dist.empty()) computeGeodesicDist();
+    if (geodesic_dist.empty()) computeGeodesicDist();
 
     //create a GIS_LineSeg2d from the polyline...
-    GIS_LineSeg2d line((*this)[i]->getPos(),(*this)[i+1]->getPos());
-    line.m_curve_id=this->m_id;
-    line.m_seg_id=i;
-    line.m_start_geo_dist=this->geodesic_dist[i];
-    line.m_end_geo_dist=this->geodesic_dist[i+1];
+    GIS_LineSeg2d line((*this)[i]->getPos(), (*this)[i + 1]->getPos());
+    line.m_curve_id = this->m_id;
+    line.m_seg_id = i;
+    line.m_start_geo_dist = this->geodesic_dist[i];
+    line.m_end_geo_dist = this->geodesic_dist[i + 1];
 
     return line;
 }
 
 void GIS_plyline::computeGeodesicDist()
 {
-    int vsize=getSize();
-    geodesic_dist=vector<double>(vsize,0);
+    int vsize = getSize();
+    geodesic_dist = vector<double>(vsize, 0);
 
-    ply_vertex * ptr=head->getNext();
-    double dist=0;
-    for(int i=1;i<vsize;i++)
+    ply_vertex * ptr = head->getNext();
+    double dist = 0;
+    for (int i = 1; i < vsize; i++)
     {
-        ply_vertex * pre=ptr->getPre();
-        dist+=(ptr->getPos()-pre->getPos()).norm();
-        geodesic_dist[i]=dist;
-        ptr=ptr->getNext();
+        ply_vertex * pre = ptr->getPre();
+        dist += (ptr->getPos() - pre->getPos()).norm();
+        geodesic_dist[i] = dist;
+        ptr = ptr->getNext();
     }
 }
 //
@@ -290,26 +297,30 @@ void GIS_plyline::computeGeodesicDist()
 //
 // IO operators
 //
-istream& operator>>( istream& is, c_plyline& poly)
+istream & operator>>(istream & is, c_plyline & poly)
 {
     int vsize;
-    is>>vsize;
+    is >> vsize;
 
     poly.beginPoly();
 
     //read in all the vertices
     int iv;
-    vector< pair<double,double> > pts; pts.reserve(vsize);
-    for( iv=0;iv<vsize;iv++ ){
-        double x,y;
-        is>>x>>y;
-        pts.push_back(pair<double,double>(x,y));
+    vector<pair<double, double>> pts;
+    pts.reserve(vsize);
+    for (iv = 0; iv < vsize; iv++)
+    {
+        double x, y;
+        is >> x >> y;
+        pts.push_back(pair<double, double>(x, y));
     }
 
     int id;
-    for( iv=0;iv<vsize;iv++ ){
-        is>>id; id=id-1;
-        poly.addVertex(pts[id].first,pts[id].second);
+    for (iv = 0; iv < vsize; iv++)
+    {
+        is >> id;
+        id = id - 1;
+        poly.addVertex(pts[id].first, pts[id].second);
     }
 
     poly.endPoly();
@@ -318,7 +329,7 @@ istream& operator>>( istream& is, c_plyline& poly)
 //
 //    istream& operator>>( istream& is, c_plylinelist& p)
 //    {
-//        //remove header commnets
+//        //remove header comments
 //        do{
 //            char tmp[1024];
 //            char c=is.peek();
@@ -347,18 +358,18 @@ istream& operator>>( istream& is, c_plyline& poly)
 //        return is;
 //    }
 
-ostream& operator<<( ostream& os, c_plyline& p)
+ostream & operator<<(ostream & os, c_plyline & p)
 {
-    os<<p.getSize()<<"\n";
-    ply_vertex * ptr=p.head;
-    do{
-        os<<ptr->getPos()[0]<<" "<<ptr->getPos()[1]<<"\n";
-        ptr=ptr->getNext();
-    }
-    while(ptr!=NULL);
+    os << p.getSize() << "\n";
+    ply_vertex * ptr = p.head;
+    do
+    {
+        os << ptr->getPos()[0] << " " << ptr->getPos()[1] << "\n";
+        ptr = ptr->getNext();
+    } while (ptr != NULL);
 
-    for(int i=0;i<p.getSize();i++) os<<i+1<<" ";
-    os<<"\n";
+    for (int i = 0; i < p.getSize(); i++) os << i + 1 << " ";
+    os << "\n";
     return os;
 }
 
@@ -370,19 +381,15 @@ ostream& operator<<( ostream& os, c_plyline& p)
 //        return out;
 //    }
 
-
 void c_plyline::rotate(double cx, double cy, double angle)
 {
-	ply_vertex* head = this->getHead();
-	ply_vertex* p = head;
-	do 
-	{
-		p->rotate(cx, cy, angle);
-		p = p->getNext();
-	} while (p != NULL);
-	
+    ply_vertex * head = this->getHead();
+    ply_vertex * p = head;
+    do
+    {
+        p->rotate(cx, cy, angle);
+        p = p->getNext();
+    } while (p != NULL);
 }
 
 } //end of namespace cusg
-
-

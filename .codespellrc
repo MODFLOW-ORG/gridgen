@@ -1,2 +1,4 @@
 [codespell]
-skip = *.pdf,*.bst,*.log,*.aux,*.bbl,*.blg,*.out,*.toc,*.fls,*.fdb_latexmk,*.synctex.gz,*.asc,*.csv,*.shp,*.shx,*.dbf,*.prj,./.pixi,./builddir,*.cpp,*.h,./subprojects/googletest*,./subprojects/packagecache,./bin,*.dat,*.vtu,*.ifo,*.nod,./doc/ReleaseNotes/previous,./doc/ReleaseNotes/Figures,pixi.lock
+skip = *.pdf,*.bst,*.log,*.aux,*.bbl,*.blg,*.out,*.toc,*.fls,*.fdb_latexmk,*.synctex.gz,*.asc,*.csv,*.shp,*.shx,*.dbf,*.prj,./.pixi,./builddir,./src/tools/shapefile/shapelib,./subprojects/googletest*,./subprojects/packagecache,./bin,*.dat,*.vtu,*.ifo,*.nod,./doc/ReleaseNotes/previous,./doc/ReleaseNotes/Figures,pixi.lock
+# identifiers in the C++ source; COO is the sparse matrix format
+ignore-words-list = destory,te,indx,dum,abd,formating,splitted,coo

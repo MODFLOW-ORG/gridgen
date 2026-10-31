@@ -17,7 +17,10 @@ namespace
 {
 
 // cell top elevation, linear in x and y
-double top_at(double x, double y) { return 0.1 * x + 0.2 * y; }
+double top_at(double x, double y)
+{
+    return 0.1 * x + 0.2 * y;
+}
 
 // points of the vtu file as x, y, z triples
 std::vector<double> read_vtu_points(const std::string & path)
@@ -88,12 +91,10 @@ TEST(VTK, SharedVertexPlaneFitAtThreeCells)
         for (int i = 0; i < 4; i++)
         {
             if (i == f) continue;
-            SCOPED_TRACE("refined " + std::to_string(f) + ", inactive " +
-                         std::to_string(i));
+            SCOPED_TRACE("refined " + std::to_string(f) + ", inactive " + std::to_string(i));
             std::vector<double> zs = center_vertex_z(f / 2, f % 2, i / 2, i % 2);
             ASSERT_EQ(zs.size(), 2u);
-            for (double z : zs)
-                EXPECT_NEAR(z, z > ztop - 5.0 ? ztop : ztop - 10.0, 1e-4);
+            for (double z : zs) EXPECT_NEAR(z, z > ztop - 5.0 ? ztop : ztop - 10.0, 1e-4);
         }
     }
 }

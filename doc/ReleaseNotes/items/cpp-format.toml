@@ -1,0 +1,3 @@
+section = "internal"
+subsection = "build"
+description = "The C++ source is formatted with clang-format and checked for spelling by codespell, both run by `pixi run check-format` in continuous integration, and text files are stored with LF line endings. The program and its output are unchanged."

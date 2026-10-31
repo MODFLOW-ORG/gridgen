@@ -74,8 +74,10 @@ TEST(AsciiGrid, NodataAreaIsLeftOutOfAverage)
         {
             for (int c = 0; c < 6; c++)
             {
-                if (r == 1 && c == 1) out << "-9999";
-                else out << c + 1;
+                if (r == 1 && c == 1)
+                    out << "-9999";
+                else
+                    out << c + 1;
                 out << (c < 5 ? " " : "\n");
             }
         }

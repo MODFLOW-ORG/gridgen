@@ -30,24 +30,24 @@ namespace cusg
  *
  * Used to compare `Box` nodes in a priority queue.
  * Boxes are compared by depth, then by time of creation.
- */ 
+ */
 class PQCmp
 {
 public:
-	bool operator() (const Box* a, const Box* b) const
-	{
-		//use depth for now
-		if (a->depth > b->depth)
-		{
-			return true;
-		}
-		//if same depth, expand box created earlier first
-		else if (a->depth == b->depth)
-		{
-			return a->priority > b->priority;
-		}
-		return false;
-	}
+    bool operator()(const Box * a, const Box * b) const
+    {
+        //use depth for now
+        if (a->depth > b->depth)
+        {
+            return true;
+        }
+        //if same depth, expand box created earlier first
+        else if (a->depth == b->depth)
+        {
+            return a->priority > b->priority;
+        }
+        return false;
+    }
 };
 
 /*! \class BoxQueue 
@@ -55,57 +55,43 @@ public:
 class BoxQueue
 {
 private:
-
 public:
+    BoxQueue(void) {}
 
-	BoxQueue(void)
-	{
-	}
+    virtual void push(Box * b) = 0;
 
-	virtual void push(Box* b) = 0;
+    /** Pops off the item at the front of the queue and returns it */
+    virtual Box * extract() = 0;
 
-	/** Pops off the item at the front of the queue and returns it */
-    virtual Box* extract() = 0;
+    virtual bool empty() = 0;
 
-	virtual bool empty() = 0;
+    virtual int size() = 0;
 
-	virtual int size() = 0;
-
-	~BoxQueue(void)
-	{
-	}
+    ~BoxQueue(void) {}
 };
 
 /*! \class seqQueue
  *  \brief "Normal" (not randomized) priority queue of `Box` nodes
- */ 
+ */
 class seqQueue : public BoxQueue
 {
 private:
-	priority_queue<Box*, vector<Box*>, PQCmp> PQ;
+    priority_queue<Box *, vector<Box *>, PQCmp> PQ;
+
 public:
-	void push(Box* b)
-	{
-		PQ.push(b);
-	}
+    void push(Box * b) { PQ.push(b); }
 
     /** Pops off the item at the front of the queue and returns it */
-	Box* extract()
-	{
-		Box* r = PQ.top();
-		PQ.pop();
-		return r;
-	}
+    Box * extract()
+    {
+        Box * r = PQ.top();
+        PQ.pop();
+        return r;
+    }
 
-	bool empty()
-	{
-		return PQ.empty();
-	}
+    bool empty() { return PQ.empty(); }
 
-	int size()
-	{
-		return PQ.size();
-	}
+    int size() { return PQ.size(); }
 };
 
 /*! \class randQueue
@@ -113,46 +99,36 @@ public:
  *
  *  A list of `Box` nodes, where list extraction
  *  returns a random node.
- */ 
+ */
 class randQueue : public BoxQueue
 {
 private:
-	list<Box*> L;
-	int Qseed;
+    list<Box *> L;
+    int Qseed;
 
 public:
-	randQueue(int s): Qseed(s) {
-		//srand( time(0) );
-		srand( Qseed ); 
-	}
+    randQueue(int s) : Qseed(s)
+    {
+        //srand( time(0) );
+        srand(Qseed);
+    }
 
-	void push(Box* b)
-	{
-		L.push_back(b);
-	}
+    void push(Box * b) { L.push_back(b); }
 
-	/** Removes and returns a random item from the list */
-    Box* extract()
-	{
-		int i = rand() % L.size();
-		list<Box*>::iterator iter = L.begin();
-		advance(iter, i);
-		Box* r = *iter;
-		L.erase(iter);
-		return r;
-	}
+    /** Removes and returns a random item from the list */
+    Box * extract()
+    {
+        int i = rand() % L.size();
+        list<Box *>::iterator iter = L.begin();
+        advance(iter, i);
+        Box * r = *iter;
+        L.erase(iter);
+        return r;
+    }
 
-	bool empty()
-	{
-		return L.empty();
-	}
+    bool empty() { return L.empty(); }
 
-	int size()
-	{
-		return L.size();
-	}
-
+    int size() { return L.size(); }
 };
-
 
 } //end namespace cusg

@@ -12,9 +12,8 @@ namespace gridgen_test
 using namespace cusg;
 
 // flat layers: top at 0, each layer thk thick
-inline ModflowGrid * make_mfgrid(int nlay, int nrow, int ncol, double delr,
-                                 double delc, double thk = 10.0,
-                                 double xoff = 0.0, double yoff = 0.0,
+inline ModflowGrid * make_mfgrid(int nlay, int nrow, int ncol, double delr, double delc,
+                                 double thk = 10.0, double xoff = 0.0, double yoff = 0.0,
                                  double angle = 0.0)
 {
     int ncpl = nrow * ncol;
@@ -25,8 +24,8 @@ inline ModflowGrid * make_mfgrid(int nlay, int nrow, int ncol, double delr,
         for (int i = 0; i < ncpl; i++) s[i] = -thk * k;
         surfaces.push_back(s);
     }
-    ModflowGrid * mfgrid = new ModflowGrid(nlay, nrow, ncol, delr, delc,
-                                           surfaces, xoff, yoff, angle);
+    ModflowGrid * mfgrid =
+        new ModflowGrid(nlay, nrow, ncol, delr, delc, surfaces, xoff, yoff, angle);
     for (double * s : surfaces) delete[] s;
     return mfgrid;
 }
@@ -41,8 +40,7 @@ struct RefinePoint
 
 // refine at points, optionally smooth, then number nodes zero based;
 // the quadtree modifies mfgrid, so each quadtree needs its own
-inline QuadTree3D * make_qtree(ModflowGrid * mfgrid,
-                               const std::vector<RefinePoint> & points,
+inline QuadTree3D * make_qtree(ModflowGrid * mfgrid, const std::vector<RefinePoint> & points,
                                bool smooth = false)
 {
     QuadTree3D * qtree = new QuadTree3D(mfgrid);

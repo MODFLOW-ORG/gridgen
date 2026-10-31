@@ -17,8 +17,7 @@ namespace cusg
 class GridDomain
 {
 public:
-	void build(Grid * grid, int layer, active_domain_raw_data * data);
+    void build(Grid * grid, int layer, active_domain_raw_data * data);
 };
 
-
-}//end namespace cusg
+} //end namespace cusg
