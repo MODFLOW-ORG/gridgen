@@ -15,13 +15,13 @@ PATTERNS = ("src/*.cpp", "src/*.h", "test/unit/*.cpp", "test/unit/*.h")
 
 def cpp_files():
     out = subprocess.run(
-        ["git", "ls-files", *PATTERNS],
+        ["git", "ls-files", "-z", *PATTERNS],
         cwd=ROOT,
         check=True,
         capture_output=True,
         text=True,
     ).stdout
-    return out.split()
+    return [f for f in out.split("\0") if f]
 
 
 def main():
@@ -30,6 +30,9 @@ def main():
     args = parser.parse_args()
 
     files = cpp_files()
+    # clang-format reads stdin when given no files
+    if not files:
+        sys.exit("no C++ files found")
     if args.fix:
         cmd = ["clang-format", "-i", *files]
     else:
