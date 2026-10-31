@@ -6,8 +6,6 @@
 using namespace std;
 using namespace cusg;
 
-#define TESTING 0
-
 //use the ply and area pair to record
 struct PlyAreaPair
 {
@@ -30,8 +28,6 @@ c_ply & getOutBound(GIS_polygon & gp)
 bool CPlyEnclose(const c_ply & cply, const Point2d & p2d)
 {
     double wnum = 0.0;
-    //if(cply.getSize() < 3)
-    //	return false;
     ply_vertex * tpv = cply.getHead();
     do
     {
@@ -49,32 +45,9 @@ bool CPlyEnclose(const c_ply & cply, const Point2d & p2d)
     return false;
 }
 
-bool CPolygonEnclose(const c_polygon & cplygon, const Point2d & p2d)
-{
-    bool inside = true;
-    for (c_polygon::const_iterator pit = cplygon.begin(); pit != cplygon.end(); pit++)
-    {
-        const c_ply & cp = *pit;
-        if (cp.getType() == c_ply::POUT)
-        {
-            if (!CPlyEnclose(cp, p2d)) return false;
-        }
-        else
-        {
-            if (CPlyEnclose(cp, p2d)) return false;
-        }
-    }
-    return true;
-}
-
 //here we use the center of c_ply to decide the containing relationship
 bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
 {
-    //if(plygon.size() < 2)
-    //	return true;
-#if TESTING
-    int id = 0;
-#endif
 
     vector<PlyAreaPair> plyareas;
     for (GIS_polygon::iterator git = plygon.begin(); git != plygon.end(); ++git)
@@ -93,11 +66,6 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
     GIS_polygon * ogp = new GIS_polygon();
     ogp->m_id = plygon.m_id;
     ogp->push_back(*(plyareas.front().cply));
-
-#if TESTING
-    id++;
-    ogp->m_id = id;
-#endif
 
     plygons.push_back(ogp);
 
@@ -135,10 +103,6 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
                 pap.cply->set(c_ply::POUT, pap.cply->getHead());
                 gp->push_back(*(pap.cply));
 
-#if TESTING
-                id++;
-                gp->m_id = id;
-#endif
                 plygons.push_back(gp);
             }
         }
@@ -148,9 +112,3 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
 }
 //
 ////return true if only one polygon is in plygon
-//bool preProPolygon(GIS_polygon& plygon, vector<GIS_polygon*>& gplygons)
-//{
-//
-//
-//	return true;
-//}

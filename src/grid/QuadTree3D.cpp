@@ -127,45 +127,8 @@ void QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
 }
 
 /**************************************************************/
-//the old version
-//void QuadTree3D::refine( Point2d& pt, int max_level, int at_layer)
-//{
-//	//refined=false;
-//	bool refined=true;
-//	do
-//	{
-//		refined=false;
-//		GridIntersection gi(max_level,at_layer);
-//		bool r=gi.intersect((QuadTree3D*)this,pt);
-//		if(r)
-//		{
-//			assert(gi.getIntersections().size()==1);
-//			Box * b=gi.getIntersections().front(); //there should be only one
 
 //			//post-check to see if the point is on the corner or on the boundary
-
-//			if(b->depth>=max_level) continue; //too deep
-//			bool r=b->split(0);
-//			assert(r); //make sure that split is successful
-
-//			for(int c=0;c<4;c++)
-//				nodegroup.add(b->pChildren[c]);
-
-//			refined=true;
-//			this->rebuild_nodeid_array=true;
-//		}
-//	}
-//	while(refined);
-//}
-
-//bool lineIntersectBox(LineSeg2d line, Box* b)
-//{
-//	double a[2], b[2];
-//	double c[2]={line.pt[0][0], line.pt[0][1]};
-//	double d[2]={line.pt[1][0], line.pt[1][1]};
-//	double p[2];
-//	return true;
-//}
 
 //given the  intersection precondition provided by GridIntersection
 bool isReallyIntersect(Box * b, const LineSeg2d & line)
@@ -228,7 +191,6 @@ bool isReallyIntersect(Box * b, const LineSeg2d & line)
 }
 /***********************************************************************************************************/
 //grid and line seg intersection for Quadtree3D refinement
-#if 1
 bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_level, int at_layer,
                           vector<Box *> & results)
 {
@@ -254,7 +216,6 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
         if (isReallyIntersect(*sit, line))
         {
             results.push_back(*sit);
-            //cur_res.insert(*sit);
         }
         else
         {
@@ -262,16 +223,8 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
         }
     }
 
-#if 0
-		list<Box*> open(bs.begin(), bs.end());
-		set<Box*> visited(bs.begin(), bs.end());
-#else
-    //list<Box*> open(cur_res.begin(), cur_res.end());
-    //set<Box*> visited;//(cur_res.begin(), cur_res.end());
-
     list<Box *> open(results.begin(), results.end());
     set<Box *> visited(results.begin(), results.end());
-#endif
 
     while (open.empty() == false) //not empty
     {
@@ -315,123 +268,16 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
     else
         return false;
 }
-#endif
-
-//void QuadTree3D::refine(LineSeg2d line, int max_level, int at_layer)
-//{
-//	bool refined = true;
-//	do
-//	{
-//		refined = false;
-//		GridIntersection gi(max_level, at_layer);
-//		bool r = gi.intersect((QuadTree3D*)this, line);
-//		//vector<Box*> results;
-//		//bool r = specialLineIntersect(this, line, max_level, at_layer, results);
-//		vector<Box*>& results = gi.getIntersections();
-//
-//		if(r)
-//		{
-//			//debugging
-//			//vector<Box*> boxes;
-//			//specialLineIntersect(this, line, max_level, at_layer, results);
-
-//			for(vector<Box*>::iterator i=results.begin();i!=results.end();i++)
-//			{
-//				Box * b=*i;
 
 //				if(b->depth>=max_level) continue; //too deep
 
-//				bool r=b->split(0);
-//				assert(r); //make sure that split is successful
-
-//				for(int c=0;c<4;c++)
-//					nodegroup.add(b->pChildren[c]);
-
-//				refined=true;
-//				this->rebuild_nodeid_array=true;
-//			}
-//		}
-
-//	}while(refined);
-
-//}
-
-void QuadTree3D::refine(LineSeg2d line, int max_level, int at_layer)
-{
-    bool refined = true;
-    do
-    {
-        refined = false;
-        //GridIntersection gi(max_level, at_layer);
-        //bool r = gi.intersect((QuadTree3D*)this, line);
-        vector<Box *> results;
-        bool r = specialLineIntersect(this, line, max_level, at_layer, results);
-        //vector<Box*>& results = gi.getIntersections();
-
-        if (r)
-        {
-            //debugging
-            //vector<Box*> boxes;
-            //specialLineIntersect(this, line, max_level, at_layer, results);
-
-            for (vector<Box *>::iterator i = results.begin(); i != results.end(); i++)
-            {
-                Box * b = *i;
-
-                if (b->depth >= max_level) continue; //too deep
-
-                bool r = b->split(0);
-                assert(r); //make sure that split is successful
-
-                for (int c = 0; c < 4; c++) nodegroup.add(b->pChildren[c]);
-
-                refined = true;
-                this->rebuild_nodeid_array = true;
-            }
-        }
-
-    } while (refined);
-}
-
-//void QuadTree3D::refine(LineSeg2d line, int max_level, int at_layer)
-//{
-//	//const LineSeg2d& line=*_line;
-
-//	bool refined=true;
-
 //	do
 //	{
-
-//		refined=false;
-//		GridIntersection gi(max_level,at_layer);
-//		bool r=gi.intersect((QuadTree3D*)this,line);
-
-//		if(r)
-//		{
-//			vector<Box*>& boxes=gi.getIntersections();
-//			for(vector<Box*>::iterator i=boxes.begin();i!=boxes.end();i++)
-//			{
-//				Box * b=*i;
 
 //				if(b->depth>=max_level) continue; //too deep
 
 //				//check if really intersect
 //				//todo:
-
-//				bool r=b->split(0);
-//				assert(r); //make sure that split is successful
-
-//				for(int c=0;c<4;c++)
-//					nodegroup.add(b->pChildren[c]);
-
-//				refined=true;
-//				this->rebuild_nodeid_array=true;
-//			}
-//		}
-
-//	}
-//	while(refined);
-//}
 
 void QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
 {
@@ -457,22 +303,11 @@ void QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
             {
                 LineSeg2d line(ptr->getPos(), next->getPos());
 
-#if 1
                 bool myr = specialLineIntersect(this, line, max_level, at_layer, results);
                 if (myr) r = true;
-#else
-                bool myr = gi.intersect((QuadTree3D *)this, line);
-                if (myr)
-                {
-                    r = true;
-                    vector<Box *> & cur_inter = gi.getIntersections();
-                    results.insert(results.end(), cur_inter.begin(), cur_inter.end());
-                }
-#endif
             }
             ptr = next;
 
-            //break;
         } while (ptr != NULL);
 
         if (r)
@@ -498,54 +333,8 @@ void QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
     } while (refined);
 }
 
-//void QuadTree3D::refine( c_plyline& arc, int max_level, int at_layer)
-//{
-
-//	bool refined=true;
-
 //	do
 //	{
-
-//		refined=false;
-//		GridIntersection gi(max_level,at_layer);
-
-//		ply_vertex * ptr=arc.getHead();
-
-//		bool r=false;
-//		do
-//		{
-//			ply_vertex * next=ptr->getNext();
-//			if(next!=NULL)
-//			{
-//				LineSeg2d line(ptr->getPos(),next->getPos());
-//				bool myr=gi.intersect((QuadTree3D*)this,line);
-//				if(myr) r=true;
-//			}
-//			ptr=next;
-//		}
-//		while(ptr!=NULL);
-
-//		if(r)
-//		{
-//			vector<Box*>& boxes=gi.getIntersections();
-//			for(vector<Box*>::iterator i=boxes.begin();i!=boxes.end();i++)
-//			{
-//				Box * b=*i;
-//				if(b->depth>=max_level) continue; //too deep
-
-//				bool r=b->split(0);
-//				if(r)
-//				{
-//					for(int c=0;c<4;c++) nodegroup.add(b->pChildren[c]);
-//					refined=true;
-//					this->rebuild_nodeid_array=true;
-//				}
-//			}//end for i
-//		}
-
-//	}
-//	while(refined);
-//}
 
 bool isReallyIntersect(BoxPlyClip * bpc, Box * b)
 {
@@ -567,23 +356,12 @@ bool isReallyIntersect(BoxPlyClip * bpc, Box * b)
         delete (*cit);
     }
 
-    //delete bpc;
     if (area >= 1e-7)
         return true;
     else
         return false;
 }
 
-bool isReallyIntersect(c_ply & ply, Box * b)
-{
-    /*****************************************************************/
-    BoxPlyClip * bpc = convertPlyToClip(ply);
-    bool r = isReallyIntersect(bpc, b);
-
-    bpc->destroy();
-    delete bpc;
-    return r;
-}
 bool isReallyIntersect(c_polygon & pgon, Box * b)
 {
     BoxPlyClip * bpc = convertSimplePolygonToClip(pgon);
@@ -593,46 +371,6 @@ bool isReallyIntersect(c_polygon & pgon, Box * b)
     bpc->destroy();
     delete bpc;
     return r;
-}
-
-void QuadTree3D::refine(c_ply & ply, int max_level, int at_layer)
-{
-    bool refined = true;
-
-    do
-    {
-
-        refined = false;
-        GridIntersection gi(max_level, at_layer);
-        bool r = gi.intersect((QuadTree3D *)this, ply);
-
-        if (r)
-        {
-            vector<Box *> & boxes = gi.getIntersections();
-
-            //cout<<"add box size="<<boxes.size()*4<<endl;
-
-            for (vector<Box *>::iterator i = boxes.begin(); i != boxes.end(); i++)
-            {
-                Box * b = *i;
-                if (b->depth >= max_level) continue; //too deep
-
-                if (!isReallyIntersect(ply, b)) continue; //no really intersect or contain
-
-                bool r = b->split(0);
-
-#if DEBUG
-                assert(r); //make sure that split is successful
-#endif
-
-                for (int c = 0; c < 4; c++) nodegroup.add(b->pChildren[c]);
-
-                refined = true;
-                this->rebuild_nodeid_array = true;
-            }
-        }
-
-    } while (refined);
 }
 
 //refine cells enclosed by pgon
@@ -662,11 +400,7 @@ void QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
                     continue; //not really intersect
                 }
 
-                bool r = b->split(0);
-
-#if DEBUG
-                assert(r); //make sure that split is successful
-#endif
+                b->split(0);
 
                 for (int c = 0; c < 4; c++) nodegroup.add(b->pChildren[c]);
 
@@ -780,46 +514,6 @@ void QuadTree3D::smooth_refinement(int level_tol_horizontal, int level_tol_verti
         while (smooth_refinement(box, box_pq, level_tol_horizontal, level_tol_vertical) == false);
 
     } //end while
-
-#if DEBUG
-    //check the correctness of the result
-    totalnodesize = nodegroup.size();
-    for (int l = 0; l < totalnodesize; l++)
-    {
-        Box * box = nodegroup[l];
-
-        if (box->isLeaf)
-        {
-            list<pair<int, int>> connectionlist = get_node_connections(box);
-
-            //check the neighbors
-            // go through each connection
-            typedef list<pair<int, int>>::iterator IT;
-            for (IT ic = connectionlist.begin(); ic != connectionlist.end(); ic++)
-            {
-                int tonodeid = ic->first;
-                int dir = ic->second;
-                Box * nei = nodegroup[tonodeid];
-
-                if (nei == NULL) continue;
-                assert(nei->isLeaf);
-
-                bool refine_nei = false;
-
-                if (abs(dir) == 3) //vertical neighbor
-                {
-                    if (nei->depth < box->depth - level_tol_vertical) refine_nei = true;
-                }
-                else //horizontal neighbor
-                {
-                    if (nei->depth < box->depth - level_tol_horizontal) refine_nei = true;
-                }
-
-                assert(refine_nei == false);
-            }
-        }
-    } //end for l
-#endif //DEBUG
 }
 
 /// Return an array of size (nodes) that contains the area for all cells.
@@ -844,29 +538,6 @@ double * QuadTree3D::get_cell_areas()
 
 /*!
 	\brief Return the four vertices for the specified nodeid.
-	*/
-/*
-	vector<Point2d> get_vertices(int nodeid)
-	{
-
-	}
-	*/
-
-/*! 
-	\brief Return a tuple containing two points (the lower left and the upper 
-	right) in global grid coordinates.
-	*/
-pair<Point2d, Point2d> QuadTree3D::get_extent()
-{
-    return m_mfgrid->get_extent();
-}
-
-/*
-	///Return the nodeid for the modflow grid.
-	int get_nodeid(int i, int j)
-	{
-	//return i * ncol + j;
-	}
 	*/
 
 /*! 
@@ -933,17 +604,6 @@ int * QuadTree3D::createnodenumber_array()
     return nodenumber_array;
 }
 
-/*!
-	Create an array of size modflowgrid.nlay that has the number of
-	nodes in each layer.
-	*/
-void QuadTree3D::create_nodelay_array()
-{
-    //this is not implemented in grid.py
-    cerr << "! ERROR: create_nodelay_array is not implemented" << endl;
-    return;
-}
-
 /*! 
 	Return an array of len(nodegroup) that contains the nodenumber for all
 	active leaf nodes.  Thus the array contains:
@@ -970,19 +630,6 @@ Box * QuadTree3D::get_nodeobj(int nodenumber)
 {
     int nodeid = nodeid_array[nodenumber];
     return nodegroup[nodeid];
-}
-
-void QuadTree3D::getnode(void * node, int nodenumber)
-{
-    Box * box = (Box *)node;
-    int nodeid = nodeid_array[nodenumber];
-    *box = *(nodegroup[nodeid]);
-}
-
-///get number of nodes
-int QuadTree3D::get_nodes()
-{
-    return nodegroup.node_size();
 }
 
 int QuadTree3D::get_nodenumber(int nodeid)
@@ -1099,19 +746,15 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
         int csize = connections.size();
         for (int i = 0; i < csize; i++) area->push_back(-1.0f);
     }
-    //if(addVerticalPass)
-    //{
     //up direction
     vector<VPTPair> vpb1;
     getVPT(box, vpb1, false);
     for (vector<VPTPair>::iterator vpit = vpb1.begin(); vpit != vpb1.end(); ++vpit)
     {
-        //cout<<"vertical pass"<<endl;
         assert(vpit->bSrc == box);
         connections.push_back(make_pair(vpit->bDst->id, 3));
         if (area != NULL) area->push_back(vpit->area);
     }
-    //}
 
     for (list<Box *>::iterator i = nei[5].begin(); i != nei[5].end(); i++)
         if ((*i)->active) connections.push_back(make_pair((*i)->id, -3));
@@ -1126,45 +769,12 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
     getVPT(box, vpb2, true);
     for (vector<VPTPair>::iterator vpit = vpb2.begin(); vpit != vpb2.end(); ++vpit)
     {
-        //cout<<"vertical pass"<<endl;
         assert(vpit->bSrc == box);
         connections.push_back(make_pair(vpit->bDst->id, -3));
         if (area != NULL) area->push_back(vpit->area);
     }
 
     return connections;
-}
-
-/// direction indicator of size nja (+-1 for x, +-2 for y +-3 for z)
-int QuadTree3D::boundayNodes(vector<int> & nodeids, int dir)
-{
-    //for(NodeGroup::reverse_iterator i=nodegroup.rbegin();i!=nodegroup.rend();i++)
-    int size = this->nodes();
-    for (int i = 0; i < size; i++)
-    {
-        Box * box = this->get_nodeobj(i);
-        list<Box *> neighbors;
-        if (dir == -1)
-        { //-x boundary
-            box->getWestNeighbors(neighbors);
-        }
-        else if (dir == 1)
-        { //+x boundary
-            box->getEastNeighbors(neighbors);
-        }
-        else if (dir == -2)
-        { //-y boundary
-            box->getSouthNeighbors(neighbors);
-        }
-        else if (dir == 2)
-        { //-y boundary
-            box->getNorthNeighbors(neighbors);
-        }
-
-        if (neighbors.empty()) nodeids.push_back(box->id);
-    }
-
-    return nodeids.size();
 }
 
 /*! \brief Obtain CSRData
@@ -1276,7 +886,6 @@ CSRData QuadTree3D::get_usg_csr_data()
 
             int tonid = get_nodenumber(tonodeid); ///messed up here....
 
-            //assert(tonid!=tonodeid);
             double tonodedxdydz[3] = {tonodeobj->dx, tonodeobj->dy, tonodeobj->dz};
 
             ja[japos] = tonid + id_offset;
@@ -1318,8 +927,6 @@ CSRData QuadTree3D::get_usg_csr_data()
                 fahl[japos] = *fit;
             }
 
-            //cout<<"fahl["<<japos<<"]="<<fahl[japos]<<" dz="<<dz<<endl;
-
             japos++;
 
             if (vertical_pass_through) ++fit;
@@ -1329,8 +936,6 @@ CSRData QuadTree3D::get_usg_csr_data()
     } //end for nid
 
     ia[box_size] = japos + id_offset;
-
-    //cout<<"- Returning the UsgCsrData object"<<endl;
 
     return CSRData(box_size, nja, area, ia, ja, cl1, cl2, fahl, fldr, iac);
 }
@@ -1373,11 +978,6 @@ void QuadTree3D::sortareabyconid(const list<pair<int, int>> & connectionlist, ve
     tmp.swap(area);
 }
 
-//	void QuadTree3D::buildConnectionBetweenLayers()
-//	{
-//
-//	}
-
 void QuadTree3D::_add_root_nodes()
 {
     // Copy the nodegroup from the base modflow grid
@@ -1414,7 +1014,6 @@ double * QuadTree3D::get_top()
         if (m_top_layer_z_operator[b->layer] == Z_VALUE_REPLICATE_OPEARTOR)
         {
             Index2d i = m_mfgrid->getIndex(Point2d(b->x, b->y));
-            int id = m_mfgrid->get_nodeid(b->layer, i[0], i[1]);
             this->top[nodenumber] = m_mfgrid->botm(b->layer, i[0], i[1]);
         }
         else //if(m_top_layer_z_operator[b->layer]==Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR)
@@ -1497,7 +1096,6 @@ bool QuadTree3D::recompute_z_of_cells()
     }
 
     int nodesize = nodes();
-    int mfgrid_csize = m_mfgrid->nrow * m_mfgrid->ncol;
 
     for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
     {
@@ -1554,7 +1152,6 @@ void QuadTree3D::align_elev(Box * top_box)
         double top_of_bot_box = this->top[bot_box->number];
         if (bot_of_top_box < top_of_bot_box)
         {
-            //cout<<"align = "<<bot_of_top_box<<" and "<<top_of_bot_box<<endl;
             this->top[bot_box->number] = bot_of_top_box;
         }
     } //end for j
@@ -1590,7 +1187,6 @@ void QuadTree3D::number_nodes(Box * box, unsigned int & number)
     }
     else
     {
-        //for(int i=0;i<4;i++) number_nodes(box->pChildren[i],number);
         number_nodes(box->pChildren[0], number);
         number_nodes(box->pChildren[1], number);
         number_nodes(box->pChildren[3], number);
@@ -1839,12 +1435,6 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
         //a cell that lies only over nodata cells has no value
         if (totalArea < 1e-6 && nodataArea >= 1e-6) nodata_error(center, box, arcinfo_filename);
 
-        //if(totalArea != fabs(box->dx * box->dy))
-        //{
-        //	cout<<totalArea<<" - "<<(box->dx * box->dy)<<"\n";
-        //	cout<<"interpolation area error!\n";
-        //}
-
         //if total intersection area is 0, use the bilinear
         //rotate box center if the grid is rotated...
 
@@ -1860,87 +1450,9 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
     //#endif
 }
 
-//linear interpolation the value of a given point in a given layer (either top or bottom)
-double QuadTree3D::bilinear_interpolation(const Point2d & pt, int layer, bool top)
-{
-    int mfgrid_csize = m_mfgrid->nrow * m_mfgrid->ncol;
-
-    if (top)
-    {
-        if (m_top_layer_z_source.find(layer) ==
-            m_top_layer_z_source.end()) //no name defined, interpolate from the based grid
-            return bilinear_interpolation(pt, &m_mfgrid->bot[mfgrid_csize * layer]);
-        else //read from ascii file
-            return bilinear_interpolation(pt, m_top_layer_z_source[layer]);
-    }
-    else
-    {
-        if (m_bot_layer_z_source.find(layer) ==
-            m_bot_layer_z_source.end()) //no name defined, interpolate from the based grid
-            return bilinear_interpolation(pt, &m_mfgrid->bot[mfgrid_csize * (layer + 1)]);
-        else //from arc ascii info file
-            return bilinear_interpolation(pt, m_bot_layer_z_source[layer]);
-    }
-}
-
-//linear interpolation the value of a given point
-double QuadTree3D::bilinear_interpolation(const Point2d & pt, double * zgrid)
-{
-    //create a ascii_grid from grid
-    mf_ascii_grid ag(this->getModflowGrid(), zgrid, m_mfgrid->ncol, m_mfgrid->nrow);
-    return bilinear_interpolation(pt, &ag);
-}
-
-//linear interpolation the value of a given point
-double QuadTree3D::bilinear_interpolation(const Point2d & pt, const string & arcinfo_filename)
-{
-    ascii_grid * ag = m_str2ag[arcinfo_filename];
-
-    if (ag == NULL) //not found, build from filename
-    {
-        arcinfo_ascii_grid * aag = new arcinfo_ascii_grid();
-        assert(aag);
-        bool br = aag->build(arcinfo_filename);
-        if (br == false)
-        {
-            cerr << "! Error: failed to build arcinfo_ascii_grid from file: (" << arcinfo_filename
-                 << ")" << endl;
-            assert(false);
-            exit(1);
-        }
-
-        m_str2ag[arcinfo_filename] = ag = aag;
-    }
-
-    //rotate pt if the grid is rotated...
-    Point2d pt2;
-    {
-        double cx, cy, rotation;
-        getModflowGrid()->getRotatePara(cx, cy, rotation);
-        double rx, ry;
-        rx = cx + (pt[0] - cx) * cos(rotation) - (pt[1] - cy) * sin(rotation);
-        ry = cy + (pt[1] - cy) * cos(rotation) + (pt[0] - cx) * sin(rotation);
-        pt2.set(rx, ry);
-    }
-
-    //interpolate here
-    return bilinear_interpolation(pt2, ag);
-}
-
 //// GL: bilinear interpolation
-//double QuadTree3D::bilinear_interpolation(const Point2d& pt, ascii_grid * ag)
-//{
-//	Index2d id = ag->getIndex(pt[0], pt[1]);
-//	Index2d id1 = ag->getIndex(pt[0], pt[1]);
-
-//	int i=nrows-1-floor((y-yllcorner)/cellsize);
-//	int j=floor((x-xllcorner)/cellsize);
 
 //
-
-//	assert(false);
-//	return 0;
-//}
 
 //linear interpolation the value of the center of the box
 double QuadTree3D::bilinear_interpolation(const Point2d & pt, ascii_grid * ag)
@@ -1950,113 +1462,29 @@ double QuadTree3D::bilinear_interpolation(const Point2d & pt, ascii_grid * ag)
     //get the ag cell that contains pt
     Index2d id = ag->getIndex(pt[0], pt[1]);
 
-#if 1
-    // return nodata when the point is out of bound...
-
     ascii_grid_cell cell = ag->getCell(id[0], id[1]);
 
     //
     if (pt[0] < cell.x && id[1] > 0) id[1]--;
-    //if(pt[1]<=cell.y && id[0]<(int)ag->getnrows()-1 ) id[0]++;
-    //if(pt[1]>=cell.y && id[0]<(int)ag->getnrows()-1 ) id[0]++;
     if (pt[1] > cell.y && id[0] > 0) id[0]--;
-
-    //if(pt[1]<=cell.y && id[0]>0 ) id[0]--;
 
     cell = ag->getCell(id[0], id[1]);
 
     //bilinear_interpolation
     double x = (pt[0] - cell.x) / cell.dx;
     double y = (cell.y - pt[1]) / cell.dy;
-    //double y= (pt[1]-cell.y)/cell.dy;
 
-    if (x < 0 || x > 1 || y < 0 || y > 1)
-    {
-        Index2d id = ag->getIndex(pt[0], pt[1]);
-        {
-            if (x < 0)
-                x = 0;
-            else if (x > 1)
-                x = 1;
-            if (y < 0)
-                y = 0;
-            else if (y > 1)
-                y = 1;
-        }
-        //cout<<"degenerate case: "<<x<<", "<<y<<endl;
-    }
-
-    //if(x<0 || x>1 || y<0 || y>1)
-    //{
-    //	Index2d id=ag->getIndex(pt[0],pt[1]);
-
-    //	//if(id[1]>0 && id[0]<ag->getnrows()-1 )
-    //	//{
-    //		//cout<<"Error:QuadTree3D::bilinear_interpolation: Index out of bound: x="<<x<<" y="<<y<<endl;
-    //		//Index2d id=ag->getIndex(pt[0],pt[1]);
-    //	//}
-    //	//else //
-    //	{
-    //		if(x<0) x=0;
-    //		else if(x>1) x=1;
-    //		if(y<0) y=0;
-    //		else if(y>1) y=1;
-    //	}
-
-    //}
+    // clamp a point outside the cell to its edge
+    if (x < 0)
+        x = 0;
+    else if (x > 1)
+        x = 1;
+    if (y < 0)
+        y = 0;
+    else if (y > 1)
+        y = 1;
 
     return cusg::bilinear_interpolation(ag, id[0], id[1], x, y);
-#else
-    // return nodata when the point is out of bound...
-
-#if 0 // turn off this for now...
-    // (to have the following code working, getIndex(double x, double y) needs to be modified as well)
-		if( id[0]>=(int)ag->getnrows() || id[1]>=(int)ag->getncols() || id[0]<0 || id[1]<0)
-		{
-			return ag->getNoDATA_value();
-		}
-#endif
-    //
-
-    ascii_grid_cell cell = ag->getCell(id[0], id[1]);
-
-    //
-    if (pt[0] <= cell.x && id[1] > 0) id[1]--;
-    if (pt[1] <= cell.y && id[0] < (int)ag->getnrows() - 1) id[0]++;
-    //if(pt[1]>=cell.y && id[0]<(int)ag->getnrows()-1 ) id[0]++;
-
-    //if(pt[1]<=cell.y && id[0]>0 ) id[0]--;
-
-    cell = ag->getCell(id[0], id[1]);
-
-    //bilinear_interpolation
-    double x = (pt[0] - cell.x) / cell.dx;
-    double y = (pt[1] - cell.y) / cell.dy;
-
-    if (x < 0 || x > 1 || y < 0 || y > 1)
-    {
-        Index2d id = ag->getIndex(pt[0], pt[1]);
-
-        //if(id[1]>0 && id[0]<ag->getnrows()-1 )
-        //{
-        //cout<<"Error:QuadTree3D::bilinear_interpolation: Index out of bound: x="<<x<<" y="<<y<<endl;
-        //Index2d id=ag->getIndex(pt[0],pt[1]);
-        //}
-        //else //
-        {
-            if (x < 0)
-                x = 0;
-            else if (x > 1)
-                x = 1;
-            if (y < 0)
-                y = 0;
-            else if (y > 1)
-                y = 1;
-        }
-    }
-
-    return cusg::bilinear_interpolation(ag, id[0], id[1], x, y);
-#endif
 }
 
 } //end of namespace

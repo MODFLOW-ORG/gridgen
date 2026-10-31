@@ -45,7 +45,6 @@ public:
     {
         if (i >= nrows || j >= ncols)
         {
-            //cerr<<" ! Error: arcinfo_ascii_grid::getvalue index out of bound ("<<i<<"/"<<nrows<<","<<j<<"/"<<ncols<<")"<<endl;
             return nodata_value;
         }
 
@@ -253,10 +252,5 @@ protected:
 //x and y must be between 0 and 1
 double bilinear_interpolation(ascii_grid * grid, unsigned int i, unsigned int j, double x,
                               double y);
-
-//perform trilinear interpolation between (i,j), (i+1,j), (i,j+1), (i+1,j+1) and grid1 and grid2
-//x and y and z must be between 0 and 1
-double trilinear_interpolation(ascii_grid * grid1, ascii_grid * grid2, unsigned int i,
-                               unsigned int j, double x, double y, double z);
 
 } //end of namespace cusg

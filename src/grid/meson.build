@@ -1,8 +1,6 @@
 grid_sources = files(
     'Box.cpp',
     'ModflowGrid.cpp',
-    'Octree.cpp',
-    'Cube.cpp',
     'ModflowGrid2D.cpp',
     'QuadTree3D.cpp',
     'GridDomain.cpp',

@@ -34,7 +34,6 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////
     const Point & operator=(const Point & other)
     {
-        //memcpy(v,other.v,sizeof(T)*D);
         for (int i = 0; i < D; i++) v[i] = other.v[i];
         return *this;
     }

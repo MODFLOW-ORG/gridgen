@@ -123,30 +123,6 @@ ModflowGrid2D::ModflowGrid2D(int nrow, int ncol, double * delr, double * delc, d
     init2D();
 }
 
-ModflowGrid2D::ModflowGrid2D() : Grid()
-{
-    /* be sure to call init2D() once you set up the grid! */
-    nlay = 0;
-    nlay = nrow = ncol = nodes = 0;
-    delr = delc = NULL;
-    Xe = Ye = NULL; //x/y coord of all edges
-    xoffset = 0;
-    yoffset = 0;
-    rotation = 0;
-    width = height = 0;
-}
-
-/// # of nodes in all layers (int *)
-int * ModflowGrid2D::get_nodelay()
-{
-    int * nodelay = new int[nlay];
-    assert(nodelay);
-
-    for (int k = 0; k < nlay; k++) nodelay[k] = this->nrow * this->ncol;
-
-    return nodelay;
-}
-
 ///x coords for the center of all cells
 double * ModflowGrid2D::get_local_x_array()
 {
@@ -163,15 +139,7 @@ double * ModflowGrid2D::get_local_x_array()
 /// #  y coord for the center of the cell (and for all cells)
 double * ModflowGrid2D::get_local_y_array()
 {
-    //  	//allocate space
-    //  	double * y = new double[nrow];
-    //  	assert(y);
-    //double Ly=0;
-    //  	for(int i=0;i<nrow;i++) Ly+=delc[i];
-    //  	for(int i=0;i<nrow;i++) y[i] = ((i==0)?(0):y[i-1]+delc[i]);
     ////modified by Guilin
-    //  	//for(int i=0;i<nrow;i++) y[i] = Ly-y[i]-0.5*delc[i]+yoffset;
-    //      for(int i=0;i<nrow;i++) y[i] = Ly-y[i]+0.5*delc[i]+yoffset;
 
     //allocate space
     double * y = new double[nrow];
@@ -207,14 +175,6 @@ double * ModflowGrid2D::get_local_Ye_array()
     for (int i = size - 2; i >= 0; i--) Ye[i] = Ye[i + 1] + delc[i];
     for (int i = 0; i < size; i++) Ye[i] += yoffset;
 
-    //double Ly=0;
-    //for(int i=0;i<nrow;i++) Ly+=delc[i];
-    //Ye[0]=0;
-    //for(int i=1;i<size;i++) Ye[i] = Ye[i-1] + delc[i-1];
-    //      for(int i=1;i<size;i++) Ye[i] = Ly - Ye[i];
-    //      Ye[0] = Ly;
-    //for(int i=0;i<size;i++) Ye[i]+=yoffset;
-
     return Ye;
 }
 
@@ -248,43 +208,6 @@ double * ModflowGrid2D::get_cell_areas()
         0-------1
     */
 
-vector<Point2d> ModflowGrid2D::get_vertices(int nodeid)
-{
-    Index2d ij = get_indices(nodeid);
-    int i = ij[0];
-    int j = ij[1];
-
-    Point2d p0(Xe[j], Ye[i + 1]);
-    Point2d p1(Xe[j + 1], Ye[i + 1]);
-    Point2d p2(Xe[j + 1], Ye[i]);
-    Point2d p3(Xe[j], Ye[i]);
-
-    vector<Point2d> vertices;
-    vertices.push_back(p0);
-    vertices.push_back(p1);
-    vertices.push_back(p2);
-    vertices.push_back(p3);
-
-    return vertices;
-}
-
-/*! 
-        \brief Return a tuple containing two points (the lower left and the upper 
-        right) in global grid coordinates.
-    */
-pair<Point2d, Point2d> ModflowGrid2D::get_extent()
-{
-    Point2d min, max;
-
-    min[0] = Xe[0];
-    min[1] = Ye[nrow];
-
-    max[0] = Xe[ncol];
-    max[1] = Ye[0];
-
-    return make_pair(min, max);
-}
-
 ///Return the nodeid for the modflow grid.
 int ModflowGrid2D::get_nodeid(int i, int j)
 {
@@ -306,45 +229,6 @@ Index2d ModflowGrid2D::get_indices(int nodeid)
     return Index2d(i, j);
 }
 
-///get box from id
-Box * ModflowGrid2D::create_nodeobj(int nodeid)
-{
-    Index2d ij = get_indices(nodeid);
-    int i = ij[0];
-    int j = ij[1];
-    return create_nodeobj(i, j);
-}
-
-Box * ModflowGrid2D::create_nodeobj(int i, int j)
-{
-    double x = this->X[j];
-    double y = this->Y[i];
-    Point3d position(x, y, 0);
-
-    double dx = this->delr[j];
-    double dy = this->delc[i];
-    Vector3d dxdydz(dx, dy, 0);
-
-    Box * nodeobj = new Box(position, dxdydz); //(position, dxdydz, save=False);
-
-    assert(nodeobj);
-
-    return nodeobj;
-}
-
-///
-Box * ModflowGrid2D::find_nodeobj(const Point2d & pt)
-{
-    Index2d id2d = getIndex(pt);
-
-    if (id2d[0] == INT_MAX || id2d[1] == INT_MAX || id2d[0] == INT_MIN || id2d[1] == INT_MIN)
-        return NULL;
-
-    //get the box
-    int id = get_nodeid(id2d[0], id2d[1]);
-    return nodegroup[id];
-}
-
 /// return a box containtain the given id
 Box * ModflowGrid2D::find_nodeobj(int i, int j)
 {
@@ -354,7 +238,6 @@ Box * ModflowGrid2D::find_nodeobj(int i, int j)
     if (nodegroup.empty() || id < 0 || ((unsigned)id) > nodegroup.size())
     {
         cerr << "! Error: ModflowGrid2D::find_nodeobj index out of bound" << endl;
-        //return NULL;
         exit(1);
     }
 
@@ -440,41 +323,6 @@ void ModflowGrid2D::init2D()
     Y = get_local_y_array();
     Xe = get_local_Xe_array();
     Ye = get_local_Ye_array();
-
-    //create and connect actual nodes (boxes)
-    //create_nodes();
-}
-
-///create nodes and add them to nodegroup
-void ModflowGrid2D::create_nodes()
-{
-    // Create the nodegroup.
-    nodegroup = NodeGroup(this);
-    nodegroup.nlay = 1;
-
-    for (int i = 0; i < nrow; i++)
-    {
-        double y = Y[i];
-        for (int j = 0; j < ncol; j++)
-        {
-            double x = X[j];
-
-            Point3d position;
-            Vector3d dxdydz;
-
-            double z = 0.5 * (botm(0, i, j) + botm(1, i, j));
-            double dz = (botm(0, i, j) - botm(1, i, j));
-
-            position = Point3d(x, y, z);
-            dxdydz = Vector3d(delr[j], delc[i], dz);
-            Box * nodeobj = new Box(position, dxdydz);
-            assert(nodeobj);
-            nodeobj->layer = 0;
-            nodegroup.add(nodeobj);
-        } //end i
-    } //end j
-
-    add_connections();
 }
 
 ///add connection between boxes
@@ -482,16 +330,11 @@ void ModflowGrid2D::create_nodes()
 void ModflowGrid2D::add_connections()
 {
 
-    //grid.logger.info('Adding the 2d level zero connections.')
-    //cout<<"Adding the 2d level zero connections"<<endl;
-
     for (int i = 0; i < nrow; i++)
     {
         for (int j = 0; j < ncol; j++)
         {
             int nodeid = get_nodeid(i, j);
-
-            //cout<<"Adding connections for nodeid: "<< nodeid<<endl;
 
             Box * nodeobj = nodegroup[nodeid];
 
@@ -544,7 +387,6 @@ Index2d ModflowGrid2D::getIndex(const Point2d & pt)
 
     if (xAsc && (pt[0] < Xe[0] - IndexEPSION || pt[0] > Xe[ncol] + IndexEPSION))
     {
-        //assert(Xe[0] < Xe[ncol]);
         if (pt[0] < Xe[0] - IndexEPSION)
             i_x = INT_MIN;
         else if (pt[0] > Xe[ncol] + IndexEPSION)
@@ -553,7 +395,6 @@ Index2d ModflowGrid2D::getIndex(const Point2d & pt)
     }
     if ((!xAsc) && (pt[0] < Xe[ncol] - IndexEPSION || pt[0] > Xe[0] + IndexEPSION))
     {
-        //assert(Xe[0] > Xe[ncol] );
         if (pt[0] > Xe[0] + IndexEPSION)
             i_x = INT_MIN;
         else if (pt[0] < Xe[ncol] - IndexEPSION)
@@ -562,7 +403,6 @@ Index2d ModflowGrid2D::getIndex(const Point2d & pt)
     }
     if (yAsc && (pt[1] > Ye[0] + IndexEPSION || pt[1] < Ye[nrow] - IndexEPSION))
     {
-        //assert(Ye[0] > Ye[nrow] );
         if (pt[1] > Ye[0] + IndexEPSION)
             i_y = INT_MIN;
         else if (pt[1] < Ye[nrow] - IndexEPSION)
@@ -571,7 +411,6 @@ Index2d ModflowGrid2D::getIndex(const Point2d & pt)
     }
     if ((!yAsc) && (pt[1] < Ye[0] - IndexEPSION || pt[1] > Ye[nrow] + IndexEPSION))
     {
-        //assert(Ye[0] < Ye[nrow]);
         if (pt[1] < Ye[0] - IndexEPSION)
             i_y = INT_MIN;
         else if (pt[1] > Ye[nrow] + IndexEPSION)
@@ -585,7 +424,6 @@ Index2d ModflowGrid2D::getIndex(const Point2d & pt)
     }
     if (yAsc)
     {
-        //cerr<<"The coordinate order is not correct!\n";
         assert(Ye[0] > Ye[nrow]);
     }
 
@@ -594,57 +432,12 @@ Index2d ModflowGrid2D::getIndex(const Point2d & pt)
     i_y = getYIndexByBinarySearch(pt, Ye, 0, this->nrow, yAsc);
 
     ////find i_x
-    //for (int i = 0; i <this->ncol; i++)
-    //{
-    //	int n = i+1;
-    //	if(xAsc && (Xe[i] <=pt[0] && Xe[n] >=pt[0]))
-    //	{
-    //		i_x = i; break;
-    //	}
-    //	if((!xAsc) && (Xe[n]<=pt[0] && Xe[i] >=pt[0]))
-    //	{
-    //		i_x = i; break;
-    //	}
-    //}
     ////find i_y
-    //for (int i = 0; i <this->nrow; i++)
-    //{
-    //	int n = i+1;
-    //	if(yAsc &&(Ye[i]>=pt[1] && Ye[n]<=pt[1]))
-    //	{
-    //		i_y = i; break;
-    //	}
-    //	if((!yAsc) && (Ye[i] <=pt[1] && Ye[n] >=pt[1]))
-    //	{
-    //		i_y = i; break;
-    //	}
-    //}
-    //cout<<i_y<<" - "<<i_x<<"\t";
 
     return Index2d(i_y, i_x);
     /******************************************************************/
-    //the below code is by Jyh-Ming Lien
-    //find i_x
-    //double * Xe=this->Xe;
-    //for(int i=0;i<this->ncol;i++)
-    //{
-    //    int n=i+1;
-    //    if(Xe[i]<=pt[0] && Xe[n]>=pt[0]){
-    //        i_x=i;
-    //        break;
-    //    }
-    //}
 
     ////find i_y
-    //double * Ye=this->Ye;
-    //for(int i=0;i<this->nrow;i++)
-    //{
-    //    int n=i+1;
-    //    if(Ye[i]>=pt[1] && Ye[n]<=pt[1]){//this is not correct since the order is from n-1 to 0 in y, instead of from 0 to n-1 in x.
-    //        i_y=i;
-    //        break;
-    //    }
-    //}
 }
 
 int ModflowGrid2D::getXIndexByBinarySearch(const Point2d & pt, double * Xe, int left, int right,
@@ -673,10 +466,6 @@ int ModflowGrid2D::getXIndexByBinarySearch(const Point2d & pt, double * Xe, int 
         else
             return getXIndexByBinarySearch(pt, Xe, left, mid, ascending);
     }
-    //else
-    //return mid;
-
-    //return -1;
 }
 
 int ModflowGrid2D::getYIndexByBinarySearch(const Point2d & pt, double * Ye, int left, int right,
@@ -704,8 +493,6 @@ int ModflowGrid2D::getYIndexByBinarySearch(const Point2d & pt, double * Ye, int 
         else
             return getYIndexByBinarySearch(pt, Ye, mid, right, ascending);
     }
-
-    //return -1;
 }
 
 } //namespace cusg

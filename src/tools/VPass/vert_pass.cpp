@@ -1,6 +1,5 @@
 
 #include "vert_pass.h"
-//int vpnum = 0;
 
 void determineArea(VPassBox & vpb)
 {
@@ -22,7 +21,6 @@ void genOneVP(list<Box *> & bl, vector<VPassBox> & vpbl)
 {
     if (bl.size() >= 3)
     {
-        //assert(bl.front()->active && bl.back()->active);
         VPassBox vpb;
         vpb.bSrc = bl.front();
         bl.pop_front();
@@ -34,9 +32,6 @@ void genOneVP(list<Box *> & bl, vector<VPassBox> & vpbl)
         determineArea(vpb);
 
         vpbl.push_back(vpb);
-
-        //vpnum++;
-        //cout<<vpnum<<"----vertical pass--id :"<<vpb.bSrc->id<<"\t"<<vpb.bDst->id<<"\t"<<vpb.bPssList.front()->id<<endl;
     }
 }
 //exploration in two vertical directions
@@ -116,49 +111,6 @@ void getVPT(Box * b, vector<VPTPair> & vpts, bool topToDown)
     }
 
     ////////////////////////////////////////////
-    //for testing
-    //cout<<"total vertical pass through : "<<vpnum<<endl;
 }
 
 ////this function
-//void VerticalPass(Grid* grid, vector<VPassBox>& vpbl)
-//{
-//	//cast
-//	QuadTree3D* qtgrid=dynamic_cast<QuadTree3D*>(grid);
-//	ModflowGrid* mfgrid=dynamic_cast<ModflowGrid*>(grid);
-//	ModflowGrid2D* mf2dqtgrid=dynamic_cast<ModflowGrid2D*>(grid);
-//
-//	if(qtgrid == NULL && mfgrid == NULL)
-//		return;
-//
-//	//vector<VPassBox> vpbl;
-//	Box* tb = NULL;
-//	for(NodeGroup::iterator nit = grid->nodegroup.begin(); nit != grid->nodegroup.end(); ++nit)
-//	{
-//		tb = *nit;
-//
-//		if(tb == NULL || (!(tb->isLeaf)) || (tb->active == false))
-//			continue;
-//
-//		boxVPConnection(tb, vpbl, false, true);
-//	}
-//
-//	cerr<<"total vertical pass number is "<<vpbl.size()<<endl;
-//
-//	for(vector<VPassBox>::iterator vit = vpbl.begin(); vit !=vpbl.end(); ++vit)
-//	{
-//		vit->bSrc->flag = 1;
-//
-//		if(vit->bSrc->id == 22911)
-//		{
-//			cout<<"debugging here!\n";
-//		}
-//
-//		vector<VPassBox> vbs;
-//		boxVPConnection(vit->bSrc, vbs, false, true);
-//		cout<<"id : "<<vit->bSrc->id<<"\t"<<vit->bPssList.front()->id<<"\t"<<vit->bDst->id<<endl;
-//		//cout<<vit->bSrc->id<<"\t";
-//	}
-//	cout<<endl;
-//
-//}

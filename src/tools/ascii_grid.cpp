@@ -66,7 +66,6 @@ bool arcinfo_ascii_grid::build(istream & ins)
     //read values
     for (unsigned int i = 0; i < size; i++)
     {
-        //int id=(nrows-i/ncols-1)*(ncols)+(i%ncols);
         ins >> values[i];
     }
 
@@ -120,7 +119,6 @@ double bilinear_interpolation(ascii_grid * grid, unsigned int i, unsigned int j,
         x2 = ll; //avoid interpolating invalid values...
     else
         x2 = (1 - x) * ll + x * lr;
-    //else x2=(1-x)*ll+x*lr;
 
     if (grid->isvalid(x1) && grid->isvalid(x2) == false)
     {
@@ -133,21 +131,6 @@ double bilinear_interpolation(ascii_grid * grid, unsigned int i, unsigned int j,
 
     //interpolate in y dir
     return (1 - y) * x1 + y * x2;
-}
-
-//perform trilinear interpolation between (i,j), (i+1,j), (i,j+1), (i+1,j+1) and grid1 and grid2
-//x and y and z must be between 0 and 1
-double trilinear_interpolation(ascii_grid * grid1, ascii_grid * grid2, unsigned int i,
-                               unsigned int j, double x, double y, double z)
-{
-    double z1 = bilinear_interpolation(grid1, i, j, x, y);
-    double z2 = bilinear_interpolation(grid2, i, j, x, y);
-
-    //interpolate in z dir
-    if (grid1->isvalid(z1) && grid2->isvalid(z2) == false) z2 = z1;
-    if (grid1->isvalid(z1) == false && grid2->isvalid(z2)) z1 = z2;
-
-    return (1 - z) * z1 + z * z2;
 }
 
 } //end of namespace cusg

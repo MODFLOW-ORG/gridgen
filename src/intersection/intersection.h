@@ -67,26 +67,6 @@ template <class real> int AreaSign(const real a[2], const real b[2], const real 
 {
     real area = Area(a, b, c);
 
-    /*
-        if ((area > 0 && area < SMALLNUMBER)
-            || (area < 0 && area > -SMALLNUMBER))
-          {
-              if (sizeof (a[0]) <= sizeof (double))
-                {
-                    REAL A[2];
-                    A[0] = a[0];
-                    A[1] = a[1];
-                    REAL B[2];
-                    B[0] = b[0];
-                    B[1] = b[1];
-                    REAL C[2];
-                    C[0] = c[0];
-                    C[1] = c[1];
-                    return AreaSign < REAL > (A, B, C);
-                }
-          }
-          */
-
     if (area > SMALLNUMBER)
         return 1;
     else if (area < -SMALLNUMBER)
@@ -715,13 +695,8 @@ char SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2
         }
     }
 
-    real denom_small = denom * small_number;
-
     //compute s
     num_s = a[0] * (d[1] - c[1]) + c[0] * (a[1] - d[1]) + d[0] * (c[1] - a[1]);
-
-    //if( fabs(num_s)<SMALLNUMBER ) num_s=0;
-    //else if( fabs(num_s-denom)<SMALLNUMBER ) num_s=denom;
 
     s = num_s / denom;
 
@@ -730,7 +705,6 @@ char SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2
     else if (fabs(1 - s) < small_number)
         s = 1;
 
-    //if(num_s<0  || num_s>denom) return '0';
     if (s < 0 || s > 1) return '0';
 
     //compute t
@@ -753,7 +727,6 @@ char SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2
 
     if (code != 'v')
     {
-        //s = num_s / denom;
         p[0] = (a[0] + s * (b[0] - a[0]));
         p[1] = (a[1] + s * (b[1] - a[1]));
     }

@@ -58,6 +58,4 @@ struct VPassBox
     double area;
 };
 
-//void boxVPConnection(Box* b, vector<VPassBox>& vpbl, bool topToDown);
-
 void getVPT(Box * b, vector<VPTPair> & vpts, bool topToDown);

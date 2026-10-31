@@ -51,10 +51,6 @@ public:
                   double yoffset = 0, double rotation = 0);
     ModflowGrid2D(int nrow, int ncol, double * delr, double * delc, double xoffset = 0,
                   double yoffset = 0, double rotation = 0);
-    ModflowGrid2D();
-
-    /// # of nodes in all layers (int *)
-    int * get_nodelay();
 
     ///x coords for the center of all cells
     double * get_local_x_array();
@@ -80,14 +76,6 @@ public:
         0-------1
     */
 
-    vector<Point2d> get_vertices(int nodeid);
-
-    /*! 
-        \brief Return a tuple containing two points (the lower left and the upper 
-        right) in global grid coordinates.
-    */
-    pair<Point2d, Point2d> get_extent();
-
     ///Return the nodeid for the modflow grid.
     int get_nodeid(int i, int j);
 
@@ -101,16 +89,6 @@ public:
                                 bool ascending);
     int getYIndexByBinarySearch(const Point2d & pt, double * Ye, int left, int right,
                                 bool ascending);
-
-    ///get box from id
-    ///!!! NOTE This function creates a new BOX
-    Box * create_nodeobj(int nodeid);
-
-    /// !!! NOTE This function creates a new BOX
-    Box * create_nodeobj(int i, int j);
-
-    /// return a box containtain the given pt
-    Box * find_nodeobj(const Point2d & pt);
 
     /// return a box containtain the given id
     Box * find_nodeobj(int i, int j);
@@ -160,9 +138,6 @@ public:
 
 protected:
     void init2D();
-
-    ///create nodes and add them to nodegroup
-    void create_nodes();
 
     ///add connection between boxes
     ///fldir is -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z.

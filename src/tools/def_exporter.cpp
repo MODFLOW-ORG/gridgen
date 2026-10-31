@@ -21,15 +21,6 @@ inline ostream & operator<<(ostream & out, list<string> & strlist)
     return out;
 }
 
-bool DefinitionExporter::save(ostream & out, grid_raw_data & data)
-{
-    if (dynamic_cast<modflow_grid_raw_data *>(&data) != NULL)
-        return save(out, (modflow_grid_raw_data &)data);
-    else if (dynamic_cast<quadtree_builder_raw_data *>(&data) != NULL)
-        return save(out, (quadtree_builder_raw_data &)data);
-    return false;
-}
-
 bool DefinitionExporter::save(ostream & out, modflow_grid_raw_data & data)
 {
     assert(data.type == "modflow_grid");
@@ -56,44 +47,6 @@ bool DefinitionExporter::save(ostream & out, modflow_grid_raw_data & data)
     return true;
 }
 
-bool DefinitionExporter::save(ostream & out, ModflowGrid * grid)
-{
-    const string & name = grid->name;
-    string top_data_name = name + ".top.dat";
-    string delc_data_name = name + ".delc.dat";
-    string delr_data_name = name + ".delr.dat";
-
-    out << "BEGIN MODFLOW_GRID " << name << "\n";
-    out << "\tROTATION_ANGLE = " << round_trip(grid->rotation * 180 / PI) << "\n";
-    out << "\tX_OFFSET = " << round_trip(grid->xoffset) << "\n";
-    out << "\tY_OFFSET = " << round_trip(grid->yoffset) << "\n";
-    //out<<"length_unit = "<<grid-><<"\n"; //not available...
-    out << "\tNLAY = " << grid->nlay << "\n";
-    out << "\tNROW = " << grid->nrow << "\n";
-    out << "\tNCOL = " << grid->ncol << "\n";
-    out << "\tDELR = OPEN/CLOSE " << delr_data_name << "\n";
-    out << "\tDELC = OPEN/CLOSE " << delc_data_name << "\n";
-    out << "\tTOP = OPEN/CLOSE " << top_data_name << "\n";
-
-    save(delc_data_name, grid->delc, grid->nrow);
-    save(delc_data_name, grid->delr, grid->ncol);
-    save(top_data_name, grid->top, grid->ncol * grid->nrow);
-
-    int csize = grid->nrow * grid->ncol;
-    for (int i = 0; i < grid->nlay; i++)
-    {
-        stringstream ss;
-        ss << name << ".bot" << i + 1 << ".dat";
-        out << "\tBOTTOM LAYER " << i + 1 << " = OPEN/CLOSE " << ss.str() << "\n";
-        double * ptr = &grid->bot[(i + 1) * csize];
-        save(ss.str(), ptr, csize);
-    }
-
-    out << "END MODFLOW_GRID\n";
-
-    return true;
-}
-
 bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
 {
     ModflowGrid * mflowgrid = grid->getModflowGrid();
@@ -101,8 +54,6 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
     const string & name = grid->name;
 
     string ghostnode_name = name + ".gnc.dat"; //ghnost nodes are saved in get_usg_csr_data()
-
-    //CSRData csr=grid->get_usg_csr_data();
 
     string tree_structure_file = name + ".tsf";
     string nodesperlay_data_name = name + ".nodesperlay.dat";
@@ -289,8 +240,6 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
                 }
                 else
                     conNum += qtree_grid->get_node_connections(b).size();
-
-                //conNum += qtree_grid->get_node_connections(b).size();
             }
             else if (modflow_grid != NULL)
             {
@@ -328,11 +277,6 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
 
     fout.close();
     cout << "- Save data to file: " << filename << endl;
-    return true;
-}
-
-bool DefinitionExporter::save(grid_intersection_raw_data & data)
-{
     return true;
 }
 

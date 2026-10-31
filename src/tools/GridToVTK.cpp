@@ -7,9 +7,6 @@
 #include <sstream>
 using namespace std;
 
-//int debug_num[4] = {0};
-static int ShareVID = 0;
-
 //reverse interpolate the z coordinates for all boxes
 //void reverseInterpolate(QuadTree3D* qtree);
 
@@ -40,8 +37,6 @@ void writeVTKCell(ofstream & ofile, int boxNum)
         ofile << (sid) << "\t" << (sid + 6) << "\t" << (sid + 2) << "\t" << (sid + 4) << "\t"
               << (sid + 1) << "\t" << (sid + 7) << "\t" << (sid + 3) << "\t" << (sid + 5) << "\n";
 
-        //ofile<<(sid+6)<<"\t"<<sid<<"\t"<<(sid+4)<<"\t"<<(sid+2)<<"\t";
-        //	ofile<<(sid+7)<<"\t"<<(sid+1)<<"\t"<<(sid+5)<<"\t"<<(sid+3)<<"\n";
         sid += 8;
 
         id++;
@@ -78,7 +73,6 @@ void writeVTKCell(ofstream & ofile, int boxNum)
 template <typename Dtype>
 void writeDataArray(ofstream & ofile, string type, string name, const vector<Dtype> & data)
 {
-    //typename vector<Dtype>::const_iterator DIT;
     ofile << "<DataArray type=\"" << type << "\" Name=\"" << name << "\" format=\"ascii\">";
     int id = 0;
     for (typename vector<Dtype>::const_iterator dit = data.begin(); dit != data.end(); dit++)
@@ -212,7 +206,6 @@ void DFSWriteQDT2VTK(QuadTree3D * qtree, ofstream & ofile, int & pntNum, Box * b
                      int c, bool one_based_numbering, const GridVertices & gv,
                      vector<int> * intvals, vector<double> * dbvals)
 {
-    char tmp[8] = {'\0'};
     //if(b->isLeaf)
     if (b->isLeaf && b->active)
     {
@@ -264,8 +257,6 @@ void DFSWriteQDT2VTK(QuadTree3D * qtree, ofstream & ofile, int & pntNum, Box * b
     {
         for (int i = 0; i < 4; i++)
         {
-            //if(one_based_numbering) sprintf(tmp,"%d",i+1);
-            //else sprintf(tmp,"%d",i);
             DFSWriteQDT2VTK(qtree, ofile, pntNum, b->pChildren[i], l, r, c, one_based_numbering, gv,
                             intvals, dbvals);
         }
@@ -343,7 +334,6 @@ void writeQuadtreeGrid2VTK(QuadTree3D * qtree, string vtkName)
         writeDataArray(ofile, "Int32", intNames[i], intvals[i]);
     }
 
-    int dbSize = dbNames.size();
     for (int i = 0; i < 4; i++)
     {
         writeDataArray(ofile, "Float64", dbNames[i], dbvals[i]);
@@ -359,7 +349,6 @@ void writeQuadtreeGrid2VTK(QuadTree3D * qtree, string vtkName)
 void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intvals,
                 vector<double> * dbvals, BoxVtx * boxVts)
 {
-    //ModflowGrid* mfgrid = qtree->getModflowGrid();
     /***************************************************************************************/
     //write the cells
     ofile << "<Cells>\n";
@@ -558,8 +547,7 @@ void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool with
     dbNames.push_back("delr");
     dbNames.push_back("delc");
 
-    int cellNum =
-        collectCell_share(mfgrid, allBoxes, intvals, dbvals, without_inactive, one_based_numbering);
+    collectCell_share(mfgrid, allBoxes, intvals, dbvals, without_inactive, one_based_numbering);
 
     //write the points, loop over each layer
     stringstream ss0;
@@ -603,7 +591,6 @@ void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool with
         writeDataArray(ofile, "Int32", intNames[i], intvals[i]);
     }
 
-    int dbSize = dbNames.size();
     for (int i = 0; i < 4; i++)
     {
         writeDataArray(ofile, "Float64", dbNames[i], (dbvals[i]));
@@ -694,15 +681,6 @@ int collectCell_share(QuadTree3D * qtree, vector<Box *> & allBoxes, vector<int> 
     return cellNum;
 }
 
-Vertex * getMid(Vertex * v1, Vertex * v2, vector<Vertex *> & vdata, int & vid)
-{
-    Vertex * nv = new Vertex((v1->pos[0] + v2->pos[0]) / 2, (v1->pos[1] + v2->pos[1]) / 2,
-                             (v1->pos[2] + v2->pos[2]) / 2, vid++);
-    vdata.push_back(nv);
-
-    return nv;
-}
-
 void rotateOnePnt(double x, double y, double cx, double cy, double rotation, double & resx,
                   double & resy)
 {
@@ -728,54 +706,7 @@ double fitZ(double ** vv, double x, double y)
     return z;
 }
 
-int getDepth(int n[4])
-{
-    if (n[0] == n[1] && n[1] == n[2] && n[2] == n[3]) return -1;
-    for (int i = 0; i < 4; i++)
-    {
-        if (n[i] > n[(i + 1) % 4]) return i;
-    }
-    assert(false);
-    return -1;
-}
-bool no_collinear_add(set<Box *> & bset, Box * b)
-{
-    if (bset.size() == 2)
-    {
-        set<Box *>::iterator bit = bset.begin();
-
-        Box * b1 = *(bset.begin());
-        Box * b2 = *(++bit);
-        if (bset.find(b) == bset.end())
-        {
-            double co_eff =
-                fabs((b2->x - b1->x) * (b->y - b1->y) - (b->x - b1->x) * (b2->y - b1->y));
-            if (co_eff < 1e-6) return false;
-        }
-    }
-    bset.insert(b);
-    return true;
-}
-
 //-------------------------------------------------------------------------------------------------
-
-//build the mfgrid ascii grid
-void build_mf_ascii(QuadTree3D * qtree, vector<mf_ascii_grid *> & top_ags,
-                    vector<mf_ascii_grid *> & bot_ags)
-{
-    ModflowGrid * mfgrid = qtree->getModflowGrid();
-
-    int csize = mfgrid->nrow * mfgrid->ncol;
-    for (int k = 0; k < mfgrid->nlay; k++)
-    {
-        double * top_zgrid = &(mfgrid->top[csize * k]);
-        double * bot_zgrid = &(mfgrid->bot[csize * k]);
-        mf_ascii_grid * top_ag = new mf_ascii_grid(mfgrid, top_zgrid, mfgrid->ncol, mfgrid->nrow);
-        mf_ascii_grid * bot_ag = new mf_ascii_grid(mfgrid, bot_zgrid, mfgrid->ncol, mfgrid->nrow);
-        top_ags.push_back(top_ag);
-        bot_ags.push_back(bot_ag);
-    }
-}
 
 //
 // for QuadTree3D sharing Vertices
@@ -1088,7 +1019,6 @@ void buildBox(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> & eda
 void buildSharing(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> & edata,
                   VTK_Box * boxdata)
 {
-    int bsize = qtree->nodegroup.size();
 
     // build VE
     buildVE(qtree, vdata, edata, boxdata);
@@ -1287,7 +1217,6 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
         vector<Box *> vb1, vb2;
         vector<double> dvals1, dvals2;
         vector<int> depth1, depth2;
-        //vector<double> zs;
         for (int i = 0; i < 4; i++)
         {
             if (v->box[i] != NULL && v->box[i]->isLeaf && v->box[i]->active)
@@ -1299,7 +1228,6 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
                     dvals1.push_back(zbot[v->box[i]->number]);
                     depth1.push_back(v->box[i]->depth);
                 }
-                //zs.push_back(zbot[v->box[i]->number]);
             }
             if (v->box[i + 4] != NULL && v->box[i + 4]->isLeaf && v->box[i + 4]->active)
             {
@@ -1310,7 +1238,6 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
                     dvals2.push_back(ztop[v->box[i + 4]->number]);
                     depth2.push_back(v->box[i + 4]->depth);
                 }
-                //zs.push_back(ztop[v->box[i + 4]->number]);
             }
         }
 
@@ -1326,11 +1253,6 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
             dt[1] = smooth_interpolate(dvals2, depth2, vb2, v->pos[0], v->pos[1]);
         }
 
-        //double zsum(0);
-        //for(vector<double>::iterator dit = zs.begin(); dit != zs.end(); ++dit)
-        //{
-        //	zsum += (*dit);
-        //}
         if (bset1.size() > 0 && bset2.size() > 0)
             v->pos[2] = (dt[0] + dt[1]) / 2;
         else if (bset1.size() > 0)
@@ -1346,7 +1268,6 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
 void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intvals,
                 vector<double> * dbvals, VTK_Box * boxdata)
 {
-    //ModflowGrid* mfgrid = qtree->getModflowGrid();
     /***************************************************************************************/
     //write the cells
     ofile << "<Cells>\n";
@@ -1372,8 +1293,6 @@ void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intval
         ofile << vids[0]->num << "\t" << vids[1]->num << "\t" << vids[3]->num << "\t"
               << vids[2]->num << "\t" << vids[4]->num << "\t" << vids[5]->num << "\t"
               << vids[7]->num << "\t" << vids[6]->num << "\n";
-        //ofile<<vids[0]->num<<"\t"<<vids[6]->num<<"\t"<<vids[2]->num<<"\t"<<vids[4]->num<<"\t"
-        //	<<vids[1]->num<<"\t"<<vids[7]->num<<"\t"<<vids[3]->num<<"\t"<<vids[5]->num<<"\n";
 
         rid++;
         if (rid % 5000 == 0) ofile.flush();
@@ -1431,8 +1350,7 @@ void write_vtu_file(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *>
     dbNames.push_back("delr");
     dbNames.push_back("delc");
     //
-    int cellNum =
-        collectCell_share(qtree, allBoxes, intvals, dbvals, qtree->get_one_based_node_numbering());
+    collectCell_share(qtree, allBoxes, intvals, dbvals, qtree->get_one_based_node_numbering());
 
     //world coordinates of each point from the nearest corner of a cell it bounds
     GridVertices gv(qtree);
@@ -1508,7 +1426,6 @@ void write_vtu_file(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *>
         writeDataArray(ofile, "Int32", intNames[i], intvals[i]);
     }
 
-    int dbSize = dbNames.size();
     for (int i = 0; i < 4; i++)
     {
         writeDataArray(ofile, "Float64", dbNames[i], (dbvals[i]));

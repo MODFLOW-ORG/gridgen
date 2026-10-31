@@ -23,8 +23,6 @@
 #include <map>
 using namespace std;
 
-#define DEBUGTEST 0
-
 namespace cusg
 {
 
@@ -86,9 +84,6 @@ struct PolygonCellIntersectionInfo
     Box * box;
     GIS_polygon * m_interPolygon;
 };
-void destroyPlylineCell(PolylineCellIntersectionInfo & info);
-
-void destroyPlygonCell(PolygonCellIntersectionInfo & info);
 
 class GridIntersection
 {
@@ -99,7 +94,6 @@ public:
         m_layer = at_layer;
         m_b_include_poly_boundary = true;
         m_b_save_intersection_info = false;
-        //m_cur_id = -1;
     }
     ~GridIntersection()
     {
@@ -142,9 +136,6 @@ public:
 
     //save the shape file
     bool saveShp(string & shpName, vector<string> & attributes);
-
-    //save the vtk file
-    bool saveVTK(string & vtkName, vector<string> & attributes);
 
     //
     bool intersect(QuadTree3D * grid, double x, double y) { return intersect(grid, Point2d(x, y)); }
@@ -213,19 +204,13 @@ public:
     bool intersect(T * grid, const c_polygon & polygon, list<Box *> & bd_intersection,
                    list<Box *> & enclosed_intersection);
 
-    ///Box
-    bool intersect(Box * b, const Point2d & pt);
     bool intersect(Box * b, const LineSeg2d & line);
     double intersect_len(Box * b, const LineSeg2d & line);
-    //double intersect_polygon(Box* b, const GIS_polygon& ply, GIS_polygon& resultPly);
-    //void intersect_polygon(Box* b, const GIS_polygon& plygon, vector<GIS_polygon*>& resultPlygons);
-    //void intersect_polygon(Box* b, BoxPlyClip* bpc, vector<GIS_polygon*>& resultPlygons);
     void intersect_polygon(Box * b, const GIS_polygon & plygon,
                            vector<GIS_polygon *> & resultPlygons, BoxPlyClip * bpc = NULL);
 
     //retrieve detailed information
     bool getIntersection(Box * b, const LineSeg2d & line, LineSeg2d & intseg);
-    //c_ply getIntersection(Box * b, const c_ply& ply);
 
     //get the number of intersections...
     int getIntersectionSize() { return m_intersection.size(); }
@@ -235,7 +220,6 @@ public:
     template <typename T> bool intersect(T * grid, /*const*/ GIS_LineSeg2d & line);
     template <typename T>
     bool intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyClip * bpc = NULL);
-    //template<typename T> bool intersect(T* grid, BoxPlyClip* bpc);
 
     /// clip off a line segment if its end points are out side of the grid
     /// return false when the entire segment is outside of the grid
@@ -270,10 +254,6 @@ protected:
                                vector<PolygonCellIntersectionInfo> & infoResult,
                                BoxPlyClip * bpc = NULL);
 
-    void buildIntersectionInfo(Box * box, const GIS_polygon & ply,
-                               PolygonCellIntersectionInfo & info);
-
-    //void buildIntersectionInfo(Box * box, BoxPlyClip* bpc, vector<PolygonCellIntersectionInfo>& infoResult);
     SegmentCellIntersectionInfo buildIntersectionInfo(Box * box, const GIS_LineSeg2d & line);
     PointCellIntersectionInfo buildIntersectionInfo(Box * box, const GIS_Point2d & pt);
 
@@ -446,16 +426,6 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply, list<Box *> & bd_i
                     open.push_back(nb);
                     visited.insert(nb);
                     enclosed_intersection.push_back(nb);
-
-                    /*
-						//now we should just flood the entire grid with this interior cell
-						list<Box*> flooded;
-						floodGrid(nb,visited,flooded);
-
-						open.insert(open.end(),flooded.begin(),flooded.end());
-						visited.insert(flooded.begin(),flooded.end());
-						enclosed_intersection.insert(enclosed_intersection.end(),flooded.begin(),flooded.end());
-						*/
                 }
             } //end for n
         } //end for i
@@ -509,13 +479,6 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
 
             LineSeg2d line(ptr->getPos(), next->getPos());
             bool r = intersect(grid, line);
-
-#if DEBUGTEST
-            if (r == false)
-            {
-                intersect(grid, line);
-            }
-#endif
 
             assert(r);
 
@@ -575,16 +538,6 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
                     open.push_back(nb);
                     visited.insert(nb);
                     enclosed_intersection.push_back(nb);
-
-                    /*
-						//now we should just flood the entire grid with this interior cell
-						list<Box*> flooded;
-						floodGrid(nb,visited,flooded);
-
-						open.insert(open.end(),flooded.begin(),flooded.end());
-						visited.insert(flooded.begin(),flooded.end());
-						enclosed_intersection.insert(enclosed_intersection.end(),flooded.begin(),flooded.end());
-						*/
                 }
             } //end for n
         } //end for i
@@ -619,8 +572,6 @@ bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBo
 
     //first box
     Box * b1 = m_intersection.back();
-
-    //shpArcId.insert(make_pair(b1, m_cur_id));
 
     r = intersect(grid, clipped_line.pt[1]);
     if (r == false)
@@ -718,27 +669,7 @@ bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBo
 template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_Point2d & pt)
 {
     ////rotate
-    //ModflowGrid* mfgrid = dynamic_cast<ModflowGrid*>(grid);
-    //if(mfgrid==NULL)
-    //{
-    //	QuadTree3D* quadgrid = dynamic_cast<QuadTree3D*>(grid);
-    //	if(quadgrid!=NULL)
-    //		mfgrid = quadgrid->getModflowGrid();
-    //}
-    //if(mfgrid == NULL)
-    //{
-    //	LGR_Grid* lgrgrid = dynamic_cast<LGR_Grid*>(grid);
-    //	if(lgrgrid != NULL)
-    //		mfgrid = lgrgrid->getModflowGrid();
-    //}
-    //if(mfgrid == NULL)
-    //{
-    //	cerr<<"error: abnormal grid !"<<endl;
-    //}
-    //double cx, cy, angle;
-    //mfgrid->getRotatePara(cx, cy, angle);
     ////rotate
-    //pt.rotate(cx, cy, -angle);
 
     vector<Box *> tmp;
     m_intersection.swap(tmp);
@@ -762,27 +693,7 @@ template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_P
 template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_LineSeg2d & line)
 {
     ////rotate
-    //ModflowGrid* mfgrid = dynamic_cast<ModflowGrid*>(grid);
-    //if(mfgrid==NULL)
-    //{
-    //	QuadTree3D* quadgrid = dynamic_cast<QuadTree3D*>(grid);
-    //	if(quadgrid!=NULL)
-    //		mfgrid = quadgrid->getModflowGrid();
-    //}
-    //if(mfgrid == NULL)
-    //{
-    //	LGR_Grid* lgrgrid = dynamic_cast<LGR_Grid*>(grid);
-    //	if(lgrgrid != NULL)
-    //		mfgrid = lgrgrid->getModflowGrid();
-    //}
-    //if(mfgrid == NULL)
-    //{
-    //	cerr<<"error: abnormal grid !"<<endl;
-    //}
-    //double cx, cy, angle;
-    //mfgrid->getRotatePara(cx, cy, angle);
     ////rotate
-    //line.rotate(cx, cy, -angle);
 
     vector<Box *> tmp;
     m_intersection.swap(tmp);
@@ -827,21 +738,11 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
             {
                 Box * box = *i;
 
-#if DEBUGTEST
-                if (box->number != 8408) continue;
-#endif
-
                 //store intersection info here...
-#if 0
-					PolygonCellIntersectionInfo info;
-					buildIntersectionInfo(box, ply, info);
-					m_ply_interaction_info.push_back(info);
-#else
                 vector<PolygonCellIntersectionInfo> infos;
                 buildIntersectionInfo(box, ply, infos, bpc);
                 m_ply_interaction_info.insert(m_ply_interaction_info.end(), infos.begin(),
                                               infos.end());
-#endif
             }
         }
 
@@ -857,23 +758,12 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
                 for (list<Box *>::iterator i = bd_intersection.begin(); i != bd_intersection.end();
                      i++)
                 {
-                    Box * box = *i;
-
-#if DEBUGTEST
-                    if (box->number != 8408) continue;
-#endif
 
                     //store intersection info here...
-#if 0
-						PolygonCellIntersectionInfo info;
-						buildIntersectionInfo(box, ply, info);
-						m_ply_interaction_info.push_back(info);
-#else
                     vector<PolygonCellIntersectionInfo> infos;
                     buildIntersectionInfo(*i, ply, infos, bpc);
                     m_ply_interaction_info.insert(m_ply_interaction_info.end(), infos.begin(),
                                                   infos.end());
-#endif
                 }
             }
         } //end if(m_b_include_poly_boundary)

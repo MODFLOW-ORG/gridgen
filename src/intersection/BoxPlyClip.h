@@ -57,11 +57,9 @@ struct VNode
         {
             if (fabs(x - fval) < SMALLNUMBER)
             {
-                //isScanPnt = isOnline = true;
                 isInDirect = true;
                 return;
             }
-            //bool big = (x >= fval);
             bool big = (x >= fval);
             isInDirect = (big == isGreater);
         }
@@ -69,11 +67,9 @@ struct VNode
         {
             if (fabs(y - fval) < SMALLNUMBER)
             {
-                //isScanPnt = isOnline = true;
                 isInDirect = true;
                 return;
             }
-            //bool big = (y >= fval);
             bool big = (y >= fval);
             isInDirect = (big == isGreater);
         }
@@ -164,8 +160,6 @@ void convertClipToPolygon(BoxPlyClip * bpc, GIS_polygon * cpolygon);
 VNode * copyOnePly(VNode * head, bool bSetVisited = false);
 
 double getRotAngle(Vector2d & v1, Vector2d & v2);
-
-bool compareTwoBPC(BoxPlyClip * b1, BoxPlyClip * b2);
 
 //make sure the min and max are in correct order
 double intersectTwoBox(Point2d ld, Point2d rd, Point2d ru, Point2d lu, double xmin2, double xmax2,
