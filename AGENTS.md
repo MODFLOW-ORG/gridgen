@@ -97,12 +97,14 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   and check a death test by its exit code alone, with an empty message
   matcher: `EXPECT_EXIT(..., testing::ExitedWithCode(1), "")` (see
   `test_asciigrid.cpp`).
-- **Formatting:** run `pixi run check-format` before committing; ruff
-  (`ruff.toml`) formats and lints the Python, clang-format (`.clang-format`)
-  formats the C++ in `src/` and `test/unit/` except the vendored
-  `src/tools/shapefile/shapelib/`, and codespell (`.codespellrc`) checks
-  spelling in everything but data files, generated files, shapelib, and the
-  archived release notes. `pixi run fix-format` applies all three. Add a
+- **Formatting:** before each commit that changes C++, Python, or text, run
+  `pixi run check-format`; if it fails, run `pixi run fix-format`, check the
+  result, and include it in the commit, since the lint job runs the same
+  check on every push. ruff (`ruff.toml`) formats and lints the Python,
+  clang-format (`.clang-format`) formats the C++ in `src/` and `test/unit/`
+  except the vendored `src/tools/shapefile/shapelib/`, and codespell
+  (`.codespellrc`) checks spelling in everything but data files, generated
+  files, shapelib, and the archived release notes. Add a
   misspelled identifier to `ignore-words-list` rather than renaming it in an
   unrelated change. Text files are stored with LF endings (`.gitattributes`);
   `test/action01_buildqtg.dfn` keeps CRLF so that reading input written on
