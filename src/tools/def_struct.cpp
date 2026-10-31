@@ -683,22 +683,6 @@ void quadtree_grid_raw_data::fillQuadTree3D()
 
     /********************************************************************/
     //check whether the quadtree is built successfully
-#if DEBUG
-    cout << "********************************************************" << endl;
-    int size = qtree_grid->nodegroup.size();
-    cout << "The total number of size is : " << size << endl;
-    int showNum = 0;
-    for (int i = 0; i < size; i++)
-    {
-        Box * box = qtree_grid->nodegroup[i];
-        if (box->isLeaf)
-        {
-            showNum++;
-        }
-    }
-    cout << "The leaf nodes' number is : " << showNum << endl;
-    cout << "********************************************************" << endl;
-#endif
 }
 //-----------------------------------------------------------------------------
 //

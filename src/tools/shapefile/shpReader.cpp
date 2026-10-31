@@ -70,7 +70,6 @@ bool ShapeReader::read(const string & filename)
     }
 
     /************************************************************/
-#if 1
     DBFHandle hDBF = DBFOpen(filename.c_str(), "rb");
 
     //check
@@ -147,7 +146,6 @@ bool ShapeReader::read(const string & filename)
     //if(heigh_pos==UINT_MAX)
     //	cerr<<"! Warning: no height found in the database"<<endl;
 
-#endif
     /************************************************************/
 
     //Get info
@@ -236,12 +234,6 @@ bool ShapeReader::read(const string & filename)
     }
 
     SHPClose(hSHP);
-
-#if 0
-    cout.precision(20);
-    cout<<"bbox[0]="<<bbox[0]<<" bbox[1]="<<bbox[1]<<" bbox[2]="<<bbox[2]<<" bbox[3]="<<bbox[3]<<endl;
-    cout<<"width="<<bbox[1]-bbox[0]<<" height="<<bbox[3]-bbox[2]<<endl;
-#endif
 
     //done readh shp file
 

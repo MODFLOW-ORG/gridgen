@@ -187,25 +187,6 @@ public:
     bool operator==(const c_ply & other) { return other.head == head; }
     friend istream & operator>>(istream &, c_ply &);
 
-#if TRIANGULATION
-
-    ///////////////////////////////////////////////////////////////////////////
-    // functionality provided if triangulation is available.
-
-    /// find a point that is enclosed by this polychain
-    Point2d findEnclosedPt();
-
-    /// triangulate the polygon
-    void triangulate(vector<triangle> & tris);
-
-    /*! \brief check if a point is enclosed
-            \remarks the behavior is unknown if pt is 
-                     on the boundary of the polygon
-        */
-    bool enclosed(const Point2d & pt);
-
-#endif //TRIANGULATION
-
 protected:
     ///////////////////////////////////////////////////////////////////////////
     void doInit(); /*return # of vertice in this poly*/
@@ -323,25 +304,6 @@ public:
             } while (pcur != phead);
         }
     }
-
-#if TRIANGULATION
-
-    ///////////////////////////////////////////////////////////////////////////
-    // functionality provided if triangulation is available.
-
-    /// triangulate the polygon
-    void triangulate(vector<triangle> & tris);
-
-    /*! \brief check if a point is enclosed
-            \remarks the behavior is unknown if pt 
-                     is on the boundary of the polygon
-        */
-    bool enclosed(const Point2d & pt);
-
-    /// find a point inside the polygon
-    Point2d findEnclosedPt();
-
-#endif //TRIANGULATION
 
 protected:
     void build_all();

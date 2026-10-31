@@ -18,8 +18,6 @@
 #include "PolygonChecker.h"
 using namespace std;
 
-#define DEBUG 00
-
 namespace cusg
 {
 
@@ -433,20 +431,6 @@ bool GridIntersection::intersect(QuadTree3D * grid, const Point2d & pt) //, bool
     int id = mf->get_nodeid(m_layer, id2d[0], id2d[1]);
     Box * box = grid->nodegroup[id];
 
-#if DEBUG
-    bool inside = box->in(pt[0], pt[1]);
-    if (inside == false)
-    {
-        Index2d id2d = mf->getIndex(pt);
-        mf->get_nodeid(m_layer, id2d[0], id2d[1]);
-        box->in(pt[0], pt[1]);
-        cout << "id=" << id << " m_layer=" << m_layer << endl;
-        cout << "modflowGrid=" << mf << endl;
-        cout << "qtree_grid=" << grid << endl;
-        cout << "Point " << pt << " is not inside " << *box << " index=" << id2d << endl;
-    }
-#endif
-
     box = box->find(pt[0], pt[1]); //find a leave that contains pt
 
     //make sure box is valid
@@ -523,10 +507,6 @@ void GridIntersection::buildIntersectionInfo(Box * box, const GIS_polygon & ply,
         info.box = box;
         info.m_polyID = ply.m_id;
         info.m_area = info.m_interPolygon->getArea();
-
-#if DEBUGTEST
-        info.m_polyID = gp->m_id;
-#endif
 
         infoResult.push_back(info);
     }
@@ -852,19 +832,10 @@ bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
             continue;
         }
 
-#if DEBUG
-        cout << "- GridIntersection::intersect: int_count=" << int_count << endl;
-#endif
-
         return (int_count % 2) == 1;
     }
 
     totoal_failed_call++;
-
-#if DEBUG
-    cerr << "! Warning: Max iteration reached.. near=" << near << " far=" << far
-         << " ratio=" << totoal_failed_call << "/" << totoal_call << endl;
-#endif
 
     return false;
 }
@@ -909,10 +880,6 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & plygon,
         GIS_polygon * nplygon = new GIS_polygon();
         convertClipToPolygon(*cit, nplygon);
         resultPlygons.push_back(nplygon);
-
-#if DEBUGTEST
-        nplygon->m_id = plygon.m_id;
-#endif
 
         (*cit)->destroy();
         delete *cit;

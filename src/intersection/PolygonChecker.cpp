@@ -6,8 +6,6 @@
 using namespace std;
 using namespace cusg;
 
-#define TESTING 0
-
 //use the ply and area pair to record
 struct PlyAreaPair
 {
@@ -54,9 +52,6 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
 {
     //if(plygon.size() < 2)
     //	return true;
-#if TESTING
-    int id = 0;
-#endif
 
     vector<PlyAreaPair> plyareas;
     for (GIS_polygon::iterator git = plygon.begin(); git != plygon.end(); ++git)
@@ -75,11 +70,6 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
     GIS_polygon * ogp = new GIS_polygon();
     ogp->m_id = plygon.m_id;
     ogp->push_back(*(plyareas.front().cply));
-
-#if TESTING
-    id++;
-    ogp->m_id = id;
-#endif
 
     plygons.push_back(ogp);
 
@@ -117,10 +107,6 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
                 pap.cply->set(c_ply::POUT, pap.cply->getHead());
                 gp->push_back(*(pap.cply));
 
-#if TESTING
-                id++;
-                gp->m_id = id;
-#endif
                 plygons.push_back(gp);
             }
         }

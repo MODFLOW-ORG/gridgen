@@ -23,8 +23,6 @@
 #include <map>
 using namespace std;
 
-#define DEBUGTEST 0
-
 namespace cusg
 {
 
@@ -499,13 +497,6 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
             LineSeg2d line(ptr->getPos(), next->getPos());
             bool r = intersect(grid, line);
 
-#if DEBUGTEST
-            if (r == false)
-            {
-                intersect(grid, line);
-            }
-#endif
-
             assert(r);
 
             //record the relationship between the boxes and this segment
@@ -816,21 +807,11 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
             {
                 Box * box = *i;
 
-#if DEBUGTEST
-                if (box->number != 8408) continue;
-#endif
-
                 //store intersection info here...
-#if 0
-					PolygonCellIntersectionInfo info;
-					buildIntersectionInfo(box, ply, info);
-					m_ply_interaction_info.push_back(info);
-#else
                 vector<PolygonCellIntersectionInfo> infos;
                 buildIntersectionInfo(box, ply, infos, bpc);
                 m_ply_interaction_info.insert(m_ply_interaction_info.end(), infos.begin(),
                                               infos.end());
-#endif
             }
         }
 
@@ -848,21 +829,11 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
                 {
                     Box * box = *i;
 
-#if DEBUGTEST
-                    if (box->number != 8408) continue;
-#endif
-
                     //store intersection info here...
-#if 0
-						PolygonCellIntersectionInfo info;
-						buildIntersectionInfo(box, ply, info);
-						m_ply_interaction_info.push_back(info);
-#else
                     vector<PolygonCellIntersectionInfo> infos;
                     buildIntersectionInfo(*i, ply, infos, bpc);
                     m_ply_interaction_info.insert(m_ply_interaction_info.end(), infos.begin(),
                                                   infos.end());
-#endif
                 }
             }
         } //end if(m_b_include_poly_boundary)
