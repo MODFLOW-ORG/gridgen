@@ -36,12 +36,11 @@ int main(int argc, char ** argv)
     string action;
     string dfn_file;
 
-    bool gl_display = false;
-
     for (int i = 1; i < argc; i++)
     {
+        // -g opened the OpenGL viewer, which is no longer built
         if (strcmp(argv[i], "-g") == 0)
-            gl_display = true;
+            continue;
         else if (action.empty())
             action = argv[i];
         else
@@ -49,7 +48,7 @@ int main(int argc, char ** argv)
     }
 
     DefinitionParser def_parser;
-    bool parse_suc = def_parser.parse(dfn_file);
+    def_parser.parse(dfn_file);
 
     block_raw_data * data = def_parser.getBlockData(action);
 

@@ -695,8 +695,6 @@ char SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2
         }
     }
 
-    real denom_small = denom * small_number;
-
     //compute s
     num_s = a[0] * (d[1] - c[1]) + c[0] * (a[1] - d[1]) + d[0] * (c[1] - a[1]);
 

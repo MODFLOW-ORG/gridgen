@@ -758,7 +758,6 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
                 for (list<Box *>::iterator i = bd_intersection.begin(); i != bd_intersection.end();
                      i++)
                 {
-                    Box * box = *i;
 
                     //store intersection info here...
                     vector<PolygonCellIntersectionInfo> infos;

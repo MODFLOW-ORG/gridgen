@@ -138,32 +138,31 @@ void writeIntDBVal(DBFHandle & dbfhdl, int entity, vector<int> & intFldIDs, vect
     int strFldNum = strVals.size();
     int logFldNum = logVals.size();
     //write integer fields
-    int success = 0;
     for (int i = 0; i < intFldNum; ++i)
     {
         if (!isTxt)
-            success = DBFWriteIntegerAttribute(dbfhdl, entity, intFldIDs[i], intVals[i]);
+            DBFWriteIntegerAttribute(dbfhdl, entity, intFldIDs[i], intVals[i]);
         else
             ofile << intVals[i] << _IFO_DEL;
     }
     for (int i = 0; i < dbFldNum; ++i)
     {
         if (!isTxt)
-            success = DBFWriteDoubleAttribute(dbfhdl, entity, dbFldIDs[i], dbVals[i]);
+            DBFWriteDoubleAttribute(dbfhdl, entity, dbFldIDs[i], dbVals[i]);
         else
             ofile << round_trip(dbVals[i]) << _IFO_DEL;
     }
     for (int i = 0; i < strFldNum; i++)
     {
         if (!isTxt)
-            success = DBFWriteStringAttribute(dbfhdl, entity, strFldIDs[i], strVals[i].c_str());
+            DBFWriteStringAttribute(dbfhdl, entity, strFldIDs[i], strVals[i].c_str());
         else
             ofile << strVals[i].c_str() << _IFO_DEL;
     }
     for (int i = 0; i < logFldNum; i++)
     {
         if (!isTxt)
-            success = DBFWriteStringAttribute(dbfhdl, entity, logFldIDs[i], logVals[i].c_str());
+            DBFWriteStringAttribute(dbfhdl, entity, logFldIDs[i], logVals[i].c_str());
         else
             ofile << logVals[i].c_str() << _IFO_DEL;
     }
@@ -238,7 +237,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
     }
     else
     {
-        int success = 0;
         ofile << "nodenumber" << _IFO_DEL;
         for (int i = 0; i < intFldNum; ++i)
         {
@@ -289,10 +287,9 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             }
 
             //write nodenumber
-            int success = 0;
             if (!isTxt)
-                success = DBFWriteIntegerAttribute(
-                    dbfhdl, entity, ndfldId, pit->box->number == -1 ? -1 : pit->box->number + 1);
+                DBFWriteIntegerAttribute(dbfhdl, entity, ndfldId,
+                                         pit->box->number == -1 ? -1 : pit->box->number + 1);
             else
                 ofile << (pit->box->number == -1 ? -1 : pit->box->number + 1) << _IFO_DEL;
             writeIntDBVal(dbfhdl, entity, intFldIDs, intVals, dbFldIDs, dbVals, strFldIDs, strVals,
@@ -344,7 +341,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             }
 
             //write nodenumber
-            int success = 0;
             if (!isTxt)
                 DBFWriteIntegerAttribute(dbfhdl, entity, ndfldId,
                                          pit->box->number == -1 ? -1 : pit->box->number + 1);
@@ -425,7 +421,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
             //write nodenumber
-            int success = 0;
             if (!isTxt)
                 DBFWriteIntegerAttribute(dbfhdl, entity, ndfldId,
                                          pit->box->number == -1 ? -1 : pit->box->number + 1);

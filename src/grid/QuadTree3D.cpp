@@ -400,7 +400,7 @@ void QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
                     continue; //not really intersect
                 }
 
-                bool r = b->split(0);
+                b->split(0);
 
                 for (int c = 0; c < 4; c++) nodegroup.add(b->pChildren[c]);
 
@@ -1014,7 +1014,6 @@ double * QuadTree3D::get_top()
         if (m_top_layer_z_operator[b->layer] == Z_VALUE_REPLICATE_OPEARTOR)
         {
             Index2d i = m_mfgrid->getIndex(Point2d(b->x, b->y));
-            int id = m_mfgrid->get_nodeid(b->layer, i[0], i[1]);
             this->top[nodenumber] = m_mfgrid->botm(b->layer, i[0], i[1]);
         }
         else //if(m_top_layer_z_operator[b->layer]==Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR)
@@ -1097,7 +1096,6 @@ bool QuadTree3D::recompute_z_of_cells()
     }
 
     int nodesize = nodes();
-    int mfgrid_csize = m_mfgrid->nrow * m_mfgrid->ncol;
 
     for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
     {
@@ -1480,7 +1478,6 @@ double QuadTree3D::bilinear_interpolation(const Point2d & pt, ascii_grid * ag)
 
     if (x < 0 || x > 1 || y < 0 || y > 1)
     {
-        Index2d id = ag->getIndex(pt[0], pt[1]);
         {
             if (x < 0)
                 x = 0;

@@ -41,17 +41,17 @@ void writeDB(int entityNum, DBFHandle & dbf, vector<int> & fieldIds, vector<int>
              int l, int r, int c, string & location, double top, double bot, double dx, double dy)
 {
     //write to DB
-    int writeDBFSuccess2 = DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[0], num);
-    int success3 = DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[1], l);
-    int success4 = DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[2], r);
-    int success5 = DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[3], c);
+    DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[0], num);
+    DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[1], l);
+    DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[2], r);
+    DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[3], c);
 
-    int success6 = DBFWriteStringAttribute(dbf, entityNum, fieldIds[4], location.c_str());
+    DBFWriteStringAttribute(dbf, entityNum, fieldIds[4], location.c_str());
 
-    int ds1 = DBFWriteDoubleAttribute(dbf, entityNum, dbIds[0], top);
-    int ds2 = DBFWriteDoubleAttribute(dbf, entityNum, dbIds[1], bot);
-    int dr = DBFWriteDoubleAttribute(dbf, entityNum, dbIds[2], dx);
-    int dl = DBFWriteDoubleAttribute(dbf, entityNum, dbIds[3], dy);
+    DBFWriteDoubleAttribute(dbf, entityNum, dbIds[0], top);
+    DBFWriteDoubleAttribute(dbf, entityNum, dbIds[1], bot);
+    DBFWriteDoubleAttribute(dbf, entityNum, dbIds[2], dx);
+    DBFWriteDoubleAttribute(dbf, entityNum, dbIds[3], dy);
 }
 
 //write feature and info using index
@@ -216,8 +216,6 @@ void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, 
     ////loop over all the leaf nodes
 
     ModflowGrid * mfgrid = qtree->getModflowGrid();
-    unsigned int id_offset = (qtree->get_one_based_node_numbering()) ? 1 : 0;
-    unsigned int id = id_offset; //starting from 1 if it's one based
 
     double cx, cy, rotation;
     mfgrid->getRotatePara(cx, cy, rotation);
@@ -308,8 +306,6 @@ void writeModflowGrid2Shp(ModflowGrid * modflow, string gridShpName, string feat
     ////loop over all the leaf nodes
 
     ModflowGrid * mfgrid = modflow;
-    unsigned int id_offset = 0;  //
-    unsigned int id = id_offset; //starting from 1 if it's one based
     char extra[64];
 
     double cx, cy, rotation;

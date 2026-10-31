@@ -144,7 +144,7 @@ void GridIntersection::build(grid_intersection_raw_data & data)
             if (angle != 0) polygons[j].rotate(cx, cy, -angle);
 
             vector<GIS_polygon *> tvplygons;
-            bool allInhole = checkHole(polygons[j], tvplygons);
+            checkHole(polygons[j], tvplygons);
 
             //loop over all the polygons
             for (vector<GIS_polygon *>::iterator git = tvplygons.begin(); git != tvplygons.end();
@@ -676,10 +676,6 @@ double GridIntersection::intersect_len(Box * b, const LineSeg2d & line)
 bool GridIntersection::intersect(const Point2d & pt, const c_ply & ply)
 {
 
-    static int totoal_call = 0;
-    static int totoal_failed_call = 0;
-    totoal_call++;
-
     int max_trial = 200;
 
     Vector2d offset(ply.getHead()->getPos().get());
@@ -728,8 +724,6 @@ bool GridIntersection::intersect(const Point2d & pt, const c_ply & ply)
         return (int_count % 2) == 1;
     }
 
-    totoal_failed_call++;
-
     return false;
 }
 
@@ -739,10 +733,6 @@ bool GridIntersection::intersect(const Point2d & pt, const c_ply & ply)
 //
 bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
 {
-
-    static int totoal_call = 0;
-    static int totoal_failed_call = 0;
-    totoal_call++;
 
     int max_trial = 200;
 
@@ -802,8 +792,6 @@ bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
 
         return (int_count % 2) == 1;
     }
-
-    totoal_failed_call++;
 
     return false;
 }

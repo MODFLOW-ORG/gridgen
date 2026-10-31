@@ -193,7 +193,7 @@ bool DefinitionParser::parse(istream & in, string folder)
             string relFolder = "";
             if (dotIdx != -1) relFolder = dfnPath.substr(0, dotIdx);
 
-            bool r = parse(relfin, relFolder);
+            parse(relfin, relFolder);
             relfin.close();
 
             continue;

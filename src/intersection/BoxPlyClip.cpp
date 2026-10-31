@@ -41,7 +41,6 @@ void InsertionSortV(vector<VNode *> & vs, bool isX)
     {
         VNode * tv = vs[i];
         int j = i - 1;
-        bool bcon = (!isX && (vs[j]->x > tv->x)) || (isX && (vs[j]->y > tv->y));
         while (j >= 0 && ((!isX && (vs[j]->x > tv->x)) || (isX && (vs[j]->y > tv->y))))
         {
             vs[j + 1] = vs[j];
@@ -780,7 +779,6 @@ void BoxPlyClip::collectPolygonsInInterval(bool isX, bool isBigger, vector<VNode
         }
 
         VNode * vn1 = isNextO ? interVs[endId]->next : interVs[endId]->prev;
-        VNode * vn2 = isNextO ? interVs[endId]->prev : interVs[endId]->prev;
         if (interVs[endId]->isOnline && (!vn1->isVisited))
         {
             startId = endId;

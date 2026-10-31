@@ -92,16 +92,12 @@ bool ShapeReader::read(const string & filename)
     int nWidth, nDecimals;
 
     //position of these fields in database...
-    uint base_ele_pos = UINT_MAX;
-    uint heigh_pos = UINT_MAX;
     for (int i = 0; i < DBFGetFieldCount(hDBF); i++)
     {
         char szTitle[12];
         DBFFieldType eType = DBFGetFieldInfo(hDBF, i, szTitle, &nWidth, &nDecimals);
         if (eType != FTInteger && eType != FTDouble && eType != FTString && eType != FTLogical)
             continue; //not good...
-        if (base_elevation_tag == szTitle) base_ele_pos = i;
-        if (height_tag == szTitle) heigh_pos = i;
 
         //collect the field name and type info
         if (eType == FTInteger)

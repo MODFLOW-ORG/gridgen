@@ -43,7 +43,7 @@ void writeOneLine(int vNum, double * tmpX, double * tmpY, int lyrID, int layer, 
     SHPDestroyObject(shpObj);
 
     //write the entity feature info
-    int success = DBFWriteIntegerAttribute(dbfHandle, entityNum, lyrID, layer);
+    DBFWriteIntegerAttribute(dbfHandle, entityNum, lyrID, layer);
 }
 
 //write the column and row edges of the base grid; grid holds the base cells
@@ -89,14 +89,11 @@ void writeQuadtree2ShpLine(cusg::QuadTree3D * qtree, string gridShpName)
     prepareWriteLine(gridShpName, &handler, &dbfHandle, &lyrId);
 
     ModflowGrid * mfgrid = qtree->getModflowGrid();
-    unsigned int id_offset = 0;
-    unsigned int id = id_offset;
 
     GridVertices gv(qtree);
     writeOneMFGrid(qtree, mfgrid, gv, handler, dbfHandle, lyrId);
 
     double resX[2], resY[2];
-    SHPObject * shpObj = NULL;
     //get through each cell
     for (NodeGroup::iterator nit = qtree->nodegroup.begin(); nit != qtree->nodegroup.end(); ++nit)
     {

@@ -7,8 +7,6 @@
 #include <sstream>
 using namespace std;
 
-static int ShareVID = 0;
-
 //reverse interpolate the z coordinates for all boxes
 //void reverseInterpolate(QuadTree3D* qtree);
 
@@ -208,7 +206,6 @@ void DFSWriteQDT2VTK(QuadTree3D * qtree, ofstream & ofile, int & pntNum, Box * b
                      int c, bool one_based_numbering, const GridVertices & gv,
                      vector<int> * intvals, vector<double> * dbvals)
 {
-    char tmp[8] = {'\0'};
     //if(b->isLeaf)
     if (b->isLeaf && b->active)
     {
@@ -337,7 +334,6 @@ void writeQuadtreeGrid2VTK(QuadTree3D * qtree, string vtkName)
         writeDataArray(ofile, "Int32", intNames[i], intvals[i]);
     }
 
-    int dbSize = dbNames.size();
     for (int i = 0; i < 4; i++)
     {
         writeDataArray(ofile, "Float64", dbNames[i], dbvals[i]);
@@ -551,8 +547,7 @@ void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool with
     dbNames.push_back("delr");
     dbNames.push_back("delc");
 
-    int cellNum =
-        collectCell_share(mfgrid, allBoxes, intvals, dbvals, without_inactive, one_based_numbering);
+    collectCell_share(mfgrid, allBoxes, intvals, dbvals, without_inactive, one_based_numbering);
 
     //write the points, loop over each layer
     stringstream ss0;
@@ -596,7 +591,6 @@ void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool with
         writeDataArray(ofile, "Int32", intNames[i], intvals[i]);
     }
 
-    int dbSize = dbNames.size();
     for (int i = 0; i < 4; i++)
     {
         writeDataArray(ofile, "Float64", dbNames[i], (dbvals[i]));
@@ -1025,7 +1019,6 @@ void buildBox(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> & eda
 void buildSharing(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> & edata,
                   VTK_Box * boxdata)
 {
-    int bsize = qtree->nodegroup.size();
 
     // build VE
     buildVE(qtree, vdata, edata, boxdata);
@@ -1357,8 +1350,7 @@ void write_vtu_file(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *>
     dbNames.push_back("delr");
     dbNames.push_back("delc");
     //
-    int cellNum =
-        collectCell_share(qtree, allBoxes, intvals, dbvals, qtree->get_one_based_node_numbering());
+    collectCell_share(qtree, allBoxes, intvals, dbvals, qtree->get_one_based_node_numbering());
 
     //world coordinates of each point from the nearest corner of a cell it bounds
     GridVertices gv(qtree);
@@ -1434,7 +1426,6 @@ void write_vtu_file(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *>
         writeDataArray(ofile, "Int32", intNames[i], intvals[i]);
     }
 
-    int dbSize = dbNames.size();
     for (int i = 0; i < 4; i++)
     {
         writeDataArray(ofile, "Float64", dbNames[i], (dbvals[i]));
