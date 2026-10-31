@@ -103,12 +103,6 @@ void addShpAttrVal(int iShape, GridIntersection * gridInter, vector<bool> & bInt
     }
 }
 
-//void  addShpAttrVal(GridIntersection* gridInter, 	vector<bool>& bIntFld, vector<bool>& bDBFld,vector<bool>& bStrFld, vector<bool>& bLogFld,
-//	vector<int>& ivals, vector<double>& dvals, vector<string>& svals, vector<string>& lvals)
-//{
-//
-//}
-
 void addDBHandleFields(DBFHandle & dbfhdl, int intFldNum, vector<string> & intFldNames,
                        int doubleFldNum, vector<string> & dbFldNames, vector<int> & intFldIDs,
                        vector<int> & dbFldIDs)
@@ -192,7 +186,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             handler = SHPCreate(file.c_str(), SHPT_POINT);
         else
         {
-            //ofile.open(file.c_str(),std::ofstream::out | std::ofstream::trunc);
             ofile.open(file.c_str(), std::ofstream::out | std::ofstream::trunc);
         }
     }
@@ -387,9 +380,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             x = new double[vsize];
             y = new double[vsize];
 
-            //if(pgonInfo.m_interPolygon->size() > 1)
-            //	cerr<<pgonInfo.m_interPolygon->size()<<_IFO_DEL;
-
             //make sure the out boundary
             list<c_polygon::iterator> orderedPItrs;
             for (c_polygon::iterator plyit = pgonInfo.m_interPolygon->begin();
@@ -464,9 +454,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
 void writePntIntersect(GridIntersection * gridInter, string file, vector<string> & attributes,
                        FILETYPE filetype)
 {
-    //ofstream fout;
-    //if(isTxt)
-    //	fout.open(file.c_str(), std::ofstream::out | std::ofstream::trunc);
     vector<PointCellIntersectionInfo> & pntInters = gridInter->getPointIntersectionInfo();
 
     vector<string> intFldName, dbFldName, strFldName, logFldName;

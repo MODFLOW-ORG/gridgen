@@ -74,7 +74,6 @@ extern "C"
 
     static unsigned x[3] = {X0, X1, X2}, a[3] = {A0, A1, A2}, c = C;
     static unsigned short lastx[3];
-    //static void next();
 
 #if HAVEFP
     REAL drand48()

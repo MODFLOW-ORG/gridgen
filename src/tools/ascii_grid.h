@@ -45,7 +45,6 @@ public:
     {
         if (i >= nrows || j >= ncols)
         {
-            //cerr<<" ! Error: arcinfo_ascii_grid::getvalue index out of bound ("<<i<<"/"<<nrows<<","<<j<<"/"<<ncols<<")"<<endl;
             return nodata_value;
         }
 

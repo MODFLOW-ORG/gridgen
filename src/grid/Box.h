@@ -34,7 +34,6 @@ namespace cusg
 typedef Point<int, 2> Index2d; //!< 2d index
 typedef Point<int, 3> Index3d; //!< 3d index
 
-//class GridIntersection;
 class ModflowGrid;
 class Box; //defined later in this file
 
@@ -113,9 +112,6 @@ public:
 
         pUp = pDown = NULL;
         priority = 0;
-
-        //flag=-1;
-        //ldX = ldY = luX = luY = rdX = rdY = ruX = ruY = 0.0;
     }
 
     /*!  \brief Constructor of the Box
@@ -146,9 +142,6 @@ public:
 
         pUp = pDown = NULL;
         priority = 0;
-
-        //flag=-1;
-        //ldX = ldY = luX = luY = rdX = rdY = ruX = ruY = 0.0;
     }
 
     /// get all neighbors in direction "dir"
@@ -414,13 +407,8 @@ public:
     //the child modflow grid,used in LGR_Grid
     //ModflowGrid * childmfgrid;
 
-    //bool bRegular;
-
     ///the coordinates of the center after rotation
     void rotateCtr(double cx, double cy, double rotation, double & resx, double & resy);
-
-    //int flag;
-    //Vertex* vertices[8];
 };
 //end of class Box
 

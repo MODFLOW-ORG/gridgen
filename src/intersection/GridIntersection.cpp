@@ -71,8 +71,6 @@ void GridIntersection::build(grid_intersection_raw_data & data)
                 //rotate
                 if (angle != 0) line.rotate(cx, cy, -angle);
 
-                //cout<<"m_start_geo_dist["<<j<<"]["<<is<<"]="<<line.m_start_geo_dist<<","<<line.m_end_geo_dist<<endl;
-
                 if (qtgrid != NULL)
                     intersect(qtgrid, line);
                 else if (mfgrid != NULL)
@@ -128,7 +126,6 @@ void GridIntersection::build(grid_intersection_raw_data & data)
 
                 k++;
             }
-            //arcs[j].destroy();
 
         } //end for j
     } //end if
@@ -140,9 +137,6 @@ void GridIntersection::build(grid_intersection_raw_data & data)
         int psize = polygons.size();
         for (int j = 0; j < psize; j++)
         {
-            //if(j != 3728)
-            //	continue;
-            //cout<<"poly "<<j<<endl;
 
             if (j % 500 == 0) cout << "- Processing polygon: " << j << "    ......" << endl;
 
@@ -152,13 +146,10 @@ void GridIntersection::build(grid_intersection_raw_data & data)
             vector<GIS_polygon *> tvplygons;
             bool allInhole = checkHole(polygons[j], tvplygons);
 
-            //cout<<"begin intersection"<<endl;
-            //int k = 0;
             //loop over all the polygons
             for (vector<GIS_polygon *>::iterator git = tvplygons.begin(); git != tvplygons.end();
                  ++git)
             {
-                //cout<<k<<endl; k++;
                 GIS_polygon gp = *(*git);
 
                 BoxPlyClip * bpc = convertCPolygonToClip(*(*git));
@@ -173,7 +164,6 @@ void GridIntersection::build(grid_intersection_raw_data & data)
                 bpc->destroy();
                 delete bpc;
             }
-            //tvplygons.pop_back();
             for (vector<GIS_polygon *>::iterator vit = tvplygons.begin(); vit != tvplygons.end();
                  ++vit)
             {
@@ -414,16 +404,10 @@ bool GridIntersection::intersect(ModflowGrid * grid, const Point2d & pt) //, boo
 
 bool GridIntersection::intersect(QuadTree3D * grid, const Point2d & pt) //, bool noBoud)
 {
-    //vector<Box*> tmp;
-    //tmp.swap(m_intersection);
     ModflowGrid * mf = grid->getModflowGrid();
-
-    //cout<<"Check: mf->nrow="<<mf->nrow<<" mf->ncol="<<mf->ncol<<endl;
 
     Index2d id2d = mf->getIndex(pt);
 
-    //cout<<"pt="<<pt<<endl;
-    //cout<<"id2d="<<id2d[0]<<","<<id2d[1]<<endl;
     if (id2d[0] == INT_MAX || id2d[1] == INT_MAX || id2d[0] == INT_MIN || id2d[1] == INT_MIN)
         return false;
 
@@ -685,18 +669,6 @@ double GridIntersection::intersect_len(Box * b, const LineSeg2d & line)
     return 0; //no intersection...
 }
 
-//c_ply GridIntersection::getIntersection(Box * b, const c_ply& ply)
-//{
-//	c_ply intply(c_ply::POUT);
-//	return intply;
-//}
-
-//bool gridintersection::intersect(box * b, const c_ply& ply)
-//{
-
-//    return true;
-//}
-
 //
 // check if a point is inside a ply
 // ray shooting is slow. Can be improved.
@@ -748,8 +720,6 @@ bool GridIntersection::intersect(const Point2d & pt, const c_ply & ply)
             ptr = next;
         } while (ptr != ply.getHead());
 
-        //cout<<"int_count="<<int_count<<endl;
-
         if (degenerate)
         {
             max_trial--;
@@ -759,8 +729,6 @@ bool GridIntersection::intersect(const Point2d & pt, const c_ply & ply)
     }
 
     totoal_failed_call++;
-
-    //cout<<"Max iteration reached.. near="<<near<<" far="<<far<<" ratio="<<totoal_failed_call<<"/"<<totoal_call<<endl;
 
     return false;
 }
@@ -845,25 +813,11 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & plygon,
                                          vector<GIS_polygon *> & resultPlygons,
                                          BoxPlyClip * bpcInit)
 {
-    //if(b->number != 16443)
-    //	return;
-
-    //ofstream ofile("C:\\Guilin\\matlab files\\cor.txt");
-    //GIS_polygon gpn;
-    //gpn.copy(plygon);
-    //int vsize = gpn.getSize();
-    //for(int i = 0; i< vsize; i++)
-    //{
-    //	ofile<<gpn[i]->getPos()[0]<<"\t"<<gpn[i]->getPos()[1]<<endl;
-    //}
-    //ofile.close();
-    //cout<<"num "<<b->number<<endl;
 
     double xmin = min(b->x - b->dx / 2, b->x + b->dx / 2);
     double xmax = max(b->x - b->dx / 2, b->x + b->dx / 2);
     double ymin = min(b->y - b->dy / 2, b->y + b->dy / 2);
     double ymax = max(b->y - b->dy / 2, b->y + b->dy / 2);
-    //cout<<"current id : "<<b->id<<endl;
 
     /*****************************************************************/
     BoxPlyClip * bpc = bpcInit;
@@ -923,9 +877,6 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & plygon,
     {
         bpc->resetStatus();
     }
-
-    //bpc->destroy();
-    //delete bpc;
 }
 
 //check if b1 and b2 are neighbors that sharing a same edge/face, return -1 if nor neighbors

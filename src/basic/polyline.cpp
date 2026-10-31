@@ -71,20 +71,6 @@ void c_plyline::doInit()
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//convert plyline to ply
-//c_ply c_plyline::toply() const
-//{
-//    c_ply ply(c_ply::UNKNOWN);
-//    ply_vertex* ptr=getHead();
-//    ply.beginPoly();
-//    do{
-//        const Point2d& pos=ptr->getPos();
-//        ply.addVertex(pos[0],pos[1]);
-//        ptr=ptr->getNext();
-//    }while( ptr!=NULL );
-//    ply.endPoly();
-//    return ply;
-//}
 
 void c_plyline::build_all()
 {
@@ -141,56 +127,6 @@ void GIS_plyline::computeGeodesicDist()
 // Compute the center and the box of a list of plys
 //
 
-//    //
-//    // Compute the center and the box of a list of plys
-//    //
-//    void c_plylinelist::translate(const Vector2d& v)
-//    {
-//        for(iterator i=begin();i!=end();i++) i->translate(v);
-//    }
-//
-//    //
-//    // rotate all polychains
-//    //
-//    void c_plylinelist::rotate(double r)
-//    {
-//        for(iterator i=begin();i!=end();i++) i->rotate(r);
-//    }
-//
-//    void c_plylinelist::negate()
-//    {
-//        for(iterator i=begin();i!=end();i++) i->negate();
-//    }
-//
-//
-//    //
-//    // Compute the center and the box of a list of plys
-//    //
-//
-//    void c_plylinelist::buildBoxAndCenter()
-//    {
-//        //typedef list<c_ply>::iterator IT;
-//        box[0]=box[2]=FLT_MAX;
-//        box[1]=box[3]=-FLT_MAX;
-//        for(iterator i=begin();i!=end();i++){
-//
-//            ply_vertex * ptr=i->getHead();
-//            do{
-//                const Point2d& p=ptr->getPos();
-//                if(p[0]<box[0]) box[0]=p[0];
-//                if(p[0]>box[1]) box[1]=p[0];
-//                if(p[1]<box[2]) box[2]=p[1];
-//                if(p[1]>box[3]) box[3]=p[1];
-//                ptr=ptr->getNext();
-//            }
-//            while(ptr!=NULL); //end while
-//        }
-//
-//        center[0]=(box[0]+box[1])/2;
-//        center[1]=(box[2]+box[3])/2;
-//
-//        is_buildboxandcenter_called=true;
-//    }
 //
 //
 // IO operators
@@ -224,45 +160,6 @@ istream & operator>>(istream & is, c_plyline & poly)
     poly.endPoly();
     return is;
 }
-//
-//    istream& operator>>( istream& is, c_plylinelist& p)
-//    {
-//        //remove header comments
-//        do{
-//            char tmp[1024];
-//            char c=is.peek();
-//            if(isspace(c)) is.get(c); //eat it
-//            else if(c=='#') {
-//                is.getline(tmp,1024);
-//            }
-//            else break;
-//        }while(true);
-//
-//        //start reading
-//        uint size;
-//        is>>size;
-//        uint vid=0;
-//        for(uint i=0;i<size;i++){
-//            c_plyline poly;
-//            is>>poly;
-//            p.push_back(poly);
-//            uint vsize=poly.getSize();
-//            for(uint j=0;j<vsize;j++){
-//                poly[j]->setVID(vid++);       //id of vertex in the polygons
-//            }
-//        }
-//
-//        //done
-//        return is;
-//    }
-
-//    ostream& operator<<( ostream& out, c_plylinelist& p)
-//    {
-//        out<<p.size()<<"\n";
-//        typedef c_plylinelist::iterator PIT;
-//        for(PIT i=p.begin();i!=p.end();i++) out<<*i;
-//        return out;
-//    }
 
 void c_plyline::rotate(double cx, double cy, double angle)
 {

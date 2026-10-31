@@ -62,27 +62,11 @@ public:
     void refine(c_plyline & arc, int max_level, int at_layer = 0);
     void refine(c_polygon & pgon, int max_level, int at_layer = 0);
 
-    //void refine( max_level, at_layer, Point2d);
-
     /// Return a numpy array of size (nodes) that contains the area for all cells.
     double * get_cell_areas();
 
     /*!
         \brief Return the four vertices for the specified nodeid.
-    */
-    /*
-	vector<Point2d> get_vertices(int nodeid)
-	{
-		
-	}
-	*/
-
-    /*
-	///Return the nodeid for the modflow grid.
-	int get_nodeid(int i, int j)
-	{
-        //return i * ncol + j;
-    }
     */
 
     /*! 

@@ -52,7 +52,6 @@ inline int round(REAL v)
 }
 
 #define sign(x) ((x) >= 0 ? 1 : -1)
-//#define swap(x1, x2)  {int tmp=x1; x1=x2; x2=tmp}
 #define applysign(x, y) ((y) >= 0 ? abs(x) : -abs(x))
 
 /* Angle Conversions & Constants */

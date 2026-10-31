@@ -107,11 +107,7 @@ private:
     int Qseed;
 
 public:
-    randQueue(int s) : Qseed(s)
-    {
-        //srand( time(0) );
-        srand(Qseed);
-    }
+    randQueue(int s) : Qseed(s) { srand(Qseed); }
 
     void push(Box * b) { L.push_back(b); }
 

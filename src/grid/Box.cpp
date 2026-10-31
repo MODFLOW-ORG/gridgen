@@ -78,9 +78,6 @@ BoxIter::BoxIter(const Box * bb, int direc) : b(bb), direction(direc), neighbor(
     cross = (direc + 2) % 4;
 }
 
-//double Box::r0 = 0;
-//int Box::counter = 0;
-
 /*! \brief Returns the first box in the node walk.
  *  \returns A pointer to the first node in the direction to be
  *           traveled (as specified when the iterator was instantiated).
@@ -238,8 +235,6 @@ void Box::getNeighbors(list<Box *> & neighbors, int dir)
  */
 bool Box::split(double epsilon)
 {
-
-    //cout<< "refining nodeid: "<<id<<endl;
 
     if (this->dy < epsilon || this->dx < epsilon)
     {
@@ -472,12 +467,6 @@ bool Box::refine_pUpDown(Box ** ppbox)
 Box * Box::find(double qx, double qy)
 {
     if (isLeaf && in(qx, qy)) return this;
-
-    //if(childmfgrid != NULL)
-    //{
-    //	Point2d pt(qx, qy);
-    //	return childmfgrid->find_nodeobj(pt);
-    //}
 
     assert(!isLeaf);
 

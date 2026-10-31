@@ -242,8 +242,6 @@ class quadtree_grid_raw_data : public grid_raw_data
 public:
     quadtree_grid_raw_data(block_raw_data & block) : grid_raw_data(block)
     {
-        //        ncon=nodes=0;
-        //        nodesperlay=ia=ja=connection_direction_array=NULL;
         modflow_data = NULL;
         qtree_grid = NULL;
     }
@@ -253,28 +251,15 @@ public:
     virtual Grid * build();
 
     string modflow_grid;
-    //    int nodes;
-    //    long ncon;
 
     //raw string data
     string tree_structure_file;
-    //    list<string> nodesperlay_str;
-    //    list<string> ia_str;
-    //    list<string> ja_str;
-    //    list<string> connection_direction_array_str;
     map<int, list<string>> top_str;
     map<int, list<string>> bot_str;
 
     //numerical data
     modflow_grid_raw_data * modflow_data;
     QuadTree3D * qtree_grid; //the quadtree built by this raw data
-
-    //    int * nodesperlay; //size of nlay
-    //    int * ia; //size of nodes+1
-    //    int * ja; //size of ncon
-    //    int * connection_direction_array; //size of ncon
-    //vector< REAL* > top;
-    //vector< REAL* > bot;
 
     //add by Guilin
     vector<TreeStructNode> allNodes;
@@ -313,7 +298,6 @@ public:
     //active domains
     map<int, list<string>> active_domain_str;
 
-    //string node_numbering;
     map<int, list<string>> refine_by_features_str; //one string for each layer
     map<int, list<string>> refine_by_array_str;    //one array of size (nrow,ncol) for each layer
     map<int, list<string>> top_str;
@@ -337,7 +321,6 @@ public:
     vector<pair<string, string>>
         bot; //first string is the operation and the second string is the source name
 
-    //bool areaWeightedInterpolate;
     map<int, bool> top_area_weighted; //the mode of interpolation: "AREA_WEIGHTED"
     map<int, bool> bot_area_weighted; //the mode of interpolation: "AREA_WEIGHTED"
 };
@@ -437,7 +420,6 @@ public:
     virtual bool initialize(map<string, block_raw_data *> & blocks);
 
     string grid_name;
-    //int feature_type;
     string feature_type;
 
     string shapefile;

@@ -91,7 +91,6 @@ void writeQuadtree2ShpLine(cusg::QuadTree3D * qtree, string gridShpName)
     ModflowGrid * mfgrid = qtree->getModflowGrid();
     unsigned int id_offset = 0;
     unsigned int id = id_offset;
-    //char extra[64];
 
     GridVertices gv(qtree);
     writeOneMFGrid(qtree, mfgrid, gv, handler, dbfHandle, lyrId);

@@ -66,7 +66,6 @@ bool arcinfo_ascii_grid::build(istream & ins)
     //read values
     for (unsigned int i = 0; i < size; i++)
     {
-        //int id=(nrows-i/ncols-1)*(ncols)+(i%ncols);
         ins >> values[i];
     }
 
@@ -120,7 +119,6 @@ double bilinear_interpolation(ascii_grid * grid, unsigned int i, unsigned int j,
         x2 = ll; //avoid interpolating invalid values...
     else
         x2 = (1 - x) * ll + x * lr;
-    //else x2=(1-x)*ll+x*lr;
 
     if (grid->isvalid(x1) && grid->isvalid(x2) == false)
     {

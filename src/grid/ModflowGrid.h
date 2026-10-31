@@ -80,7 +80,6 @@ public:
     {
         cx = this->X[0] - 0.5 * delr[0];
         cy = this->Y[nrow - 1] - 0.5 * delc[nrow - 1];
-        //cy = this->Y[nrow - 1]  + 0.5 * delc[nrow - 1];//- 0.5 * delc[nrow - 1];
         angle = rotation;
     }
 

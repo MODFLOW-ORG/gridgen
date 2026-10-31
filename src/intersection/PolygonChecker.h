@@ -13,4 +13,3 @@ bool CPlyEnclose(const c_ply & cply, const Point2d & p2d);
 bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons);
 
 ////return true if only one polygon is in plygon
-//bool preProPolygon(GIS_polygon& plygon, vector<GIS_polygon*>& gplygons);

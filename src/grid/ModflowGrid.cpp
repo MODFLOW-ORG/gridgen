@@ -422,7 +422,6 @@ void ModflowGrid::add_connections_3d()
             {
                 int nodeid = get_nodeid(k, i, j);
 
-                //cout<<"Adding connections for nodeid: "<<nodeid<<endl;
                 Box * nodeobj = nodegroup[nodeid];
 
                 if (i < last_row)
@@ -477,30 +476,5 @@ void ModflowGrid::add_connections_3d()
         } //end i
     } //end k
 }
-
-//void ModflowGrid::rotate()
-//{
-//	//if(rotation==0)
-//	//	return;
-//	double cx = this->X[0] - 0.5 * delr[0];
-//	double cy = this->Y[nrow - 1] - 0.5 * delc[nrow - 1];
-//	NodeGroup::iterator nit = nodegroup.begin();
-//	for(; nit != nodegroup.end(); ++nit)
-//	{
-//		Box* b = *nit;
-//		b->ldX = cx + (b->x - b->dx / 2  - cx) * cos(rotation) - (b->y - b->dy / 2 - cy) * sin(rotation);
-//		b->ldY = cy + (b->y - b->dy / 2 - cy) * cos(rotation) + (b->x - b->dx / 2 - cx) * sin(rotation);
-//
-//		b->luX = cx + (b->x - b->dx / 2  - cx) * cos(rotation) - (b->y + b->dy / 2 - cy) * sin(rotation);
-//		b->luY = cy + (b->y + b->dy / 2 - cy) * cos(rotation) + (b->x - b->dx / 2 - cx) * sin(rotation);
-//
-//		b->rdX = cx + (b->x + b->dx / 2  - cx) * cos(rotation) - (b->y - b->dy / 2 - cy) * sin(rotation);
-//		b->rdY = cy + (b->y - b->dy / 2 - cy) * cos(rotation) + (b->x + b->dx / 2 - cx) * sin(rotation);
-//
-//		b->ruX = cx + (b->x + b->dx / 2  - cx) * cos(rotation) - (b->y + b->dy / 2 - cy) * sin(rotation);
-//		b->ruY = cy + (b->y + b->dy / 2 - cy) * cos(rotation) + (b->x + b->dx / 2 - cx) * sin(rotation);
-//	}
-//	this->bIsRotated = true;
-//}
 
 } //namespace cusg

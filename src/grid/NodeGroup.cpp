@@ -138,7 +138,6 @@ void NodeGroup::disable_nodes_in_layer(int layer)
  */
 void NodeGroup::build_node_info()
 {
-    //if(rebuild_nodeid_array==false) return;
 
     //count the number of leaf nodes
     this->total_leaf_number = 0;
@@ -161,7 +160,6 @@ void NodeGroup::build_node_info()
     nodelay_array = new int[nlay]; // number of nodes per layer
     assert(nodeid_array && nodelay_array);
     memset(nodelay_array, 0, sizeof(int) * nlay);
-    //total_leaf_number=active_leaf_number=0;
 
     //number the nodes, starting with the lowest layer number
     //this is the id of the node in CSR/COO

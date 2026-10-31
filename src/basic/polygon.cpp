@@ -10,20 +10,6 @@ namespace cusg
 //    c_polygon& getP(){ return g_P; }
 //    c_polygon& getQ(){ return g_Q; }
 
-//
-//ply_vertex * ply_vertex_extra::getDihedralPre(){
-//    assert(concavity_bpc);
-//    ply_vertex * v=concavity_bpc->getConcavity();
-//    for(short i=0;i<4;i++) v=v->getPre();
-//    return v;
-//}
-//ply_vertex * ply_vertex_extra::getDihedralNext(){
-//    assert(concavity_bpc);
-//    ply_vertex * v=concavity_bpc->getConcavity();
-//    for(short i=0;i<4;i++) v=v->getNext();
-//    return v;
-//}
-
 ply_vertex::~ply_vertex()
 {
     //doing nothing for now
@@ -78,86 +64,8 @@ void ply_vertex::computeExtraInfo()
 void ply_vertex::reverse()
 {
     swap(next, pre);
-    //normal=-normal;
     computeExtraInfo();
 }
-
-/*
-    ply_vertex::~ply_vertex()
-    {
-        //doing nothing for now
-    }
-
-    // - compute normal
-    // - check if the vertex is reflex or not
-    void ply_vertex::computeExtraInfo()
-    {
-        reflex=true;
-
-         //compute normal direction
-         if(next!=NULL){
-             Vector2d v=next->pos-pos;
-             if( v[0]==0 ){
-                 if(v[1]>0){ normal[0]=1; normal[1]=0; }
-                 else{ normal[0]=-1; normal[1]=0; }
-             }
-             else if( v[0]>0 ){
-                 normal[1]=-1;
-                 normal[0]=(v[1]/v[0]);
-             }
-             else{//v[0]<0
-                 normal[1]=1;
-                 normal[0]=-(v[1]/v[0]);
-             }
-
-             normal=normal.normalize();
-
-             if(pre!=NULL){
-                 //compute if left or right turn
-                 Vector2d u=pos-pre->pos;
-                 float z=u[0]*v[1]-u[1]*v[0];
-                 if(z>0) reflex=false;
-             }
-         }//end if(next!=NULL)
-    }
-
-    void ply_vertex::negate()
-    {
-        normal=-normal;
-        pos[0]=-pos[0];
-        pos[1]=-pos[1];
-    }
-
-    void ply_vertex::reverse()
-    {
-        swap(next,pre);
-        //normal=-normal;
-        computeExtraInfo();
-    }
-
-    void ply_vertex::copy(ply_vertex * other)
-    {
-        pos=other->pos;
-        normal=other->normal;
-        reflex=other->reflex;
-        vid=other->vid;
-    }
-
-    void ply_vertex::rotate(double r)
-    {
-        double cos_r=cos(r);
-        double sin_r=sin(r);
-        //rotate pos
-        double x=pos[0]*cos_r-pos[1]*sin_r;
-        double y=pos[0]*sin_r+pos[1]*cos_r;
-        pos.set(x,y);
-
-        //rotate normal
-        x=normal[0]*cos_r-normal[1]*sin_r;
-        y=normal[0]*sin_r+normal[1]*cos_r;
-        normal.set(x,y);
-    }
-    */
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -377,7 +285,6 @@ void c_plylist::buildBoxAndCenter()
 {
     if (is_buildboxandcenter_called == false)
     {
-        //typedef list<c_ply>::iterator IT;
         box[0] = box[2] = FLT_MAX;
         box[1] = box[3] = -FLT_MAX;
         for (iterator i = begin(); i != end(); i++)
@@ -461,7 +368,6 @@ istream & operator>>(istream & is, c_ply & poly)
         double x, y;
         is >> x >> y;
         pts.push_back(pair<double, double>(x, y));
-        //double d=x*x+y*y;
     }
     int id;
     for (iv = 0; iv < vsize; iv++)

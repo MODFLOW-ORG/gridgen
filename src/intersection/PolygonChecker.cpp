@@ -28,8 +28,6 @@ c_ply & getOutBound(GIS_polygon & gp)
 bool CPlyEnclose(const c_ply & cply, const Point2d & p2d)
 {
     double wnum = 0.0;
-    //if(cply.getSize() < 3)
-    //	return false;
     ply_vertex * tpv = cply.getHead();
     do
     {
@@ -50,8 +48,6 @@ bool CPlyEnclose(const c_ply & cply, const Point2d & p2d)
 //here we use the center of c_ply to decide the containing relationship
 bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
 {
-    //if(plygon.size() < 2)
-    //	return true;
 
     vector<PlyAreaPair> plyareas;
     for (GIS_polygon::iterator git = plygon.begin(); git != plygon.end(); ++git)
@@ -116,9 +112,3 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
 }
 //
 ////return true if only one polygon is in plygon
-//bool preProPolygon(GIS_polygon& plygon, vector<GIS_polygon*>& gplygons)
-//{
-//
-//
-//	return true;
-//}

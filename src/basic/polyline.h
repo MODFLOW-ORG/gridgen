@@ -87,34 +87,6 @@ public:
     vector<double> geodesic_dist; ///geodesic distance of each vertex
 };
 
-//    //a c_plylist is a list of c_ply
-//    class c_plylinelist : public list<c_plyline>
-//    {
-//        friend ostream& operator<<( ostream&, c_plylinelist& );
-//        friend istream& operator>>( istream&, c_plylinelist& );
-//
-//    public:
-//
-//        c_plylinelist(){is_buildboxandcenter_called=false;}
-//        void negate();
-//        void translate(const Vector2d& v);
-//        void rotate(double r);
-//
-//        //access
-//        void buildBoxAndCenter();
-//        double * getBBox() { assert(is_buildboxandcenter_called); return box; }
-//        const Point2d& getCenter() { assert(is_buildboxandcenter_called); return center; }
-//
-//    protected:
-//
-//        Point2d center;
-//        double box[4];
-//
-//    private:
-//
-//        bool is_buildboxandcenter_called;
-//    };
-
 } //end of namespace cusg
 
 #endif //_POLYLINE_H_

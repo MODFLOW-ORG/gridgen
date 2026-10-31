@@ -57,11 +57,9 @@ struct VNode
         {
             if (fabs(x - fval) < SMALLNUMBER)
             {
-                //isScanPnt = isOnline = true;
                 isInDirect = true;
                 return;
             }
-            //bool big = (x >= fval);
             bool big = (x >= fval);
             isInDirect = (big == isGreater);
         }
@@ -69,11 +67,9 @@ struct VNode
         {
             if (fabs(y - fval) < SMALLNUMBER)
             {
-                //isScanPnt = isOnline = true;
                 isInDirect = true;
                 return;
             }
-            //bool big = (y >= fval);
             bool big = (y >= fval);
             isInDirect = (big == isGreater);
         }

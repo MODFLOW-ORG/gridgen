@@ -7,7 +7,6 @@
 #include <sstream>
 using namespace std;
 
-//int debug_num[4] = {0};
 static int ShareVID = 0;
 
 //reverse interpolate the z coordinates for all boxes
@@ -40,8 +39,6 @@ void writeVTKCell(ofstream & ofile, int boxNum)
         ofile << (sid) << "\t" << (sid + 6) << "\t" << (sid + 2) << "\t" << (sid + 4) << "\t"
               << (sid + 1) << "\t" << (sid + 7) << "\t" << (sid + 3) << "\t" << (sid + 5) << "\n";
 
-        //ofile<<(sid+6)<<"\t"<<sid<<"\t"<<(sid+4)<<"\t"<<(sid+2)<<"\t";
-        //	ofile<<(sid+7)<<"\t"<<(sid+1)<<"\t"<<(sid+5)<<"\t"<<(sid+3)<<"\n";
         sid += 8;
 
         id++;
@@ -78,7 +75,6 @@ void writeVTKCell(ofstream & ofile, int boxNum)
 template <typename Dtype>
 void writeDataArray(ofstream & ofile, string type, string name, const vector<Dtype> & data)
 {
-    //typename vector<Dtype>::const_iterator DIT;
     ofile << "<DataArray type=\"" << type << "\" Name=\"" << name << "\" format=\"ascii\">";
     int id = 0;
     for (typename vector<Dtype>::const_iterator dit = data.begin(); dit != data.end(); dit++)
@@ -264,8 +260,6 @@ void DFSWriteQDT2VTK(QuadTree3D * qtree, ofstream & ofile, int & pntNum, Box * b
     {
         for (int i = 0; i < 4; i++)
         {
-            //if(one_based_numbering) sprintf(tmp,"%d",i+1);
-            //else sprintf(tmp,"%d",i);
             DFSWriteQDT2VTK(qtree, ofile, pntNum, b->pChildren[i], l, r, c, one_based_numbering, gv,
                             intvals, dbvals);
         }
@@ -359,7 +353,6 @@ void writeQuadtreeGrid2VTK(QuadTree3D * qtree, string vtkName)
 void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intvals,
                 vector<double> * dbvals, BoxVtx * boxVts)
 {
-    //ModflowGrid* mfgrid = qtree->getModflowGrid();
     /***************************************************************************************/
     //write the cells
     ofile << "<Cells>\n";
@@ -1231,7 +1224,6 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
         vector<Box *> vb1, vb2;
         vector<double> dvals1, dvals2;
         vector<int> depth1, depth2;
-        //vector<double> zs;
         for (int i = 0; i < 4; i++)
         {
             if (v->box[i] != NULL && v->box[i]->isLeaf && v->box[i]->active)
@@ -1243,7 +1235,6 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
                     dvals1.push_back(zbot[v->box[i]->number]);
                     depth1.push_back(v->box[i]->depth);
                 }
-                //zs.push_back(zbot[v->box[i]->number]);
             }
             if (v->box[i + 4] != NULL && v->box[i + 4]->isLeaf && v->box[i + 4]->active)
             {
@@ -1254,7 +1245,6 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
                     dvals2.push_back(ztop[v->box[i + 4]->number]);
                     depth2.push_back(v->box[i + 4]->depth);
                 }
-                //zs.push_back(ztop[v->box[i + 4]->number]);
             }
         }
 
@@ -1270,11 +1260,6 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
             dt[1] = smooth_interpolate(dvals2, depth2, vb2, v->pos[0], v->pos[1]);
         }
 
-        //double zsum(0);
-        //for(vector<double>::iterator dit = zs.begin(); dit != zs.end(); ++dit)
-        //{
-        //	zsum += (*dit);
-        //}
         if (bset1.size() > 0 && bset2.size() > 0)
             v->pos[2] = (dt[0] + dt[1]) / 2;
         else if (bset1.size() > 0)
@@ -1290,7 +1275,6 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
 void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intvals,
                 vector<double> * dbvals, VTK_Box * boxdata)
 {
-    //ModflowGrid* mfgrid = qtree->getModflowGrid();
     /***************************************************************************************/
     //write the cells
     ofile << "<Cells>\n";
@@ -1316,8 +1300,6 @@ void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intval
         ofile << vids[0]->num << "\t" << vids[1]->num << "\t" << vids[3]->num << "\t"
               << vids[2]->num << "\t" << vids[4]->num << "\t" << vids[5]->num << "\t"
               << vids[7]->num << "\t" << vids[6]->num << "\n";
-        //ofile<<vids[0]->num<<"\t"<<vids[6]->num<<"\t"<<vids[2]->num<<"\t"<<vids[4]->num<<"\t"
-        //	<<vids[1]->num<<"\t"<<vids[7]->num<<"\t"<<vids[3]->num<<"\t"<<vids[5]->num<<"\n";
 
         rid++;
         if (rid % 5000 == 0) ofile.flush();

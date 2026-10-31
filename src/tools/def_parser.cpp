@@ -176,7 +176,6 @@ bool DefinitionParser::parse(istream & in, string folder)
 
             dfnPath += block.name;
 
-            //cout<<"dfnPath: "<<dfnPath<<endl;
             int pathsize = dfnPath.size();
             for (int i = 0; i < pathsize; i++)
             {
@@ -193,8 +192,6 @@ bool DefinitionParser::parse(istream & in, string folder)
             int dotIdx = dfnPath.find_last_of('/');
             string relFolder = "";
             if (dotIdx != -1) relFolder = dfnPath.substr(0, dotIdx);
-
-            //cout<<"refFolder:"<<endl;
 
             bool r = parse(relfin, relFolder);
             relfin.close();

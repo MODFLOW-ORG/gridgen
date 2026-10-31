@@ -55,8 +55,6 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
 
     string ghostnode_name = name + ".gnc.dat"; //ghnost nodes are saved in get_usg_csr_data()
 
-    //CSRData csr=grid->get_usg_csr_data();
-
     string tree_structure_file = name + ".tsf";
     string nodesperlay_data_name = name + ".nodesperlay.dat";
 
@@ -242,8 +240,6 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
                 }
                 else
                     conNum += qtree_grid->get_node_connections(b).size();
-
-                //conNum += qtree_grid->get_node_connections(b).size();
             }
             else if (modflow_grid != NULL)
             {

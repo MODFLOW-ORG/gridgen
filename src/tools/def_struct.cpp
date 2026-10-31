@@ -117,7 +117,6 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
         in.getline(tmp, size);
 
         if (strlen(tmp) == 0) continue;
-        //cout<<"get line="<<tmp<<endl;
 
         pair<char *, char *> name_value = split(tmp);
 
@@ -165,8 +164,6 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
             entry_raw_data data;
             data.name = tolower(merge(name, " "));
 
-            //cout<<"data.name="<<data.name<<endl;
-
             data.value = tokenize(name_value.second, ignore);
             block.push_back(data);
         }
@@ -200,7 +197,6 @@ pair<char *, char *> BaseParser::split(char * tmp)
     {
         *pos = '\0';
         pos++;
-        //cout<<"tmp="<<tmp<<", pos="<<pos<<"#"<<endl;
     }
 
     return make_pair(tmp, pos);
@@ -296,9 +292,6 @@ bool modflow_grid_raw_data::parse()
         length_unit = value.front();
     else
     {
-        //cerr<<"! Error: missing length_unit"<<endl;
-        //assert(false);
-        //return false;
     }
 
     value = name_value_map["nlay"];
@@ -503,27 +496,6 @@ bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
     //read/open this->tree_structure_file here
     parseTreeStructFile(tree_structure_file, allNodes, getFolderPath());
 
-    //    nodesperlay=createArray<int>(nodesperlay_str,modflow_data->nlay, getFolderPath());
-    //    ia=createArray<int>(ia_str,this->nodes+1, getFolderPath());
-    //    ja=createArray<int>(ja_str,this->ncon, getFolderPath());
-    //    connection_direction_array=createArray<int>(connection_direction_array_str,this->ncon, getFolderPath());
-
-    /*
-    top.reserve(modflow_data->nlay);
-    bot.reserve(modflow_data->nlay);
-    
-	//int ncol_nrow=modflow_data->ncol*modflow_data->nrow; //TODO: this is incorrect...
-    
-	for(int i=0;i<modflow_data->nlay;i++)
-    {
-
-        REAL * T=createArray<REAL>(top_str[i],ncol_nrow, getFolderPath());
-        REAL * B=createArray<REAL>(bot_str[i],ncol_nrow, getFolderPath());
-        top.push_back(T);
-        bot.push_back(B);
-    }
-	*/
-
     m_initizlied = true;
     return true;
 }
@@ -597,10 +569,6 @@ void quadtree_grid_raw_data::fillQuadTree3D()
         int row = tmpNode.row - 1;
         int col = tmpNode.col - 1;
 
-        //		Index2d id2d=getIndex(qtree_grid->getModflowGrid(),test);
-        //		int id=mf->get_nodeid(layerNum,id2d[1],id2d[0]);
-        //		Box * box=grid->nodegroup[id];
-
         int nodeid = qtree_grid->getModflowGrid()->get_nodeid(layerNum, row, col);
         Box * nodeobj = qtree_grid->nodegroup[nodeid];
 
@@ -668,13 +636,8 @@ void quadtree_grid_raw_data::fillQuadTree3D()
             tmpNodeBoxObj->number = tmpNode.number;
             tmpNodeBoxObj->isLeaf = true;
             if (tmpNodeBoxObj->number == -1) tmpNodeBoxObj->active = false;
-
-            //if(!(tmpNodeBoxObj->isLeaf && tmpNodeBoxObj->number!=0))
-            //	cout<<"error"<<endl;
-            //count++;
         }
     }
-    //cout<<"total node number "<<count<<endl;
 
     qtree_grid->set_one_based_node_numbering(!zero_based);
 
@@ -802,7 +765,6 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
         if (modflow_data->initialize(blocks) == false) return false;
     }
 
-    // initialize return false;
     active_domain_data.reserve(modflow_data->nlay);
     for (int i = 0; i < modflow_data->nlay; i++)
     {
@@ -1152,14 +1114,6 @@ bool active_domain_raw_data::parse()
         name_value_map[name] = value;
     }
 
-    //check the names
-    //    list<string>& value=name_value_map["grid"];
-    //    if(!value.empty()) grid_name=value.front();
-    //    else{
-    //        cerr<<"! Error: missing grid"<<endl;
-    //        assert(false);
-    //    }
-
     list<string> & value = name_value_map["shapefile"];
     if (!value.empty())
         shapefile = value.front();
@@ -1180,18 +1134,6 @@ bool active_domain_raw_data::parse()
         return false;
     }
 
-    //    value=name_value_map["layer"];
-    //    if(!value.empty()){
-    //        for(list<string>::iterator i=value.begin();i!=value.end();i++)
-    //        {
-    //            layers.push_back( atoi(i->c_str()) );
-    //        }
-    //    }
-    //    else{
-    //        cerr<<"! Error: missing layer"<<endl;
-    //        assert(false);
-    //    }
-
     value = name_value_map["include_boundary"];
     if (!value.empty()) include_boundary = (::tolower(value.front()[0]) == 'f') ? false : true;
 
@@ -1201,34 +1143,6 @@ bool active_domain_raw_data::parse()
 bool active_domain_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
     if (m_initizlied) return true;
-
-    //    //get the grid
-    //    block_raw_data * block=blocks[grid_name];
-    //
-    //    grid_raw_data* grid=dynamic_cast<grid_raw_data*>(block);
-    //    if( grid==NULL )
-    //    {
-    //        cerr<<"! Error: "<<grid_name<<" is not a grid"<<endl;
-    //        return false;
-    //    }
-    //
-    //    //initialize the grid if necessary
-    //    bool r=grid->initialize(blocks);
-    //    if(r==false){
-    //        cerr<<"! Error: initialize "<<grid_name<<" failed"<<endl;
-    //        return false;
-    //    }
-    //
-    //    //should we check if the grid is built...
-    //    //it's safe to built a grid multiple times anyway...
-    //    this->grid=grid->build();
-    //
-    //    //check again
-    //    if(this->grid==NULL)
-    //    {
-    //        cerr<<"! Error: build "<<grid_name<<" failed"<<endl;
-    //        return false;
-    //    }
 
     m_initizlied = true;
 
@@ -1294,13 +1208,6 @@ bool refinement_raw_data::parse()
         assert(false);
         return false;
     }
-
-    //    value=name_value_map["refinement_level_by_attribute"];
-    //    if(!value.empty()) refinement_level_by_attribute=value.front();
-    //    else{
-    //        cerr<<"! Error: missing refinement_level_by_attribute"<<endl;
-    //        assert(false);
-    //    }
 
     return true;
 }
@@ -1477,7 +1384,6 @@ bool gridtoshape_raw_data::parse()
     }
 
     value = name_value_map["feature_type"];
-    //if(!value.empty()) feature_type=atoi(value.front().c_str());
     if (!value.empty())
         feature_type = value.front();
     else
