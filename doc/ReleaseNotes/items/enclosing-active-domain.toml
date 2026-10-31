@@ -1,3 +1,0 @@
-section = "fixes"
-subsection = "gridding"
-description = "A polygon that enclosed the whole base grid, without its boundary crossing the grid, was treated as if it covered no cells. As an ACTIVE_DOMAIN it made every cell inactive; every cell is now active, and the grid is the same as one built without an active domain. As a REFINEMENT_FEATURES polygon it refined nothing; every cell in the layer is now refined to the REFINEMENT_LEVEL, as the cells inside a polygon that crosses the grid already were. In a GRID_INTERSECTION block it selected nothing; it now selects every cell in the layer. A polygon that lies outside the grid still covers no cells."

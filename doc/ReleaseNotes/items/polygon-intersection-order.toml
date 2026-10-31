@@ -1,3 +1,0 @@
-section = "fixes"
-subsection = "intersection"
-description = "Polygon intersection output listed cells in an order that could change from run to run. Cells are now listed in the same order on every run, beginning with the cells along the polygon boundary from its first vertex. The cells and values are unchanged."

@@ -12,7 +12,7 @@ project(
 
 # release date shown by the program for a release version; set by
 # scripts/update_version.py
-release_date = 'January 6, 2017'
+release_date = 'October 31, 2026'
 
 cc = meson.get_compiler('cpp')
 cc_id = cc.get_id()

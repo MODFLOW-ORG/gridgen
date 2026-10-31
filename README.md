@@ -32,6 +32,6 @@ In instances where an author is citing use of this software, it would be appropr
 
 Lien, Jyh-Ming, Liu, Guilin, and Langevin, C.D., 2015, GRIDGEN version 1.0 -- A computer program for generating unstructured finite-volume grids: U.S. Geological Survey Open-File Report 2014-1109, 39 p., http://dx.doi.org/10.3133/ofr20141109.
 
-### Software/Code Citation for GRIDGEN v1.0.02
+### Software/Code Citation for GRIDGEN v1.0.03
 
-Lien, Jyh-Ming, Liu, Guilin, and Langevin, C.D., 2017, GRIDGEN version 1.0.02 -- A computer program for generating unstructured finite-volume grids: Software release, 06 January 2017.
+Lien, Jyh-Ming, Liu, Guilin, and Langevin, C.D., 2026, GRIDGEN version 1.0.03 -- A computer program for generating unstructured finite-volume grids: Software release, 31 October 2026.
