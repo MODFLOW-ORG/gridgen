@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "input"
+description = "A REFINEMENT_ARRAY (or REFINE_BY_ARRAY) LAYER n record in a QUADTREE_BUILDER block, which the GRIDGEN report does not describe, was read but never used, so the grid was not refined and no message said so. GRIDGEN now warns that the record is ignored and no longer reads the array. Refine with REFINEMENT_FEATURES instead."

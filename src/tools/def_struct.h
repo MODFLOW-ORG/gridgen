@@ -318,7 +318,6 @@ public:
 
     //string node_numbering;
     map<int, list<string>> refine_by_features_str; //one string for each layer
-    map<int, list<string>> refine_by_array_str;    //one array of size (nrow,ncol) for each layer
     map<int, list<string>> top_str;
     map<int, list<string>> bot_str;
 
@@ -332,7 +331,6 @@ public:
     QuadTree3D * qtree_grid;
 
     vector<list<refinement_raw_data *>> refine_by_features;
-    vector<int *> refine_by_array; //one array of size (nrow,ncol) for each layer
     vector<pair<string, string>>
         top; //first string is the operation and the second string is the source name
              //the operation can be "REPLICATE", "INTERPOLATE" or "ASCIIGRID"
