@@ -11,12 +11,12 @@ namespace cusg
 	{
 		if(fabs(v1->x - v2->x) >SMALLCOORDINATE)
 		{
-			cerr<<"coordiante not equal"<<endl;
+			cerr<<"coordinate not equal"<<endl;
 			return false;
 		}
 		if(fabs(v1->y- v2->y) >SMALLCOORDINATE)
 		{
-			cerr<<"coordiante not equal"<<endl;
+			cerr<<"coordinate not equal"<<endl;
 			return false;
 		}
 		if(v1->isInDirect != v2->isInDirect || v1->isOnline != v2->isOnline || v1->isScanPnt != v2->isScanPnt || v1->isVisited != v2->isVisited)

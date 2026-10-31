@@ -134,7 +134,7 @@ protected:
         }
     }
 
-    //save an array of things with formating info
+    //save an array of things with formatting info
     template<typename T>
     void save(ostream& out, T * A, int size, int * formating)
     {
@@ -142,7 +142,7 @@ protected:
         int last_newline_id=0;
         for(int i=0;i<size;i++){
 
-            //check if a new formating line is reached
+            //check if a new formatting line is reached
             if(i==formating[fid]-1){
                 fid++;
                 if(i>0 && i!=size-1){ last_newline_id=i; out<<"\n"; }

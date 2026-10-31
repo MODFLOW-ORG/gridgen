@@ -71,7 +71,7 @@ bool CPolygonEnclose(const c_polygon& cplygon,const Point2d& p2d)
 	return true;
 }
 
-//here we use the center ot c_ply to decide the containing relationship
+//here we use the center of c_ply to decide the containing relationship
 bool checkHole(GIS_polygon& plygon, vector<GIS_polygon*>& plygons)
 {
 	//if(plygon.size() < 2)

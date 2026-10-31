@@ -238,16 +238,16 @@ protected:
 	
 	bool smooth_refinement(Box * box, vector< pair<int,Box*> >& box_pq, int level_tol_horizontal, int level_tol_vertical);
 
-	//linear interploation the value of the center of the box
+	//linear interpolation the value of the center of the box
 	double bilinear_interpolation(Box * box, double * grid);
 	
-	//linear interploation the value of the center of the box
+	//linear interpolation the value of the center of the box
 	double bilinear_interpolation(Box * box, const string & arcinfo_filename, bool useAreaWeighted = true);
 
-	//linear interploation the value of a given point
+	//linear interpolation the value of a given point
 	double bilinear_interpolation(const Point2d& pt, double * zgrid);
 	
-	//linear interploation the value of a given point 
+	//linear interpolation the value of a given point 
 	double bilinear_interpolation(const Point2d& pt, const string & arcinfo_filename);
 
 	///align the elevation (z) between the shared surface (bottom of top cell and top of bottom cells) of the given box
@@ -255,11 +255,11 @@ protected:
 
 public:
 	
-	//linear interploation the value of the center of the box
+	//linear interpolation the value of the center of the box
 	//Instead of having this as static, we should move it to modflow grid...
 	static double bilinear_interpolation(const Point2d& pt, ascii_grid * agrid);
 	
-	//linear interploation the value of a given point in a given layer (either top or bottom)
+	//linear interpolation the value of a given point in a given layer (either top or bottom)
 	double bilinear_interpolation(const Point2d& pt, int layer, bool top);
 	
 protected:

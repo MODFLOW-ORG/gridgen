@@ -53,7 +53,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data& rawd
 	double cx, cy, angle;
 	rmfgrid->getRotatePara(cx, cy, angle);
 
-	//set z-value interploation methods
+	//set z-value interpolation methods
 	for(int i=0;i<rawdata.modflow_data->nlay;i++)
 	{
 		string operation_top = tolower(rawdata.top[i].first);

@@ -236,7 +236,7 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data& data)
     save(data.usg_data_prefix,csr,nperlay);
     csr.destory(); //free memory
 
-    //save extra infor for irragular map
+    //save extra information for irregular map
 	if(quadGrid != NULL)
 	{
 		// Save ghost nodes to file

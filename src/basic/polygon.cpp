@@ -193,7 +193,7 @@ namespace cusg
     //copy from the given ply
     void c_ply::copy(const c_ply& other)
     {
-        destroy();//detroy myself first
+        destroy();//destroy myself first
 
         ply_vertex* ptr=other.head;
         beginPoly();

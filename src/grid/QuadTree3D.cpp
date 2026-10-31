@@ -1149,7 +1149,7 @@ namespace cusg
 	}
 
 
-	/// direction indiactor of size nja (+-1 for x, +-2 for y +-3 for z)
+	/// direction indicator of size nja (+-1 for x, +-2 for y +-3 for z)
 	int QuadTree3D::boundayNodes(vector<int>& nodeids, int dir)
 	{
 		//for(NodeGroup::reverse_iterator i=nodegroup.rbegin();i!=nodegroup.rend();i++)
@@ -1666,7 +1666,7 @@ namespace cusg
 
 		/* 
 		   //
-		   // the foloowing code is removed on 3/25/2014. 
+		   // the following code is removed on 3/25/2014. 
 		   // this is now output to .nod file
 		   // in bool DefinitionExporter::save_node_coordinate(const string& prefix, Grid * grid)
 		   // in def_exporter.cpp
@@ -1719,7 +1719,7 @@ namespace cusg
 		cout<<"- Save data to file: "<<filePath<<endl;
 	}
 
-	//linear interploation the value of the center of the box
+	//linear interpolation the value of the center of the box
 	double QuadTree3D::bilinear_interpolation(Box * box, double * zgrid)
 	{
 		//create a ascii_grid from grid 
@@ -1743,7 +1743,7 @@ namespace cusg
 		return value;
 	}
 
-	//linear interploation the value of the center of the box
+	//linear interpolation the value of the center of the box
 	double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_filename, bool useAreaWeighted)
 	{
 		ascii_grid * ag=m_str2ag[arcinfo_filename];
@@ -1862,7 +1862,7 @@ namespace cusg
 
 	}
 
-	//linear interploation the value of a given point in a given layer (either top or bottom)
+	//linear interpolation the value of a given point in a given layer (either top or bottom)
 	double QuadTree3D::bilinear_interpolation(const Point2d& pt, int layer, bool top)
 	{
 		int mfgrid_csize=m_mfgrid->nrow * m_mfgrid->ncol;
@@ -1883,7 +1883,7 @@ namespace cusg
 		}
 	}
 
-	//linear interploation the value of a given point
+	//linear interpolation the value of a given point
 	double QuadTree3D::bilinear_interpolation(const Point2d& pt, double * zgrid)
 	{
 		//create a ascii_grid from grid 
@@ -1891,7 +1891,7 @@ namespace cusg
 		return bilinear_interpolation(pt, &ag);
 	}
 
-	//linear interploation the value of a given point 
+	//linear interpolation the value of a given point 
 	double QuadTree3D::bilinear_interpolation(const Point2d& pt, const string & arcinfo_filename)
 	{
 		ascii_grid * ag=m_str2ag[arcinfo_filename];
@@ -1927,7 +1927,7 @@ namespace cusg
 		return bilinear_interpolation(pt2, ag);
 	}
 
-	//// GL: bilinear interploation 
+	//// GL: bilinear interpolation 
 	//double QuadTree3D::bilinear_interpolation(const Point2d& pt, ascii_grid * ag)
 	//{
 	//	Index2d id = ag->getIndex(pt[0], pt[1]);
@@ -1944,10 +1944,10 @@ namespace cusg
 
 
 	
-	//linear interploation the value of the center of the box
+	//linear interpolation the value of the center of the box
 	double QuadTree3D::bilinear_interpolation(const Point2d& pt, ascii_grid * ag)
 	{
-		//determine the i and j to interploate from...
+		//determine the i and j to interpolate from...
 
 		//get the ag cell that contains pt
 		Index2d id=ag->getIndex(pt[0],pt[1]);

@@ -51,7 +51,7 @@ namespace cusg
 		double m_startGeoDist;
 		double m_endGeoDist;
 		Box* box;
-		c_plyline* m_plyline; //the cutted polyline
+		c_plyline* m_plyline; //the cut polyline
 	};
 
 	struct SegmentCellIntersectionInfo
@@ -227,7 +227,7 @@ namespace cusg
 		//void intersect_polygon(Box* b, BoxPlyClip* bpc, vector<GIS_polygon*>& resultPlygons);
 		void intersect_polygon(Box* b, const GIS_polygon& plygon,  vector<GIS_polygon*>& resultPlygons,BoxPlyClip* bpc=NULL);
 
-		//retrive detailed information
+		//retrieve detailed information
 		bool getIntersection(Box * b, const LineSeg2d& line, LineSeg2d& intseg);
 		//c_ply getIntersection(Box * b, const c_ply& ply);
 

@@ -306,7 +306,7 @@ namespace cusg
 		//else{
 		//	cerr<<"output_file is not defined!"<<endl;
 		//}
-		cerr<<"Saving intersection file to VTK is not suported yet!\n";
+		cerr<<"Saving intersection file to VTK is not supported yet!\n";
 		return true;
 	}
 

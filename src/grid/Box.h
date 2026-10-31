@@ -277,7 +277,7 @@ public:
 	void getleafParents(list<Box*>& parents, bool exclusive=false)
 	{
 		//not implemented yet
-	    cerr<<"! Error: getleafParents is not implmeneted"<<endl;
+	    cerr<<"! Error: getleafParents is not implemented"<<endl;
 		//see node.py
 	}
 	
@@ -452,7 +452,7 @@ public:
 	//bool bRegular;
 
 
-	///the corrdinates of the center after rotation
+	///the coordinates of the center after rotation
 	void rotateCtr(double cx, double cy, double rotation,double& resx, double& resy);
 
 	//int flag;

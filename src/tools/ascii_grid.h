@@ -58,7 +58,7 @@ class ascii_grid
 	unsigned int getncols() { return ncols; }
 	unsigned int getnrows() { return nrows; }
 
-	//check if the given valule is valid or not
+	//check if the given value is valid or not
 	bool isvalid(double v){ return v!=nodata_value; }
 
 	//given a 2d point (x,y) returns the index of the point

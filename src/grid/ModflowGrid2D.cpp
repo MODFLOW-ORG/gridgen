@@ -167,7 +167,7 @@ namespace cusg
   //  	//for(int i=0;i<nrow;i++) y[i] = Ly-y[i]-0.5*delc[i]+yoffset;
   //      for(int i=0;i<nrow;i++) y[i] = Ly-y[i]+0.5*delc[i]+yoffset;
 
-	//alocate space
+	//allocate space
 		double * y =  new double[nrow];
 		assert(y);
 		for (int i = nrow - 1; i >=0; i--) y[i] = ((i ==nrow-1)?(0):y[i + 1]) +delc[i];

@@ -13,7 +13,7 @@ namespace cusg
 ///////////////////////////////////////////////////////////////////////////////
 c_plyline::c_plyline(const c_ply& ply)
 {
-    destroy();//detroy myself first
+    destroy();//destroy myself first
     ply_vertex* ptr=ply.getHead();
     beginPoly();
     do{
@@ -31,7 +31,7 @@ c_plyline::c_plyline(const c_ply& ply)
 //copy from the given ply
 void c_plyline::copy(const c_plyline& other)
 {
-    destroy();//detroy myself first
+    destroy();//destroy myself first
 
     ply_vertex* ptr=other.head;
     beginPoly();
@@ -318,7 +318,7 @@ istream& operator>>( istream& is, c_plyline& poly)
 //
 //    istream& operator>>( istream& is, c_plylinelist& p)
 //    {
-//        //remove header commnets
+//        //remove header comments
 //        do{
 //            char tmp[1024];
 //            char c=is.peek();

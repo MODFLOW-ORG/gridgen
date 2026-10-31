@@ -69,7 +69,7 @@ namespace cusg
         int * get_nodelay_array();
 
 
-        ///make all nodes in the given layer as diabled
+        ///make all nodes in the given layer as disabled
         void disable_nodes_in_layer(int layer);
 
         ///number of active leaf nodes in this group
@@ -88,7 +88,7 @@ namespace cusg
         int * nodelay_array;  //number of nodes per layer
         int nlay;             //total number of layers
 
-        bool rebuild_nodeid_array; //rebuid node id
+        bool rebuild_nodeid_array; //rebuild node id
 
         int nextnodenumber;
 

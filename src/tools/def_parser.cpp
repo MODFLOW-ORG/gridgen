@@ -109,7 +109,7 @@ DefinitionParser::DefinitionParser()
 	m_block_type_map["grid_to_vtkfile"] = &createBlockType<gridtovtk_raw_data>;
 }
 
-//desctructor
+//destructor
 DefinitionParser::~DefinitionParser()
 {
     typedef map<string, block_raw_data *>::iterator IT;
