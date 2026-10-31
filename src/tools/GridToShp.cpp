@@ -1,21 +1,17 @@
 #include "GridToShp.h"
 #include "Box.h"
+#include "GridVertices.h"
 #include "shpGridToLine.h"
 #include <fstream>
 #include <sstream>
 using namespace std;
 
-inline void rotateOneBox(Box* b, double cx, double cy, double rotation, double* padfX, double* padfY, double* padfZ, double* padfM, double* ctrX, double* ctrY)
+//corners, clockwise from the upper left, and center of a box
+inline void boxCorners(const GridVertices& gv, Box* b, double* padfX, double* padfY, double* ctrX, double* ctrY)
 {
-	double ldX, ldY, luX, luY, rdX, rdY, ruX, ruY, ctrx, ctry;
-	b->rotate(cx, cy, rotation, ldX, ldY, luX, luY, rdX, rdY, ruX, ruY);
-	b->rotateCtr(cx, cy, rotation, ctrx, ctry);
-
-	padfX[0] = luX; padfX[1] = ruX;
-	padfX[2] = rdX; padfX[3] = ldX;
-	padfY[0] = luY; padfY[1] = ruY;
-	padfY[2] = rdY; padfY[3] = ldY;
-	ctrX[0] = ctrx; ctrY[0] = ctry;
+	gv.get_corners(b, padfX, padfY);
+	const Point2d& ctr = gv.center(b);
+	ctrX[0] = ctr[0]; ctrY[0] = ctr[1];
 }
 
 //shptype: point 0; polygon 1; line 2;
@@ -71,14 +67,15 @@ void writeFeatEntity(Grid* grid, SHPHandle& handler, DBFHandle& dbf,vector<int>&
 	bool isqtree = (qtree != NULL);
 	
 	//double padfX[4] = {0}, padfY[4] = {0}, padfZ[4] = {0}, padfM[4] = {0}, ctrX[1] = {0}, ctrY[1] = {0};
-	double padfX[5] = {0}, padfY[5] = {0}, padfZ[4] = {0}, padfM[4] = {0}, ctrX[1] = {0}, ctrY[1] = {0};
+	double padfX[5] = {0}, padfY[5] = {0}, ctrX[1] = {0}, ctrY[1] = {0};
+	GridVertices gv(grid);
 
 	int n = sort_idx.size(), id;
 	for(int i = 0; i < n; i++)
 	{
 		id = sort_idx[i];
 
-		rotateOneBox(b_vec[id], cx, cy, rotation, padfX, padfY, padfZ, padfM, ctrX, ctrY);
+		boxCorners(gv, b_vec[id], padfX, padfY, ctrX, ctrY);
 
 		SHPObject * shpObj = NULL;
 		int entityNum = -1;

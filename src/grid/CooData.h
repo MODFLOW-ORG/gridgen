@@ -31,7 +31,7 @@ struct CooData
 	CooData(){ } 
 
     ///Constructor
-    CooData(int nodes, int ncon, int * coorow, int * coocol, int * indptr, double * area, float * cl1, float * cl2, float * fahl, int * fldr)
+    CooData(int nodes, int ncon, int * coorow, int * coocol, int * indptr, double * area, double * cl1, double * cl2, double * fahl, int * fldr)
     {
         this->nodes = nodes;
         this->ncon = ncon;
@@ -93,9 +93,9 @@ struct CooData
 
         int * coorow = new int[ncon];
         int * coocol = new int[ncon];
-        float * cl1 = new float[ncon];
-        float * cl2 = new float[ncon];
-        float * fahl = new float[ncon];
+        double * cl1 = new double[ncon];
+        double * cl2 = new double[ncon];
+        double * fahl = new double[ncon];
         int * fldr = new int[ncon];
 
         assert(coorow && coocol && cl1 && cl2 && fahl && fldr);
@@ -142,13 +142,13 @@ struct CooData
 	int nodes;
 	
     /// size of nja storing distance to the shared of each connection
-	float * cl1;
+	double * cl1;
 	
 	/// size of nja storing reversed distance to the shared from each connection
-	float * cl2;
+	double * cl2;
 	
 	/// area of the connection of size nja
-    float * fahl;
+    double * fahl;
     
     /// direction indicator of size nja (+-1 for x, +-2 for y +-3 for z)
     int  * fldr;

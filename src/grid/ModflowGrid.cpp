@@ -259,9 +259,9 @@ namespace cusg
         int * ia = new int[box_size+1];
         int * ja = new int[nja];
         double * area = get_cell_areas();
-        float * cl1 = new float[nja];
-        float * cl2 = new float[nja];
-        float * fahl = new float[nja];
+        double * cl1 = new double[nja];
+        double * cl2 = new double[nja];
+        double * fahl = new double[nja];
         int * fldr = new int[nja];
         int * iac = new int[box_size]; // number of connection +1 for each cell, array of size  nodes
 

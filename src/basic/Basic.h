@@ -55,11 +55,11 @@ namespace cusg{
     /* Angle Conversions & Constants */
 
     #ifndef PI
-    #define PI ((REAL)3.1415926535897)
+    #define PI ((REAL)3.14159265358979323846)
     #endif
 
     #ifndef PI2
-    #define PI2 ((REAL)6.2831853071794)
+    #define PI2 (2*PI)
     #endif
 
     #define RAD2DEG (180/PI)
@@ -105,8 +105,6 @@ namespace cusg{
     // Following functions define M_PI and drand48, which are not starndard c library and 
     // definitions. In addition, rint used to round off float points to int is also here.
     /////////////////////////////////////////////////////////////////////////////////////////
-
-    #define M_PI 3.1415926 //reference PI above
 
     extern "C" {
         //Implementation of these functions are located in util.cpp

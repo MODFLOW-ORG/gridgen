@@ -1,4 +1,5 @@
 #include "intersecReadWrite.h"
+#include "RoundTrip.h"
 #include <sstream>
 using namespace std;
 using namespace cusg;
@@ -145,7 +146,7 @@ void writeIntDBVal(DBFHandle& dbfhdl, int entity, vector<int>& intFldIDs, vector
 		if(!isTxt)
 			success = DBFWriteDoubleAttribute(dbfhdl,entity,dbFldIDs[i], dbVals[i]);
 		else
-			ofile<<dbVals[i]<<_IFO_DEL;
+			ofile<<round_trip(dbVals[i])<<_IFO_DEL;
 	}
 	for (int i = 0; i < strFldNum; i++)
 	{

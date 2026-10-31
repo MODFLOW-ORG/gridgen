@@ -162,10 +162,10 @@ public:
 	list<pair<int, int> > get_node_connections(int nodenumber);
 	list<pair<int, int> > get_node_connections(Box* box);
 
-    list< pair<int,int> > get_node_connections_vp(int nodenumber, vector<float>* area );
+    list< pair<int,int> > get_node_connections_vp(int nodenumber, vector<double>* area );
 
     //return the
-    list< pair<int,int> > get_node_connections_vp(Box * box , vector<float>* area);
+    list< pair<int,int> > get_node_connections_vp(Box * box , vector<double>* area);
 	
 	/// direction indicator of size nja (+-1 for x, +-2 for y +-3 for z)
 	int boundayNodes(vector<int>& nodeids, int dir);
@@ -234,7 +234,7 @@ protected:
 	void sortconnectionbynodenumber(list< pair<int,int> > & connectionlist);
 
 	//sort the area array based on connection id
-	void sortareabyconid(const list<pair<int, int> >& connectionlist, vector<float>& area);
+	void sortareabyconid(const list<pair<int, int> >& connectionlist, vector<double>& area);
 	
 	bool smooth_refinement(Box * box, vector< pair<int,Box*> >& box_pq, int level_tol_horizontal, int level_tol_vertical);
 

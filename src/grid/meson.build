@@ -6,6 +6,7 @@ grid_sources = files(
     'ModflowGrid2D.cpp',
     'QuadTree3D.cpp',
     'GridDomain.cpp',
+    'GridVertices.cpp',
     'NodeGroup.cpp',
     'QuadTreeBuilder.cpp',
 )

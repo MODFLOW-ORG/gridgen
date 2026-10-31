@@ -60,7 +60,7 @@ void rotateOnePnt(double x, double y, double cx, double cy, double rotation,doub
 //util
 
 //collect share
-int collectCell_share(QuadTree3D* qtree,  vector<Box*>& allBoxes, vector<int>* intvals, vector<float>* dbvals, bool one_based_numbering);
+int collectCell_share(QuadTree3D* qtree,  vector<Box*>& allBoxes, vector<int>* intvals, vector<double>* dbvals, bool one_based_numbering);
 
 void writeVTKHeader(ofstream& ofile);
 
@@ -71,7 +71,7 @@ void writeVTKCell(ofstream& ofile, int boxNum);
 template<typename Dtype>
 void writeDataArray(ofstream& ofile, string type, string name, const vector<Dtype>& data);
 
-void writeCells(ofstream& ofile,  vector<Box*>& allBoxes, vector<int>* intvals, vector<float>* dbvals, BoxVtx* boxVts);
+void writeCells(ofstream& ofile,  vector<Box*>& allBoxes, vector<int>* intvals, vector<double>* dbvals, BoxVtx* boxVts);
 //fit a plane using 3 points
 double fitZ(double** vv, double x, double y);
 

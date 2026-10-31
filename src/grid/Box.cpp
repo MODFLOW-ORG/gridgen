@@ -599,22 +599,6 @@ Box * Box::find(double qx, double qy)
 	return NULL;
 }
 
-//rotate
-void Box::rotate(double cx, double cy, double rotation, double& ldX, double& ldY, double& luX, double& luY, double& rdX, double& rdY, double& ruX, double& ruY)
-{
-	ldX = cx + (x - dx / 2  - cx) * cos(rotation) - (y - dy / 2 - cy) * sin(rotation);
-	ldY = cy + (y - dy / 2 - cy) * cos(rotation) + (x - dx / 2 - cx) * sin(rotation);
-
-	luX = cx + (x - dx / 2  - cx) * cos(rotation) - (y + dy / 2 - cy) * sin(rotation);
-	luY = cy + (y + dy / 2 - cy) * cos(rotation) + (x - dx / 2 - cx) * sin(rotation);
-
-	rdX = cx + (x + dx / 2  - cx) * cos(rotation) - (y - dy / 2 - cy) * sin(rotation);
-	rdY = cy + (y - dy / 2 - cy) * cos(rotation) + (x + dx / 2 - cx) * sin(rotation);
-
-	ruX = cx + (x + dx / 2  - cx) * cos(rotation) - (y + dy / 2 - cy) * sin(rotation);
-	ruY = cy + (y + dy / 2 - cy) * cos(rotation) + (x + dx / 2 - cx) * sin(rotation);
-	
-}
 void Box::rotateCtr(double cx, double cy, double rotation,double& resx, double& resy)
 {
 	resx= cx +  (x - cx) * cos(rotation) - (y - cy)* sin(rotation);

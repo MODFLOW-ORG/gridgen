@@ -3,26 +3,13 @@
 #include "ModflowGrid.h"
 #include "QuadTree3D.h"
 #include "QuadTreeBuilder.h"
+#include "GridVertices.h"
 #include <sstream>
 #include <algorithm>
 #include <vector>
 
-#define PRECISION 40
 namespace cusg
 {
-
-inline void rotateOneBox_exporter(Box* b, double cx, double cy, double rotation, double* padfX, double* padfY, double* padfZ, double* padfM, double* ctrX, double* ctrY)
-{
-	double ldX, ldY, luX, luY, rdX, rdY, ruX, ruY, ctrx, ctry;
-	b->rotate(cx, cy, rotation, ldX, ldY, luX, luY, rdX, rdY, ruX, ruY);
-	b->rotateCtr(cx, cy, rotation, ctrx, ctry);
-
-	padfX[0] = luX; padfX[1] = ruX;
-	padfX[2] = rdX; padfX[3] = ldX;
-	padfY[0] = luY; padfY[1] = ruY;
-	padfY[2] = rdY; padfY[3] = ldY;
-	ctrX[0] = ctrx; ctrY[0] = ctry;
-}
 
 inline ostream& operator<<(ostream& out, list<string>& strlist)
 {
@@ -47,10 +34,10 @@ bool DefinitionExporter::save(ostream& out, modflow_grid_raw_data& data)
 {
     assert(data.type=="modflow_grid");
 	out<<"BEGIN MODFLOW_GRID "<<data.name<<"\n";
-	out<<"\tROTATION_ANGLE = "<<setprecision(PRECISION)<<data.rotation_angle * 360 / (2*3.1415926)<<"\n";
-	out<<"\tX_OFFSET = "<<setprecision(PRECISION)<<data.x_offset<<"\n";
-	out<<"\tY_OFFSET = "<<setprecision(PRECISION)<<data.y_offset<<"\n";
-	out<<"\tLENGTH_UNIT = "<<setprecision(PRECISION)<<data.length_unit<<"\n";
+	out<<"\tROTATION_ANGLE = "<<round_trip(data.rotation_degrees)<<"\n";
+	out<<"\tX_OFFSET = "<<round_trip(data.x_offset)<<"\n";
+	out<<"\tY_OFFSET = "<<round_trip(data.y_offset)<<"\n";
+	out<<"\tLENGTH_UNIT = "<<data.length_unit<<"\n";
 	out<<"\tNLAY = "<<data.nlay<<"\n";
 	out<<"\tNROW = "<<data.nrow<<"\n";
 	out<<"\tNCOL = "<<data.ncol<<"\n";
@@ -77,9 +64,9 @@ bool DefinitionExporter::save(ostream& out, ModflowGrid * grid)
     string delr_data_name=name+".delr.dat";
 
     out<<"BEGIN MODFLOW_GRID "<<name<<"\n";
-    out<<"\tROTATION_ANGLE = "<<setprecision(PRECISION)<<grid->rotation * 360 / (2*3.1415926)<<"\n";
-    out<<"\tX_OFFSET = "<<setprecision(PRECISION)<<grid->xoffset<<"\n";
-    out<<"\tY_OFFSET = "<<setprecision(PRECISION)<<grid->yoffset<<"\n";
+    out<<"\tROTATION_ANGLE = "<<round_trip(grid->rotation * 180 / PI)<<"\n";
+    out<<"\tX_OFFSET = "<<round_trip(grid->xoffset)<<"\n";
+    out<<"\tY_OFFSET = "<<round_trip(grid->yoffset)<<"\n";
     //out<<"length_unit = "<<grid-><<"\n"; //not available...
     out<<"\tNLAY = "<<grid->nlay<<"\n";
     out<<"\tNROW = "<<grid->nrow<<"\n";
@@ -296,7 +283,7 @@ bool DefinitionExporter::save_node_coordinate(const string& prefix, Grid * grid)
 			{
 				if(qtree_grid->vertical_pass_through)
 				{
-					vector<float> conAreas;
+					vector<double> conAreas;
 					conNum += qtree_grid->get_node_connections_vp(b, &conAreas).size();
 				}
 				else
@@ -326,26 +313,16 @@ bool DefinitionExporter::save_node_coordinate(const string& prefix, Grid * grid)
 
 	std::sort(sorted_boxes.begin(),sorted_boxes.end());
 
-	// add rotation here: Mar 15th 2016
-	double cx, cy, rotation;
-	ModflowGrid * mfgrid=(qtree_grid != NULL) ? qtree_grid->getModflowGrid() : modflow_grid;
-	mfgrid->getRotatePara(cx, cy, rotation);
-	double padfX[5] = {0}, padfY[5] = {0}, padfZ[4] = {0}, padfM[4] = {0}, ctrX[1] = {0}, ctrY[1] = {0};
+	// cell centers, rotated and offset
+	GridVertices gv(grid);
 
-	//
 	for(vector< pair<long, Box *> >::iterator i=sorted_boxes.begin();i!=sorted_boxes.end();i++)
 	{
 		Box * box=i->second;
-
-		//rotate box
-		rotateOneBox_exporter(box, cx, cy, rotation, padfX, padfY, padfZ, padfM, ctrX, ctrY);
-
-		//fout<<i->first<<" "<<box->layer+id_offset
-        //    <<" "<<setprecision(PRECISION)<<box->x<<" "<<box->y<<" "<<box->z<<" "
-        //    <<box->dx<<" "<<box->dy<<" "<<box->dz<<"\n";
+		const Point2d& ctr=gv.center(box);
 		fout<<i->first<<" "<<box->layer+id_offset
-            <<" "<<setprecision(PRECISION)<<ctrX[0]<<" "<<ctrY[0]<<" "<<box->z<<" "
-            <<box->dx<<" "<<box->dy<<" "<<box->dz<<"\n";
+            <<" "<<round_trip(ctr[0])<<" "<<round_trip(ctr[1])<<" "<<round_trip(box->z)<<" "
+            <<round_trip(box->dx)<<" "<<round_trip(box->dy)<<" "<<round_trip(box->dz)<<"\n";
     }
 
 

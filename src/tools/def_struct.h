@@ -189,7 +189,7 @@ public:
 
 	modflow_grid_raw_data(block_raw_data& block):grid_raw_data(block)
 	{ 
-		rotation_angle=x_offset=y_offset=0;
+		rotation_angle=rotation_degrees=x_offset=y_offset=0;
 		nlay=nrow=ncol=0;
 		delr=delc=NULL;
 		top=NULL;
@@ -201,7 +201,8 @@ public:
 	virtual bool initialize(map<string, block_raw_data *>& blocks);
 	virtual Grid * build();
 
-	REAL rotation_angle;
+	REAL rotation_angle; //radians
+	REAL rotation_degrees; //as given, so it is written back unchanged
 	REAL x_offset;
 	REAL y_offset;
     string length_unit;

@@ -1,5 +1,8 @@
 
 #include "GridToVTK.h"
+#include "GridVertices.h"
+#include "RoundTrip.h"
+#include <cfloat>
 #include <fstream>
 #include <sstream>
 using namespace std;
@@ -9,19 +12,6 @@ static int ShareVID = 0;
 
 //reverse interpolate the z coordinates for all boxes
 //void reverseInterpolate(QuadTree3D* qtree);
-
-inline void rotateOneBox(Box* b, double cx, double cy, double rotation, double* padfX, double* padfY, double* padfZ, double* padfM, double* ctrX, double* ctrY)
-{
-	double ldX, ldY, luX, luY, rdX, rdY, ruX, ruY, ctrx, ctry;
-	b->rotate(cx, cy, rotation, ldX, ldY, luX, luY, rdX, rdY, ruX, ruY);
-	b->rotateCtr(cx, cy, rotation, ctrx, ctry);
-
-	padfX[0] = luX; padfX[1] = ruX;
-	padfX[2] = rdX; padfX[3] = ldX;
-	padfY[0] = luY; padfY[1] = ruY;
-	padfY[2] = rdY; padfY[3] = ldY;
-	ctrX[0] = ctrx; ctrY[0] = ctry;
-}
 
 /********************************************************/
 //write the vtk file
@@ -97,7 +87,7 @@ void writeDataArray(ofstream& ofile, string type, string name, const vector<Dtyp
 	int id = 0;
 	for(typename vector<Dtype>::const_iterator dit = data.begin(); dit != data.end(); dit++)
 	{
-		ofile<<(*dit)<<"\t";
+		ofile<<round_trip_value(*dit)<<"\t";
 		
 		if(id % 1000==0)
 			ofile.flush();
@@ -109,8 +99,7 @@ void writeDataArray(ofstream& ofile, string type, string name, const vector<Dtyp
 //export modflow grid to a paraview vtk file
 void writeModflowGrid2VTK(ModflowGrid* modflow, string vtkName, bool without_inactive, bool one_based_numbering)
 {
-	double cx, cy, rotation;
-	modflow->getRotatePara(cx, cy, rotation);
+	GridVertices gv(modflow);
 	//write the points, loop over each layer
 	int nlay = modflow->nlay;
 	int nrow = modflow->nrow;
@@ -118,10 +107,6 @@ void writeModflowGrid2VTK(ModflowGrid* modflow, string vtkName, bool without_ina
 
 	double padfX[4] = {0};
 	double padfY[4] = {0};
-	double padfZ[4] = {0};
-	double padfM[4] = {0};
-	double ctrX[1] = {0};
-	double ctrY[1] = {0};
 
 	stringstream ss0;
 	ss0<<vtkName.c_str();
@@ -158,11 +143,11 @@ void writeModflowGrid2VTK(ModflowGrid* modflow, string vtkName, bool without_ina
 					double top= modflow->bot[ l * nrow * ncol + r * ncol + c];
 					double bot= modflow->bot[(l + 1) * nrow * ncol + r * ncol + c] ;
 
-					rotateOneBox(box, cx, cy, rotation, padfX, padfY, padfZ, padfM, ctrX, ctrY);
+					gv.get_corners(box, padfX, padfY);
 					for(int i = 0; i < 4; i++)
 					{
-						ofile<<padfX[i]<<"\t"<<padfY[i]<<"\t"<<top * ZSCALE<<"\t" ;		//(box->z - box->dz / 2)<<"\t";
-						ofile<<padfX[i]<<"\t"<<padfY[i]<<"\t"<<bot * ZSCALE<<"\t";		//(box->z + box->dz / 2)<<"\t";
+						ofile<<round_trip(padfX[i])<<"\t"<<round_trip(padfY[i])<<"\t"<<round_trip(top * ZSCALE)<<"\t" ;		//(box->z - box->dz / 2)<<"\t";
+						ofile<<round_trip(padfX[i])<<"\t"<<round_trip(padfY[i])<<"\t"<<round_trip(bot * ZSCALE)<<"\t";		//(box->z + box->dz / 2)<<"\t";
 
 						id+=2;
 						if(id%500==0)
@@ -219,7 +204,7 @@ void writeModflowGrid2VTK(ModflowGrid* modflow, string vtkName, bool without_ina
 
 }
 
-void DFSWriteQDT2VTK(QuadTree3D* qtree, ofstream& ofile,  int& pntNum, Box* b, int l,int r, int c,bool one_based_numbering,double cx, double cy, double rotation,
+void DFSWriteQDT2VTK(QuadTree3D* qtree, ofstream& ofile,  int& pntNum, Box* b, int l,int r, int c,bool one_based_numbering, const GridVertices& gv,
 	vector<int>* intvals, vector<double>* dbvals)
 {
 	char tmp[8]={'\0'};
@@ -228,20 +213,16 @@ void DFSWriteQDT2VTK(QuadTree3D* qtree, ofstream& ofile,  int& pntNum, Box* b, i
 	{
 		double padfX[4] = {0};
 		double padfY[4] = {0};
-		double padfZ[4] = {0};
-		double padfM[4] = {0};
-		double ctrX[1] = {0};
-		double ctrY[1] = {0};
 
-		rotateOneBox(b, cx, cy, rotation, padfX, padfY, padfZ, padfM, ctrX, ctrY);
+		gv.get_corners(b, padfX, padfY);
 
 		double top=qtree->top[b->number];
 		double bot=qtree->bot[b->number];
 
 		for(int i = 0; i < 4; i++)
 		{
-				ofile<<padfX[i]<<"\t"<<padfY[i]<<"\t"<<top * ZSCALE<<"\t";
-				ofile<<padfX[i]<<"\t"<<padfY[i]<<"\t"<<bot * ZSCALE<<"\t";
+				ofile<<round_trip(padfX[i])<<"\t"<<round_trip(padfY[i])<<"\t"<<round_trip(top * ZSCALE)<<"\t";
+				ofile<<round_trip(padfX[i])<<"\t"<<round_trip(padfY[i])<<"\t"<<round_trip(bot * ZSCALE)<<"\t";
 
 				pntNum+=2;
 				if(pntNum%500==0)
@@ -276,7 +257,7 @@ void DFSWriteQDT2VTK(QuadTree3D* qtree, ofstream& ofile,  int& pntNum, Box* b, i
 		{
 			//if(one_based_numbering) sprintf(tmp,"%d",i+1);
 			//else sprintf(tmp,"%d",i);
-			DFSWriteQDT2VTK(qtree, ofile,pntNum,b->pChildren[i],l,r,c,one_based_numbering, cx, cy, rotation, intvals, dbvals);
+			DFSWriteQDT2VTK(qtree, ofile,pntNum,b->pChildren[i],l,r,c,one_based_numbering, gv, intvals, dbvals);
 		}
 	}//end b->isLeaf
 }
@@ -290,9 +271,7 @@ void writeQuadtreeGrid2VTK(QuadTree3D* qtree, string vtkName)
 
 
 	ModflowGrid * mfgrid=qtree->getModflowGrid();
-
-	double cx, cy, rotation;
-	mfgrid->getRotatePara(cx, cy, rotation);
+	GridVertices gv(qtree);
 
 	//write the points, loop over each layer
 	stringstream ss0;
@@ -334,7 +313,7 @@ void writeQuadtreeGrid2VTK(QuadTree3D* qtree, string vtkName)
 				Box * box=qtree->nodegroup[bid];
 
 				if(box->active)
-					DFSWriteQDT2VTK(qtree, ofile, pntNum,  box,  l, r,  c,qtree->get_one_based_node_numbering(), cx,  cy,  rotation, intvals, dbvals);
+					DFSWriteQDT2VTK(qtree, ofile, pntNum,  box,  l, r,  c,qtree->get_one_based_node_numbering(), gv, intvals, dbvals);
 			}
 		}
 	}
@@ -367,7 +346,7 @@ void writeQuadtreeGrid2VTK(QuadTree3D* qtree, string vtkName)
 	ofile.close();
 }
 
-void writeCells(ofstream& ofile,  vector<Box*>& allBoxes, vector<int>* intvals, vector<float>* dbvals, BoxVtx* boxVts)
+void writeCells(ofstream& ofile,  vector<Box*>& allBoxes, vector<int>* intvals, vector<double>* dbvals, BoxVtx* boxVts)
 {
 	//ModflowGrid* mfgrid = qtree->getModflowGrid();
 	/***************************************************************************************/
@@ -422,9 +401,8 @@ void writeCells(ofstream& ofile,  vector<Box*>& allBoxes, vector<int>* intvals, 
 *******************************************************************************************************************/
 void buildSharingVertices_mfgrid(ModflowGrid* mfgrid, vector<Vertex*>& vdata, BoxVtx* boxVts)
 {
-	double val;//, resx, resy;
-	double cx, cy, rotation;
-	mfgrid->getRotatePara(cx, cy, rotation);
+	double val;
+	GridVertices gv(mfgrid);
 
 	int mfgrid_csize=(mfgrid->nrow) * (mfgrid->ncol);
 	
@@ -446,9 +424,12 @@ void buildSharingVertices_mfgrid(ModflowGrid* mfgrid, vector<Vertex*>& vdata, Bo
 				Point2d pos(Xe[c], Ye[r]);
 				val = QuadTree3D::bilinear_interpolation(pos, &ag);
 
-				//rotateOnePnt(pos[0], pos[1], cx, cy, rotation, resx, resy);
+				//the corner of the cell to the southeast, or of the last row or column
+				Box* box = mfgrid->nodegroup[mfgrid->get_nodeid(0, min(r, mfgrid->nrow - 1), min(c, mfgrid->ncol - 1))];
+				int corner = (r < mfgrid->nrow) ? ((c < mfgrid->ncol) ? 0 : 1) : ((c < mfgrid->ncol) ? 3 : 2);
+				const Point2d& xy = gv.vertices()[gv.corners(box)[corner]];
 
-				Vertex* nv = new Vertex(pos[0], pos[1], val, vid++);
+				Vertex* nv = new Vertex(xy[0], xy[1], val, vid++);
 				vdata.push_back(nv);
 			}
 		}
@@ -479,7 +460,7 @@ void buildSharingVertices_mfgrid(ModflowGrid* mfgrid, vector<Vertex*>& vdata, Bo
 	}
 
 }
-int collectCell_share(ModflowGrid* mfgrid,  vector<Box*>& allBoxes, vector<int>* intvals, vector<float>* dbvals, bool without_inactive, bool one_based_numbering)
+int collectCell_share(ModflowGrid* mfgrid,  vector<Box*>& allBoxes, vector<int>* intvals, vector<double>* dbvals, bool without_inactive, bool one_based_numbering)
 {
 	int cellNum = 0;
 	for(int k=0;k<mfgrid->nlay;k++)
@@ -512,10 +493,10 @@ int collectCell_share(ModflowGrid* mfgrid,  vector<Box*>& allBoxes, vector<int>*
 					double top=mfgrid->bot[k * mfgrid->nrow * mfgrid->ncol + r * mfgrid->ncol + c];
 					double bot=mfgrid->bot[ (k+1) * mfgrid->nrow * mfgrid->ncol + r * mfgrid->ncol + c];
 
-					dbvals[0].push_back((float)top); 
-					dbvals[1].push_back((float)bot); 
-					dbvals[2].push_back((float)(b->dx)); 
-					dbvals[3].push_back((float)(b->dy));
+					dbvals[0].push_back(top); 
+					dbvals[1].push_back(bot); 
+					dbvals[2].push_back(b->dx); 
+					dbvals[3].push_back(b->dy);
 
 					intvals[5].push_back(cellNum++);//the vtk_id
 				}
@@ -532,8 +513,6 @@ void writeModflowGrid2VTK_shareV(ModflowGrid* mfgrid, string vtkName, bool witho
 	vector<Vertex*> vdata;
 	buildSharingVertices_mfgrid(mfgrid, vdata, boxVts);
 		//begin to write
-	double cx, cy, rotation;
-	mfgrid->getRotatePara(cx, cy, rotation);
 
 	/*****************************************************************************************/
 	//collect all the boxes and necessary info
@@ -548,7 +527,7 @@ void writeModflowGrid2VTK_shareV(ModflowGrid* mfgrid, string vtkName, bool witho
 	intNames.push_back("col");
 	intNames.push_back("vtkid");
 
-	vector<float> dbvals[4];//tops, bottoms, delrs, delcs;
+	vector<double> dbvals[4];//tops, bottoms, delrs, delcs;
 	dbNames.push_back("top"); 
 	dbNames.push_back("bottom"); 
 	dbNames.push_back("delr"); 
@@ -568,14 +547,12 @@ void writeModflowGrid2VTK_shareV(ModflowGrid* mfgrid, string vtkName, bool witho
 
 	//write the points
 	ofile<<"<Points>\n";
-	ofile<<"<DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+	ofile<<"<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n";
 	int flash = 0;
 	for(vector<Vertex*>::iterator vit = vdata.begin(); vit != vdata.end(); ++vit)
 	{
 		Vertex* nv = *vit;
-		double resx, resy;
-		rotateOnePnt(nv->pos[0], nv->pos[1], cx, cy, rotation,resx, resy);
-		ofile<<(float)(resx)<<"\t"<<(float)(resy)<<"\t"<<(float)(nv->pos[2] * ZSCALE)<<"\t";
+		ofile<<round_trip(nv->pos[0])<<"\t"<<round_trip(nv->pos[1])<<"\t"<<round_trip(nv->pos[2] * ZSCALE)<<"\t";
 
 		if(flash % 5000 == 0)
 		{
@@ -601,7 +578,7 @@ void writeModflowGrid2VTK_shareV(ModflowGrid* mfgrid, string vtkName, bool witho
 	int dbSize = dbNames.size();
 	for(int i = 0; i < 4; i++)
 	{
-		writeDataArray(ofile, "Float32", dbNames[i], (dbvals[i]));
+		writeDataArray(ofile, "Float64", dbNames[i], (dbvals[i]));
 	}
 	ofile<<"</CellData>\n";
 
@@ -622,7 +599,7 @@ void writeModflowGrid2VTK_shareV(ModflowGrid* mfgrid, string vtkName, bool witho
 * write VTK file with sharing vertices for quadtree
 ******************************************************************************************************************/
 //void DFSCollectInfo(Box* b, int l, int r, int c, int& boxNum, 
-void DFScollectCell_share(Box* b, int k, int r, int c, QuadTree3D* qtree, vector<Box*>& allBoxes, int& boxNum,  vector<int>* intvals, vector<float>* dbvals
+void DFScollectCell_share(Box* b, int k, int r, int c, QuadTree3D* qtree, vector<Box*>& allBoxes, int& boxNum,  vector<int>* intvals, vector<double>* dbvals
 	, bool one_based_numbering)
 {
 	if(b->isLeaf && b->active)
@@ -644,10 +621,10 @@ void DFScollectCell_share(Box* b, int k, int r, int c, QuadTree3D* qtree, vector
 		double top=qtree->top[b->number];
 		double bot=qtree->bot[b->number];
 
-		dbvals[0].push_back((float)top); 
-		dbvals[1].push_back((float)bot); 
-		dbvals[2].push_back((float)(b->dx)); 
-		dbvals[3].push_back((float)(b->dy));
+		dbvals[0].push_back(top); 
+		dbvals[1].push_back(bot); 
+		dbvals[2].push_back(b->dx); 
+		dbvals[3].push_back(b->dy);
 
 		intvals[5].push_back(boxNum++);//the vtk_id
 	}
@@ -659,7 +636,7 @@ void DFScollectCell_share(Box* b, int k, int r, int c, QuadTree3D* qtree, vector
 		}
 	}
 }
-int collectCell_share(QuadTree3D* qtree,  vector<Box*>& allBoxes, vector<int>* intvals, vector<float>* dbvals, bool one_based_numbering)
+int collectCell_share(QuadTree3D* qtree,  vector<Box*>& allBoxes, vector<int>* intvals, vector<double>* dbvals, bool one_based_numbering)
 {
 	ModflowGrid* mfgrid = qtree->getModflowGrid();
 	int cellNum = 0;
@@ -1319,7 +1296,7 @@ void interpolate_z(QuadTree3D* qtree, vector<VTK_V*>& vdata, vector<VTK_E*>& eda
 //
 // write
 //
-void writeCells(ofstream& ofile,  vector<Box*>& allBoxes, vector<int>* intvals, vector<float>* dbvals, VTK_Box* boxdata)
+void writeCells(ofstream& ofile,  vector<Box*>& allBoxes, vector<int>* intvals, vector<double>* dbvals, VTK_Box* boxdata)
 {
 	//ModflowGrid* mfgrid = qtree->getModflowGrid();
 	/***************************************************************************************/
@@ -1394,13 +1371,36 @@ void write_vtu_file(QuadTree3D* qtree, vector<VTK_V*>& vdata, vector<VTK_E*>& ed
 	intNames.push_back("col");
 	intNames.push_back("vtkid");
 
-	vector<float> dbvals[4];//tops, bottoms, delrs, delcs;
+	vector<double> dbvals[4];//tops, bottoms, delrs, delcs;
 	dbNames.push_back("top"); 
 	dbNames.push_back("bottom"); 
 	dbNames.push_back("delr"); 
 	dbNames.push_back("delc");
 	//
 	int cellNum = collectCell_share(qtree, allBoxes, intvals, dbvals, qtree->get_one_based_node_numbering());
+
+	//world coordinates of each point from the nearest corner of a cell it bounds
+	GridVertices gv(qtree);
+	map<VTK_V*, Point2d> world;
+	for(vector<Box*>::iterator bit = allBoxes.begin(); bit != allBoxes.end(); ++bit)
+	{
+		VTK_Box& s_box = boxdata[(*bit)->id];
+		VTK_V* vids[8] = {s_box.e[0]->v[0], s_box.e[0]->v[1], s_box.e[1]->v[1], s_box.e[2]->v[0],
+			s_box.e[4]->v[0], s_box.e[4]->v[1], s_box.e[5]->v[1], s_box.e[6]->v[0]};
+		const int* ids = gv.corners(*bit);
+		for(int i = 0; i < 8; i++)
+		{
+			if(world.count(vids[i])) continue;
+			double resx, resy, dmin = DBL_MAX;
+			rotateOnePnt(vids[i]->pos[0], vids[i]->pos[1], cx, cy, rotation, resx, resy);
+			for(int j = 0; j < 4; j++)
+			{
+				const Point2d& p = gv.vertices()[ids[j]];
+				double d = (p[0] - resx) * (p[0] - resx) + (p[1] - resy) * (p[1] - resy);
+				if(d < dmin) { dmin = d; world[vids[i]] = p; }
+			}
+		}
+	}
 
 		//write the points, loop over each layer
 	stringstream ss0;
@@ -1414,15 +1414,16 @@ void write_vtu_file(QuadTree3D* qtree, vector<VTK_V*>& vdata, vector<VTK_E*>& ed
 
 	//write the points
 	ofile<<"<Points>\n";
-	ofile<<"<DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+	ofile<<"<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n";
 	int flash = 0;
 	for(vector<VTK_V*>::iterator vit = vtk_vertices.begin(); vit != vtk_vertices.end(); ++vit)
 	{
 		VTK_V* sv = *vit;
-		double resx, resy;
-		rotateOnePnt(sv->pos[0], sv->pos[1], cx, cy, rotation,resx, resy);
+		//points and cells both come from the active leaves
+		assert(world.count(sv));
+		const Point2d& xy = world[sv];
 
-		ofile<<(float)(resx)<<"\t"<<(float)(resy)<<"\t"<<(float)(sv->pos[2] * ZSCALE)<<"\t";
+		ofile<<round_trip(xy[0])<<"\t"<<round_trip(xy[1])<<"\t"<<round_trip(sv->pos[2] * ZSCALE)<<"\t";
 
 		if(flash % 5000 == 0)
 		{
@@ -1449,7 +1450,7 @@ void write_vtu_file(QuadTree3D* qtree, vector<VTK_V*>& vdata, vector<VTK_E*>& ed
 	int dbSize = dbNames.size();
 	for(int i = 0; i < 4; i++)
 	{
-		writeDataArray(ofile, "Float32", dbNames[i], (dbvals[i]));
+		writeDataArray(ofile, "Float64", dbNames[i], (dbvals[i]));
 	}
 	ofile<<"</CellData>\n";
 

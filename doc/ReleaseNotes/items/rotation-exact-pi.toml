@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "gridding"
+description = "ROTATION_ANGLE was converted between degrees and radians with pi taken as 3.1415926, so a rotated grid differed from the same grid rotated with an exact pi (for example, by FloPy) by about 0.6 millimeters at 110 kilometers from the grid origin. The conversion now uses pi to double precision, which moves the cells of a rotated grid and changes intersection results slightly. The grid definition file written by QUADTREE_BUILDER now repeats the rotation angle as given (17.3 rather than 17.30000000000000071054273576010018587112)."

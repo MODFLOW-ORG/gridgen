@@ -40,7 +40,7 @@ struct CSRData
         iac=NULL;
 	}
 
-	CSRData(int _nodes, int _nja, double * _area, int * _ia, int * _ja, float * _cl1, float * _cl2, float * _fahl, int * _fldr, int * _iac=NULL)
+	CSRData(int _nodes, int _nja, double * _area, int * _ia, int * _ja, double * _cl1, double * _cl2, double * _fahl, int * _fldr, int * _iac=NULL)
     {
         nodes=_nodes;
         nja=_nja;
@@ -82,13 +82,13 @@ struct CSRData
     double * area;
     
     /// size of nja storing distance to the shared face of each connection
-	float * cl1;
+	double * cl1;
 	
 	/// size of nja storing reversed distance to the shared face from each connection
-	float * cl2;
+	double * cl2;
 	
 	/// area of the connection of size nja
-    float * fahl;
+    double * fahl;
     
     /// direction indicator of size nja (+-1 for x, +-2 for y +-3 for z)
     int  * fldr;
@@ -142,9 +142,9 @@ istream&  operator>>(istream& ins, CSRData& data)
     data.ia = new int[data.nodes+1];
     data.ja = new int[data.nja];
     data.area = new double[data.nodes];
-    data.cl1 = new float[data.nja];
-    data.cl2 = new float[data.nja];
-    data.fahl = new float[data.nja];
+    data.cl1 = new double[data.nja];
+    data.cl2 = new double[data.nja];
+    data.fahl = new double[data.nja];
     data.fldr = new int[data.nja];
 
     assert(data.ia && data.ja && data.cl1 && data.cl2 && data.fahl && data.fldr);
