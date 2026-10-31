@@ -1,10 +1,14 @@
 // Quadtree refinement, smoothing, and connectivity
 #include <cstdlib>
+#include <set>
+#include <utility>
+#include <vector>
 
 #include <gtest/gtest.h>
 
 #include "csr_checks.h"
 #include "grid_helpers.h"
+#include "polyline.h"
 
 using namespace cusg;
 using gridgen_test::expect_csr_valid;
@@ -32,6 +36,31 @@ int max_level_jump(QuadTree3D * qtree, const CSRData & csr, bool vertical)
         }
     }
     return jump;
+}
+
+// refine 3 x 3 cells of 100 once along a line; return the cells refined,
+// numbered by row from the top and then by column
+std::set<int> line_refined_cells(const std::vector<std::pair<double, double>> & points)
+{
+    QuadTree3D * qtree = new QuadTree3D(make_mfgrid(1, 3, 3, 100.0, 100.0));
+    c_plyline arc;
+    arc.beginPoly();
+    for (const auto & pt : points) arc.addVertex(pt.first, pt.second);
+    arc.endPoly();
+    qtree->refine(arc, 1, 0);
+    qtree->number_nodes();
+    qtree->refresh();
+
+    std::set<int> cells;
+    for (int n = 0; n < qtree->nodes(); n++)
+    {
+        Box * box = qtree->get_nodeobj(n);
+        if (box->depth == 0) continue;
+        int row = static_cast<int>((300.0 - box->y) / 100.0);
+        int col = static_cast<int>(box->x / 100.0);
+        cells.insert(3 * row + col);
+    }
+    return cells;
 }
 
 } // namespace
@@ -151,4 +180,34 @@ TEST(QuadTree, VerticalPassThroughInactiveCell)
     // layer 1 to layer 3 and back
     EXPECT_EQ(nlong, 2);
     csr.destory();
+}
+
+TEST(QuadTree, LineRefinesCellsItCrosses)
+{
+    EXPECT_EQ(line_refined_cells({{50.0, 150.0}, {250.0, 150.0}}), (std::set<int>{3, 4, 5}));
+}
+
+TEST(QuadTree, LineRefinesCellItIsInside)
+{
+    EXPECT_EQ(line_refined_cells({{120.0, 120.0}, {180.0, 180.0}}), (std::set<int>{4}));
+}
+
+TEST(QuadTree, LineEndingOnEdgeDoesNotRefineNextCell)
+{
+    EXPECT_EQ(line_refined_cells({{150.0, 250.0}, {150.0, 200.0}}), (std::set<int>{1}));
+}
+
+TEST(QuadTree, LineEndingAtCornerDoesNotRefineNextCells)
+{
+    EXPECT_EQ(line_refined_cells({{150.0, 250.0}, {200.0, 200.0}}), (std::set<int>{1}));
+}
+
+TEST(QuadTree, LineThroughCornerRefinesCellsAtCorner)
+{
+    EXPECT_EQ(line_refined_cells({{150.0, 250.0}, {250.0, 150.0}}), (std::set<int>{1, 2, 4, 5}));
+}
+
+TEST(QuadTree, LineAlongEdgeRefinesCellsOnBothSides)
+{
+    EXPECT_EQ(line_refined_cells({{100.0, 250.0}, {100.0, 150.0}}), (std::set<int>{0, 1, 3, 4}));
 }

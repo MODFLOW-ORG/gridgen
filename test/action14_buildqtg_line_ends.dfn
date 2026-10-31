@@ -1,0 +1,31 @@
+# lines that end on a cell edge, end at a cell corner, pass through a cell
+# corner, and run along a cell edge, without smoothing
+
+BEGIN MODFLOW_GRID grid08mfg
+  ROTATION_ANGLE = 0.
+  X_OFFSET = 0.
+  Y_OFFSET = 0.
+  LENGTH_UNIT = undefined
+  NLAY = 1
+  NROW = 10
+  NCOL = 10
+  DELR = CONSTANT 100.
+  DELC = CONSTANT 100.
+  TOP = CONSTANT 0.
+  BOTTOM LAYER 1 = CONSTANT -10.
+END MODFLOW_GRID
+
+BEGIN REFINEMENT_FEATURES line_ends
+  SHAPEFILE = shapefiles/line_ends
+  FEATURE_TYPE = line
+  REFINEMENT_LEVEL = 2
+END REFINEMENT_FEATURES
+
+BEGIN QUADTREE_BUILDER buildqtg_line_ends
+  MODFLOW_GRID = grid08mfg
+  REFINEMENT_FEATURES LAYER 1 = line_ends
+  SMOOTHING = none
+  GRID_DEFINITION_FILE = grid08qtg.dfn
+  TOP LAYER 1 = REPLICATE grid08mfg
+  BOTTOM LAYER 1 = REPLICATE grid08mfg
+END QUADTREE_BUILDER
