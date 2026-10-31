@@ -21,8 +21,6 @@ static const map<string, set<string>> & block_records()
                                        "grid_definition_file",
                                        "refinement_features layer",
                                        "refine_by_features layer",
-                                       "refinement_array layer",
-                                       "refine_by_array layer",
                                        "active_domain layer",
                                        "smoothing",
                                        "horizontal_smoothing_level",
@@ -69,6 +67,17 @@ static const map<string, set<string>> & block_records()
     return records;
 }
 
+//records a block type reads but does not use, with the reason given in the warning
+static const map<string, map<string, string>> & ignored_records()
+{
+    static map<string, map<string, string>> records;
+    if (!records.empty()) return records;
+    const char * no_array = "GRIDGEN does not refine by array; use REFINEMENT_FEATURES";
+    records["quadtree_builder"]["refinement_array layer"] = no_array;
+    records["quadtree_builder"]["refine_by_array layer"] = no_array;
+    return records;
+}
+
 static string upper(string s)
 {
     for (size_t i = 0; i < s.size(); i++) s[i] = (char)toupper((unsigned char)s[i]);
@@ -90,6 +99,14 @@ static list<string> unrecognized_records(const block_raw_data & block)
         size_t pos = name.rfind(" layer ");
         if (pos != string::npos) name = name.substr(0, pos + 6);
         if (known->second.count(name)) continue;
+        map<string, map<string, string>>::const_iterator ignored =
+            ignored_records().find(block.type);
+        if (ignored != ignored_records().end() && ignored->second.count(name))
+        {
+            warnings.push_back("record " + upper(e->name) + " in " + upper(block.type) + " block " +
+                               block.name + " is ignored; " + ignored->second.at(name));
+            continue;
+        }
         warnings.push_back("record " + upper(e->name) + " is not recognized in " +
                            upper(block.type) + " block " + block.name + " and is ignored");
     }
