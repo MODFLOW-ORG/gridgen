@@ -260,6 +260,9 @@ void ShapeReader::readPly(SHPObject * psShape, int iShape)
 }
 void ShapeReader::readMultiPatch(SHPObject * psShape, int iShape)
 {
+    //outer and first rings start a polygon, and inner rings are its holes; a
+    //plain ring is a hole after another ring, as in a polygon shapefile
+    bool started = false;
     for (int i = 0; i < psShape->nParts; i++)
     {
         int stId = psShape->panPartStart[i];
@@ -269,67 +272,39 @@ void ShapeReader::readMultiPatch(SHPObject * psShape, int iShape)
             endId = psShape->panPartStart[i + 1] - 1;
         }
         int type = psShape->panPartType[i];
-        if (type == SHPT_POLYGON || type == SHPT_POLYGONM || type == SHPT_POLYGONZ)
+        if (type != SHPP_OUTERRING && type != SHPP_INNERRING && type != SHPP_FIRSTRING &&
+            type != SHPP_RING)
         {
-            c_ply ply(c_ply::POUT);
-            ply.beginPoly();
-            for (int j = stId; j <= endId; j++)
-            {
-                //Points may duplicate....
-                double & x = psShape->padfX[j];
-                double & y = psShape->padfY[j];
-                ply.addVertex(x, y);
+            cerr << "! Warning: part " << i + 1 << " of multipatch shape " << iShape + 1 << " is a "
+                 << SHPPartTypeName(type) << ", which is not supported, and is skipped" << endl;
+            continue;
+        }
 
-                if (x < bbox[0]) bbox[0] = x;
-                if (x > bbox[1]) bbox[1] = x;
-                if (y < bbox[2]) bbox[2] = y;
-                if (y > bbox[3]) bbox[3] = y;
-            }
-            ply.endPoly();
-            add_ply(ply, iShape);
-        }
-        else if (type == SHPT_ARC || type == SHPT_ARCZ || type == SHPT_ARCM)
+        if (type == SHPP_INNERRING && !started)
         {
-            GIS_plyline arc;
-            arc.beginPoly();
-            for (int j = stId; j <= endId; j++)
-            {
-                //Points may duplicate....
-                double & x = psShape->padfX[j];
-                double & y = psShape->padfY[j];
-                arc.addVertex(x, y);
+            cerr << "! Warning: part " << i + 1 << " of multipatch shape " << iShape + 1
+                 << " is an inner ring that follows no outer ring, and is skipped" << endl;
+            continue;
+        }
 
-                if (x < bbox[0]) bbox[0] = x;
-                if (x > bbox[1]) bbox[1] = x;
-                if (y < bbox[2]) bbox[2] = y;
-                if (y > bbox[3]) bbox[3] = y;
-            }
-            arc.endPoly();
-            arc.m_id = iShape;
-            arc.computeGeodesicDist();
-            m_arc_list.push_back(arc);
-        }
-        else if (type == SHPT_MULTIPOINT || type == SHPT_MULTIPOINTM || type == SHPT_MULTIPOINTZ)
+        bool outer = !started || type == SHPP_OUTERRING || type == SHPP_FIRSTRING;
+        c_ply ply(outer ? c_ply::POUT : c_ply::PIN);
+        ply.beginPoly();
+        for (int j = stId; j <= endId; j++)
         {
-            for (int j = stId; j <= endId; j++)
-            {
-                //Points may duplicate....
-                double & x = psShape->padfX[j];
-                double & y = psShape->padfY[j];
-                if (x < bbox[0]) bbox[0] = x;
-                if (x > bbox[1]) bbox[1] = x;
-                if (y < bbox[2]) bbox[2] = y;
-                if (y > bbox[3]) bbox[3] = y;
+            //Points may duplicate....
+            double & x = psShape->padfX[j];
+            double & y = psShape->padfY[j];
+            ply.addVertex(x, y);
 
-                GIS_Point2d pt(x, y);
-                pt.m_id = iShape;
-                m_pt_list.push_back(pt);
-            }
+            if (x < bbox[0]) bbox[0] = x;
+            if (x > bbox[1]) bbox[1] = x;
+            if (y < bbox[2]) bbox[2] = y;
+            if (y > bbox[3]) bbox[3] = y;
         }
-        else
-        {
-            cerr << "error : unsupported type id: " << type << endl;
-        }
+        ply.endPoly();
+        add_ply(ply, iShape);
+        started = true;
     }
 }
 
