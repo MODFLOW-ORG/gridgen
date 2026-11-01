@@ -1,8 +1,9 @@
 # the base grid written as unshared-vertex and zero-based VTK files, as
 # zero-based polygons without repeated end vertices, and as lines, and
-# intersected with points, lines, and polygons; and the quadtree grid written
-# as lines to a shapefile named with its extension, and intersected with points
-# that have a logical attribute, read from a shapefile named with its extension
+# intersected with points, lines, and polygons; the quadtree grid written as
+# lines to a shapefile named with its extension, and intersected with points
+# that have a logical attribute, read from a shapefile named with its
+# extension; and both grids intersected with a polygon that has a hole
 
 LOAD grid02qtg.dfn
 
@@ -82,4 +83,22 @@ BEGIN GRID_INTERSECTION wells_grid02qtg_lay1_intersect
   FEATURE_TYPE = point
   OUTPUT_FILE = output_intersection/wells_grid02qtg_lay1_intersect.ifo
   OUTPUT_SHAPEFILE = output_intersection/wells_grid02qtg_lay1_intersect.shp
+END GRID_INTERSECTION
+
+BEGIN GRID_INTERSECTION hole_grid01mfg_lay1_intersect
+  GRID = grid01mfg
+  LAYER = 1
+  SHAPEFILE = shapefiles/polygon_hole
+  FEATURE_TYPE = polygon
+  OUTPUT_FILE = output_intersection/hole_grid01mfg_lay1_intersect.ifo
+  OUTPUT_SHAPEFILE = output_intersection/hole_grid01mfg_lay1_intersect.shp
+END GRID_INTERSECTION
+
+BEGIN GRID_INTERSECTION hole_grid02qtg_lay1_intersect
+  GRID = grid02qtg
+  LAYER = 1
+  SHAPEFILE = shapefiles/polygon_hole
+  FEATURE_TYPE = polygon
+  OUTPUT_FILE = output_intersection/hole_grid02qtg_lay1_intersect.ifo
+  OUTPUT_SHAPEFILE = output_intersection/hole_grid02qtg_lay1_intersect.shp
 END GRID_INTERSECTION

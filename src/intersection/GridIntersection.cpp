@@ -829,33 +829,6 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & plygon,
 
     bpc->resetStatus();
 
-    //the holes
-    for (list<VNode *>::iterator vit = bpc->plys.begin(); vit != bpc->plys.end(); ++vit)
-    {
-        VNode * vn = *vit;
-        if (vn == bpc->first) continue;
-        VNode * nh = copyOnePly(vn, false);
-        BoxPlyClip * tbp = new BoxPlyClip();
-        tbp->first = nh;
-        tbp->plys.push_back(tbp->first);
-
-        list<BoxPlyClip *> hcres;
-        tbp->clip(xmin, xmax, ymin, ymax, hcres);
-        for (list<BoxPlyClip *>::iterator cit = hcres.begin(); cit != hcres.end(); ++cit)
-        {
-            GIS_polygon * nplygon = new GIS_polygon();
-            convertClipToPolygon(*cit, nplygon);
-            nplygon->front().set(c_ply::POUT, nplygon->front().getHead());
-            resultPlygons.push_back(nplygon);
-
-            (*cit)->destroy();
-            delete *cit;
-        }
-        tbp->destroy();
-
-        delete tbp;
-    }
-
     if (bpcInit == NULL)
     {
         bpc->destroy();

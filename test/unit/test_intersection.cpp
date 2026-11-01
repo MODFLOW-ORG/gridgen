@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <map>
 #include <set>
 #include <vector>
 
@@ -136,4 +137,76 @@ TEST(QuadTree, RefineByPolygonEnclosingGrid)
     polygon.destroy();
     qtree->refresh();
     EXPECT_EQ(qtree->nodes(), 400);
+}
+
+namespace
+{
+
+// the area of a polygon with a hole intersected with each cell of a grid
+template <typename T>
+std::map<Box *, double> hole_areas(T * grid, const std::vector<XY> & outer,
+                                   const std::vector<XY> & hole)
+{
+    GIS_polygon polygon;
+    static_cast<c_polygon &>(polygon) = make_polygon(outer, {hole});
+    BoxPlyClip * bpc = convertCPolygonToClip(polygon);
+
+    GridIntersection gi(0, 0);
+    gi.set_save_intersection_info(true);
+    gi.intersect(grid, polygon, bpc);
+
+    std::map<Box *, double> areas;
+    for (const PolygonCellIntersectionInfo & info : gi.getPolygonIntersectionInfo())
+    {
+        EXPECT_EQ(areas.count(info.box), 0u) << "cell at " << info.box->x << ", " << info.box->y;
+        areas[info.box] += info.m_area;
+    }
+    bpc->destroy();
+    delete bpc;
+    polygon.destroy();
+    return areas;
+}
+
+} // namespace
+
+TEST(GridIntersection, PolygonHoleIsNotPartOfTheArea)
+{
+    // the intersected areas of a 60 by 60 square sum to its area less its
+    // hole's, each cell is listed once, and cells in the hole are not, for a
+    // hole on the cell edges, one that cuts cells, and one inside a cell (#99)
+    struct Case
+    {
+        double lo;
+        double hi;
+        double area;
+    };
+    const Case holes[] = {{40.0, 60.0, 3200.0}, {43.0, 57.0, 3404.0}, {41.0, 48.0, 3551.0}};
+    for (const Case & c : holes)
+    {
+        std::vector<XY> hole = square(c.lo, c.hi);
+        std::reverse(hole.begin(), hole.end());
+        for (int refined = 0; refined < 2; refined++)
+        {
+            SCOPED_TRACE(std::string(refined ? "quadtree" : "MODFLOW grid") + ", hole from " +
+                         std::to_string(c.lo) + " to " + std::to_string(c.hi));
+            ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+            std::map<Box *, double> areas;
+            if (refined)
+                areas = hole_areas(make_qtree(mfgrid, {{45.0, 45.0, 2, 0}}, true),
+                                   square(20.0, 80.0), hole);
+            else
+                areas = hole_areas(mfgrid, square(20.0, 80.0), hole);
+
+            double total = 0.0;
+            for (const auto & a : areas)
+            {
+                const Box * b = a.first;
+                total += a.second;
+                EXPECT_FALSE(b->x - b->dx / 2 >= c.lo && b->x + b->dx / 2 <= c.hi &&
+                             b->y - b->dy / 2 >= c.lo && b->y + b->dy / 2 <= c.hi)
+                    << "cell in the hole at " << b->x << ", " << b->y;
+            }
+            EXPECT_NEAR(total, c.area, 1e-3);
+        }
+    }
 }
