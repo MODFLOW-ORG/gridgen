@@ -1408,14 +1408,16 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
     return true;
 }
 
-//a quadtree grid is written with its own numbering and without inactive cells
+//a quadtree grid keeps its own numbering, and its inactive cells are never written
 void block_raw_data::warnQuadtreeExportRecords(Grid * grid)
 {
     if (dynamic_cast<QuadTree3D *>(grid) == NULL) return;
     if (hasRecord("node_numbering"))
-        warnIgnored("node_numbering", "a QUADTREE grid keeps the node numbering it was built with");
+        warnIgnored("node_numbering",
+                    "it has no effect on a QUADTREE grid, which keeps the node numbering "
+                    "it was built with");
     if (hasRecord("without_inactive"))
-        warnIgnored("without_inactive", "inactive cells of a QUADTREE grid are never written");
+        warnIgnored("without_inactive", "it has no effect on a QUADTREE grid");
 }
 
 //-----------------------------------------------------------------------------
