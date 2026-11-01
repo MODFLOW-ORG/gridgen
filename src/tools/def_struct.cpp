@@ -1408,7 +1408,7 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
     return true;
 }
 
-//a quadtree grid keeps its own numbering, and its inactive cells are never written
+//records that do not change any output of a quadtree grid
 void block_raw_data::warnQuadtreeExportRecords(Grid * grid)
 {
     if (dynamic_cast<QuadTree3D *>(grid) == NULL) return;
