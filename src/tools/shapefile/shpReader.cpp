@@ -280,6 +280,13 @@ void ShapeReader::readMultiPatch(SHPObject * psShape, int iShape)
             continue;
         }
 
+        if (type == SHPP_INNERRING && !started)
+        {
+            cerr << "! Warning: part " << i + 1 << " of multipatch shape " << iShape + 1
+                 << " is an inner ring that follows no outer ring, and is skipped" << endl;
+            continue;
+        }
+
         bool outer = !started || type == SHPP_OUTERRING || type == SHPP_FIRSTRING;
         c_ply ply(outer ? c_ply::POUT : c_ply::PIN);
         ply.beginPoly();

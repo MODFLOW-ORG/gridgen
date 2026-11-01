@@ -59,23 +59,31 @@ void write_multipatch(const std::string & path, const std::vector<std::vector<Pa
 TEST(ShapeReader, MultipatchRingsAreReadAsPolygonsWithHoles)
 {
     // outer and first rings start a polygon, inner rings and a ring after
-    // another ring are holes, and triangle strips are skipped (#100)
+    // another ring are holes, and triangle strips and fans, and an inner ring
+    // before any other ring, are skipped (#100)
     std::string path = testing::TempDir() + "gridgen_unit_multipatch";
     write_multipatch(path, {{square(SHPP_OUTERRING, 0, 0, 10), square(SHPP_INNERRING, 3, 3, 4)},
                             {square(SHPP_FIRSTRING, 20, 0, 10), square(SHPP_RING, 23, 3, 4)},
                             {square(SHPP_RING, 40, 0, 10)},
                             {{SHPP_TRISTRIP, {60, 70, 60, 70}, {0, 0, 10, 10}},
-                             square(SHPP_OUTERRING, 60, 0, 10)}});
+                             square(SHPP_OUTERRING, 60, 0, 10)},
+                            {square(SHPP_OUTERRING, 80, 0, 10), square(SHPP_OUTERRING, 100, 0, 10)},
+                            {{SHPP_TRIFAN, {120, 130, 130}, {0, 0, 10}},
+                             square(SHPP_INNERRING, 123, 3, 4),
+                             square(SHPP_RING, 120, 0, 10),
+                             square(SHPP_RING, 123, 3, 4)}});
 
     ShapeReader reader;
     ASSERT_TRUE(reader.read(path));
     std::vector<GIS_polygon> & polygons = reader.getPolyList();
-    ASSERT_EQ(polygons.size(), 4u);
+    ASSERT_EQ(polygons.size(), 7u);
 
-    const size_t rings[] = {2, 2, 1, 1};
+    // the shape each polygon is from, and its rings
+    const int shapes[] = {0, 1, 2, 3, 4, 4, 5};
+    const size_t rings[] = {2, 2, 1, 1, 1, 1, 2};
     for (size_t i = 0; i < polygons.size(); i++)
     {
-        EXPECT_EQ(polygons[i].m_id, static_cast<int>(i));
+        EXPECT_EQ(polygons[i].m_id, shapes[i]);
         ASSERT_EQ(polygons[i].size(), rings[i]) << "shape " << i;
         EXPECT_EQ(polygons[i].front().getType(), c_ply::POUT) << "shape " << i;
         if (rings[i] == 2) EXPECT_EQ(polygons[i].back().getType(), c_ply::PIN) << "shape " << i;

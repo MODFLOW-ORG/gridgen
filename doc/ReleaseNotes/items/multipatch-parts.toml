@@ -1,3 +1,3 @@
 section = "fixes"
 subsection = "input"
-description = "Multipatch shapefiles were read incorrectly: outer and first rings were rejected with an unsupported type error, and inner rings were read as lines, so an active domain or refinement feature from a multipatch shapefile lost its polygons or its holes. Outer, first, and plain rings are now read as polygons and inner rings as their holes, as in a polygon shapefile. Triangle strips and fans are skipped with a warning."
+description = "Multipatch shapefiles were read incorrectly, so an active domain or refinement feature from a multipatch shapefile could lose its polygons or its holes; an active domain of outer and inner rings made the whole layer inactive. Outer and first rings now start a polygon and inner rings are its holes; a plain ring starts a polygon unless it follows another ring, when it is a hole, as in a polygon shapefile. Triangle strips and fans are skipped with a warning."
