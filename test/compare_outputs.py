@@ -66,6 +66,8 @@ CASES = (
     # VTK files, line shapefiles, and intersections of the base grid, and
     # shapefile names with their extension
     ("grid01mfg-to-vtkfile-nsv", "action17_modflowgrid.dfn"),
+    ("grid01mfg-to-vtkfile-zb", "action17_modflowgrid.dfn"),
+    ("grid01mfg-to-vtkfile-nsv-zb", "action17_modflowgrid.dfn"),
     ("grid01mfg-to-lineshapefile", "action17_modflowgrid.dfn"),
     ("grid01mfg-to-polyshapefile-zb", "action17_modflowgrid.dfn"),
     ("grid02qtg-to-lineshapefile", "action17_modflowgrid.dfn"),

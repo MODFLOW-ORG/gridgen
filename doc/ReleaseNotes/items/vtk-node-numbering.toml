@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "export"
+description = "NODE_NUMBERING = zero-based in a GRID_TO_VTKFILE block for a MODFLOW_GRID was ignored, so the node, layer, row, and column numbers in the VTK file always started at 1. They now start at 0 when NODE_NUMBERING = zero-based is given. VTK files written with the default numbering are unchanged."
