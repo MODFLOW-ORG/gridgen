@@ -1,0 +1,3 @@
+section = "documentation"
+subsection = "export"
+description = "Table 10 of the GRIDGEN report gives the default of SHARE_VERTEX in a GRID_TO_VTKFILE block as False, but the default is True: cell vertices are shared among neighboring cells and their elevations are interpolated unless SHARE_VERTEX is given a value other than True (in any letter case), which is read as False."
