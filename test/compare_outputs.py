@@ -78,6 +78,8 @@ CASES = (
     ("wells_grid02qtg_lay1_intersect", "action17_modflowgrid.dfn"),
     # an active domain and refinement from a polygon with a hole
     ("buildqtg_hole", "action18_buildqtg_hole.dfn"),
+    # the same polygon from a multipatch shapefile
+    ("buildqtg_multipatch", "action19_buildqtg_multipatch.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
@@ -93,6 +95,7 @@ SKIP_PATTERNS = (
     "grid09qtg*",
     "grid10qtg*",
     "grid11qtg*",
+    "grid12qtg*",
     "*.py",
     "__pycache__",
     "compare",
