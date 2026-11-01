@@ -163,6 +163,7 @@ std::map<Box *, double> hole_areas(T * grid, const std::vector<XY> & outer,
     }
     bpc->destroy();
     delete bpc;
+    polygon.destroy();
     return areas;
 }
 
