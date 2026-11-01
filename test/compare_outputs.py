@@ -55,6 +55,8 @@ CASES = (
     ("buildqtg_enclosing", "action12_buildqtg_enclosing.dfn"),
     # an ASCII grid with NODATA cells under parts of active cells
     ("buildqtg_nodata", "action13_buildqtg_nodata.dfn"),
+    # lines that end on, pass through, or run along cell edges and corners
+    ("buildqtg_line_ends", "action14_buildqtg_line_ends.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
@@ -66,6 +68,7 @@ SKIP_PATTERNS = (
     "grid05qtg*",
     "grid06qtg*",
     "grid07qtg*",
+    "grid08qtg*",
     "*.py",
     "__pycache__",
     "compare",

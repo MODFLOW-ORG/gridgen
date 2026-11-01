@@ -182,7 +182,7 @@ bool isReallyIntersect(Box * b, const LineSeg2d & line)
         }
     }
 
-    if (b) return true;
+    if (b_intersect) return true;
 
     //last chance, both point are in box
     if (b->in(s[0], s[1]) && b->in(e[0], e[1])) return true;
@@ -211,16 +211,10 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
     bs.insert(bl1.begin(), bl1.end());
     bs.insert(bl2.begin(), bl2.end());
 
+    //a box holding an end point on its boundary may only touch the line
     for (set<Box *>::iterator sit = bs.begin(); sit != bs.end(); ++sit)
     {
-        if (isReallyIntersect(*sit, line))
-        {
-            results.push_back(*sit);
-        }
-        else
-        {
-            cerr << "Warning: line not intersect with box actually!\n";
-        }
+        if (isReallyIntersect(*sit, line)) results.push_back(*sit);
     }
 
     list<Box *> open(results.begin(), results.end());

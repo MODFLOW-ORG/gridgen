@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "gridding"
+description = "A line refinement feature that ended on a cell edge or at a cell corner also refined the cells on the other side of that edge or corner, which the line does not enter. Only the cells a line crosses, passes through a corner of, or runs along an edge of are now refined. A grid refined by lines whose end points fall on cell edges or corners can have fewer cells than before."
