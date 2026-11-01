@@ -34,6 +34,7 @@
 
 # meson builddir
 builddir/
+builddir-coverage/
 
 # Executables
 bin/
@@ -53,6 +54,9 @@ test/grid05qtg*
 test/grid06qtg*
 test/grid07qtg*
 test/grid08qtg*
+test/grid09qtg*
+test/grid10qtg*
+test/grid11qtg*
 test/output_usgdata/grid*
 test/output_intersection/c*
 test/output_intersection/wells_*

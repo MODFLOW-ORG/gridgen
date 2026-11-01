@@ -20,6 +20,9 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Compare outputs with main** (needs a build of main at `../gridgen-main`,
   e.g. `git worktree add ../gridgen-main main`, then `pixi run setup-main`
   and `pixi run build-main`): `pixi run compare-main`
+- **Measure coverage** of `src/` by the regression cases (a separate coverage
+  build; the results by file are in `builddir-coverage/coverage.txt`):
+  `pixi run coverage`
 - **Check format, lint, and spelling** (Python and C++): `pixi run check-format`;
   `pixi run fix-format` applies the fixes
 - **Show the OS tag used for release archives:** `pixi run get-ostag`

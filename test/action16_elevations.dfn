@@ -1,0 +1,9 @@
+# the grid with elevations from ASCII grids written for MODFLOW-USG
+
+LOAD grid09qtg.dfn
+
+BEGIN GRID_TO_USGDATA grid09qtg-to-usgdata
+  GRID = grid09qtg
+  USG_DATA_PREFIX = output_usgdata/grid09qtg
+  VERTICAL_PASS_THROUGH = True
+END GRID_TO_USGDATA

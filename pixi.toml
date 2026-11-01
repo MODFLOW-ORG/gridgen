@@ -12,6 +12,7 @@ modflow-devtools = "*"
 ruff = "*"
 codespell = "*"
 clang-format = "23.1.*"
+gcovr = "*"
 
 [tasks]
 
@@ -29,6 +30,9 @@ test-intersect = { cmd = "meson test --verbose --no-rebuild -C builddir intersec
 test-vtk = { cmd = "meson test --verbose --no-rebuild -C builddir vtkA vtkB vtkC" }
 test-unit = { cmd = "meson test --verbose --no-rebuild -C builddir unit" }
 test-determinism = { cmd = "meson test --verbose --no-rebuild -C builddir determinism" }
+
+# line and function coverage of src/ by the regression cases (shapelib excluded)
+coverage = { cmd = "rm -rf builddir-coverage && meson setup -Db_coverage=true -Dunit_tests=disabled --buildtype=debug builddir-coverage && meson compile -C builddir-coverage && meson test -C builddir-coverage determinism && gcovr -r . builddir-coverage --gcov-ignore-parse-errors=suspicious_hits.warn_once_per_file -e src/tools/shapefile/shapelib/ -e subprojects/ -e test/ --print-summary -o builddir-coverage/coverage.txt" }
 
 # compare outputs with a build of main checked out at ../gridgen-main
 # (e.g., git worktree add ../gridgen-main main)

@@ -57,6 +57,25 @@ CASES = (
     ("buildqtg_nodata", "action13_buildqtg_nodata.dfn"),
     # lines that end on, pass through, or run along cell edges and corners
     ("buildqtg_line_ends", "action14_buildqtg_line_ends.dfn"),
+    # elevations from ASCII grids, omitted and aligned elevations, negative
+    # thickness, and active domains from a polygon interior, a line, and points
+    ("buildqtg_elevations", "action15_buildqtg_elevations.dfn"),
+    ("grid09qtg-to-usgdata", "action16_elevations.dfn"),
+    # a single smoothing level for both directions
+    ("buildqtg_smoothing_level", "action15_buildqtg_elevations.dfn"),
+    # VTK files, line shapefiles, and intersections of the base grid, and
+    # shapefile names with their extension
+    ("grid01mfg-to-vtkfile-nsv", "action17_modflowgrid.dfn"),
+    ("grid01mfg-to-lineshapefile", "action17_modflowgrid.dfn"),
+    ("grid01mfg-to-polyshapefile-zb", "action17_modflowgrid.dfn"),
+    ("grid02qtg-to-lineshapefile", "action17_modflowgrid.dfn"),
+    ("wells_grid01mfg_lay1_intersect", "action17_modflowgrid.dfn"),
+    ("canal_grid01mfg_lay1_intersect", "action17_modflowgrid.dfn"),
+    ("buffer_grid01mfg_lay1_intersect", "action17_modflowgrid.dfn"),
+    # a logical attribute in the intersection output
+    ("wells_grid02qtg_lay1_intersect", "action17_modflowgrid.dfn"),
+    # an active domain and refinement from a polygon with a hole
+    ("buildqtg_hole", "action18_buildqtg_hole.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
@@ -69,6 +88,9 @@ SKIP_PATTERNS = (
     "grid06qtg*",
     "grid07qtg*",
     "grid08qtg*",
+    "grid09qtg*",
+    "grid10qtg*",
+    "grid11qtg*",
     "*.py",
     "__pycache__",
     "compare",
