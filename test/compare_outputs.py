@@ -61,6 +61,8 @@ CASES = (
     # thickness, and active domains from a polygon interior, a line, and points
     ("buildqtg_elevations", "action15_buildqtg_elevations.dfn"),
     ("grid09qtg-to-usgdata", "action16_elevations.dfn"),
+    # a single smoothing level for both directions
+    ("buildqtg_smoothing_level", "action15_buildqtg_elevations.dfn"),
     # VTK files, line shapefiles, and intersections of the base grid, and
     # shapefile names with their extension
     ("grid01mfg-to-vtkfile-nsv", "action17_modflowgrid.dfn"),
@@ -88,6 +90,7 @@ SKIP_PATTERNS = (
     "grid08qtg*",
     "grid09qtg*",
     "grid10qtg*",
+    "grid11qtg*",
     "*.py",
     "__pycache__",
     "compare",
