@@ -21,9 +21,7 @@ struct Part
 // a closed square ring with its lower left corner at (x0, y0)
 Part square(int type, double x0, double y0, double size)
 {
-    return {type,
-            {x0, x0, x0 + size, x0 + size, x0},
-            {y0, y0 + size, y0 + size, y0, y0}};
+    return {type, {x0, x0, x0 + size, x0 + size, x0}, {y0, y0 + size, y0 + size, y0, y0}};
 }
 
 // write a multipatch shapefile with one shape for each list of parts
