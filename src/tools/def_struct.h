@@ -177,8 +177,35 @@ public:
     //related folder path
     string folderPath;
 
+    //whether the block has a record of this name
+    bool hasRecord(const string & rname) const
+    {
+        for (const_iterator e = begin(); e != end(); e++)
+            if (e->name == rname) return true;
+        return false;
+    }
+
+    //warnings reported when the block was initialized
+    const list<string> & getWarnings() const { return m_warnings; }
+
 protected:
+    //report that a record given in this block is ignored, and why
+    void warnIgnored(const string & rname, const string & reason)
+    {
+        string upper_name = rname, upper_type = type;
+        for (size_t i = 0; i < upper_name.size(); i++) upper_name[i] = toupper(upper_name[i]);
+        for (size_t i = 0; i < upper_type.size(); i++) upper_type[i] = toupper(upper_type[i]);
+        string w = "record " + upper_name + " in " + upper_type + " block " + name +
+                   " is ignored; " + reason;
+        cerr << "! Warning: " << w << endl;
+        m_warnings.push_back(w);
+    }
+
+    //report NODE_NUMBERING and WITHOUT_INACTIVE as ignored for a quadtree grid
+    void warnQuadtreeExportRecords(Grid * grid);
+
     bool m_initizlied;
+    list<string> m_warnings;
 };
 
 //-----------------------------------------------------------------------------
@@ -370,9 +397,6 @@ public:
     string output_file;
     string output_shapefile;
     vector<string> attributes;
-
-    //add on Aug. 22nd
-    string output_vtkfile;
 
     //actual data...
     Grid * grid;

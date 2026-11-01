@@ -45,9 +45,9 @@ static const map<string, set<string>> & block_records()
     const char * grid_to_usgdata[] = {"grid", "usg_data_prefix", "vertical_pass_through", NULL};
     const char * grid_to_vtkfile[] = {"grid",           "vtkfile",          "share_vertex",
                                       "node_numbering", "without_inactive", NULL};
-    const char * grid_intersection[] = {"grid",           "layer",       "shapefile",
-                                        "feature_type",   "output_file", "output_shapefile",
-                                        "output_vtkfile", "attributes",  NULL};
+    const char * grid_intersection[] = {"grid",         "layer",       "shapefile",
+                                        "feature_type", "output_file", "output_shapefile",
+                                        "attributes",   NULL};
 
     struct
     {
@@ -75,6 +75,8 @@ static const map<string, map<string, string>> & ignored_records()
     const char * no_array = "GRIDGEN does not refine by array; use REFINEMENT_FEATURES";
     records["quadtree_builder"]["refinement_array layer"] = no_array;
     records["quadtree_builder"]["refine_by_array layer"] = no_array;
+    records["grid_intersection"]["output_vtkfile"] =
+        "GRIDGEN does not write a VTK file of an intersection";
     return records;
 }
 

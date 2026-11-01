@@ -1001,21 +1001,6 @@ bool grid_intersection_raw_data::parse()
         }
     }
 
-    value = name_value_map["output_vtkfile"];
-    if (!value.empty())
-    {
-        output_vtkfile = value.front();
-        string fullpath = getFolderPath();
-        fullpath += output_vtkfile;
-
-        output_vtkfile = fullpath;
-        int pathsize = output_vtkfile.size();
-        for (int i = 0; i < pathsize; i++)
-        {
-            if (output_vtkfile[i] == '\\') output_vtkfile[i] = '/';
-        }
-    }
-
     value = name_value_map["layer"];
     if (!value.empty())
         layer = atoi(value.front().c_str()) - 1;
@@ -1417,8 +1402,20 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
         return false;
     }
 
+    warnQuadtreeExportRecords(this->grid);
+
     m_initizlied = true;
     return true;
+}
+
+//a quadtree grid is written with its own numbering and without inactive cells
+void block_raw_data::warnQuadtreeExportRecords(Grid * grid)
+{
+    if (dynamic_cast<QuadTree3D *>(grid) == NULL) return;
+    if (hasRecord("node_numbering"))
+        warnIgnored("node_numbering", "a QUADTREE grid keeps the node numbering it was built with");
+    if (hasRecord("without_inactive"))
+        warnIgnored("without_inactive", "inactive cells of a QUADTREE grid are never written");
 }
 
 //-----------------------------------------------------------------------------
@@ -1528,6 +1525,8 @@ bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
         cerr << "! Error: build " << grid_name << " failed" << endl;
         return false;
     }
+
+    warnQuadtreeExportRecords(this->grid);
 
     m_initizlied = true;
     return true;

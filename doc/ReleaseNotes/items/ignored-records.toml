@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "input"
+description = "Some records were read but had no effect, without a message: OUTPUT_VTKFILE in a GRID_INTERSECTION block, and NODE_NUMBERING and WITHOUT_INACTIVE in GRID_TO_SHAPEFILE and GRID_TO_VTKFILE blocks for a QUADTREE grid, which is always written with the node numbering it was built with and without its inactive cells. GRIDGEN now warns that these records are ignored. The output is unchanged."

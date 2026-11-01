@@ -271,3 +271,89 @@ TEST(DefinitionParser, UnrecognizedRecordIsReported)
     EXPECT_NE(warnings.front().find("QUADTREE_BUILDER block qtb"), std::string::npos)
         << warnings.front();
 }
+
+TEST(DefinitionParser, IntersectionVtkfileIsReportedAsIgnored)
+{
+    // OUTPUT_VTKFILE was read but no VTK file was written, without a message (#102)
+    std::istringstream dfn("BEGIN GRID_INTERSECTION gi\n"
+                           "  GRID = mfg\n"
+                           "  LAYER = 1\n"
+                           "  SHAPEFILE = wells\n"
+                           "  FEATURE_TYPE = point\n"
+                           "  OUTPUT_FILE = wells.ifo\n"
+                           "  OUTPUT_VTKFILE = wells\n"
+                           "END GRID_INTERSECTION\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    const std::list<std::string> & warnings = parser.getWarnings();
+    ASSERT_EQ(warnings.size(), 1u);
+    EXPECT_NE(warnings.front().find("OUTPUT_VTKFILE"), std::string::npos) << warnings.front();
+    EXPECT_NE(warnings.front().find("is ignored"), std::string::npos) << warnings.front();
+}
+
+namespace
+{
+
+// GRID_TO_SHAPEFILE and GRID_TO_VTKFILE blocks of a grid, with the records
+// that only a MODFLOW_GRID uses
+std::string export_blocks(const std::string & grid)
+{
+    return "BEGIN QUADTREE_BUILDER qtb\n"
+           "  MODFLOW_GRID = mfg\n"
+           "  GRID_DEFINITION_FILE = qtg.dfn\n"
+           "END QUADTREE_BUILDER\n"
+           "BEGIN GRID_TO_SHAPEFILE shp\n"
+           "  GRID = " +
+           grid +
+           "\n"
+           "  SHAPEFILE = grid\n"
+           "  FEATURE_TYPE = polygon\n"
+           "  NODE_NUMBERING = zero-based\n"
+           "  WITHOUT_INACTIVE = false\n"
+           "END GRID_TO_SHAPEFILE\n"
+           "BEGIN GRID_TO_VTKFILE vtk\n"
+           "  GRID = " +
+           grid +
+           "\n"
+           "  VTKFILE = grid\n"
+           "  NODE_NUMBERING = zero-based\n"
+           "  WITHOUT_INACTIVE = false\n"
+           "END GRID_TO_VTKFILE\n";
+}
+
+} // namespace
+
+TEST(DefinitionParser, QuadtreeExportRecordsAreReportedAsIgnored)
+{
+    // a quadtree grid is written with its own numbering and without inactive cells (#102)
+    std::istringstream dfn(std::string(MFG_BLOCK) + export_blocks("qtb"));
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    const char * blocks[] = {"shp", "vtk"};
+    for (const char * name : blocks)
+    {
+        block_raw_data * data = parser.getBlockData(name);
+        ASSERT_NE(data, nullptr) << name;
+        ASSERT_TRUE(data->initialize(parser.getBlockData())) << name;
+        const std::list<std::string> & warnings = data->getWarnings();
+        ASSERT_EQ(warnings.size(), 2u) << name;
+        EXPECT_NE(warnings.front().find("NODE_NUMBERING"), std::string::npos) << warnings.front();
+        EXPECT_NE(warnings.back().find("WITHOUT_INACTIVE"), std::string::npos) << warnings.back();
+    }
+}
+
+TEST(DefinitionParser, ModflowGridExportRecordsAreNotReported)
+{
+    // the same records are used for a MODFLOW_GRID (#102)
+    std::istringstream dfn(std::string(MFG_BLOCK) + export_blocks("mfg"));
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    const char * blocks[] = {"shp", "vtk"};
+    for (const char * name : blocks)
+    {
+        block_raw_data * data = parser.getBlockData(name);
+        ASSERT_NE(data, nullptr) << name;
+        ASSERT_TRUE(data->initialize(parser.getBlockData())) << name;
+        EXPECT_TRUE(data->getWarnings().empty()) << name;
+    }
+}
