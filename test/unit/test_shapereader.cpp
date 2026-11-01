@@ -84,9 +84,9 @@ TEST(ShapeReader, MultipatchRingsAreReadAsPolygonsWithHoles)
     for (size_t i = 0; i < polygons.size(); i++)
     {
         EXPECT_EQ(polygons[i].m_id, shapes[i]);
-        ASSERT_EQ(polygons[i].size(), rings[i]) << "shape " << i;
-        EXPECT_EQ(polygons[i].front().getType(), c_ply::POUT) << "shape " << i;
-        if (rings[i] == 2) EXPECT_EQ(polygons[i].back().getType(), c_ply::PIN) << "shape " << i;
+        ASSERT_EQ(polygons[i].size(), rings[i]) << "polygon " << i;
+        EXPECT_EQ(polygons[i].front().getType(), c_ply::POUT) << "polygon " << i;
+        if (rings[i] == 2) EXPECT_EQ(polygons[i].back().getType(), c_ply::PIN) << "polygon " << i;
     }
     EXPECT_TRUE(reader.getArcList().empty());
 }
