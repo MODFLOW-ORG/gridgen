@@ -76,6 +76,9 @@ CASES = (
     ("buffer_grid01mfg_lay1_intersect", "action17_modflowgrid.dfn"),
     # a logical attribute in the intersection output
     ("wells_grid02qtg_lay1_intersect", "action17_modflowgrid.dfn"),
+    # intersections with a polygon that has a hole
+    ("hole_grid01mfg_lay1_intersect", "action17_modflowgrid.dfn"),
+    ("hole_grid02qtg_lay1_intersect", "action17_modflowgrid.dfn"),
     # an active domain and refinement from a polygon with a hole
     ("buildqtg_hole", "action18_buildqtg_hole.dfn"),
 )

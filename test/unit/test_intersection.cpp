@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <map>
 #include <set>
 #include <vector>
 
@@ -136,4 +137,62 @@ TEST(QuadTree, RefineByPolygonEnclosingGrid)
     polygon.destroy();
     qtree->refresh();
     EXPECT_EQ(qtree->nodes(), 400);
+}
+
+namespace
+{
+
+// the area of a polygon with a hole intersected with each cell of a grid
+template <typename T>
+std::map<Box *, double> hole_areas(T * grid, const std::vector<XY> & outer,
+                                   const std::vector<XY> & hole)
+{
+    GIS_polygon polygon;
+    static_cast<c_polygon &>(polygon) = make_polygon(outer, {hole});
+    BoxPlyClip * bpc = convertCPolygonToClip(polygon);
+
+    GridIntersection gi(0, 0);
+    gi.set_save_intersection_info(true);
+    gi.intersect(grid, polygon, bpc);
+
+    std::map<Box *, double> areas;
+    for (const PolygonCellIntersectionInfo & info : gi.getPolygonIntersectionInfo())
+    {
+        EXPECT_EQ(areas.count(info.box), 0u) << "cell at " << info.box->x << ", " << info.box->y;
+        areas[info.box] += info.m_area;
+    }
+    bpc->destroy();
+    delete bpc;
+    return areas;
+}
+
+} // namespace
+
+TEST(GridIntersection, PolygonHoleIsNotPartOfTheArea)
+{
+    // the intersected areas of a 60 by 60 square with a 20 by 20 hole sum to
+    // 3,200, each cell is listed once, and cells in the hole are not (#99)
+    std::vector<XY> hole = square(40.0, 60.0);
+    std::reverse(hole.begin(), hole.end());
+    for (int refined = 0; refined < 2; refined++)
+    {
+        SCOPED_TRACE(refined ? "quadtree" : "MODFLOW grid");
+        ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+        std::map<Box *, double> areas;
+        if (refined)
+            areas = hole_areas(make_qtree(mfgrid, {{45.0, 45.0, 2, 0}}, true), square(20.0, 80.0),
+                               hole);
+        else
+            areas = hole_areas(mfgrid, square(20.0, 80.0), hole);
+
+        double total = 0.0;
+        for (const auto & a : areas)
+        {
+            total += a.second;
+            EXPECT_FALSE(a.first->x > 40.0 && a.first->x < 60.0 && a.first->y > 40.0 &&
+                         a.first->y < 60.0)
+                << "cell in the hole at " << a.first->x << ", " << a.first->y;
+        }
+        EXPECT_NEAR(total, 3200.0, 1e-6);
+    }
 }
