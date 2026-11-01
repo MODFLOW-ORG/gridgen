@@ -157,11 +157,12 @@ int main(int argc, char ** argv)
             if (grid2vtk->b_share_vertex)
             {
                 writeModflowGrid2VTK_shareV(modflow_grid, grid2vtk->vtkfile,
+                                            grid2vtk->without_inactive,
                                             grid2vtk->one_based_node_numbering);
             }
             else
             {
-                writeModflowGrid2VTK(modflow_grid, grid2vtk->vtkfile,
+                writeModflowGrid2VTK(modflow_grid, grid2vtk->vtkfile, grid2vtk->without_inactive,
                                      grid2vtk->one_based_node_numbering);
             }
         }
