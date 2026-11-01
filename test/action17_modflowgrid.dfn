@@ -1,0 +1,85 @@
+# the base grid written as unshared-vertex and zero-based VTK files and as
+# lines, and intersected with points, lines, and polygons; and the quadtree
+# grid written as lines to a shapefile named with its extension, and
+# intersected with points that have a logical attribute, read from a shapefile
+# named with its extension
+
+LOAD grid02qtg.dfn
+
+BEGIN GRID_TO_VTKFILE grid01mfg-to-vtkfile-nsv
+  GRID = grid01mfg
+  VTKFILE = output_vtkfiles/grid01mfg_nsv
+  SHARE_VERTEX = False
+END GRID_TO_VTKFILE
+
+BEGIN GRID_TO_VTKFILE grid01mfg-to-vtkfile-zb
+  GRID = grid01mfg
+  VTKFILE = output_vtkfiles/grid01mfg_zb
+  NODE_NUMBERING = zero-based
+END GRID_TO_VTKFILE
+
+BEGIN GRID_TO_VTKFILE grid01mfg-to-vtkfile-nsv-zb
+  GRID = grid01mfg
+  VTKFILE = output_vtkfiles/grid01mfg_nsv_zb
+  SHARE_VERTEX = False
+  NODE_NUMBERING = zero-based
+END GRID_TO_VTKFILE
+
+BEGIN GRID_TO_SHAPEFILE grid01mfg-to-lineshapefile
+  GRID = grid01mfg
+  SHAPEFILE = output_shapefiles/grid01mfg_lines
+  FEATURE_TYPE = line
+END GRID_TO_SHAPEFILE
+
+BEGIN GRID_TO_SHAPEFILE grid01mfg-to-polyshapefile-zb
+  GRID = grid01mfg
+  SHAPEFILE = output_shapefiles/grid01mfg_zb
+  FEATURE_TYPE = polygon
+  NODE_NUMBERING = zero-based
+  CONCIDE = False
+END GRID_TO_SHAPEFILE
+
+BEGIN GRID_TO_SHAPEFILE grid02qtg-to-lineshapefile
+  GRID = grid02qtg
+  SHAPEFILE = output_shapefiles/grid02qtg_lines.shp
+  FEATURE_TYPE = line
+END GRID_TO_SHAPEFILE
+
+BEGIN GRID_INTERSECTION wells_grid01mfg_lay1_intersect
+  GRID = grid01mfg
+  LAYER = 1
+  SHAPEFILE = shapefiles/wells_points
+  FEATURE_TYPE = point
+  OUTPUT_FILE = output_intersection/wells_grid01mfg_lay1_intersect.ifo
+  ATTRIBUTES = all
+  OUTPUT_SHAPEFILE = output_intersection/wells_grid01mfg_lay1_intersect.shp
+END GRID_INTERSECTION
+
+BEGIN GRID_INTERSECTION canal_grid01mfg_lay1_intersect
+  GRID = grid01mfg
+  LAYER = 1
+  SHAPEFILE = shapefiles/MD_Canals_50m_v2
+  FEATURE_TYPE = line
+  OUTPUT_FILE = output_intersection/canal_grid01mfg_lay1_intersect.ifo
+  ATTRIBUTES = HYDR_COND BOT_ELEV
+  OUTPUT_SHAPEFILE = output_intersection/canal_grid01mfg_lay1_intersect.shp
+END GRID_INTERSECTION
+
+BEGIN GRID_INTERSECTION buffer_grid01mfg_lay1_intersect
+  GRID = grid01mfg
+  LAYER = 1
+  SHAPEFILE = shapefiles/wells_1000m_buffer_Multipart
+  FEATURE_TYPE = polygon
+  OUTPUT_FILE = output_intersection/buffer_grid01mfg_lay1_intersect.ifo
+  ATTRIBUTES = none
+  OUTPUT_SHAPEFILE = output_intersection/buffer_grid01mfg_lay1_intersect.shp
+END GRID_INTERSECTION
+
+BEGIN GRID_INTERSECTION wells_grid02qtg_lay1_intersect
+  GRID = grid02qtg
+  LAYER = 1
+  SHAPEFILE = shapefiles/wells_logical.shp
+  FEATURE_TYPE = point
+  OUTPUT_FILE = output_intersection/wells_grid02qtg_lay1_intersect.ifo
+  OUTPUT_SHAPEFILE = output_intersection/wells_grid02qtg_lay1_intersect.shp
+END GRID_INTERSECTION

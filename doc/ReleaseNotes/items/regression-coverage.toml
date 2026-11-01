@@ -1,0 +1,3 @@
+section = "internal"
+subsection = "build"
+description = "Test cases were added for elevations from ASCII grids, omitted and aligned elevations, active domains defined by lines, points, and polygons with holes, line shapefiles of a grid, VTK files and intersections of a MODFLOW_GRID, and logical attributes in intersection output. `pixi run coverage` reports how much of the source code the test cases run. The program and its output are unchanged."

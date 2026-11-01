@@ -1,0 +1,37 @@
+# elevations from ASCII grids with and without area weighting, elevations
+# replicated where TOP or BOTTOM is omitted, cells with negative thickness,
+# active domains from a polygon without its boundary, a line, and points, a
+# single smoothing level, and aligned elevations
+
+LOAD action06_buildqtg_multilayer.dfn
+
+BEGIN ACTIVE_DOMAIN domain_interior
+  SHAPEFILE = shapefiles/active_domain
+  FEATURE_TYPE = polygon
+  INCLUDE_BOUNDARY = False
+END ACTIVE_DOMAIN
+
+BEGIN ACTIVE_DOMAIN domain_chd_line
+  SHAPEFILE = shapefiles/chd_line
+  FEATURE_TYPE = line
+END ACTIVE_DOMAIN
+
+BEGIN ACTIVE_DOMAIN domain_wells
+  SHAPEFILE = shapefiles/wells_points
+  FEATURE_TYPE = point
+END ACTIVE_DOMAIN
+
+BEGIN QUADTREE_BUILDER buildqtg_elevations
+  MODFLOW_GRID = grid03mfg
+  ACTIVE_DOMAIN LAYER 2 = domain_interior
+  ACTIVE_DOMAIN LAYER 3 = domain_chd_line domain_wells
+  REFINEMENT_FEATURES LAYER 1 = chd_line wells_points
+  REFINEMENT_FEATURES LAYER 2 = well_buffer
+  SMOOTHING = full
+  MAX_SMOOTHING_LEVEL_TARGET = 1
+  AUTOALIGNMENT = True
+  GRID_DEFINITION_FILE = grid09qtg.dfn
+  TOP LAYER 1 = ASCIIGRID AREA_WEIGHTED layer1_top.asc
+  BOTTOM LAYER 1 = ASCIIGRID NO_AREA_WEIGHTED layer1_bottom.asc
+  BOTTOM LAYER 2 = INTERPOLATE grid03mfg
+END QUADTREE_BUILDER
