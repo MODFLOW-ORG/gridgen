@@ -357,3 +357,23 @@ TEST(DefinitionParser, ModflowGridExportRecordsAreNotReported)
         EXPECT_TRUE(data->getWarnings().empty()) << name;
     }
 }
+
+TEST(DefinitionParser, QuadtreeExportWithoutTheRecordsIsNotReported)
+{
+    // only records that are given are reported (#102)
+    std::istringstream dfn(std::string(MFG_BLOCK) + "BEGIN QUADTREE_BUILDER qtb\n"
+                                                    "  MODFLOW_GRID = mfg\n"
+                                                    "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                                                    "END QUADTREE_BUILDER\n"
+                                                    "BEGIN GRID_TO_SHAPEFILE shp\n"
+                                                    "  GRID = qtb\n"
+                                                    "  SHAPEFILE = grid\n"
+                                                    "  FEATURE_TYPE = point\n"
+                                                    "END GRID_TO_SHAPEFILE\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    block_raw_data * data = parser.getBlockData("shp");
+    ASSERT_NE(data, nullptr);
+    ASSERT_TRUE(data->initialize(parser.getBlockData()));
+    EXPECT_TRUE(data->getWarnings().empty());
+}

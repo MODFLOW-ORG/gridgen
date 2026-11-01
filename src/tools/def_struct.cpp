@@ -1415,7 +1415,7 @@ void block_raw_data::warnQuadtreeExportRecords(Grid * grid)
     if (hasRecord("node_numbering"))
         warnIgnored("node_numbering",
                     "it has no effect on a QUADTREE grid, which keeps the node numbering "
-                    "it was built with");
+                    "it was built with; set NODE_NUMBERING in the QUADTREE_BUILDER block");
     if (hasRecord("without_inactive"))
         warnIgnored("without_inactive", "it has no effect on a QUADTREE grid");
 }
