@@ -25,6 +25,19 @@ if cc_id == 'intel'
   link_args += ['-diag-disable=10441']
 endif
 
+# keep floating-point results the same across compilers and standards: no
+# value-unsafe optimizations and no fused multiply-adds
+if cc_id in ['intel', 'intel-llvm']
+  compile_args += ['-fp-model=precise']
+elif cc_id in ['intel-cl', 'intel-llvm-cl']
+  compile_args += ['/fp:precise']
+endif
+if cc_id in ['gcc', 'clang', 'intel-llvm']
+  compile_args += ['-ffp-contract=off']
+elif cc_id == 'intel-llvm-cl'
+  compile_args += ['/clang:-ffp-contract=off']
+endif
+
 # global so subprojects (GoogleTest) are built with the same RTTI setting
 add_global_arguments(cc.get_supported_arguments(compile_args), language: 'cpp')
 add_global_link_arguments(cc.get_supported_arguments(link_args), language: 'cpp')

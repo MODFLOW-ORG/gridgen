@@ -1,0 +1,3 @@
+section = "internal"
+subsection = "build"
+description = "GRIDGEN is compiled without value-unsafe floating-point optimizations or fused multiply-add instructions, so a build gives the same results with each supported compiler. On computers whose processors have fused multiply-add instructions, such as Apple silicon, some values in the output change in the last digit."
