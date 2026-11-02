@@ -238,6 +238,11 @@ TEST(GridIntersection, PolygonVerticesOnGridLines)
     const std::vector<XY> star = {{65.0, 60.0}, {55.0, 85.0}, {37.5, 72.5}, {35.0, 50.0},
                                   {32.5, 27.5}, {55.0, 17.5}, {72.5, 32.5}};
     const std::vector<XY> kite = {{60.0, 52.5}, {47.5, 57.5}, {42.5, 45.0}, {50.0, 47.5}};
+    // a hole that shares a vertex on a grid line with the outer ring
+    const std::vector<XY> shared = {{70.0, 60.0}, {62.5, 87.5}, {27.5, 82.5},
+                                    {12.5, 37.5}, {47.5, 27.5}, {67.5, 35.0}};
+    const std::vector<XY> sharer = {{70.0, 60.0}, {57.5, 60.0}, {50.0, 60.0},
+                                    {42.5, 55.0}, {55.0, 50.0}, {60.0, 52.5}};
     // an edge along a grid line, and one that ends inside a cell edge
     const std::vector<XY> edge = {
         {80.0, 80.0}, {40.0, 60.0}, {30.0, 50.0}, {50.0, 10.0}, {80.0, 20.0}};
@@ -261,6 +266,7 @@ TEST(GridIntersection, PolygonVerticesOnGridLines)
         {"rounded hole", square(1005.0, 1095.0), {rounded}, 8096.0, 1000.0, 10, 10.0},
         {"notch hole", square(5.0, 95.0), {notch}, 8068.75, 0.0, 10, 10.0},
         {"kite hole", star, {kite}, 1659.375, 0.0, 40, 2.5},
+        {"shared vertex", shared, {sharer}, 2390.625, 0.0, 10, 10.0},
         {"edge on a grid line", edge, {}, 2300.0, 0.0, 10, 10.0},
         {"edge ending inside a cell edge", shelf, {}, 650.0, 0.0, 10, 10.0}};
     for (const Case & c : cases)

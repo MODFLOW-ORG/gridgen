@@ -427,6 +427,13 @@ VNode * BoxPlyClip::collectAlongWay(vector<VNode *> & vs, VNode * tmpv, bool nex
     return vs.back();
 }
 
+//true if v is on the line and both its neighbors are on the kept side, off the line
+bool touchesKeptSide(VNode * v)
+{
+    return v->isOnline && v->next->isInDirect && !v->next->isOnline && v->prev->isInDirect &&
+           !v->prev->isOnline;
+}
+
 //set intersection
 int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBigger,
                                vector<VNode *> & intersectV)
@@ -578,13 +585,14 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
 
         //a vertex that touches the line from the kept side does not cross it, unless the
         //ring also crosses the line at the same place
-        if (vn->isOnline && pureInDir1 && pureInDir2)
+        if (touchesKeptSide(vn))
         {
             bool alone = true;
             for (map<VNode *, bool>::iterator mit = shouldRecord.begin(); mit != shouldRecord.end();
                  ++mit)
             {
-                if (mit->first != vn && AlmostEqual(mit->first, vn)) alone = false;
+                if (mit->first != vn && AlmostEqual(mit->first, vn) && !touchesKeptSide(mit->first))
+                    alone = false;
             }
             if (alone)
             {
