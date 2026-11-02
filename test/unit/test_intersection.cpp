@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 
 #include "GridIntersection.h"
+#include "PolygonChecker.h"
 #include "grid_helpers.h"
 
 using namespace cusg;
@@ -303,4 +304,53 @@ TEST(GridIntersection, LineAlongGridLine)
     GridIntersection gi(0, 0);
     gi.intersect(mfgrid, LineSeg2d(95.0, 60.0, 30.0, 60.0));
     expect_each_cell_once(gi.getIntersections(), 14);
+}
+
+namespace
+{
+
+// an outer ring with a long edge that subtends a small angle from the hole
+const std::vector<XY> thin_outer = {{25.0, 72.5}, {12.5, 40.5}, {35.3, 27.5}, {50.0, 7.5}};
+const std::vector<XY> thin_hole = {{29.9, 45.0}, {25.0, 37.5}, {22.5, 37.5}};
+
+} // namespace
+
+TEST(GridIntersection, HoleSeenAcrossThinOuterEdge)
+{
+    // the hole is subtracted from the cells it lies in, not listed as a piece
+    // of its own, when an outer edge subtends a small angle from it (#113)
+    for (int refined = 0; refined < 2; refined++)
+    {
+        SCOPED_TRACE(refined ? "quadtree" : "MODFLOW grid");
+        ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+        std::map<Box *, double> areas;
+        if (refined)
+            areas = polygon_areas(make_qtree(mfgrid, {{45.0, 45.0, 2, 0}}, true), thin_outer,
+                                  {thin_hole});
+        else
+            areas = polygon_areas(mfgrid, thin_outer, {thin_hole});
+
+        double total = 0.0;
+        for (const auto & a : areas) total += a.second;
+        EXPECT_NEAR(total, 664.425, 1e-3);
+    }
+}
+
+TEST(PolygonChecker, HoleSeenAcrossThinOuterEdge)
+{
+    // a ring inside another is read as its hole when an edge of the outer ring
+    // subtends a small angle from the hole's center (#113)
+    GIS_polygon polygon;
+    static_cast<c_polygon &>(polygon) = make_polygon(thin_outer, {thin_hole});
+    vector<GIS_polygon *> polygons;
+    checkHole(polygon, polygons);
+    ASSERT_EQ(polygons.size(), 1u);
+    EXPECT_EQ(polygons.front()->size(), 2u);
+    EXPECT_NEAR(polygons.front()->getArea(), 664.425, 1e-3);
+    // the polygons hold the input rings, so freeing them frees the input
+    for (GIS_polygon * p : polygons)
+    {
+        p->destroy();
+        delete p;
+    }
 }

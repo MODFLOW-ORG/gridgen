@@ -27,22 +27,18 @@ c_ply & getOutBound(GIS_polygon & gp)
 
 bool CPlyEnclose(const c_ply & cply, const Point2d & p2d)
 {
-    double wnum = 0.0;
+    //count the edges crossing a ray from the point; summing the angles they turn through
+    //loses the small ones
+    bool inside = false;
     ply_vertex * tpv = cply.getHead();
     do
     {
-        Vector2d vc1(tpv->getPos()[0] - p2d[0], tpv->getPos()[1] - p2d[1]);
-        Vector2d vc2(tpv->getNext()->getPos()[0] - p2d[0], tpv->getNext()->getPos()[1] - p2d[1]);
-        double ang = getRotAngle(vc1, vc2);
-        if (ang > PI) ang = ang - 2 * PI;
-        wnum += ang;
-
+        if (CrossesRay(tpv->getPos().get(), tpv->getNext()->getPos().get(), p2d.get()))
+            inside = !inside;
         tpv = tpv->getNext();
     } while (tpv != cply.getHead());
 
-    if (fabs(wnum - 2 * PI) < EPSION || fabs(wnum + 2 * PI) < EPSION) return true;
-
-    return false;
+    return inside;
 }
 
 //here we use the center of c_ply to decide the containing relationship

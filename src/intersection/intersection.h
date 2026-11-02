@@ -32,6 +32,18 @@ template <class real> void Assign(real p[2], real a[2])
     p[1] = a[1];
 }
 
+/*! \brief Determines if edge ab crosses the ray from p in the +x direction
+
+       Counting the edges of a ring that cross the ray tells whether p is
+       inside the ring: an odd count is inside.
+     */
+inline bool CrossesRay(const double a[2], const double b[2], const double p[2])
+{
+    if ((a[1] > p[1]) == (b[1] > p[1])) return false;
+    double x = a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]);
+    return p[0] < x;
+}
+
 /*! \brief Returns the area of a triangle
 
        Returns the area of a 2D triangle (i.e., three sets of vertices
