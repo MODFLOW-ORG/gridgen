@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -333,6 +334,16 @@ TEST(GridIntersection, HoleSeenAcrossThinOuterEdge)
         double total = 0.0;
         for (const auto & a : areas) total += a.second;
         EXPECT_NEAR(total, 664.425, 1e-3);
+
+        // the two cells the hole lies in
+        const std::pair<XY, double> expected[] = {{{25.0, 35.0}, 61.0636}, {{25.0, 45.0}, 95.8333}};
+        for (const auto & e : expected)
+        {
+            double area = -1.0;
+            for (const auto & a : areas)
+                if (contains(a.first, e.first)) area = a.second;
+            EXPECT_NEAR(area, e.second, 1e-3) << "cell at " << e.first.x << ", " << e.first.y;
+        }
     }
 }
 
