@@ -156,7 +156,12 @@ The following test problems are in the test directory of the source code archive
 
 \section{Known Issues}
 
-Defects are tracked as issues on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}) and listed here until they are fixed. No defects are known in this version.
+The following defects are known in this version. Each is tracked as an issue on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}) and is removed from this list when it is fixed.
+
+\begin{itemize}
+  \item A GRID\_INTERSECTION with a polygon whose vertices, or the vertices of one of its holes, lie exactly on grid lines can stop GRIDGEN with an assertion or, less often, report incorrect areas; the result can change from run to run. Moving such vertices off the grid lines by a small distance avoids the problem (\ghissue{109}).
+  \item The OUTPUT\_SHAPEFILE of a polygon GRID\_INTERSECTION writes each polygon with its outer boundary and holes wound opposite to the shapefile specification and with unclosed rings. GIS programs read a cell that contains a whole hole as invalid, with a negative area. The areas in OUTPUT\_FILE are correct (\ghissue{110}).
+\end{itemize}
 
 \section{Documentation}
 
