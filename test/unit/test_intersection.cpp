@@ -288,3 +288,13 @@ TEST(GridIntersection, PolygonVerticesOnGridLines)
         }
     }
 }
+
+TEST(GridIntersection, LineAlongGridLine)
+{
+    // a line along a grid line that ends inside a cell edge selects the cells
+    // on both sides of it (#109)
+    ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+    GridIntersection gi(0, 0);
+    gi.intersect(mfgrid, LineSeg2d(95.0, 60.0, 30.0, 60.0));
+    expect_each_cell_once(gi.getIntersections(), 14);
+}
