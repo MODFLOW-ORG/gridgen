@@ -189,25 +189,20 @@ double getRotAngle(Vector2d & v1, Vector2d & v2)
 //test enclosing
 bool ClipPlyEnclose(VNode * head, const Point2d & p2d)
 {
-    double wnum = 0.0;
     if (head == NULL || head->next == head) return false;
+    //count the edges crossing a ray from the point; summing the angles they turn through
+    //loses the small ones
+    bool inside = false;
     VNode * cv = head;
     do
     {
-        Vector2d vc1(cv->x - p2d[0], cv->y - p2d[1]);
-        Vector2d vc2(cv->next->x - p2d[0], cv->next->y - p2d[1]);
-
-        double ang = getRotAngle(vc1, vc2);
-        if (ang > PI) ang = ang - 2 * PI;
-        wnum += ang;
-
+        double a[2] = {cv->x, cv->y};
+        double b[2] = {cv->next->x, cv->next->y};
+        if (CrossesRay(a, b, p2d.get())) inside = !inside;
         cv = cv->next;
     } while (cv != head);
 
-    //if( (abs(wnum) < EPSION) || (abs(wnum - 2*PI) < EPSION) || (abs(wnum + 2*PI) < EPSION))
-    if (fabs(wnum - 2 * PI) < EPSION || fabs(wnum + 2 * PI) < EPSION) return true;
-
-    return false;
+    return inside;
 }
 
 void getFeasiblePreNext(VNode * tv, VNode *& vn1, VNode *& vn2, VNode *& vnprev1, VNode *& vnprev2)
