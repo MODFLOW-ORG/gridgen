@@ -156,11 +156,7 @@ The following test problems are in the test directory of the source code archive
 
 \section{Known Issues}
 
-The following defects are known in this version. Each is tracked as an issue on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}) and is removed from this list when it is fixed.
-
-\begin{itemize}
-  \item The OUTPUT\_SHAPEFILE of a GRID\_INTERSECTION with FEATURE\_TYPE = polygon writes the outer boundary of each polygon counterclockwise and its holes clockwise, the reverse of the shapefile specification, and does not repeat the first vertex at the end of each boundary. Programs that read shapefiles with GDAL warn ``Non closed ring detected'' for every polygon in the file and read a cell that contains a whole hole as invalid, with a negative area. Use the areas in OUTPUT\_FILE, which are correct (\ghissue{110}).
-\end{itemize}
+No defects are known in this version. Defects are tracked as issues on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}) and are listed here until they are fixed.
 
 \section{Documentation}
 

@@ -6,6 +6,21 @@ using namespace cusg;
 
 const string _IFO_DEL = ",";
 
+// signed area of a ring, positive when it runs counterclockwise
+static double ringArea(ply_vertex * head)
+{
+    double area = 0.0;
+    ply_vertex * pv = head;
+    do
+    {
+        const Point2d & a = pv->getPos();
+        const Point2d & b = pv->getNext()->getPos();
+        area += a[0] * b[1] - b[0] * a[1];
+        pv = pv->getNext();
+    } while (pv != head);
+    return 0.5 * area;
+}
+
 bool checkAttributesContain(const char * attriName, vector<string> & attributes)
 {
     for (vector<string>::iterator sit = attributes.begin(); sit != attributes.end(); ++sit)
@@ -373,6 +388,8 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                 cerr << "! Warning: bad polygon, ignored!" << endl;
                 continue;
             }
+            // each ring repeats its first vertex at the end
+            vsize += partSize;
             x = new double[vsize];
             y = new double[vsize];
 
@@ -397,17 +414,23 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             {
                 c_polygon::iterator & plyit = *lit;
                 nParts[k] = startPartIDAcumulate;
-                startPartIDAcumulate += plyit->getSize();
+                startPartIDAcumulate += plyit->getSize() + 1;
 
+                // the shapefile specification orders the outer ring clockwise
+                // and holes counterclockwise
                 ply_vertex * hv = plyit->getHead();
+                bool forward = (ringArea(hv) < 0.0) == (plyit->getType() == c_ply::POUT);
                 ply_vertex * pv = hv;
                 do
                 {
                     x[vid] = pv->getPos()[0];
                     y[vid] = pv->getPos()[1];
-                    pv = pv->getNext();
+                    pv = forward ? pv->getNext() : pv->getPre();
                     vid++;
                 } while (pv != hv);
+                x[vid] = hv->getPos()[0];
+                y[vid] = hv->getPos()[1];
+                vid++;
             }
 
             //create a polygon shape here

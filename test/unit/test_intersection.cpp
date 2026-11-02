@@ -12,6 +12,7 @@
 
 #include "GridIntersection.h"
 #include "PolygonChecker.h"
+#include "shapefile/intersecReadWrite.h"
 #include "grid_helpers.h"
 
 using namespace cusg;
@@ -305,6 +306,70 @@ TEST(GridIntersection, LineAlongGridLine)
     GridIntersection gi(0, 0);
     gi.intersect(mfgrid, LineSeg2d(95.0, 60.0, 30.0, 60.0));
     expect_each_cell_once(gi.getIntersections(), 14);
+}
+
+TEST(GridIntersection, OutputShapefileRingsAreClosedAndOriented)
+{
+    // each ring of a polygon intersection written to a shapefile repeats its
+    // first vertex at the end, outer rings run clockwise and holes
+    // counterclockwise, and the cell holding the whole hole has the area in
+    // the intersection (#110)
+    ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+    std::vector<XY> hole = square(41.0, 48.0);
+    std::reverse(hole.begin(), hole.end());
+    GIS_polygon polygon;
+    static_cast<c_polygon &>(polygon) = make_polygon(square(5.0, 95.0), {hole});
+    BoxPlyClip * bpc = convertCPolygonToClip(polygon);
+    GridIntersection gi(0, 0);
+    gi.set_save_intersection_info(true);
+    gi.intersect(mfgrid, polygon, bpc);
+
+    std::string path = testing::TempDir() + "gridgen_unit_rings";
+    std::vector<std::string> attributes;
+    writePolyIntersect(&gi, path, attributes, WRITE_SHP);
+    bpc->destroy();
+    delete bpc;
+    polygon.destroy();
+
+    SHPHandle shp = SHPOpen(path.c_str(), "rb");
+    ASSERT_NE(shp, nullptr);
+    int nshapes = 0;
+    SHPGetInfo(shp, &nshapes, nullptr, nullptr, nullptr);
+    EXPECT_EQ(nshapes, 100);
+    int nholes = 0;
+    for (int i = 0; i < nshapes; i++)
+    {
+        SHPObject * obj = SHPReadObject(shp, i);
+        ASSERT_NE(obj, nullptr);
+        double total = 0.0;
+        for (int part = 0; part < obj->nParts; part++)
+        {
+            SCOPED_TRACE("shape " + std::to_string(i) + ", ring " + std::to_string(part));
+            int first = obj->panPartStart[part];
+            int last = part + 1 < obj->nParts ? obj->panPartStart[part + 1] : obj->nVertices;
+            ASSERT_GE(last - first, 4);
+            EXPECT_EQ(obj->padfX[first], obj->padfX[last - 1]);
+            EXPECT_EQ(obj->padfY[first], obj->padfY[last - 1]);
+            // positive when counterclockwise
+            double area = 0.0;
+            for (int v = first; v < last - 1; v++)
+                area += obj->padfX[v] * obj->padfY[v + 1] - obj->padfX[v + 1] * obj->padfY[v];
+            area *= 0.5;
+            if (part == 0)
+                EXPECT_LT(area, 0.0);
+            else
+                EXPECT_GT(area, 0.0);
+            total -= area;
+        }
+        if (obj->nParts > 1)
+        {
+            nholes++;
+            EXPECT_NEAR(total, 51.0, 1e-9);
+        }
+        SHPDestroyObject(obj);
+    }
+    EXPECT_EQ(nholes, 1);
+    SHPClose(shp);
 }
 
 namespace
