@@ -63,6 +63,7 @@ test/output_intersection/c*
 test/output_intersection/wells_*
 test/output_intersection/buffer_*
 test/output_intersection/hole_*
+test/output_intersection/gridlines_*
 test/output_shapefiles/grid*
 test/output_vtkfiles/grid*
 

@@ -431,6 +431,21 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
         b[1] = fval;
     }
 
+    //move vertices that are on the line within the tolerance onto it, so that an edge along
+    //the line is intersected as one
+    VNode * snap = startV;
+    do
+    {
+        if (snap->Online(fval, isX))
+        {
+            if (isX)
+                snap->x = fval;
+            else
+                snap->y = fval;
+        }
+        snap = snap->next;
+    } while (snap != startV);
+
     //try to intersect
     map<VNode *, bool> shouldRecord;
     vector<VNode *> interCand;
@@ -521,6 +536,7 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
 
     vector<VNode *> uselessNodes;
     vector<VNode *> notOnline;
+    vector<VNode *> touching;
     for (vector<VNode *>::iterator vit = interCand.begin(); vit != interCand.end(); ++vit)
     {
         VNode * vn = *vit;
@@ -530,6 +546,24 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
         if (vn->isOnline && (!(pureInDir1 && pureInDir2)))
         {
             notOnline.push_back(vn);
+        }
+
+        //a vertex that touches the line from the kept side does not cross it, unless the
+        //ring also crosses the line at the same place
+        if (vn->isOnline && pureInDir1 && pureInDir2)
+        {
+            bool alone = true;
+            for (map<VNode *, bool>::iterator mit = shouldRecord.begin(); mit != shouldRecord.end();
+                 ++mit)
+            {
+                if (mit->first != vn && AlmostEqual(mit->first, vn)) alone = false;
+            }
+            if (alone)
+            {
+                touching.push_back(vn);
+                shouldRecord[vn] = false;
+                continue;
+            }
         }
 
         if (pureInDir1 || pureInDir2)
@@ -555,19 +589,28 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
         vn->isOnline = false;
         vn->isInDirect = false; // vn->isScanPnt = false;
     }
-
-    //decide the final intersection vertices
-    int onNum = 0;
-    for (map<VNode *, bool>::iterator mit = shouldRecord.begin(); mit != shouldRecord.end(); ++mit)
+    //touching nodes are kept as ordinary vertices
+    for (vector<VNode *>::iterator vit = touching.begin(); vit != touching.end(); ++vit)
     {
-        bool b = mit->second;
-        VNode * v = mit->first;
-        if (b)
+        VNode * vn = *vit;
+        vn->isOnline = false;
+        vn->isScanPnt = false;
+    }
+
+    //decide the final intersection vertices, in ring order rather than by address so that
+    //vertices at the same place on the scanning line are always sorted the same way
+    int onNum = 0;
+    stmp = startV;
+    do
+    {
+        map<VNode *, bool>::iterator mit = shouldRecord.find(stmp);
+        if (mit != shouldRecord.end() && mit->second)
         {
-            intersectV.push_back(v);
+            intersectV.push_back(stmp);
             onNum++;
         }
-    }
+        stmp = stmp->next;
+    } while (stmp != startV);
 
     return onNum;
 }
@@ -920,6 +963,13 @@ VNode * convertPlyToVN(const c_ply & tply)
     while (cv != head)
     {
         VNode * t = new VNode(cv->getPos()[0], cv->getPos()[1]);
+        //leave out a repeated vertex, such as the closing vertex of a shapefile ring
+        if (AlmostEqual(t, nh->prev) || AlmostEqual(t, nh))
+        {
+            delete t;
+            cv = cv->getNext();
+            continue;
+        }
         nh->prev->next = t;
         t->prev = nh->prev;
         t->next = nh;
