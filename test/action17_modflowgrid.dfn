@@ -4,7 +4,8 @@
 # lines to a shapefile named with its extension, and intersected with points
 # that have a logical attribute, read from a shapefile named with its
 # extension; and both grids intersected with a polygon that has a hole and
-# with polygons whose vertices lie on grid lines
+# with polygons whose vertices lie on grid lines and with a polygon whose
+# hole lies inside one cell
 
 LOAD grid02qtg.dfn
 
@@ -120,4 +121,22 @@ BEGIN GRID_INTERSECTION gridlines_grid02qtg_lay1_intersect
   FEATURE_TYPE = polygon
   OUTPUT_FILE = output_intersection/gridlines_grid02qtg_lay1_intersect.ifo
   OUTPUT_SHAPEFILE = output_intersection/gridlines_grid02qtg_lay1_intersect.shp
+END GRID_INTERSECTION
+
+BEGIN GRID_INTERSECTION holeincell_grid01mfg_lay1_intersect
+  GRID = grid01mfg
+  LAYER = 1
+  SHAPEFILE = shapefiles/polygon_hole_in_cell
+  FEATURE_TYPE = polygon
+  OUTPUT_FILE = output_intersection/holeincell_grid01mfg_lay1_intersect.ifo
+  OUTPUT_SHAPEFILE = output_intersection/holeincell_grid01mfg_lay1_intersect.shp
+END GRID_INTERSECTION
+
+BEGIN GRID_INTERSECTION holeincell_grid02qtg_lay1_intersect
+  GRID = grid02qtg
+  LAYER = 1
+  SHAPEFILE = shapefiles/polygon_hole_in_cell
+  FEATURE_TYPE = polygon
+  OUTPUT_FILE = output_intersection/holeincell_grid02qtg_lay1_intersect.ifo
+  OUTPUT_SHAPEFILE = output_intersection/holeincell_grid02qtg_lay1_intersect.shp
 END GRID_INTERSECTION

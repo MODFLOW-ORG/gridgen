@@ -82,6 +82,9 @@ CASES = (
     # intersections with polygons whose vertices lie on grid lines
     ("gridlines_grid01mfg_lay1_intersect", "action17_modflowgrid.dfn"),
     ("gridlines_grid02qtg_lay1_intersect", "action17_modflowgrid.dfn"),
+    # intersections with a polygon whose hole lies inside one cell
+    ("holeincell_grid01mfg_lay1_intersect", "action17_modflowgrid.dfn"),
+    ("holeincell_grid02qtg_lay1_intersect", "action17_modflowgrid.dfn"),
     # an active domain and refinement from a polygon with a hole
     ("buildqtg_hole", "action18_buildqtg_hole.dfn"),
     # the same polygon from a multipatch shapefile
