@@ -310,7 +310,7 @@ inline bool Union(const double a[2], const double b[2], const double c[2], const
 
         if (Between_strict(c, d, b))
         {
-            p[id] = b;
+            p[1] = b;
             return true;
         }
 

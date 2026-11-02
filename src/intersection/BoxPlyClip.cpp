@@ -31,6 +31,29 @@ bool AlmostEqual(VNode * v1, VNode * v2)
 {
     return (fabs(v1->x - v2->x) <= SMALLCOORDINATE && fabs(v1->y - v2->y) <= SMALLCOORDINATE);
 }
+//slope, along the line per unit distance from it, of the edge that leaves v on the kept side
+double keptSlope(VNode * v, bool isX)
+{
+    for (int side = 0; side < 2; side++)
+    {
+        VNode * n = side == 0 ? v->next : v->prev;
+        while (n != v && AlmostEqual(n, v)) n = side == 0 ? n->next : n->prev;
+        double along = isX ? n->y - v->y : n->x - v->x;
+        double away = fabs(isX ? n->x - v->x : n->y - v->y);
+        if (n->isInDirect && away > SMALLCOORDINATE) return along / away;
+    }
+    return 0;
+}
+//true if a sorts after b along the line; crossings at the same place are sorted by where
+//their rings run just inside the kept side
+bool sortsAfter(VNode * a, VNode * b, bool isX)
+{
+    double pa = isX ? a->y : a->x;
+    double pb = isX ? b->y : b->x;
+    if (pa == pb || (AlmostEqual(a, b) && fabs(pa - pb) <= SMALLCOORDINATE))
+        return keptSlope(a, isX) > keptSlope(b, isX);
+    return pa > pb;
+}
 //sort the vertices based on X or Y ascendingly
 void InsertionSortV(vector<VNode *> & vs, bool isX)
 {
@@ -41,7 +64,7 @@ void InsertionSortV(vector<VNode *> & vs, bool isX)
     {
         VNode * tv = vs[i];
         int j = i - 1;
-        while (j >= 0 && ((!isX && (vs[j]->x > tv->x)) || (isX && (vs[j]->y > tv->y))))
+        while (j >= 0 && sortsAfter(vs[j], tv, isX))
         {
             vs[j + 1] = vs[j];
             j--;
@@ -431,8 +454,8 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
         b[1] = fval;
     }
 
-    //move vertices that are on the line within the tolerance onto it, so that an edge along
-    //the line is intersected as one
+    //move vertices that are on the line within the tolerance onto it, in place, so that an
+    //edge along the line is intersected as one
     VNode * snap = startV;
     do
     {
@@ -459,7 +482,12 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
         c[1] = stmp->y;
         d[0] = stmp->next->x;
         d[1] = stmp->next->y;
-        char code = SegSegInt(a, b, c, d, p);
+        //an edge with both ends on the line lies along it; SegSegInt can miss this by rounding
+        char code = 0;
+        if ((isX && c[0] == fval && d[0] == fval) || (!isX && c[1] == fval && d[1] == fval))
+            code = 'e';
+        else
+            code = SegSegInt(a, b, c, d, p);
 
         //set influenced vertices
         if (stmp->isInDirect) influVs.push_back(stmp);
@@ -1027,7 +1055,11 @@ BoxPlyClip * convertCPolygonToClip(const GIS_polygon & polygon)
         else
         {
             VNode * nvn = convertPlyToVN(ccp);
-            bpc->plys.push_back(nvn);
+            //a hole with fewer than three distinct vertices has no area
+            if (nvn->next == nvn || nvn->next->next == nvn)
+                bpc->destroy(nvn);
+            else
+                bpc->plys.push_back(nvn);
         }
     }
     return bpc;
@@ -1067,7 +1099,11 @@ BoxPlyClip * convertSimplePolygonToClip(const c_polygon & polygon)
         else
         {
             VNode * nvn = convertPlyToVN(ccp);
-            bpc->plys.push_back(nvn);
+            //a hole with fewer than three distinct vertices has no area
+            if (nvn->next == nvn || nvn->next->next == nvn)
+                bpc->destroy(nvn);
+            else
+                bpc->plys.push_back(nvn);
         }
     }
     return bpc;

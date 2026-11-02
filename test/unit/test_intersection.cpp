@@ -219,8 +219,8 @@ TEST(GridIntersection, PolygonVerticesOnGridLines)
 {
     // the intersected areas sum to the polygon's area when its vertices, or
     // those of a hole, lie on grid lines, every time the intersection is
-    // repeated; the triangle splits a cell in two, so a cell can be listed
-    // twice (#109)
+    // repeated; a hole can split a cell in two, so a cell can be listed twice
+    // (#109)
     const std::vector<XY> diamond = {{30.0, 40.0}, {40.0, 30.0}, {50.0, 40.0}, {40.0, 50.0}};
     const std::vector<XY> triangle = {{30.0, 30.0}, {36.0, 30.0}, {44.0, 44.0}};
     // as a shapefile stores it, clockwise with the first vertex repeated at
@@ -233,6 +233,15 @@ TEST(GridIntersection, PolygonVerticesOnGridLines)
                                      {1070.0, 1072.0},
                                      {1072.0, 1072.0},
                                      {1072.0, 1070.0}};
+    // a hole vertex where a cell edge meets the outer boundary
+    const std::vector<XY> notch = {{50.0, 30.0}, {45.0, 22.5}, {45.0, 35.0}};
+    const std::vector<XY> star = {{65.0, 60.0}, {55.0, 85.0}, {37.5, 72.5}, {35.0, 50.0},
+                                  {32.5, 27.5}, {55.0, 17.5}, {72.5, 32.5}};
+    const std::vector<XY> kite = {{60.0, 52.5}, {47.5, 57.5}, {42.5, 45.0}, {50.0, 47.5}};
+    // an edge along a grid line, and one that ends inside a cell edge
+    const std::vector<XY> edge = {
+        {80.0, 80.0}, {40.0, 60.0}, {30.0, 50.0}, {50.0, 10.0}, {80.0, 20.0}};
+    const std::vector<XY> shelf = {{95.0, 60.0}, {30.0, 60.0}, {65.0, 40.0}};
     struct Case
     {
         std::string name;
@@ -240,12 +249,20 @@ TEST(GridIntersection, PolygonVerticesOnGridLines)
         std::vector<std::vector<XY>> holes;
         double area;
         double offset;
+        // cells in each row and column, and their size
+        int n;
+        double size;
     };
-    const Case cases[] = {{"diamond", diamond, {}, 200.0, 0.0},
-                          {"diamond hole", square(5.0, 95.0), {diamond}, 7900.0, 0.0},
-                          {"triangle hole", square(5.0, 95.0), {triangle}, 8058.0, 0.0},
-                          {"closed diamond", closed, {}, 200.0, 0.0},
-                          {"rounded hole", square(1005.0, 1095.0), {rounded}, 8096.0, 1000.0}};
+    const Case cases[] = {
+        {"diamond", diamond, {}, 200.0, 0.0, 10, 10.0},
+        {"diamond hole", square(5.0, 95.0), {diamond}, 7900.0, 0.0, 10, 10.0},
+        {"triangle hole", square(5.0, 95.0), {triangle}, 8058.0, 0.0, 10, 10.0},
+        {"closed diamond", closed, {}, 200.0, 0.0, 10, 10.0},
+        {"rounded hole", square(1005.0, 1095.0), {rounded}, 8096.0, 1000.0, 10, 10.0},
+        {"notch hole", square(5.0, 95.0), {notch}, 8068.75, 0.0, 10, 10.0},
+        {"kite hole", star, {kite}, 1659.375, 0.0, 40, 2.5},
+        {"edge on a grid line", edge, {}, 2300.0, 0.0, 10, 10.0},
+        {"edge ending inside a cell edge", shelf, {}, 650.0, 0.0, 10, 10.0}};
     for (const Case & c : cases)
     {
         for (int refined = 0; refined < 2; refined++)
@@ -254,7 +271,8 @@ TEST(GridIntersection, PolygonVerticesOnGridLines)
             {
                 SCOPED_TRACE(std::string(refined ? "quadtree" : "MODFLOW grid") + ", " + c.name +
                              ", repeat " + std::to_string(repeat));
-                ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0, 10.0, c.offset, c.offset);
+                ModflowGrid * mfgrid =
+                    make_mfgrid(1, c.n, c.n, c.size, c.size, 10.0, c.offset, c.offset);
                 std::map<Box *, double> areas;
                 if (refined)
                     areas = polygon_areas(
