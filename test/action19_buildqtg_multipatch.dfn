@@ -1,0 +1,38 @@
+# an active domain and refinement from a multipatch shapefile of an outer ring
+# and an inner ring, which give the grid of action18_buildqtg_hole.dfn
+
+LOAD action01_buildqtg.dfn
+
+BEGIN MODFLOW_GRID grid12mfg
+  ROTATION_ANGLE = 0.
+  X_OFFSET = 543750
+  Y_OFFSET = 2792250
+  LENGTH_UNIT = undefined
+  NLAY = 2
+  NROW = 100
+  NCOL = 58
+  DELR = CONSTANT 800.
+  DELC = CONSTANT 800.
+  TOP = CONSTANT 5.
+  BOTTOM LAYER 1 = CONSTANT -15.
+  BOTTOM LAYER 2 = CONSTANT -40.
+END MODFLOW_GRID
+
+BEGIN ACTIVE_DOMAIN multipatch_domain
+  SHAPEFILE = shapefiles/multipatch_hole
+  FEATURE_TYPE = polygon
+  INCLUDE_BOUNDARY = False
+END ACTIVE_DOMAIN
+
+BEGIN REFINEMENT_FEATURES multipatch_refinement
+  SHAPEFILE = shapefiles/multipatch_hole
+  FEATURE_TYPE = polygon
+  REFINEMENT_LEVEL = 1
+END REFINEMENT_FEATURES
+
+BEGIN QUADTREE_BUILDER buildqtg_multipatch
+  MODFLOW_GRID = grid12mfg
+  ACTIVE_DOMAIN LAYER 1 = multipatch_domain
+  REFINEMENT_FEATURES LAYER 2 = multipatch_refinement
+  GRID_DEFINITION_FILE = grid12qtg.dfn
+END QUADTREE_BUILDER
