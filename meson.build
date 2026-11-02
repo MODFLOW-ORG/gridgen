@@ -27,9 +27,14 @@ endif
 
 # keep floating-point results the same across compilers and standards: no
 # value-unsafe optimizations and no fused multiply-adds
-if cc_id in ['intel', 'intel-llvm']
+if cc_id == 'intel'
+  compile_args += ['-fp-model=precise', '-no-fma']
+elif cc_id == 'intel-llvm'
   compile_args += ['-fp-model=precise']
-elif cc_id in ['intel-cl', 'intel-llvm-cl']
+elif cc_id == 'intel-cl'
+  compile_args += ['/fp:precise', '/Qfma-']
+elif cc_id in ['intel-llvm-cl', 'msvc']
+  # MSVC does not contract with /fp:precise unless /fp:contract is given
   compile_args += ['/fp:precise']
 endif
 if cc_id in ['gcc', 'clang', 'intel-llvm']
@@ -38,7 +43,7 @@ elif cc_id == 'intel-llvm-cl'
   compile_args += ['/clang:-ffp-contract=off']
 endif
 
-# global so subprojects (GoogleTest) are built with the same RTTI setting
+# global so subprojects (GoogleTest) are built with the same settings
 add_global_arguments(cc.get_supported_arguments(compile_args), language: 'cpp')
 add_global_link_arguments(cc.get_supported_arguments(link_args), language: 'cpp')
 
