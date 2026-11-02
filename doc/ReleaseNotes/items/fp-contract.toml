@@ -1,3 +1,3 @@
 section = "internal"
 subsection = "build"
-description = "Calculations are compiled to be evaluated as written, without the rearrangements that some compilers made by default, such as combining a multiplication and an addition in one step. Some values in the output change in the last digit with the Intel compilers and on computers with such processors, such as Apple silicon."
+description = "Calculations are compiled to be evaluated as written, without the rearrangements that some compilers made by default, such as combining a multiplication and an addition in one step. Some values in the output change in the last digit with the Intel compilers, and with gcc and clang on computers whose processors can combine the two, such as Apple silicon."

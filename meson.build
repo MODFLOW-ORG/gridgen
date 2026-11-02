@@ -39,7 +39,7 @@ elif cc_id in ['intel-llvm-cl', 'msvc']
 endif
 if cc_id in ['gcc', 'clang', 'intel-llvm']
   compile_args += ['-ffp-contract=off']
-elif cc_id == 'intel-llvm-cl'
+elif cc_id in ['clang-cl', 'intel-llvm-cl']
   compile_args += ['/clang:-ffp-contract=off']
 endif
 
