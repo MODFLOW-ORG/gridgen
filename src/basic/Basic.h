@@ -81,9 +81,9 @@ extern "C"
 {
     //Implementation of these functions are located in util.cpp
     REAL drand48();
-    REAL erand48(register unsigned short * xsubi);
-    long irand48(register unsigned short m);
-    long krand48(register unsigned short * xsubi, unsigned short m);
+    REAL erand48(unsigned short * xsubi);
+    long irand48(unsigned short m);
+    long krand48(unsigned short * xsubi, unsigned short m);
     long lrand48();
     long mrand48();
     static void next();

@@ -6,7 +6,7 @@ project(
   meson_version: '>= 1.3.1',
   default_options : [
     'b_vscrt=static_from_buildtype', # Link runtime libraries statically on Windows
-    'cpp_std=c++14',
+    'cpp_std=c++17',
     'buildtype=release',
 ])
 
@@ -52,10 +52,10 @@ python = import('python').find_installation()
 
 subdir('src')
 
-# unit tests (GoogleTest 1.17 requires C++17; 1.16 is not in WrapDB)
+# unit tests
 gtest_dep = dependency(
                        'gtest_main',
-                       version: ['>=1.14', '<1.17'],
+                       version: '>=1.17',
                        required: get_option('unit_tests'),
                        allow_fallback: true,
                       )

@@ -57,10 +57,10 @@ extern "C"
     }                                                                                              \
     return (v);
 #define NEST(TYPE, f, F)                                                                           \
-    TYPE f(register unsigned short * xsubi)                                                        \
+    TYPE f(unsigned short * xsubi)                                                                 \
     {                                                                                              \
-        register int i;                                                                            \
-        register TYPE v;                                                                           \
+        int i;                                                                                     \
+        TYPE v;                                                                                    \
         unsigned temp[3];                                                                          \
         for (i = 0; i < 3; i++)                                                                    \
         {                                                                                          \
@@ -93,7 +93,7 @@ extern "C"
 
 #else
 
-    long irand48(register unsigned short m)
+    long irand48(unsigned short m)
     /* Treat x[i] as a 48-bit fraction, and multiply it by the 16-bit
         * multiplier m.  Return integer part as result.
         */
@@ -108,11 +108,11 @@ extern "C"
         return (r[3] + carry0 + CARRY(r[2], p[1]));
     }
 
-    long krand48(register unsigned short * xsubi, unsigned short m)
+    long krand48(unsigned short * xsubi, unsigned short m)
     /* same as irand48, except user provides storage in xsubi[] */
     {
-        register int i;
-        register long iv;
+        int i;
+        long iv;
         unsigned temp[3];
 
         for (i = 0; i < 3; i++)
@@ -133,7 +133,7 @@ extern "C"
 
     long mrand48()
     {
-        register long l;
+        long l;
 
         next();
         /* sign-extend in case length of a long > 32 bits
