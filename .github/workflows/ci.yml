@@ -173,6 +173,10 @@ jobs:
         run: |
           $dlls = dumpbin /dependents gridgen.exe | Select-String -Pattern '^\s+(\S+\.dll)$' | ForEach-Object { $_.Matches[0].Groups[1].Value }
           $dlls
+          if (-not $dlls) {
+            echo "error: dumpbin listed no DLLs for gridgen.exe"
+            exit 1
+          }
           $other = $dlls | Where-Object { $_ -notmatch '^(kernel32|user32|advapi32|shell32|ole32|oleaut32|ws2_32|bcrypt|ntdll|api-ms-win-.*)\.dll$' }
           if ($other) {
             echo "error: gridgen.exe needs DLLs that are not part of Windows: $($other -join ', ')"
