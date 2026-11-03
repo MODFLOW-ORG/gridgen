@@ -133,8 +133,8 @@ jobs:
           mv $libpath/libquadmath.0.dylib $libpath/libquadmath.0.dylib.bak
           mv $libpath/libstdc++.6.dylib $libpath/libstdc++.6.dylib.bak
 
-      # static link libgcc and keep the release running on macOS 14; the
-      # linker warns that the Homebrew libstdc++.a was built for macOS 15
+      # keep the release running on macOS 14 and, with gcc, static link libgcc;
+      # the linker warns that the Homebrew libstdc++.a was built for macOS 15
       - name: Set LDFLAGS (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -165,6 +165,19 @@ jobs:
             exit 1
           fi
           lipo -info gridgen
+
+      # the release must not need the Intel or Visual C++ runtime DLLs
+      - name: Check DLLs (Windows intel)
+        if: ${{ runner.os == 'Windows' && matrix.compiler == 'intel' }}
+        working-directory: ${{ env.PROGRAM_NAME }}/bin
+        run: |
+          $dlls = dumpbin /dependents gridgen.exe | Select-String -Pattern '^\s+(\S+\.dll)$' | ForEach-Object { $_.Matches[0].Groups[1].Value }
+          $dlls
+          $other = $dlls | Where-Object { $_ -notmatch '^(kernel32|user32|advapi32|shell32|ole32|oleaut32|ws2_32|bcrypt|ntdll|api-ms-win-.*)\.dll$' }
+          if ($other) {
+            echo "error: gridgen.exe needs DLLs that are not part of Windows: $($other -join ', ')"
+            exit 1
+          }
 
       - name: Show build log
         if: failure()
