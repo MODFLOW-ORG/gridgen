@@ -1,0 +1,3 @@
+section = "internal"
+subsection = "build"
+description = "gridgen is compiled to the C++17 standard rather than C++14. Its output is unchanged."
