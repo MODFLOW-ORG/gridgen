@@ -1,0 +1,3 @@
+section = "internal"
+subsection = "build"
+description = "The Windows executable is compiled with the Intel oneAPI C++ compiler rather than the Microsoft compiler. gridgen is also tested with clang on macOS."
