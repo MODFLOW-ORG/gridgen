@@ -13,40 +13,16 @@
 #include "vert_pass.h"
 #include "GridToVTK.h"
 #include "gridgen_version.h"
+#include "GridgenError.h"
 
 using namespace cusg;
 
 #define GRIDGEN_COPYRIGHT                                                                          \
     "This program is public domain and is released on the condition that neither the U.S. Geological Survey nor the United States Government may be held liable for any damages resulting from their authorized or unauthorized use."
 
-int main(int argc, char ** argv)
+//run the action from the definition file and return the exit code
+static int run(const string & action, const string & dfn_file)
 {
-    cout << "GRIDGEN Version " << GRIDGEN_VERSION;
-    if (strlen(GRIDGEN_DATE) > 0) cout << " " << GRIDGEN_DATE;
-    cout << "\n";
-    cout << "A program for generating unstructured grids.\n";
-    cout << "\n" << GRIDGEN_COPYRIGHT << "\n" << endl;
-
-    if (argc < 3)
-    {
-        cerr << "usage: " << argv[0] << " action *.dfn" << endl;
-        return 1;
-    }
-
-    string action;
-    string dfn_file;
-
-    for (int i = 1; i < argc; i++)
-    {
-        // -g opened the OpenGL viewer, which is no longer built
-        if (strcmp(argv[i], "-g") == 0)
-            continue;
-        else if (action.empty())
-            action = argv[i];
-        else
-            dfn_file = argv[i];
-    }
-
     DefinitionParser def_parser;
     def_parser.parse(dfn_file);
 
@@ -188,4 +164,43 @@ int main(int argc, char ** argv)
     }
 
     return 0;
+}
+
+int main(int argc, char ** argv)
+{
+    cout << "GRIDGEN Version " << GRIDGEN_VERSION;
+    if (strlen(GRIDGEN_DATE) > 0) cout << " " << GRIDGEN_DATE;
+    cout << "\n";
+    cout << "A program for generating unstructured grids.\n";
+    cout << "\n" << GRIDGEN_COPYRIGHT << "\n" << endl;
+
+    if (argc < 3)
+    {
+        cerr << "usage: " << argv[0] << " action *.dfn" << endl;
+        return 1;
+    }
+
+    string action;
+    string dfn_file;
+
+    for (int i = 1; i < argc; i++)
+    {
+        // -g opened the OpenGL viewer, which is no longer built
+        if (strcmp(argv[i], "-g") == 0)
+            continue;
+        else if (action.empty())
+            action = argv[i];
+        else
+            dfn_file = argv[i];
+    }
+
+    try
+    {
+        return run(action, dfn_file);
+    }
+    catch (const GridgenError & e)
+    {
+        cerr << "! Error: " << e.what() << endl;
+        return 1;
+    }
 }

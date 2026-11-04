@@ -1,4 +1,5 @@
 #include "GhostNode.h"
+#include "GridgenError.h"
 #include "RoundTrip.h"
 #include <fstream>
 using namespace std;
@@ -37,9 +38,9 @@ void computeGN(Box * m, Box * n, int dir, vector<GhostNode> & gns)
 
         if (nl.size() > 2)
         {
-            cout << "! Error : the node " << n->id << " has more than two (" << nl.size()
-                 << ") neighbor box nodes in dir=" << dir << endl;
-            exit(0);
+            throw GridgenError("the node " + to_string(n->id) + " has more than two (" +
+                               to_string(nl.size()) +
+                               ") neighbor box nodes in dir=" + to_string(dir));
         }
 
         if (nl.size() == 1)
@@ -71,9 +72,9 @@ void computeGN(Box * m, Box * n, int dir, vector<GhostNode> & gns)
 
         if (nl.size() > 2)
         {
-            cout << "! Error : the node " << n->id << " has more than two (" << nl.size()
-                 << ") neighbor box nodes in dir=" << dir << endl;
-            exit(0);
+            throw GridgenError("the node " + to_string(n->id) + " has more than two (" +
+                               to_string(nl.size()) +
+                               ") neighbor box nodes in dir=" + to_string(dir));
         }
 
         if (nl.size() == 1)

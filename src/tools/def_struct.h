@@ -11,6 +11,7 @@
 #include <cassert>
 #include <fstream>
 #include "Basic.h"
+#include "GridgenError.h"
 #include "reader_treestruct.h"
 //#include "LGR_Grid.h"
 //#include "LGR_Child_Grid.h"
@@ -112,13 +113,9 @@ protected:
         }
         else
         {
-            //throw spec.back(); //don't know what to do in this function
-            cerr << "! Error: Unknown operator: " << spec.front() << " (in BaseParser::createArray)"
-                 << endl;
-            exit(1);
+            throw GridgenError("Unknown operator: " + spec.front() +
+                               " (in BaseParser::createArray)");
         }
-
-        return nullptr;
     }
 };
 

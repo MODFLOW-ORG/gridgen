@@ -10,6 +10,7 @@
 */
 
 #include "ModflowGrid2D.h"
+#include "GridgenError.h"
 #include <climits>
 #define IndexEPSION 1e-10
 
@@ -228,8 +229,7 @@ Box * ModflowGrid2D::find_nodeobj(int i, int j)
 
     if (nodegroup.empty() || id < 0 || ((unsigned)id) > nodegroup.size())
     {
-        cerr << "! Error: ModflowGrid2D::find_nodeobj index out of bound" << endl;
-        exit(1);
+        throw GridgenError("ModflowGrid2D::find_nodeobj index out of bound");
     }
 
     return nodegroup[id];

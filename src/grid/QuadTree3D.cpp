@@ -11,6 +11,8 @@
 //   $Id: $
 
 #include "QuadTree3D.h"
+#include "GridgenError.h"
+#include <sstream>
 #include "GridIntersection.h"
 #include "ascii_grid.h"
 #include <algorithm>
@@ -1291,10 +1293,10 @@ double QuadTree3D::bilinear_interpolation(Box * box, double * zgrid)
 //stop with an error for a cell that has no valid value in the ASCII grid
 static void nodata_error(const Point2d & center, Box * box, const string & arcinfo_filename)
 {
-    cerr << "! Error: ASCII grid " << arcinfo_filename << " has no valid value for the layer "
-         << box->layer + 1 << " cell centered at (" << center[0] << ", " << center[1] << ")"
-         << endl;
-    exit(1);
+    stringstream msg;
+    msg << "ASCII grid " << arcinfo_filename << " has no valid value for the layer "
+        << box->layer + 1 << " cell centered at (" << center[0] << ", " << center[1] << ")";
+    throw GridgenError(msg.str());
 }
 
 //value, or stop with an error if it is the nodata value of ag
@@ -1317,10 +1319,8 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
         bool br = aag->build(arcinfo_filename);
         if (br == false)
         {
-            cerr << "! Error: failed to build arcinfo_ascii_grid from file: (" << arcinfo_filename
-                 << ")" << endl;
-            assert(false);
-            exit(1);
+            throw GridgenError("failed to build arcinfo_ascii_grid from file: (" +
+                               arcinfo_filename + ")");
         }
 
         ag = aag.get();
