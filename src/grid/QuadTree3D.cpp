@@ -382,7 +382,7 @@ void QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
                     continue; //not really intersect
                 }
 
-                b->split(0);
+                if (!b->split(0)) continue; //already split
 
                 for (auto & c : b->pChildren) nodegroup.add(c);
 
