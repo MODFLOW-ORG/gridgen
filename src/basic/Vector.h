@@ -225,13 +225,13 @@ template <class T, int D> istream & operator>>(istream & in, Vector<T, D> & vec)
 //Typedef commonly used vector type
 
 /// A 2D vector of reals
-typedef Vector<REAL, 2> Vector2d;
+using Vector2d = Vector<REAL, 2>;
 
 /// A 3D vector of reals
-typedef Vector<REAL, 3> Vector3d;
+using Vector3d = Vector<REAL, 3>;
 
 /// A 4D vector of reals
-typedef Vector<REAL, 4> Vector4d;
+using Vector4d = Vector<REAL, 4>;
 
 } //end of namespace
 

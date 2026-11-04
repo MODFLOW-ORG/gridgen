@@ -13,7 +13,7 @@ namespace cusg
 
 inline ostream & operator<<(ostream & out, list<string> & strlist)
 {
-    typedef list<string>::iterator IT;
+    using IT = list<string>::iterator;
     for (IT i = strlist.begin(); i != strlist.end(); i++)
     {
         out << " " << *i;
@@ -36,7 +36,7 @@ bool DefinitionExporter::save(ostream & out, modflow_grid_raw_data & data)
     out << "\tDELC = " << data.delc_str << "\n";
     out << "\tTOP = " << data.top_str << "\n";
 
-    typedef map<int, list<string>>::iterator IT;
+    using IT = map<int, list<string>>::iterator;
     for (IT i = data.bot_str.begin(); i != data.bot_str.end(); i++)
     {
         out << "\tBOTTOM LAYER " << i->first + 1 << " = " << i->second << "\n";

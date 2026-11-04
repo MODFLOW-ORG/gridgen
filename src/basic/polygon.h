@@ -25,7 +25,7 @@ using namespace std;
 
 #include <limits.h>
 #include <float.h>
-typedef unsigned int uint;
+using uint = unsigned int;
 
 namespace cusg
 {

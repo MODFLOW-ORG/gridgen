@@ -416,7 +416,7 @@ bool QuadTree3D::smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq,
 
     //check the neighbors
     // go through each connection
-    typedef list<pair<int, int>>::iterator IT;
+    using IT = list<pair<int, int>>::iterator;
     for (IT ic = connectionlist.begin(); ic != connectionlist.end(); ic++)
     {
         int tonodeid = ic->first;
@@ -869,7 +869,7 @@ CSRData QuadTree3D::get_usg_csr_data()
         }
 
         // go through each connection
-        typedef list<pair<int, int>>::iterator IT;
+        using IT = list<pair<int, int>>::iterator;
         vector<double>::const_iterator fit = conAreas.begin();
         for (IT ic = connectionlist.begin(); ic != connectionlist.end(); ic++)
         {
@@ -937,7 +937,7 @@ CSRData QuadTree3D::get_usg_csr_data()
 void QuadTree3D::sortconnectionbynodenumber(list<pair<int, int>> & connectionlist)
 {
     //get node numbers
-    typedef list<pair<int, int>>::iterator IT;
+    using IT = list<pair<int, int>>::iterator;
     vector<pair<int, pair<int, int>>> sorted_connection_list;
     for (IT ic = connectionlist.begin(); ic != connectionlist.end(); ic++)
     {
@@ -955,7 +955,7 @@ void QuadTree3D::sortconnectionbynodenumber(list<pair<int, int>> & connectionlis
 
 void QuadTree3D::sortareabyconid(const list<pair<int, int>> & connectionlist, vector<double> & area)
 {
-    typedef list<pair<int, int>>::const_iterator CIT;
+    using CIT = list<pair<int, int>>::const_iterator;
     vector<pair<int, double>> sorted_area_list;
     vector<double>::iterator fit = area.begin();
     for (CIT ic = connectionlist.begin(); ic != connectionlist.end(); ++ic, ++fit)

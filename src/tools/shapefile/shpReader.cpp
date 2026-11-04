@@ -7,7 +7,7 @@ using namespace std;
 namespace cusg
 {
 
-typedef unsigned int uint;
+using uint = unsigned int;
 
 void ShapeReader::destroy()
 {

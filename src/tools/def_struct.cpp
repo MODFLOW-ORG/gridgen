@@ -205,7 +205,7 @@ pair<char *, char *> BaseParser::split(char * tmp)
 string BaseParser::merge(const list<string> & name, string del)
 {
     string merged;
-    typedef list<string>::const_iterator IT;
+    using IT = list<string>::const_iterator;
     IT last = --name.end();
     for (IT i = name.begin(); i != name.end(); i++)
     {

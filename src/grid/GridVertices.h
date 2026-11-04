@@ -27,7 +27,7 @@ class GridVertices
 {
 public:
     // base grid edge, numerator, and power of two of the fraction beyond it
-    typedef array<long long, 3> EdgeKey;
+    using EdgeKey = array<long long, 3>;
 
     GridVertices(Grid * grid);
 

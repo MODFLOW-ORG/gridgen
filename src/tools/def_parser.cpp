@@ -144,7 +144,7 @@ DefinitionParser::DefinitionParser()
 //destructor
 DefinitionParser::~DefinitionParser()
 {
-    typedef map<string, block_raw_data *>::iterator IT;
+    using IT = map<string, block_raw_data *>::iterator;
     for (IT i = m_blocks.begin(); i != m_blocks.end(); i++)
     {
         delete i->second;

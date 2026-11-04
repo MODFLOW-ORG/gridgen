@@ -37,7 +37,7 @@ public:
     const list<string> & getWarnings() const { return m_warnings; }
 
 protected:
-    typedef map<string, block_raw_data * (*)(block_raw_data & block)> BLOCK_TYPE_MAP;
+    using BLOCK_TYPE_MAP = map<string, block_raw_data * (*)(block_raw_data & block)>;
     BLOCK_TYPE_MAP m_block_type_map;
     map<string, block_raw_data *> m_blocks;
     list<string> m_warnings;

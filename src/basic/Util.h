@@ -31,4 +31,4 @@ double * clone_array(double * a, int n);
 }
 
 // Define types used by SWIG
-typedef std::vector<int> VECTORI;
+using VECTORI = std::vector<int>;

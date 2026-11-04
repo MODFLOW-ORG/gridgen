@@ -31,8 +31,8 @@ using namespace std;
 namespace cusg
 {
 
-typedef Point<int, 2> Index2d; //!< 2d index
-typedef Point<int, 3> Index3d; //!< 3d index
+using Index2d = Point<int, 2>; //!< 2d index
+using Index3d = Point<int, 3>; //!< 3d index
 
 class ModflowGrid;
 class Box; //defined later in this file
