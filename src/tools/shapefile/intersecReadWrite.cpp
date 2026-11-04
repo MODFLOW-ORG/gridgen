@@ -275,12 +275,15 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
     vector<vector<double>>::iterator dit = dbfldVals.begin();
     vector<vector<string>>::iterator sit = strfldVals.begin();
     vector<vector<string>>::iterator lit = logfldVals.begin();
+    vector<double> xs, ys; //vertex coordinates of the shape being written
     double *x = nullptr, *y = nullptr;
     //write points
     if (wtype == WRITE_POINT)
     {
-        x = new double[1];
-        y = new double[1];
+        xs.assign(1, 0.0);
+        ys.assign(1, 0.0);
+        x = xs.data();
+        y = ys.data();
         vector<PointCellIntersectionInfo> & pntInters = gridInter->getPointIntersectionInfo();
         vector<PointCellIntersectionInfo>::iterator pit = pntInters.begin();
         for (; pit != pntInters.end(); ++pit, ++iit, ++dit, ++sit, ++lit)
@@ -310,8 +313,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                           logFldIDs, logVals, ofile, isTxt);
             if (!isTxt) SHPDestroyObject(shpObj);
         }
-        delete[] x;
-        delete[] y;
     }
     else if (wtype == WRITE_POLYLINE)
     {
@@ -332,8 +333,10 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                 cerr << "! Warning: bad polyline, ignored!" << endl;
                 continue;
             }
-            x = new double[vsize];
-            y = new double[vsize];
+            xs.assign(vsize, 0.0);
+            ys.assign(vsize, 0.0);
+            x = xs.data();
+            y = ys.data();
             ply_vertex * pv = lineInfo.m_plyline->getHead();
             x[0] = pv->getPos()[0];
             y[0] = pv->getPos()[1];
@@ -364,8 +367,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                           logFldIDs, logVals, ofile, isTxt);
 
             if (!isTxt) SHPDestroyObject(shpObj);
-            delete[] x;
-            delete[] y;
         }
     }
     else if (wtype == WRITE_POLYGON)
@@ -389,8 +390,10 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             }
             // each ring repeats its first vertex at the end
             vsize += partSize;
-            x = new double[vsize];
-            y = new double[vsize];
+            xs.assign(vsize, 0.0);
+            ys.assign(vsize, 0.0);
+            x = xs.data();
+            y = ys.data();
 
             //make sure the out boundary
             list<c_polygon::iterator> orderedPItrs;
@@ -405,8 +408,8 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
 
             //part number
             int startPartIDAcumulate = 0;
-            int * nParts = new int[partSize];
-            memset(nParts, 0, sizeof(int) * partSize);
+            vector<int> parts(partSize, 0);
+            int * nParts = parts.data();
             int k = 0, vid = 0;
             for (list<c_polygon::iterator>::iterator lit = orderedPItrs.begin();
                  lit != orderedPItrs.end(); ++lit, k++)
@@ -452,9 +455,6 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                           logFldIDs, logVals, ofile, isTxt);
 
             if (!isTxt) SHPDestroyObject(shpObj);
-            delete[] x;
-            delete[] y;
-            delete[] nParts;
         }
     }
 

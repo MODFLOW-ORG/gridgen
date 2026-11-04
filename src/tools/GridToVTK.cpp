@@ -522,7 +522,8 @@ void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool with
                                  bool one_based_numbering)
 {
     int boxNum = mfgrid->nodegroup.size();
-    BoxVtx * boxVts = new BoxVtx[boxNum];
+    vector<BoxVtx> vtxdata(boxNum);
+    BoxVtx * boxVts = vtxdata.data();
     vector<Vertex *> vdata;
     buildSharingVertices_mfgrid(mfgrid, vdata, boxVts);
     //begin to write
@@ -605,7 +606,6 @@ void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool with
     {
         delete vit;
     }
-    delete[] boxVts;
 }
 
 /******************************************************************************************************************
@@ -1170,12 +1170,8 @@ double smooth_interpolate(vector<double> & dvals, vector<int> & depth, vector<Bo
     //do a plane fitting
     if (dsize == 3)
     {
-        double ** vv = new double *[3];
-        for (int i = 0; i < 3; i++)
-        {
-            vv[i] = new double[3];
-            memset(vv[i], 0, sizeof(double) * 3);
-        }
+        double rows[3][3] = {};
+        double * vv[3] = {rows[0], rows[1], rows[2]};
 
         for (int i = 0; i < 3; i++)
         {
@@ -1185,9 +1181,6 @@ double smooth_interpolate(vector<double> & dvals, vector<int> & depth, vector<Bo
         }
 
         double val = fitZ(vv, px, py);
-
-        for (int i = 0; i < 3; i++) delete[] vv[i];
-        delete[] vv;
 
         return val;
     }
@@ -1442,7 +1435,8 @@ void writeQuadtreeGrid2VTK_shareV(QuadTree3D * qtree, string vtkName)
 
     vector<VTK_V *> vdata;
     vector<VTK_E *> edata;
-    VTK_Box * boxdata = new VTK_Box[boxNum];
+    vector<VTK_Box> boxes(boxNum);
+    VTK_Box * boxdata = boxes.data();
 
     //build the sharing v
     buildSharing(qtree, vdata, edata, boxdata);
@@ -1467,5 +1461,4 @@ void writeQuadtreeGrid2VTK_shareV(QuadTree3D * qtree, string vtkName)
     {
         delete eit;
     }
-    delete[] boxdata;
 }

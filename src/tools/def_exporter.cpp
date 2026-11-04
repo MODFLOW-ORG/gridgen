@@ -150,6 +150,7 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
 
     //needed information about number of nodes per layer here
     int * nperlay = nullptr;
+    vector<int> mf_nperlay; //nodes per layer of a MODFLOW grid
     if (quadGrid != nullptr)
     {
         nperlay = quadGrid->get_nodelay();
@@ -159,10 +160,8 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
         ModflowGrid * mflowgrid = dynamic_cast<ModflowGrid *>(data.grid);
         if (mflowgrid != nullptr)
         {
-            nperlay = new int[mflowgrid->nlay];
-            assert(nperlay);
-            for (int i = 0; i < mflowgrid->nlay; i++)
-                nperlay[i] = mflowgrid->ncol * mflowgrid->nrow;
+            mf_nperlay.assign(mflowgrid->nlay, mflowgrid->ncol * mflowgrid->nrow);
+            nperlay = mf_nperlay.data();
         }
     }
 
@@ -193,10 +192,6 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
         string nodesperlay_data_name = data.usg_data_prefix + ".nodesperlay.dat";
         ModflowGrid * mflowgrid = quadGrid->getModflowGrid();
         save(nodesperlay_data_name, nperlay, mflowgrid->nlay);
-    }
-    else
-    {
-        delete[] nperlay;
     }
 
     return true;
