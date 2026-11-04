@@ -37,8 +37,12 @@ std::string write_shapefile(const std::string & name, int type, const std::vecto
 {
     std::string path = testing::TempDir() + name;
     SHPHandle shp = SHPCreate(path.c_str(), type);
-    DBFHandle dbf = DBFCreate(path.c_str());
-    if (fields) DBFAddField(dbf, "LEVEL", FTInteger, 4, 0);
+    DBFHandle dbf = nullptr;
+    if (fields)
+    {
+        dbf = DBFCreate(path.c_str());
+        DBFAddField(dbf, "LEVEL", FTInteger, 4, 0);
+    }
     for (size_t i = 0; i < rings.size(); i++)
     {
         std::vector<double> x, y;
@@ -54,7 +58,23 @@ std::string write_shapefile(const std::string & name, int type, const std::vecto
         if (fields) DBFWriteIntegerAttribute(dbf, static_cast<int>(i), 0, 1);
     }
     SHPClose(shp);
-    DBFClose(dbf);
+    if (fields)
+        DBFClose(dbf);
+    else
+    {
+        // shapelib passes a null buffer to fwrite for a table without fields,
+        // so write the header and blank records here
+        unsigned char header[32] = {0x03, 126, 11, 4};
+        header[4] = static_cast<unsigned char>(rings.size());
+        header[8] = 33; // header length
+        header[10] = 1; // record length, the deletion flag
+        FILE * f = std::fopen((path + ".dbf").c_str(), "wb");
+        std::fwrite(header, 1, sizeof(header), f);
+        std::fputc(0x0D, f);
+        for (size_t i = 0; i < rings.size(); i++) std::fputc(' ', f);
+        std::fputc(0x1A, f);
+        std::fclose(f);
+    }
     return path;
 }
 
