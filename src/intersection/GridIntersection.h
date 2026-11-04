@@ -56,7 +56,7 @@ struct SegmentCellIntersectionInfo
     {
         m_curveID = m_segID = -1;
         m_len = m_startGeoDist = m_endGeoDist = 0;
-        box = NULL;
+        box = nullptr;
     }
 
     int m_curveID; //id of the curve that contains this segment
@@ -75,8 +75,8 @@ struct PolygonCellIntersectionInfo
     {
         m_polyID = -1;
         m_area = 0;
-        box = NULL;
-        m_interPolygon = NULL;
+        box = nullptr;
+        m_interPolygon = nullptr;
     }
 
     int m_polyID;
@@ -103,7 +103,7 @@ public:
             pit->m_interPolygon->destroy();
 
             delete pit->m_interPolygon;
-            pit->m_interPolygon = NULL;
+            pit->m_interPolygon = nullptr;
         }
         for (vector<PolylineCellIntersectionInfo>::iterator lit =
                  m_plyline_intersection_info.begin();
@@ -112,7 +112,7 @@ public:
             lit->m_plyline->destroy();
 
             delete lit->m_plyline;
-            lit->m_plyline = NULL;
+            lit->m_plyline = nullptr;
         }
     }
 
@@ -207,7 +207,7 @@ public:
     bool intersect(Box * b, const LineSeg2d & line);
     double intersect_len(Box * b, const LineSeg2d & line);
     void intersect_polygon(Box * b, const GIS_polygon & plygon,
-                           vector<GIS_polygon *> & resultPlygons, BoxPlyClip * bpc = NULL);
+                           vector<GIS_polygon *> & resultPlygons, BoxPlyClip * bpc = nullptr);
 
     //retrieve detailed information
     bool getIntersection(Box * b, const LineSeg2d & line, LineSeg2d & intseg);
@@ -219,7 +219,7 @@ public:
     template <typename T> bool intersect(T * grid, /*const*/ GIS_Point2d & pt);
     template <typename T> bool intersect(T * grid, /*const*/ GIS_LineSeg2d & line);
     template <typename T>
-    bool intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyClip * bpc = NULL);
+    bool intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyClip * bpc = nullptr);
 
     /// clip off a line segment if its end points are out side of the grid
     /// return false when the entire segment is outside of the grid
@@ -252,7 +252,7 @@ protected:
     //the given box should be intersecting with the given geometry already
     void buildIntersectionInfo(Box * box, const GIS_polygon & ply,
                                vector<PolygonCellIntersectionInfo> & infoResult,
-                               BoxPlyClip * bpc = NULL);
+                               BoxPlyClip * bpc = nullptr);
 
     SegmentCellIntersectionInfo buildIntersectionInfo(Box * box, const GIS_LineSeg2d & line);
     PointCellIntersectionInfo buildIntersectionInfo(Box * box, const GIS_Point2d & pt);

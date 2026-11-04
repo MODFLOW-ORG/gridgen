@@ -64,7 +64,7 @@ protected:
     //
     template <class T> T * createArray(list<string> & spec, int size, string folderPath = "")
     {
-        if (spec.empty()) return NULL;
+        if (spec.empty()) return nullptr;
 
         if (tolower(spec.front()) == "constant")
         {
@@ -117,7 +117,7 @@ protected:
             exit(1);
         }
 
-        return NULL;
+        return nullptr;
     }
 };
 
@@ -226,9 +226,9 @@ public:
     {
         rotation_angle = rotation_degrees = x_offset = y_offset = 0;
         nlay = nrow = ncol = 0;
-        delr = delc = NULL;
-        top = NULL;
-        mfgrid = NULL;
+        delr = delc = nullptr;
+        top = nullptr;
+        mfgrid = nullptr;
         length_unit = "undefined";
     }
 
@@ -269,8 +269,8 @@ class quadtree_grid_raw_data : public grid_raw_data
 public:
     quadtree_grid_raw_data(block_raw_data & block) : grid_raw_data(block)
     {
-        modflow_data = NULL;
-        qtree_grid = NULL;
+        modflow_data = nullptr;
+        qtree_grid = nullptr;
     }
 
     virtual bool parse();
@@ -302,8 +302,8 @@ public:
     quadtree_builder_raw_data(block_raw_data & block) : grid_raw_data(block)
     {
         smoothing_level_horizontal = smoothing_level_vertical = 1;
-        modflow_data = NULL;
-        qtree_grid = NULL;
+        modflow_data = nullptr;
+        qtree_grid = nullptr;
         smoothing = false;
         one_based_node_numbering = true;
         auto_alignment = true;
@@ -384,7 +384,7 @@ class grid_intersection_raw_data : public block_raw_data
 public:
     grid_intersection_raw_data(block_raw_data & block) : block_raw_data(block)
     {
-        grid = NULL;
+        grid = nullptr;
         layer = 0;
     }
 
@@ -410,7 +410,7 @@ class grid_to_usgdata_raw_data : public block_raw_data
 public:
     grid_to_usgdata_raw_data(block_raw_data & block) : block_raw_data(block)
     {
-        grid = NULL;
+        grid = nullptr;
         vertical_pass_through = false;
     }
 
@@ -431,7 +431,7 @@ class gridtoshape_raw_data : public block_raw_data
 public:
     gridtoshape_raw_data(block_raw_data & block) : block_raw_data(block)
     {
-        grid = NULL;
+        grid = nullptr;
         feature_type = "polygon";
         one_based_node_numbering = true;
         without_inactive = true;
@@ -481,7 +481,7 @@ class gridtovtk_raw_data : public block_raw_data
 public:
     gridtovtk_raw_data(block_raw_data & block) : block_raw_data(block)
     {
-        grid = NULL;
+        grid = nullptr;
         b_share_vertex = true;
         one_based_node_numbering = true;
         without_inactive = true;

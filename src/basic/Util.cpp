@@ -17,11 +17,11 @@ namespace cusg
 {
 double * clone_array(double * a, int n)
 {
-    double * a2 = NULL;
+    double * a2 = nullptr;
 
     if (n > 0)
     {
-        if (a != NULL)
+        if (a != nullptr)
         {
             a2 = new double[n];
             assert(a2);

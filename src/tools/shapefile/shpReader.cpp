@@ -63,7 +63,7 @@ bool ShapeReader::read(const string & filename)
     hSHP = SHPOpen(filename.c_str(), "rb");
 
     //something is wrong
-    if (hSHP == NULL)
+    if (hSHP == nullptr)
     {
         cout << "- Error: Unable to open: " << filename << endl;
         return false;
@@ -73,7 +73,7 @@ bool ShapeReader::read(const string & filename)
     DBFHandle hDBF = DBFOpen(filename.c_str(), "rb");
 
     //check
-    if (hDBF == NULL)
+    if (hDBF == nullptr)
     {
         cerr << "! Error: DBFOpen(" << filename << ") failed." << endl;
         return false;

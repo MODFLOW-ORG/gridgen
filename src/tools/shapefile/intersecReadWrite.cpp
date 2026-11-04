@@ -193,7 +193,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
 {
     //create a shape file
     ofstream ofile;
-    SHPHandle handler = NULL;
+    SHPHandle handler = nullptr;
     if (wtype == WRITE_POINT)
     {
         if (!isTxt)
@@ -223,7 +223,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
     }
 
     //create a .dbf file
-    DBFHandle dbfhdl = NULL;
+    DBFHandle dbfhdl = nullptr;
     if (!isTxt)
     {
         string dbf = file;
@@ -276,7 +276,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
     vector<vector<double>>::iterator dit = dbfldVals.begin();
     vector<vector<string>>::iterator sit = strfldVals.begin();
     vector<vector<string>>::iterator lit = logfldVals.begin();
-    double *x = NULL, *y = NULL;
+    double *x = nullptr, *y = nullptr;
     //write points
     if (wtype == WRITE_POINT)
     {
@@ -293,11 +293,11 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             x[0] = pit->pnt[0];
             y[0] = pit->pnt[1];
 
-            SHPObject * shpObj = NULL;
+            SHPObject * shpObj = nullptr;
             int entity = -1;
             if (!isTxt)
             {
-                shpObj = SHPCreateSimpleObject(SHPT_POINT, 1, x, y, NULL);
+                shpObj = SHPCreateSimpleObject(SHPT_POINT, 1, x, y, nullptr);
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
 
@@ -347,11 +347,11 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                 y[idx] = pv->getPos()[1];
             } while (pv != lineInfo.m_plyline->getTail());
 
-            SHPObject * shpObj = NULL;
+            SHPObject * shpObj = nullptr;
             int entity = -1;
             if (!isTxt)
             {
-                shpObj = SHPCreateSimpleObject(SHPT_ARC, vsize, x, y, NULL);
+                shpObj = SHPCreateSimpleObject(SHPT_ARC, vsize, x, y, nullptr);
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
 
@@ -435,12 +435,12 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
 
             //create a polygon shape here
             //SHPObject * shpObj = SHPCreateObject(SHPT_POLYGON,vsize,x, y,NULL);
-            SHPObject * shpObj = NULL;
+            SHPObject * shpObj = nullptr;
             int entity = 0;
             if (!isTxt)
             {
-                shpObj = SHPCreateObject(SHPT_POLYGON, iShape, partSize, nParts, NULL, vsize, x, y,
-                                         NULL, NULL);
+                shpObj = SHPCreateObject(SHPT_POLYGON, iShape, partSize, nParts, nullptr, vsize, x,
+                                         y, nullptr, nullptr);
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
             //write nodenumber

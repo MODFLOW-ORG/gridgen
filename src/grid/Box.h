@@ -101,16 +101,16 @@ public:
      * \param h   height of the box
      */
     Box(double xx, double yy, double w, double h)
-        : depth(0), x(xx), y(yy), z(0), dx(w), dy(h), dz(0), isLeaf(true), pParent(NULL),
+        : depth(0), x(xx), y(yy), z(0), dx(w), dy(h), dz(0), isLeaf(true), pParent(nullptr),
           dirty(false), number(0), layer(0), locator(0), id(0),
           active(true) //, childmfgrid(NULL), bRegular(true)
     {
         for (int i = 0; i < 4; ++i)
         {
-            pChildren[i] = NULL;
+            pChildren[i] = nullptr;
         }
 
-        pUp = pDown = NULL;
+        pUp = pDown = nullptr;
         priority = 0;
     }
 
@@ -124,7 +124,7 @@ public:
      * \param dims   A vector specifying the width and height of the box
      */
     Box(const Point3d & center, Vector3d & dims)
-        : depth(0), isLeaf(true), pParent(NULL), dirty(false), number(0), layer(0), locator(0),
+        : depth(0), isLeaf(true), pParent(nullptr), dirty(false), number(0), layer(0), locator(0),
           id(0), active(true) //, childmfgrid(NULL), bRegular(true)
     {
         x = center[0];
@@ -137,10 +137,10 @@ public:
 
         for (int i = 0; i < 4; ++i)
         {
-            pChildren[i] = NULL;
+            pChildren[i] = nullptr;
         }
 
-        pUp = pDown = NULL;
+        pUp = pDown = nullptr;
         priority = 0;
     }
 

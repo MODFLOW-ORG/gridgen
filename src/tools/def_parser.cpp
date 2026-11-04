@@ -15,8 +15,9 @@ static const map<string, set<string>> & block_records()
 
     const char * modflow_grid[] = {"rotation_angle", "x_offset", "y_offset",     "length_unit",
                                    "nlay",           "nrow",     "ncol",         "delr",
-                                   "delc",           "top",      "bottom layer", NULL};
-    const char * quadtree[] = {"modflow_grid", "structure_file", "top layer", "bottom layer", NULL};
+                                   "delc",           "top",      "bottom layer", nullptr};
+    const char * quadtree[] = {"modflow_grid", "structure_file", "top layer", "bottom layer",
+                               nullptr};
     const char * quadtree_builder[] = {"modflow_grid",
                                        "grid_definition_file",
                                        "refinement_features layer",
@@ -32,22 +33,23 @@ static const map<string, set<string>> & block_records()
                                        "bottom layer",
                                        "autoalignment",
                                        "node_numbering",
-                                       NULL};
+                                       nullptr};
     const char * refinement_features[] = {"shapefile",
                                           "feature_type",
                                           "refinement_level",
                                           "refine_level_by_attribute",
                                           "refinement_level_by_attribute",
-                                          NULL};
-    const char * active_domain[] = {"shapefile", "feature_type", "include_boundary", NULL};
-    const char * grid_to_shapefile[] = {
-        "grid", "shapefile", "feature_type", "node_numbering", "without_inactive", "concide", NULL};
-    const char * grid_to_usgdata[] = {"grid", "usg_data_prefix", "vertical_pass_through", NULL};
+                                          nullptr};
+    const char * active_domain[] = {"shapefile", "feature_type", "include_boundary", nullptr};
+    const char * grid_to_shapefile[] = {"grid",           "shapefile",        "feature_type",
+                                        "node_numbering", "without_inactive", "concide",
+                                        nullptr};
+    const char * grid_to_usgdata[] = {"grid", "usg_data_prefix", "vertical_pass_through", nullptr};
     const char * grid_to_vtkfile[] = {"grid",           "vtkfile",          "share_vertex",
-                                      "node_numbering", "without_inactive", NULL};
+                                      "node_numbering", "without_inactive", nullptr};
     const char * grid_intersection[] = {"grid",         "layer",       "shapefile",
                                         "feature_type", "output_file", "output_shapefile",
-                                        "attributes",   NULL};
+                                        "attributes",   nullptr};
 
     struct
     {
@@ -62,7 +64,7 @@ static const map<string, set<string>> & block_records()
     for (size_t b = 0; b < sizeof(blocks) / sizeof(blocks[0]); b++)
     {
         set<string> & known = records[blocks[b].type];
-        for (const char ** n = blocks[b].names; *n != NULL; n++) known.insert(*n);
+        for (const char ** n = blocks[b].names; *n != nullptr; n++) known.insert(*n);
     }
     return records;
 }
@@ -183,7 +185,7 @@ bool DefinitionParser::parse(istream & in, string folder)
             cerr << "! Warning: duplicated record " << block.name
                  << "found; replace the previous record" << endl;
             delete m_blocks[block.name];
-            m_blocks[block.name] = NULL;
+            m_blocks[block.name] = nullptr;
         }
 
         //load the related path's .dfn file
@@ -226,7 +228,7 @@ bool DefinitionParser::parse(istream & in, string folder)
                 cerr << "! Warning: " << *w << endl;
             m_warnings.splice(m_warnings.end(), warnings);
             block_raw_data * ptr_block = m_block_type_map[block.type](block);
-            if (ptr_block != NULL)
+            if (ptr_block != nullptr)
             {
                 bool r = ptr_block->parse();
                 if (r)

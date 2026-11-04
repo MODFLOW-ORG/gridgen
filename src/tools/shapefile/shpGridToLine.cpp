@@ -12,7 +12,7 @@ void cornerPoint(const GridVertices & gv, const Box * b, int corner, double & x,
 void prepareWriteLine(string gridShpName, SHPHandle * shd, DBFHandle * dbf, int * lyrId)
 {
     *shd = SHPCreate(gridShpName.c_str(), SHPT_ARC);
-    if ((*shd) == NULL)
+    if ((*shd) == nullptr)
     {
         cerr << "can't create shape file: " << gridShpName.c_str() << endl;
         return;
@@ -35,9 +35,9 @@ void prepareWriteLine(string gridShpName, SHPHandle * shd, DBFHandle * dbf, int 
 void writeOneLine(int vNum, double * tmpX, double * tmpY, int lyrID, int layer, SHPHandle handler,
                   DBFHandle dbfHandle)
 {
-    SHPObject * shpObj = NULL;
+    SHPObject * shpObj = nullptr;
     //write to the shape file
-    shpObj = SHPCreateSimpleObject(SHPT_ARC, vNum, tmpX, tmpY, NULL);
+    shpObj = SHPCreateSimpleObject(SHPT_ARC, vNum, tmpX, tmpY, nullptr);
     int entityNum = SHPWriteObject(handler, -1, shpObj);
     //clear memory
     SHPDestroyObject(shpObj);

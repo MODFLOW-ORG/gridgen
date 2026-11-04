@@ -717,7 +717,7 @@ struct VTK_V
     VTK_V()
     {
         num = -1;
-        for (int i = 0; i < 8; i++) box[i] = NULL;
+        for (int i = 0; i < 8; i++) box[i] = nullptr;
     }
 
     Point3d pos;
@@ -740,19 +740,19 @@ struct VTK_E
 {
     VTK_E()
     {
-        child_v = NULL;
-        v[0] = NULL;
-        v[1] = NULL;
-        child_e[0] = NULL;
-        child_e[1] = NULL;
+        child_v = nullptr;
+        v[0] = nullptr;
+        v[1] = nullptr;
+        child_e[0] = nullptr;
+        child_e[1] = nullptr;
     }
     VTK_E(VTK_V * v1, VTK_V * v2)
     {
-        child_v = NULL;
+        child_v = nullptr;
         v[0] = v1;
         v[1] = v2;
-        child_e[0] = NULL;
-        child_e[1] = NULL;
+        child_e[0] = nullptr;
+        child_e[1] = nullptr;
     }
 
     VTK_V * child_v;
@@ -767,7 +767,7 @@ struct VTK_Box
 {
     VTK_Box()
     {
-        for (int i = 0; i < 8; i++) e[i] = NULL;
+        for (int i = 0; i < 8; i++) e[i] = nullptr;
     }
     VTK_E * e[8];
 };
@@ -892,7 +892,7 @@ void DFSbuildBox(Box * box, vector<VTK_V *> & vdata, vector<VTK_E *> & edata, VT
         for (int t = 0; t < 4; t++)
         {
             VTK_E * te = boxdata[box->id].e[k * 4 + t];
-            if (te->child_v == NULL)
+            if (te->child_v == nullptr)
             {
                 VTK_V * nv = new VTK_V();
                 nv->pos[0] = (te->v[0]->pos[0] + te->v[1]->pos[0]) / 2;
@@ -1052,44 +1052,44 @@ void determineVtoBox(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *
         vb.e[6]->v[1]->box[0] = tbox;
 
         //child
-        if (vb.e[0]->child_v != NULL)
+        if (vb.e[0]->child_v != nullptr)
         {
             vb.e[0]->child_v->box[6] = tbox;
             vb.e[0]->child_v->box[7] = tbox;
         }
-        if (vb.e[1]->child_v != NULL)
+        if (vb.e[1]->child_v != nullptr)
         {
             vb.e[1]->child_v->box[4] = tbox;
             vb.e[1]->child_v->box[7] = tbox;
         }
-        if (vb.e[2]->child_v != NULL)
+        if (vb.e[2]->child_v != nullptr)
         {
             vb.e[2]->child_v->box[4] = tbox;
             vb.e[2]->child_v->box[5] = tbox;
         }
-        if (vb.e[3]->child_v != NULL)
+        if (vb.e[3]->child_v != nullptr)
         {
             vb.e[3]->child_v->box[5] = tbox;
             vb.e[3]->child_v->box[6] = tbox;
         }
 
         //child
-        if (vb.e[4]->child_v != NULL)
+        if (vb.e[4]->child_v != nullptr)
         {
             vb.e[4]->child_v->box[2] = tbox;
             vb.e[4]->child_v->box[3] = tbox;
         }
-        if (vb.e[5]->child_v != NULL)
+        if (vb.e[5]->child_v != nullptr)
         {
             vb.e[5]->child_v->box[0] = tbox;
             vb.e[5]->child_v->box[3] = tbox;
         }
-        if (vb.e[6]->child_v != NULL)
+        if (vb.e[6]->child_v != nullptr)
         {
             vb.e[6]->child_v->box[1] = tbox;
             vb.e[6]->child_v->box[2] = tbox;
         }
-        if (vb.e[7]->child_v != NULL)
+        if (vb.e[7]->child_v != nullptr)
         {
             vb.e[7]->child_v->box[1] = tbox;
             vb.e[7]->child_v->box[2] = tbox;
@@ -1219,7 +1219,7 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
         vector<int> depth1, depth2;
         for (int i = 0; i < 4; i++)
         {
-            if (v->box[i] != NULL && v->box[i]->isLeaf && v->box[i]->active)
+            if (v->box[i] != nullptr && v->box[i]->isLeaf && v->box[i]->active)
             {
                 if (bset1.find(v->box[i]) == bset1.end())
                 {
@@ -1229,7 +1229,7 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
                     depth1.push_back(v->box[i]->depth);
                 }
             }
-            if (v->box[i + 4] != NULL && v->box[i + 4]->isLeaf && v->box[i + 4]->active)
+            if (v->box[i + 4] != nullptr && v->box[i + 4]->isLeaf && v->box[i + 4]->active)
             {
                 if (bset2.find(v->box[i + 4]) == bset2.end())
                 {

@@ -28,7 +28,7 @@ namespace cusg
 	*/
 
 QuadTree3D::QuadTree3D(ModflowGrid * mfgrid, int * chunksize)
-    : nodeid_array(NULL), nodenumber_array(NULL), nodelay_array(NULL)
+    : nodeid_array(nullptr), nodenumber_array(nullptr), nodelay_array(nullptr)
 {
     cout << "- A QuadTree object was instantiated." << endl;
 
@@ -36,7 +36,7 @@ QuadTree3D::QuadTree3D(ModflowGrid * mfgrid, int * chunksize)
     m_mfgrid = mfgrid;
 
     //Set the chunksize, which is used to allocate node memory.
-    if (chunksize == NULL)
+    if (chunksize == nullptr)
     {
         this->m_chunksize = new int(m_mfgrid->nodes * 0.2);
     }
@@ -293,7 +293,7 @@ void QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
         do
         {
             ply_vertex * next = ptr->getNext();
-            if (next != NULL)
+            if (next != nullptr)
             {
                 LineSeg2d line(ptr->getPos(), next->getPos());
 
@@ -302,7 +302,7 @@ void QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
             }
             ptr = next;
 
-        } while (ptr != NULL);
+        } while (ptr != nullptr);
 
         if (r)
         {
@@ -423,7 +423,7 @@ bool QuadTree3D::smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq,
         int dir = ic->second;
         Box * nei = nodegroup[tonodeid];
 
-        if (nei == NULL) continue;
+        if (nei == nullptr) continue;
         assert(nei->isLeaf);
 
         bool refine_nei = false;
@@ -546,7 +546,7 @@ double * QuadTree3D::get_cell_areas()
 	*/
 int * QuadTree3D::getnodeid_array()
 {
-    if (nodeid_array == NULL || nodelay_array == NULL || rebuild_nodeid_array)
+    if (nodeid_array == nullptr || nodelay_array == nullptr || rebuild_nodeid_array)
     {
         nodegroup.rebuild_nodeid_array = true;
         nodeid_array = nodegroup.get_nodeid_array();
@@ -561,7 +561,7 @@ int * QuadTree3D::getnodeid_array()
 ///get nodelay_array
 int * QuadTree3D::get_nodelay()
 {
-    if (nodeid_array == NULL || nodelay_array == NULL || rebuild_nodeid_array)
+    if (nodeid_array == nullptr || nodelay_array == nullptr || rebuild_nodeid_array)
     {
         nodegroup.rebuild_nodeid_array = true;
         nodeid_array = nodegroup.get_nodeid_array();
@@ -610,7 +610,7 @@ int * QuadTree3D::createnodenumber_array()
 	*/
 int * QuadTree3D::getnodenumber_array()
 {
-    if (nodenumber_array == NULL || rebuild_nodenumber_array)
+    if (nodenumber_array == nullptr || rebuild_nodenumber_array)
     {
         nodenumber_array = createnodenumber_array();
         rebuild_nodenumber_array = false;
@@ -656,14 +656,14 @@ list<pair<int, int>> QuadTree3D::get_node_connections(Box * box)
     for (short i = 0; i < 4; i++) box->getNeighbors(nei[i], i);
 
     //get all leaves of box->pUp
-    if (box->pUp != NULL)
+    if (box->pUp != nullptr)
     {
         box->refine_pUp();
         box->pUp->getLeaves(nei[4]);
     }
 
     //get all leaves of box->pDown
-    if (box->pDown != NULL)
+    if (box->pDown != nullptr)
     {
         box->refine_pDown();
         box->pDown->getLeaves(nei[5]);
@@ -708,14 +708,14 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
     for (short i = 0; i < 4; i++) box->getNeighbors(nei[i], i);
 
     //get all leaves of box->pUp
-    if (box->pUp != NULL)
+    if (box->pUp != nullptr)
     {
         box->refine_pUp();
         box->pUp->getLeaves(nei[4]);
     }
 
     //get all leaves of box->pDown
-    if (box->pDown != NULL)
+    if (box->pDown != nullptr)
     {
         box->refine_pDown();
         box->pDown->getLeaves(nei[5]);
@@ -735,7 +735,7 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
         if ((*i)->active) connections.push_back(make_pair((*i)->id, 3));
 
     //vertical pass here
-    if (area != NULL)
+    if (area != nullptr)
     {
         int csize = connections.size();
         for (int i = 0; i < csize; i++) area->push_back(-1.0f);
@@ -747,13 +747,13 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
     {
         assert(vpit->bSrc == box);
         connections.push_back(make_pair(vpit->bDst->id, 3));
-        if (area != NULL) area->push_back(vpit->area);
+        if (area != nullptr) area->push_back(vpit->area);
     }
 
     for (list<Box *>::iterator i = nei[5].begin(); i != nei[5].end(); i++)
         if ((*i)->active) connections.push_back(make_pair((*i)->id, -3));
 
-    if (area != NULL)
+    if (area != nullptr)
     {
         int addSize = connections.size() - area->size();
         for (int i = 0; i < addSize; i++) area->push_back(-1.0f);
@@ -765,7 +765,7 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
     {
         assert(vpit->bSrc == box);
         connections.push_back(make_pair(vpit->bDst->id, -3));
-        if (area != NULL) area->push_back(vpit->area);
+        if (area != nullptr) area->push_back(vpit->area);
     }
 
     return connections;
@@ -892,7 +892,7 @@ CSRData QuadTree3D::get_usg_csr_data()
             if (is3d)
             {
                 dz = 0.5 * (dxdydzn[2] + tonodedxdydz[2]);
-                if (top != NULL && bot != NULL)
+                if (top != nullptr && bot != nullptr)
                 {
                     double dz1 = top[nid] - bot[nid];
                     double dz2 = top[tonid] - bot[tonid];
@@ -991,7 +991,7 @@ void QuadTree3D::_add_root_nodes()
 // Do not call this function if you just wanted to get the top array
 double * QuadTree3D::get_top()
 {
-    if (this->top != NULL)
+    if (this->top != nullptr)
     {
         delete[] this->top;
     }
@@ -1036,7 +1036,7 @@ double * QuadTree3D::get_top()
 // Do not call this function if you just wanted to get the bot array
 double * QuadTree3D::get_bot()
 {
-    if (this->bot != NULL)
+    if (this->bot != nullptr)
     {
         delete this->bot;
     }
@@ -1082,7 +1082,7 @@ double * QuadTree3D::get_bot()
 bool QuadTree3D::recompute_z_of_cells()
 {
     //check if bot and top are created
-    if (bot == NULL || top == NULL)
+    if (bot == nullptr || top == nullptr)
     {
         cerr << "! Error: QuadTree3D::recompute_z_of_cells: Either top or bot are not initialized"
              << endl;
@@ -1104,7 +1104,7 @@ bool QuadTree3D::recompute_z_of_cells()
 bool QuadTree3D::align_elev()
 {
     //check if bot and top are created
-    if (bot == NULL || top == NULL)
+    if (bot == nullptr || top == nullptr)
     {
         cerr << "! Error: QuadTree3D::align_elev: Either top or bot are not initialized" << endl;
         return false;
@@ -1118,8 +1118,8 @@ bool QuadTree3D::align_elev()
         Box * box = get_nodeobj(nodenumber);
         assert(box->isLeaf); //make sure this node is a leaf node...
 
-        if (box->active == false) continue; //disabled...
-        if (box->pDown == NULL) continue;   //no neighbors at lower level
+        if (box->active == false) continue;  //disabled...
+        if (box->pDown == nullptr) continue; //no neighbors at lower level
         align_elev(box);
     } //end for nodenumber
 
@@ -1332,7 +1332,7 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
 {
     ascii_grid * ag = m_str2ag[arcinfo_filename];
 
-    if (ag == NULL) //not found, build from filename
+    if (ag == nullptr) //not found, build from filename
     {
         arcinfo_ascii_grid * aag = new arcinfo_ascii_grid();
         assert(aag);

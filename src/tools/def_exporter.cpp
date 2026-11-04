@@ -136,7 +136,7 @@ bool DefinitionExporter::save(const string & prefix, CSRData & csr, int * nperla
     save(connection_area_array, csr.fahl, csr.nja, csr.ia);
     save(connection_length_array, csr.cl1, csr.nja, csr.ia);
     save(connection_length_array_reversed, csr.cl2, csr.nja, csr.ia);
-    if (csr.iac != NULL) save(connection_count_array, csr.iac, csr.nodes);
+    if (csr.iac != nullptr) save(connection_count_array, csr.iac, csr.nodes);
 
     return true;
 }
@@ -154,15 +154,15 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
     QuadTree3D * quadGrid = dynamic_cast<QuadTree3D *>(data.grid);
 
     //needed information about number of nodes per layer here
-    int * nperlay = NULL;
-    if (quadGrid != NULL)
+    int * nperlay = nullptr;
+    if (quadGrid != nullptr)
     {
         nperlay = quadGrid->get_nodelay();
     }
     else //get number of nodes per lay onfly
     {
         ModflowGrid * mflowgrid = dynamic_cast<ModflowGrid *>(data.grid);
-        if (mflowgrid != NULL)
+        if (mflowgrid != nullptr)
         {
             nperlay = new int[mflowgrid->nlay];
             assert(nperlay);
@@ -174,7 +174,7 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
     //vertical pass-through applies only to a quadtree grid
     if (data.vertical_pass_through)
     {
-        if (quadGrid != NULL)
+        if (quadGrid != nullptr)
             quadGrid->vertical_pass_through = true;
         else
             cerr
@@ -189,7 +189,7 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
     csr.destory(); //free memory
 
     //save extra information for irregular map
-    if (quadGrid != NULL)
+    if (quadGrid != nullptr)
     {
         // Save ghost nodes to file
         string ghostnode_name = data.usg_data_prefix + ".gnc.dat";
@@ -231,7 +231,7 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
         if (b->active && b->isLeaf)
         {
             total++;
-            if (qtree_grid != NULL)
+            if (qtree_grid != nullptr)
             {
                 if (qtree_grid->vertical_pass_through)
                 {
@@ -241,7 +241,7 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
                 else
                     conNum += qtree_grid->get_node_connections(b).size();
             }
-            else if (modflow_grid != NULL)
+            else if (modflow_grid != nullptr)
             {
                 conNum += modflow_grid->get_node_connections(b->id).size();
             }

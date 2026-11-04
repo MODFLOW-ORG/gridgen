@@ -39,16 +39,16 @@ void verticalExplore(Box * tb, list<Box *> & bl, vector<VPassBox> & vpbl, bool t
 {
     list<Box *> nei;
 
-    if (topToDown && tb->pDown != NULL)
+    if (topToDown && tb->pDown != nullptr)
         tb->pDown->getLeaves(nei);
-    else if ((!topToDown) && (tb->pUp != NULL))
+    else if ((!topToDown) && (tb->pUp != nullptr))
         tb->pUp->getLeaves(nei);
 
     for (list<Box *>::iterator bit = nei.begin(); bit != nei.end(); ++bit)
     {
         Box * pb = *bit;
         assert(pb != tb);
-        if (pb == NULL || !(pb->isLeaf)) continue;
+        if (pb == nullptr || !(pb->isLeaf)) continue;
         if (pb->active)
         {
             if (bl.size() >= 2)
@@ -69,7 +69,7 @@ void verticalExplore(Box * tb, list<Box *> & bl, vector<VPassBox> & vpbl, bool t
 
 void boxVPConnection(Box * b, vector<VPassBox> & vpbl, bool topToDown)
 {
-    if (b == NULL || (!(b->isLeaf)) || (b->active == false)) return;
+    if (b == nullptr || (!(b->isLeaf)) || (b->active == false)) return;
 
     list<Box *> bl;
     bl.push_back(b);
@@ -78,7 +78,7 @@ void boxVPConnection(Box * b, vector<VPassBox> & vpbl, bool topToDown)
 
 void getVPT(Box * b, vector<VPTPair> & vpts, bool topToDown)
 {
-    if (b == NULL || (!(b->isLeaf)) || (b->active == false)) return;
+    if (b == nullptr || (!(b->isLeaf)) || (b->active == false)) return;
 
     vector<VPassBox> vpbs;
     boxVPConnection(b, vpbs, topToDown);

@@ -99,7 +99,7 @@ void getXYBound(VNode * first, double & xmin, double & xmax, double & ymin, doub
 
 VNode * copyOnePly(VNode * head, bool bSetVisited)
 {
-    if (head == NULL) return NULL;
+    if (head == nullptr) return nullptr;
 
     VNode * nh = new VNode(head->x, head->y);
     if (bSetVisited) head->isVisited = true;
@@ -150,7 +150,7 @@ void BoxPlyClip::resetStatus()
         VNode * next1 = vn->next;
         pre1->next = next1;
         next1->prev = pre1;
-        vn->prev = vn->next = NULL;
+        vn->prev = vn->next = nullptr;
         delete vn;
     }
     newAdds.clear();
@@ -189,7 +189,7 @@ double getRotAngle(Vector2d & v1, Vector2d & v2)
 //test enclosing
 bool ClipPlyEnclose(VNode * head, const Point2d & p2d)
 {
-    if (head == NULL || head->next == head) return false;
+    if (head == nullptr || head->next == head) return false;
     //count the edges crossing a ray from the point; summing the angles they turn through
     //loses the small ones
     bool inside = false;
@@ -241,7 +241,7 @@ bool decideNextOrderForOut(VNode * tv, bool isX, bool isBigger)
     else
     {
         //1:pre; 2:next
-        VNode *vn1 = NULL, *vn2 = NULL, *vnpre1 = NULL, *vnpre2 = NULL;
+        VNode *vn1 = nullptr, *vn2 = nullptr, *vnpre1 = nullptr, *vnpre2 = nullptr;
         getFeasiblePreNext(tv, vn1, vn2, vnpre1, vnpre2);
         assert(!(vnpre1->isVisited && vnpre2->isVisited));
         //if one of them is not in indirection
@@ -292,7 +292,7 @@ bool decideNextOrderForHole(VNode * tv, bool isX, bool isBigger)
     else
     {
         //1:pre; 2:next
-        VNode *vn1 = NULL, *vn2 = NULL, *vnpre1 = NULL, *vnpre2 = NULL;
+        VNode *vn1 = nullptr, *vn2 = nullptr, *vnpre1 = nullptr, *vnpre2 = nullptr;
         getFeasiblePreNext(tv, vn1, vn2, vnpre1, vnpre2);
         assert(!(vnpre1->isVisited && vnpre2->isVisited));
         if (!(vn1->isInDirect && vn2->isInDirect))
@@ -337,7 +337,7 @@ bool checkAllIndirect(double fval, bool isX, bool isBigger, VNode * head)
 }
 BoxPlyClip::BoxPlyClip()
 {
-    first = NULL;
+    first = nullptr;
 }
 BoxPlyClip::~BoxPlyClip()
 {
@@ -350,31 +350,32 @@ void BoxPlyClip::destroy()
         destroy(*vit);
     }
     plys.clear();
-    first = NULL;
+    first = nullptr;
 }
 void BoxPlyClip::destroy(VNode * vn)
 {
-    if (vn == NULL) return;
+    if (vn == nullptr) return;
     VNode * tmp = vn->next;
     while (tmp != vn)
     {
         VNode * tf = tmp;
         tmp = tmp->next;
-        if (tf != NULL) delete tf;
+        if (tf != nullptr) delete tf;
     }
     delete vn;
-    vn = NULL;
+    vn = nullptr;
 }
 
 void BoxPlyClip::add(VNode * v)
 {
-    if (first != NULL && fabs(v->x - first->x) < SMALLNUMBER && fabs(v->y - first->y) < SMALLNUMBER)
+    if (first != nullptr && fabs(v->x - first->x) < SMALLNUMBER &&
+        fabs(v->y - first->y) < SMALLNUMBER)
         return;
-    if (first != NULL && fabs(v->x - first->prev->x) < SMALLNUMBER &&
+    if (first != nullptr && fabs(v->x - first->prev->x) < SMALLNUMBER &&
         fabs(v->y - first->prev->y) < SMALLNUMBER)
         return;
 
-    if (first == NULL)
+    if (first == nullptr)
     {
         first = v;
         first->next = v;
@@ -916,7 +917,7 @@ void BoxPlyClip::clip(double fval, bool isX, bool isBigger, list<BoxPlyClip *> &
         {
             if ((*pit)->isScanPnt)
             {
-                VNode *vn1 = NULL, *vn2 = NULL, *vnprev1 = NULL, *vnprev2 = NULL;
+                VNode *vn1 = nullptr, *vn2 = nullptr, *vnprev1 = nullptr, *vnprev2 = nullptr;
                 getFeasiblePreNext(*pit, vn1, vn2, vnprev1, vnprev2);
                 if (!vnprev1->isInDirect || !vnprev2->isInDirect) continue;
             }
@@ -1070,7 +1071,7 @@ BoxPlyClip * convertCPolygonToClip(const GIS_polygon & polygon)
 //convert
 void convertClipToPolygon(BoxPlyClip * bpc, GIS_polygon * cpolygon)
 {
-    if (bpc == NULL || bpc->first == NULL) return;
+    if (bpc == nullptr || bpc->first == nullptr) return;
     //loop over
     c_ply outply(c_ply::POUT);
     convertClipToPly(bpc->first, outply);

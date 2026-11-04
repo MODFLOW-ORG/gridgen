@@ -47,7 +47,7 @@ public:
         be a ModflowGrid object.
 	*/
 
-    QuadTree3D(ModflowGrid * mfgrid, int * chunksize = NULL);
+    QuadTree3D(ModflowGrid * mfgrid, int * chunksize = nullptr);
 
     virtual ~QuadTree3D(void);
 

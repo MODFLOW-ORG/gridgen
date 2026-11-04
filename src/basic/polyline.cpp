@@ -10,15 +10,15 @@ namespace cusg
 // clean up the space allocated
 void c_plyline::destroy()
 {
-    if (head == NULL) return;
+    if (head == nullptr) return;
     ply_vertex * ptr = head;
     do
     {
         ply_vertex * n = ptr->getNext();
         delete ptr;
         ptr = n;
-    } while (ptr != NULL);
-    head = tail = NULL;
+    } while (ptr != nullptr);
+    head = tail = nullptr;
 
     all.clear();
 }
@@ -26,7 +26,7 @@ void c_plyline::destroy()
 // Create a empty polygon
 void c_plyline::beginPoly()
 {
-    head = tail = NULL;
+    head = tail = nullptr;
     all.clear();
 }
 
@@ -35,18 +35,18 @@ void c_plyline::addVertex(double x, double y, bool remove_duplicate)
 {
     Point2d pt(x, y);
 
-    if (tail != NULL)
+    if (tail != nullptr)
     {
         if (tail->getPos() == pt && remove_duplicate) return; //don't add
     }
 
     ply_vertex * v = new ply_vertex(pt);
-    if (tail != NULL)
+    if (tail != nullptr)
     {
         tail->setNext(v);
     }
     tail = v;
-    if (head == NULL) head = tail;
+    if (head == nullptr) head = tail;
     v->setVID(all.size()); //id of the vertex in this ply
     all.push_back(v);
 }
@@ -67,7 +67,7 @@ void c_plyline::doInit()
     {
         ptr->computeExtraInfo();
         ptr = ptr->getNext();
-    } while (ptr != NULL);
+    } while (ptr != nullptr);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -82,7 +82,7 @@ void c_plyline::build_all()
         ptr->setVID(vid++);
         all.push_back(ptr);
         ptr = ptr->getNext();
-    } while (ptr != NULL); //end while
+    } while (ptr != nullptr); //end while
 }
 
 //return the i-th line segment from this polyline
@@ -169,7 +169,7 @@ void c_plyline::rotate(double cx, double cy, double angle)
     {
         p->rotate(cx, cy, angle);
         p = p->getNext();
-    } while (p != NULL);
+    } while (p != nullptr);
 }
 
 } //end of namespace cusg

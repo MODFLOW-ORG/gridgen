@@ -29,18 +29,18 @@ struct CSRData
     {
         nodes = 0;
         nja = 0;
-        ja = NULL;
-        ia = NULL;
-        area = NULL;
-        cl1 = NULL;
-        cl2 = NULL;
-        fahl = NULL;
-        fldr = NULL;
-        iac = NULL;
+        ja = nullptr;
+        ia = nullptr;
+        area = nullptr;
+        cl1 = nullptr;
+        cl2 = nullptr;
+        fahl = nullptr;
+        fldr = nullptr;
+        iac = nullptr;
     }
 
     CSRData(int _nodes, int _nja, double * _area, int * _ia, int * _ja, double * _cl1,
-            double * _cl2, double * _fahl, int * _fldr, int * _iac = NULL)
+            double * _cl2, double * _fahl, int * _fldr, int * _iac = nullptr)
     {
         nodes = _nodes;
         nja = _nja;

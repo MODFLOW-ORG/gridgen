@@ -42,7 +42,7 @@ class NodeGroup : public vector<Box *>
 {
 public:
     //constructor
-    NodeGroup(Grid * g = NULL);
+    NodeGroup(Grid * g = nullptr);
 
     int add(Box * box);
 

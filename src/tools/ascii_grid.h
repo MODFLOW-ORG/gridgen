@@ -31,7 +31,7 @@ public:
     {
         ncols = nrows = 0;
         nodata_value = -9999; //the ESRI default is -9999
-        values = NULL;
+        values = nullptr;
     }
 
     //

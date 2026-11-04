@@ -373,7 +373,7 @@ void ModflowGrid::create_nodes()
                 Point3d position;
                 Vector3d dxdydz;
 
-                if (bot != NULL)
+                if (bot != nullptr)
                 {
                     double z = 0.5 * (botm(k, i, j) + botm(k + 1, i, j));
                     double dz = (botm(k, i, j) - botm(k + 1, i, j));

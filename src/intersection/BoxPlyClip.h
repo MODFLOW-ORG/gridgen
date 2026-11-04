@@ -32,13 +32,13 @@ struct VNode
     }
     ~VNode()
     {
-        next = NULL;
-        prev = NULL;
+        next = nullptr;
+        prev = nullptr;
     }
     void init()
     {
-        next = NULL;
-        prev = NULL;
+        next = nullptr;
+        prev = nullptr;
         isInDirect = false;
         isOnline = false;
         isVisited = false;

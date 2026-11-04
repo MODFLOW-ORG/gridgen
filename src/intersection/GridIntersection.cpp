@@ -38,11 +38,11 @@ void GridIntersection::build(grid_intersection_raw_data & data)
 
     //rotate
     ModflowGrid * rmfgrid = mfgrid;
-    if (rmfgrid == NULL)
+    if (rmfgrid == nullptr)
     {
-        if (qtgrid != NULL) rmfgrid = qtgrid->getModflowGrid();
+        if (qtgrid != nullptr) rmfgrid = qtgrid->getModflowGrid();
     }
-    if (rmfgrid == NULL)
+    if (rmfgrid == nullptr)
     {
         cerr << "error: abnormal grid !" << endl;
     }
@@ -71,11 +71,11 @@ void GridIntersection::build(grid_intersection_raw_data & data)
                 //rotate
                 if (angle != 0) line.rotate(cx, cy, -angle);
 
-                if (qtgrid != NULL)
+                if (qtgrid != nullptr)
                     intersect(qtgrid, line);
-                else if (mfgrid != NULL)
+                else if (mfgrid != nullptr)
                     intersect(mfgrid, line);
-                else if (mf2dqtgrid != NULL)
+                else if (mf2dqtgrid != nullptr)
                     intersect(mf2dqtgrid, line);
             } //end for i
 
@@ -154,11 +154,11 @@ void GridIntersection::build(grid_intersection_raw_data & data)
 
                 BoxPlyClip * bpc = convertCPolygonToClip(*(*git));
 
-                if (qtgrid != NULL)
+                if (qtgrid != nullptr)
                     intersect(qtgrid, gp, bpc); //polygons[j]);
-                else if (mfgrid != NULL)
+                else if (mfgrid != nullptr)
                     intersect(mfgrid, gp, bpc); //polygons[j]);
-                else if (mf2dqtgrid != NULL)
+                else if (mf2dqtgrid != nullptr)
                     intersect(mf2dqtgrid, gp, bpc); //polygons[j]);
 
                 bpc->destroy();
@@ -194,11 +194,11 @@ void GridIntersection::build(grid_intersection_raw_data & data)
             //rotate
             if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
-            if (qtgrid != NULL)
+            if (qtgrid != nullptr)
                 intersect(qtgrid, pts[j]);
-            else if (mfgrid != NULL)
+            else if (mfgrid != nullptr)
                 intersect(mfgrid, pts[j]);
-            else if (mf2dqtgrid != NULL)
+            else if (mf2dqtgrid != nullptr)
                 intersect(mf2dqtgrid, pts[j]);
         }
         //rotate back
@@ -585,7 +585,7 @@ bool GridIntersection::getIntersection(Box * b, const LineSeg2d & line, LineSeg2
             {
                 //compute the union between the edge of box and the line
                 Point2d seg[2];
-                const double * u[2] = {NULL, NULL};
+                const double * u[2] = {nullptr, nullptr};
 
                 switch (i)
                 {
@@ -809,7 +809,7 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & plygon,
 
     /*****************************************************************/
     BoxPlyClip * bpc = bpcInit;
-    if (bpcInit == NULL)
+    if (bpcInit == nullptr)
     {
         bpc = convertCPolygonToClip(plygon);
     }
@@ -829,7 +829,7 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & plygon,
 
     bpc->resetStatus();
 
-    if (bpcInit == NULL)
+    if (bpcInit == nullptr)
     {
         bpc->destroy();
         delete bpc;

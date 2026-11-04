@@ -22,7 +22,7 @@ void ply_vertex::computeExtraInfo()
     reflex = true;
 
     //compute normal direction
-    if (next != NULL)
+    if (next != nullptr)
     {
         Vector2d v = next->pos - pos;
         if (v[0] == 0)
@@ -51,7 +51,7 @@ void ply_vertex::computeExtraInfo()
 
         normal = normal.normalize();
 
-        if (pre != NULL)
+        if (pre != nullptr)
         {
             //compute if left or right turn
             Vector2d u = pos - pre->pos;
@@ -72,7 +72,7 @@ void ply_vertex::reverse()
 // clean up the space allocated
 void c_ply::destroy()
 {
-    if (head == NULL) return;
+    if (head == nullptr) return;
     ply_vertex * ptr = head;
     do
     {
@@ -80,7 +80,7 @@ void c_ply::destroy()
         delete ptr;
         ptr = n;
     } while (ptr != head);
-    head = tail = NULL;
+    head = tail = nullptr;
 
     all.clear();
 }
@@ -88,7 +88,7 @@ void c_ply::destroy()
 // Create a empty polygon
 void c_ply::beginPoly()
 {
-    head = tail = NULL;
+    head = tail = nullptr;
     all.clear();
 }
 
@@ -97,18 +97,18 @@ void c_ply::addVertex(double x, double y, bool remove_duplicate)
 {
     Point2d pt(x, y);
 
-    if (tail != NULL)
+    if (tail != nullptr)
     {
         if (tail->getPos() == pt && remove_duplicate) return; //don't add
     }
 
     ply_vertex * v = new ply_vertex(pt);
-    if (tail != NULL)
+    if (tail != nullptr)
     {
         tail->setNext(v);
     }
     tail = v;
-    if (head == NULL) head = tail;
+    if (head == nullptr) head = tail;
     v->setVID(all.size()); //id of the vertex in this ply
     all.push_back(v);
 }
@@ -116,7 +116,7 @@ void c_ply::addVertex(double x, double y, bool remove_duplicate)
 // finish building the polygon
 void c_ply::endPoly(bool remove_duplicate)
 {
-    if (head != NULL && tail != NULL)
+    if (head != nullptr && tail != nullptr)
     {
         if (remove_duplicate)
         {
