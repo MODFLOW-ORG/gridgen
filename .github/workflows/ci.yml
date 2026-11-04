@@ -246,6 +246,7 @@ jobs:
   sanitize:
     name: ubuntu-22.04 gcc 13 sanitizers
     runs-on: ubuntu-22.04
+    timeout-minutes: 45
     defaults:
       run:
         shell: bash

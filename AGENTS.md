@@ -24,8 +24,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   build; the results by file are in `builddir-coverage/coverage.txt`):
   `pixi run coverage`
 - **Run the unit and regression tests with the address and undefined behavior
-  sanitizers** (a separate debug build in `builddir-sanitize/`; CI runs it on
-  Linux, where leaks are also reported): `pixi run sanitize`
+  sanitizers** (a separate debug build in `builddir-sanitize/`, also run in
+  CI on Linux; leaks are not reported yet): `pixi run sanitize`
 - **Check format, lint, and spelling** (Python and C++): `pixi run check-format`;
   `pixi run fix-format` applies the fixes
 - **Show the OS tag used for release archives:** `pixi run get-ostag`
