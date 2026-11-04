@@ -16,7 +16,7 @@ class DefinitionParser : public BaseParser
 public:
     //constructor
     DefinitionParser();
-    virtual ~DefinitionParser();
+    ~DefinitionParser() override;
 
     //parsing the definition file
     bool parse(string filename);

@@ -79,19 +79,19 @@ private:
     priority_queue<Box *, vector<Box *>, PQCmp> PQ;
 
 public:
-    void push(Box * b) { PQ.push(b); }
+    void push(Box * b) override { PQ.push(b); }
 
     /** Pops off the item at the front of the queue and returns it */
-    Box * extract()
+    Box * extract() override
     {
         Box * r = PQ.top();
         PQ.pop();
         return r;
     }
 
-    bool empty() { return PQ.empty(); }
+    bool empty() override { return PQ.empty(); }
 
-    int size() { return PQ.size(); }
+    int size() override { return PQ.size(); }
 };
 
 /*! \class randQueue
@@ -109,10 +109,10 @@ private:
 public:
     randQueue(int s) : Qseed(s) { srand(Qseed); }
 
-    void push(Box * b) { L.push_back(b); }
+    void push(Box * b) override { L.push_back(b); }
 
     /** Removes and returns a random item from the list */
-    Box * extract()
+    Box * extract() override
     {
         int i = rand() % L.size();
         list<Box *>::iterator iter = L.begin();
@@ -122,9 +122,9 @@ public:
         return r;
     }
 
-    bool empty() { return L.empty(); }
+    bool empty() override { return L.empty(); }
 
-    int size() { return L.size(); }
+    int size() override { return L.size(); }
 };
 
 } //end namespace cusg

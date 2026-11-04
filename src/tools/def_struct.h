@@ -153,7 +153,7 @@ public:
         folderPath = other.folderPath;
     }
 
-    virtual ~block_raw_data() {}
+    ~block_raw_data() override {}
 
     virtual bool parse() { return true; } //do nothing by default
     virtual bool initialize(map<string, block_raw_data *> & blocks)
@@ -232,9 +232,9 @@ public:
         length_unit = "undefined";
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
-    virtual Grid * build();
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
+    Grid * build() override;
 
     REAL rotation_angle;   //radians
     REAL rotation_degrees; //as given, so it is written back unchanged
@@ -273,9 +273,9 @@ public:
         qtree_grid = nullptr;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
-    virtual Grid * build();
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
+    Grid * build() override;
 
     string modflow_grid;
 
@@ -309,9 +309,9 @@ public:
         auto_alignment = true;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
-    virtual Grid * build();
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
+    Grid * build() override;
 
     int smoothing_level_horizontal;
     int smoothing_level_vertical;
@@ -356,7 +356,7 @@ class refinement_raw_data : public block_raw_data
 public:
     refinement_raw_data(block_raw_data & block) : block_raw_data(block) { refinement_level = 1; }
 
-    virtual bool parse();
+    bool parse() override;
 
     string shapefile;
     string featuretype;
@@ -388,8 +388,8 @@ public:
         layer = 0;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
 
     string grid_name; //name of the grid to convert usg_data from
     string shapefile;
@@ -414,8 +414,8 @@ public:
         vertical_pass_through = false;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
 
     string grid_name;       //name of the grid to convert usg_data from
     string usg_data_prefix; //name of the usg_data file
@@ -438,8 +438,8 @@ public:
         concide = true;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
 
     string grid_name;
     string feature_type;
@@ -464,8 +464,8 @@ public:
         include_boundary = true;
     }
 
-    virtual bool parse();
-    bool initialize(map<string, block_raw_data *> & blocks);
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
 
     string feature_type;
     string shapefile;
@@ -487,8 +487,8 @@ public:
         without_inactive = true;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
 
     string grid_name;
 

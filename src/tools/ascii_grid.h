@@ -98,10 +98,10 @@ public:
     }
 
     //get the index of the given point
-    virtual Index2d getIndex(double x, double y) { return m_mfg->getIndex(Point2d(x, y)); }
+    Index2d getIndex(double x, double y) override { return m_mfg->getIndex(Point2d(x, y)); }
 
     //create a cell and return it
-    virtual ascii_grid_cell getCell(unsigned int i, unsigned int j)
+    ascii_grid_cell getCell(unsigned int i, unsigned int j) override
     {
         Box * box = m_mfg->find_nodeobj(i, j);
         ascii_grid_cell cell;
@@ -113,12 +113,12 @@ public:
         return cell;
     }
 
-    virtual double getX(unsigned int xid)
+    double getX(unsigned int xid) override
     {
         Box * box = m_mfg->find_nodeobj(xid, 0);
         return box->x;
     }
-    virtual double getY(unsigned int yid)
+    double getY(unsigned int yid) override
     {
         Box * box = m_mfg->find_nodeobj(0, yid);
         return box->x;
@@ -166,7 +166,7 @@ public:
     //
 
     //get the x coordinate of the CENTER of a cell
-    virtual double getX(unsigned int i)
+    double getX(unsigned int i) override
     {
         if (i >= ncols)
         {
@@ -178,7 +178,7 @@ public:
     }
 
     //get the y coordinate of the CENTER of a cell
-    virtual double getY(unsigned int i)
+    double getY(unsigned int i) override
     {
         if (i >= nrows)
         {
@@ -190,7 +190,7 @@ public:
     }
 
     //get the index of the given point
-    virtual Index2d getIndex(double x, double y)
+    Index2d getIndex(double x, double y) override
     {
         int i = nrows - 1 - floor((y - yllcorner) / cellsize);
         int j = floor((x - xllcorner) / cellsize);
@@ -207,7 +207,7 @@ public:
     }
 
     //create a cell and return it
-    virtual ascii_grid_cell getCell(unsigned int i, unsigned int j)
+    ascii_grid_cell getCell(unsigned int i, unsigned int j) override
     {
         ascii_grid_cell cell;
         cell.x = getX(j);
