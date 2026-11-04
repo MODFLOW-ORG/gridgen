@@ -35,6 +35,7 @@
 # meson builddir
 builddir/
 builddir-coverage/
+builddir-sanitize/
 
 # Executables
 bin/
