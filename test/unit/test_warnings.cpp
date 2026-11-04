@@ -211,10 +211,10 @@ TEST(QuadTreeBuilder, RefinementErrors)
     build_qtree(builder_dfn(path, "polygon", "REFINEMENT_LEVEL_BY_ATTRIBUTE = LEVEL"));
 }
 
-// lines across the 3x3 grid of 100 m cells, within one cell, and beside the grid
+// lines from beside the 3x3 grid of 100 m cells across it, within one cell, and beside the grid
 std::vector<Ring> lines_one_outside()
 {
-    return {{{10.0, 10.0}, {290.0, 10.0}},
+    return {{{-50.0, 10.0}, {290.0, 10.0}},
             {{10.0, 10.0}, {20.0, 10.0}},
             {{400.0, 10.0}, {500.0, 10.0}}};
 }
