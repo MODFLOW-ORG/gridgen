@@ -49,6 +49,11 @@ public:
         bbox[1] = bbox[3] = -DBL_MAX;
     }
 
+    ShapeReader(const ShapeReader &) = delete;
+    ShapeReader & operator=(const ShapeReader &) = delete;
+
+    ~ShapeReader() { destroy(); }
+
     //read field attributes
     bool readAttributes(DBFHandle & dbfHanld, int iShape);
 

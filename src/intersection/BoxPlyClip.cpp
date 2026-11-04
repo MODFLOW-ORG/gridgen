@@ -366,12 +366,19 @@ void BoxPlyClip::destroy(VNode * vn)
 
 void BoxPlyClip::add(VNode * v)
 {
+    //a repeated vertex is left out and freed
     if (first != nullptr && fabs(v->x - first->x) < SMALLNUMBER &&
         fabs(v->y - first->y) < SMALLNUMBER)
+    {
+        delete v;
         return;
+    }
     if (first != nullptr && fabs(v->x - first->prev->x) < SMALLNUMBER &&
         fabs(v->y - first->prev->y) < SMALLNUMBER)
+    {
+        delete v;
         return;
+    }
 
     if (first == nullptr)
     {
@@ -754,7 +761,7 @@ void BoxPlyClip::constructClipPly(vector<VNode *> & firstHalf, vector<VNode *> &
         if (fabs(cp.getArea()) < SMALLAREA) //SMALLNUMBER
         {
             cp.destroy();
-            bpc->destroy();
+            delete bpc;
             return;
         }
         else

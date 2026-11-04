@@ -49,6 +49,7 @@ std::set<int> line_refined_cells(const std::vector<std::pair<double, double>> & 
     for (const auto & pt : points) arc.addVertex(pt.first, pt.second);
     arc.endPoly();
     qtree->refine(arc, 1, 0);
+    arc.destroy();
     qtree->number_nodes();
     qtree->refresh();
 

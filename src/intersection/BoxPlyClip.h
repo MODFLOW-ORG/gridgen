@@ -94,7 +94,7 @@ public:
     void destroy(VNode * vn);
     void resetStatus();
 
-    //add a vertex
+    //add a vertex, which this clip then owns
     void add(VNode * v);
     //insert a vertex
     void insert(VNode * s, VNode * e, VNode * v);

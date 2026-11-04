@@ -913,6 +913,7 @@ void DFSbuildBox(Box * box, vector<VTK_V *> & vdata, vector<VTK_E *> & edata, VT
     {
         //center v
         VTK_V * cv1 = new VTK_V();
+        vdata.push_back(cv1);
         cv1->pos[0] = (vtkBox.e[0]->v[0]->pos[0] + vtkBox.e[2]->v[1]->pos[0]) / 2;
         cv1->pos[1] = (vtkBox.e[0]->v[0]->pos[1] + vtkBox.e[2]->v[1]->pos[1]) / 2;
 
@@ -936,6 +937,7 @@ void DFSbuildBox(Box * box, vector<VTK_V *> & vdata, vector<VTK_E *> & edata, VT
     {
         //center v
         VTK_V * cv2 = new VTK_V();
+        vdata.push_back(cv2);
         cv2->pos[0] = (vtkBox.e[4]->v[0]->pos[0] + vtkBox.e[6]->v[1]->pos[0]) / 2;
         cv2->pos[1] = (vtkBox.e[4]->v[0]->pos[1] + vtkBox.e[6]->v[1]->pos[1]) / 2;
 

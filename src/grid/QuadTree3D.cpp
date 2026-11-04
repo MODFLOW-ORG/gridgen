@@ -335,6 +335,7 @@ bool isReallyIntersect(BoxPlyClip * bpc, Box * b)
         convertClipToPolygon(cre, &nplygon);
         area += nplygon.getArea();
 
+        nplygon.destroy();
         delete cre;
     }
 
