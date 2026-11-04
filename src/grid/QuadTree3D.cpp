@@ -116,10 +116,10 @@ void QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
         bool r = b->split(0);
         assert(r); //make sure that split is successful
 
-        for (int c = 0; c < 4; c++)
+        for (auto & c : b->pChildren)
         {
-            nodegroup.add(b->pChildren[c]);
-            if (b->pChildren[c]->in(pt[0], pt[1])) bl.push_back(b->pChildren[c]);
+            nodegroup.add(c);
+            if (c->in(pt[0], pt[1])) bl.push_back(c);
         }
 
         this->rebuild_nodeid_array = true;
@@ -212,9 +212,9 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
     bs.insert(bl2.begin(), bl2.end());
 
     //a box holding an end point on its boundary may only touch the line
-    for (set<Box *>::iterator sit = bs.begin(); sit != bs.end(); ++sit)
+    for (auto b : bs)
     {
-        if (isReallyIntersect(*sit, line)) results.push_back(*sit);
+        if (isReallyIntersect(b, line)) results.push_back(b);
     }
 
     list<Box *> open(results.begin(), results.end());
@@ -234,9 +234,9 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
         }
 
         //process neighbors
-        for (int i = 0; i < 4; i++)
+        for (auto & neighbor : neighbors)
         {
-            for (list<Box *>::iterator n = neighbors[i].begin(); n != neighbors[i].end(); n++)
+            for (list<Box *>::iterator n = neighbor.begin(); n != neighbor.end(); n++)
             {
                 Box * nb = *n;
 
@@ -306,17 +306,16 @@ void QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
 
         if (r)
         {
-            for (vector<Box *>::iterator i = results.begin(); i != results.end(); i++)
+            for (auto b : results)
             {
-                Box * b = *i;
                 if (b->depth >= max_level) continue; //too deep
 
                 bool splitted = b->split(0);
                 if (splitted)
                 {
-                    for (int c = 0; c < 4; c++)
+                    for (auto & c : b->pChildren)
                     {
-                        nodegroup.add(b->pChildren[c]);
+                        nodegroup.add(c);
                     }
                     refined = true;
                     this->rebuild_nodeid_array = true;
@@ -341,13 +340,13 @@ bool isReallyIntersect(BoxPlyClip * bpc, Box * b)
     bpc->clip(xmin, xmax, ymin, ymax, cres);
 
     double area(0.0);
-    for (list<BoxPlyClip *>::iterator cit = cres.begin(); cit != cres.end(); ++cit)
+    for (auto & cre : cres)
     {
         GIS_polygon nplygon;
-        convertClipToPolygon(*cit, &nplygon);
+        convertClipToPolygon(cre, &nplygon);
         area += nplygon.getArea();
 
-        delete (*cit);
+        delete cre;
     }
 
     if (area >= 1e-7)
@@ -382,9 +381,8 @@ void QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
         {
             vector<Box *> & boxes = gi.getIntersections();
 
-            for (vector<Box *>::iterator i = boxes.begin(); i != boxes.end(); i++)
+            for (auto b : boxes)
             {
-                Box * b = *i;
                 if (b->depth >= max_level) continue; //too deep
 
                 if (!isReallyIntersect(pgon, b))
@@ -396,7 +394,7 @@ void QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
 
                 b->split(0);
 
-                for (int c = 0; c < 4; c++) nodegroup.add(b->pChildren[c]);
+                for (auto & c : b->pChildren) nodegroup.add(c);
 
                 refined = true;
                 this->rebuild_nodeid_array = true;
@@ -417,10 +415,10 @@ bool QuadTree3D::smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq,
     //check the neighbors
     // go through each connection
     using IT = list<pair<int, int>>::iterator;
-    for (IT ic = connectionlist.begin(); ic != connectionlist.end(); ic++)
+    for (auto & ic : connectionlist)
     {
-        int tonodeid = ic->first;
-        int dir = ic->second;
+        int tonodeid = ic.first;
+        int dir = ic.second;
         Box * nei = nodegroup[tonodeid];
 
         if (nei == nullptr) continue;
@@ -445,10 +443,8 @@ bool QuadTree3D::smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq,
             bool results = nei->split(0);
             if (results) //the neighbor did split
             {
-                for (int k = 0; k < 4; k++) //enqueue neighbors' kid
+                for (auto nei_kid : nei->pChildren) //enqueue neighbors' kid
                 {
-                    Box * nei_kid = nei->pChildren[k];
-
                     //add to node group
                     nodegroup.add(nei_kid);
 
@@ -487,9 +483,8 @@ void QuadTree3D::smooth_refinement(int level_tol_horizontal, int level_tol_verti
 
     //we use a heap here to retrieve the deepest leaves
     vector<pair<int, Box *>> box_pq;
-    for (list<Box *>::iterator i = leaves.begin(); i != leaves.end(); i++)
+    for (auto box : leaves)
     {
-        Box * box = *i;
         pair<int, Box *> tmp(box->depth, box);
         box_pq.push_back(tmp);
         push_heap(box_pq.begin(), box_pq.end());
@@ -671,19 +666,19 @@ list<pair<int, int>> QuadTree3D::get_node_connections(Box * box)
 
     //4 sides and up and down
     list<pair<int, int>> connections;
-    for (list<Box *>::iterator i = nei[0].begin(); i != nei[0].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, 2));
-    for (list<Box *>::iterator i = nei[3].begin(); i != nei[3].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, -1));
-    for (list<Box *>::iterator i = nei[1].begin(); i != nei[1].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, 1));
-    for (list<Box *>::iterator i = nei[2].begin(); i != nei[2].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, -2));
-    for (list<Box *>::iterator i = nei[4].begin(); i != nei[4].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, 3));
+    for (auto & i : nei[0])
+        if (i->active) connections.push_back(make_pair(i->id, 2));
+    for (auto & i : nei[3])
+        if (i->active) connections.push_back(make_pair(i->id, -1));
+    for (auto & i : nei[1])
+        if (i->active) connections.push_back(make_pair(i->id, 1));
+    for (auto & i : nei[2])
+        if (i->active) connections.push_back(make_pair(i->id, -2));
+    for (auto & i : nei[4])
+        if (i->active) connections.push_back(make_pair(i->id, 3));
 
-    for (list<Box *>::iterator i = nei[5].begin(); i != nei[5].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, -3));
+    for (auto & i : nei[5])
+        if (i->active) connections.push_back(make_pair(i->id, -3));
 
     return connections;
 }
@@ -723,16 +718,16 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
 
     //4 sides and up and down
     list<pair<int, int>> connections;
-    for (list<Box *>::iterator i = nei[0].begin(); i != nei[0].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, 2));
-    for (list<Box *>::iterator i = nei[3].begin(); i != nei[3].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, -1));
-    for (list<Box *>::iterator i = nei[1].begin(); i != nei[1].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, 1));
-    for (list<Box *>::iterator i = nei[2].begin(); i != nei[2].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, -2));
-    for (list<Box *>::iterator i = nei[4].begin(); i != nei[4].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, 3));
+    for (auto & i : nei[0])
+        if (i->active) connections.push_back(make_pair(i->id, 2));
+    for (auto & i : nei[3])
+        if (i->active) connections.push_back(make_pair(i->id, -1));
+    for (auto & i : nei[1])
+        if (i->active) connections.push_back(make_pair(i->id, 1));
+    for (auto & i : nei[2])
+        if (i->active) connections.push_back(make_pair(i->id, -2));
+    for (auto & i : nei[4])
+        if (i->active) connections.push_back(make_pair(i->id, 3));
 
     //vertical pass here
     if (area != nullptr)
@@ -750,8 +745,8 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
         if (area != nullptr) area->push_back(vpit->area);
     }
 
-    for (list<Box *>::iterator i = nei[5].begin(); i != nei[5].end(); i++)
-        if ((*i)->active) connections.push_back(make_pair((*i)->id, -3));
+    for (auto & i : nei[5])
+        if (i->active) connections.push_back(make_pair(i->id, -3));
 
     if (area != nullptr)
     {
@@ -871,10 +866,10 @@ CSRData QuadTree3D::get_usg_csr_data()
         // go through each connection
         using IT = list<pair<int, int>>::iterator;
         vector<double>::const_iterator fit = conAreas.begin();
-        for (IT ic = connectionlist.begin(); ic != connectionlist.end(); ic++)
+        for (auto & ic : connectionlist)
         {
-            int tonodeid = ic->first;
-            int fldir = ic->second;
+            int tonodeid = ic.first;
+            int fldir = ic.second;
 
             Box * tonodeobj = nodegroup[tonodeid];
 
@@ -939,10 +934,10 @@ void QuadTree3D::sortconnectionbynodenumber(list<pair<int, int>> & connectionlis
     //get node numbers
     using IT = list<pair<int, int>>::iterator;
     vector<pair<int, pair<int, int>>> sorted_connection_list;
-    for (IT ic = connectionlist.begin(); ic != connectionlist.end(); ic++)
+    for (auto & ic : connectionlist)
     {
-        int tonid = get_nodenumber(ic->first);
-        sorted_connection_list.push_back(make_pair(tonid, *ic));
+        int tonid = get_nodenumber(ic.first);
+        sorted_connection_list.push_back(make_pair(tonid, ic));
     }
     //sort by node numbers
     sort(sorted_connection_list.begin(), sorted_connection_list.end());
@@ -1139,9 +1134,8 @@ void QuadTree3D::align_elev(Box * top_box)
     top_box->pDown->getLeaves(lower_boxes);
 
     //align
-    for (list<Box *>::iterator j = lower_boxes.begin(); j != lower_boxes.end(); j++)
+    for (auto bot_box : lower_boxes)
     {
-        Box * bot_box = *j;
         if (bot_box->active == false) continue; //disabled...
         double top_of_bot_box = this->top[bot_box->number];
         if (bot_of_top_box < top_of_bot_box)
@@ -1383,14 +1377,14 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
         int dminx = ag->getncols() + 1, dmaxx = -1, dminy = ag->getnrows() + 1, dmaxy = -1;
         double cx, cy, rotation;
         getModflowGrid()->getRotatePara(cx, cy, rotation);
-        for (int i = 0; i < 4; i++)
+        for (auto & corner : corners)
         {
             double tx, ty;
-            tx = cx + (corners[i][0] - cx) * cos(rotation) - (corners[i][1] - cy) * sin(rotation);
-            ty = cy + (corners[i][1] - cy) * cos(rotation) + (corners[i][0] - cx) * sin(rotation);
-            corners[i].set(tx, ty);
+            tx = cx + (corner[0] - cx) * cos(rotation) - (corner[1] - cy) * sin(rotation);
+            ty = cy + (corner[1] - cy) * cos(rotation) + (corner[0] - cx) * sin(rotation);
+            corner.set(tx, ty);
 
-            Index2d idx = ag->getIndex(corners[i][0], corners[i][1]);
+            Index2d idx = ag->getIndex(corner[0], corner[1]);
             if (idx[1] < dminx) dminx = idx[1];
             if (idx[1] > dmaxx) dmaxx = idx[1];
             if (idx[0] < dminy) dminy = idx[0];

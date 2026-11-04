@@ -360,10 +360,10 @@ bool Box::split(double epsilon)
 
         if (pUp->isLeaf)
         {
-            for (int i = 0; i < 4; ++i)
+            for (auto & i : children)
             {
-                children[i]->pUp = pUp;
-                assert(children[i]->pUp->in(children[i]->x, children[i]->y));
+                i->pUp = pUp;
+                assert(i->pUp->in(i->x, i->y));
             }
         }
         else
@@ -386,7 +386,7 @@ bool Box::split(double epsilon)
 
         if (pDown->isLeaf)
         {
-            for (int i = 0; i < 4; ++i) children[i]->pDown = pDown;
+            for (auto & i : children) i->pDown = pDown;
         }
         else
         {
@@ -451,11 +451,11 @@ bool Box::refine_pUpDown(Box ** ppbox)
     //(*ppbox)->depth<this->depth
     if ((*ppbox)->isLeaf) return true; //nothing to do
 
-    for (int i = 0; i < 4; i++)
+    for (auto & i : (*ppbox)->pChildren)
     {
-        if ((*ppbox)->pChildren[i]->in(x, y))
+        if (i->in(x, y))
         {
-            (*ppbox) = (*ppbox)->pChildren[i];
+            (*ppbox) = i;
             break;
         }
     }
@@ -470,9 +470,9 @@ Box * Box::find(double qx, double qy)
 
     assert(!isLeaf);
 
-    for (int i = 0; i < 4; i++)
+    for (auto & i : pChildren)
     {
-        if (pChildren[i]->in(qx, qy)) return pChildren[i]->find(qx, qy);
+        if (i->in(qx, qy)) return i->find(qx, qy);
     }
 
     cerr << "! Error: Box::find: Locate a box error!" << endl;

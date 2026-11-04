@@ -78,9 +78,9 @@ public:
     //
     virtual void deactive_nodes(vector<Box *> & boxes)
     {
-        for (vector<Box *>::iterator i = boxes.begin(); i != boxes.end(); i++)
+        for (auto & box : boxes)
         {
-            (*i)->active = false;
+            box->active = false;
         }
     }
 

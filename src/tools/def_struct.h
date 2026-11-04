@@ -180,8 +180,8 @@ public:
     //whether the block has a record of this name
     bool hasRecord(const string & rname) const
     {
-        for (const_iterator e = begin(); e != end(); e++)
-            if (e->name == rname) return true;
+        for (const auto & e : *this)
+            if (e.name == rname) return true;
         return false;
     }
 
@@ -193,8 +193,8 @@ protected:
     void warnIgnored(const string & rname, const string & reason)
     {
         string upper_name = rname, upper_type = type;
-        for (size_t i = 0; i < upper_name.size(); i++) upper_name[i] = toupper(upper_name[i]);
-        for (size_t i = 0; i < upper_type.size(); i++) upper_type[i] = toupper(upper_type[i]);
+        for (char & i : upper_name) i = toupper(i);
+        for (char & i : upper_type) i = toupper(i);
         string w = "record " + upper_name + " in " + upper_type + " block " + name +
                    " is ignored; " + reason;
         cerr << "! Warning: " << w << endl;

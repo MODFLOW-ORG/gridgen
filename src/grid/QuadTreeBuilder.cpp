@@ -21,9 +21,9 @@ namespace cusg
 inline string tolower(const string & s)
 {
     string lower;
-    for (string::const_iterator i = s.begin(); i != s.end(); i++)
+    for (char i : s)
     {
-        char c = ::tolower(*i);
+        char c = ::tolower(i);
         lower.push_back(c);
     }
     return lower;
@@ -105,9 +105,8 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
         cout << "  * Refine grid at layer " << i + 1 << endl;
 
         list<refinement_raw_data *> & rF = rawdata.refine_by_features[i];
-        for (list<refinement_raw_data *>::iterator f = rF.begin(); f != rF.end(); f++)
+        for (auto rf : rF)
         {
-            refinement_raw_data * rf = *f;
             ShapeReader & shp_reader = shp_readers[rf->shapefile];
             shp_reader.read(rf->shapefile);
 
@@ -212,9 +211,9 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
         cout << "  * Determine the active domain for layer " << i + 1 << endl;
 
         qtree->nodegroup.disable_nodes_in_layer(i);
-        for (list<active_domain_raw_data *>::iterator f = rF.begin(); f != rF.end(); f++)
+        for (auto & f : rF)
         {
-            gd.build(qtree, i, *f);
+            gd.build(qtree, i, f);
         }
     }
 

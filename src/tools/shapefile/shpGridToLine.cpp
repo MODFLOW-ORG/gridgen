@@ -95,9 +95,8 @@ void writeQuadtree2ShpLine(cusg::QuadTree3D * qtree, string gridShpName)
 
     double resX[2], resY[2];
     //get through each cell
-    for (NodeGroup::iterator nit = qtree->nodegroup.begin(); nit != qtree->nodegroup.end(); ++nit)
+    for (auto b : qtree->nodegroup)
     {
-        Box * b = *nit;
         if (b->isLeaf == false)
         {
             //from the south edge to the north edge through the center

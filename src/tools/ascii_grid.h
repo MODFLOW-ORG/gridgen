@@ -228,9 +228,9 @@ protected:
     string tolower(const string & s)
     {
         string lower;
-        for (string::const_iterator i = s.begin(); i != s.end(); i++)
+        for (char i : s)
         {
-            char c = ::tolower(*i);
+            char c = ::tolower(i);
             lower.push_back(c);
         }
         return lower;

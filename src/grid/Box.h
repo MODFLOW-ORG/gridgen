@@ -105,9 +105,9 @@ public:
           dirty(false), number(0), layer(0), locator(0), id(0),
           active(true) //, childmfgrid(NULL), bRegular(true)
     {
-        for (int i = 0; i < 4; ++i)
+        for (auto & i : pChildren)
         {
-            pChildren[i] = nullptr;
+            i = nullptr;
         }
 
         pUp = pDown = nullptr;
@@ -135,9 +135,9 @@ public:
         dy = dims[1];
         dz = dims[2];
 
-        for (int i = 0; i < 4; ++i)
+        for (auto & i : pChildren)
         {
-            pChildren[i] = nullptr;
+            i = nullptr;
         }
 
         pUp = pDown = nullptr;
@@ -227,7 +227,7 @@ public:
             return;
         }
 
-        for (int i = 0; i < 4; i++) pChildren[i]->getLeaves(leaves);
+        for (auto & i : pChildren) i->getLeaves(leaves);
     }
 
     /*!

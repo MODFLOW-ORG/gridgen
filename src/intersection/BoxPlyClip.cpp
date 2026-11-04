@@ -143,9 +143,8 @@ BoxPlyClip * copyBoxPlyClip(BoxPlyClip * bpc, bool bSetVisited = false)
 void BoxPlyClip::resetStatus()
 {
     //delete the new added
-    for (list<VNode *>::iterator vit = newAdds.begin(); vit != newAdds.end(); ++vit)
+    for (auto vn : newAdds)
     {
-        VNode * vn = *vit;
         VNode * pre1 = vn->prev;
         VNode * next1 = vn->next;
         pre1->next = next1;
@@ -156,9 +155,8 @@ void BoxPlyClip::resetStatus()
     newAdds.clear();
 
     //loop over the influenced vertices
-    for (list<VNode *>::iterator vit = influVs.begin(); vit != influVs.end(); ++vit)
+    for (auto vn : influVs)
     {
-        VNode * vn = *vit;
         vn->resetStatus();
     }
     influVs.clear();
@@ -345,9 +343,9 @@ BoxPlyClip::~BoxPlyClip()
 }
 void BoxPlyClip::destroy()
 {
-    for (list<VNode *>::iterator vit = plys.begin(); vit != plys.end(); ++vit)
+    for (auto & ply : plys)
     {
-        destroy(*vit);
+        destroy(ply);
     }
     plys.clear();
     first = nullptr;
@@ -568,10 +566,8 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
     vector<VNode *> uselessNodes;
     vector<VNode *> notOnline;
     vector<VNode *> touching;
-    for (vector<VNode *>::iterator vit = interCand.begin(); vit != interCand.end(); ++vit)
+    for (auto vn : interCand)
     {
-        VNode * vn = *vit;
-
         bool pureInDir1 = (vn->next->isInDirect && (!vn->next->isOnline));
         bool pureInDir2 = (vn->prev->isInDirect && (!vn->prev->isOnline));
         if (vn->isOnline && (!(pureInDir1 && pureInDir2)))
@@ -584,10 +580,9 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
         if (touchesKeptSide(vn))
         {
             bool alone = true;
-            for (map<VNode *, bool>::iterator mit = shouldRecord.begin(); mit != shouldRecord.end();
-                 ++mit)
+            for (auto & mit : shouldRecord)
             {
-                if (mit->first != vn && AlmostEqual(mit->first, vn) && !touchesKeptSide(mit->first))
+                if (mit.first != vn && AlmostEqual(mit.first, vn) && !touchesKeptSide(mit.first))
                     alone = false;
             }
             if (alone)
@@ -609,22 +604,19 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
         }
     }
     //not online
-    for (vector<VNode *>::iterator vit = notOnline.begin(); vit != notOnline.end(); ++vit)
+    for (auto vn : notOnline)
     {
-        VNode * vn = *vit;
         vn->isOnline = false;
     }
     //useless nodes
-    for (vector<VNode *>::iterator vit = uselessNodes.begin(); vit != uselessNodes.end(); ++vit)
+    for (auto vn : uselessNodes)
     {
-        VNode * vn = *vit;
         vn->isOnline = false;
         vn->isInDirect = false; // vn->isScanPnt = false;
     }
     //touching nodes are kept as ordinary vertices
-    for (vector<VNode *>::iterator vit = touching.begin(); vit != touching.end(); ++vit)
+    for (auto vn : touching)
     {
-        VNode * vn = *vit;
         vn->isOnline = false;
         vn->isScanPnt = false;
     }
@@ -659,9 +651,8 @@ void BoxPlyClip::collectSecondPart(vector<VNode *> & interVs, int sIdx, int eIdx
     vector<VNode *> tmpVec;
     VNode * tsvTM = collectAlongWay(tmpVec, interVs[startId], nextO);
 
-    for (vector<VNode *>::iterator vit = tmpVec.begin(); vit != tmpVec.end(); ++vit)
+    for (auto vn : tmpVec)
     {
-        VNode * vn = *vit;
         if (!vn->isVisited)
         {
             secondHalf.push_back(vn);
@@ -747,9 +738,9 @@ void BoxPlyClip::constructClipPly(vector<VNode *> & firstHalf, vector<VNode *> &
     else
     {
         BoxPlyClip * bpc = new BoxPlyClip();
-        for (vector<VNode *>::iterator vit = firstHalf.begin(); vit != firstHalf.end(); ++vit)
+        for (auto & vit : firstHalf)
         {
-            bpc->add(copy(*vit));
+            bpc->add(copy(vit));
         }
         for (vector<VNode *>::reverse_iterator rvit = secondHalf.rbegin();
              rvit != secondHalf.rend(); ++rvit)
@@ -894,9 +885,8 @@ void BoxPlyClip::clip(double fval, bool isX, bool isBigger, list<BoxPlyClip *> &
     vector<int> onlineNums;
     vector<VNode *> interVs;
     //set intersections for holes
-    for (list<VNode *>::iterator vit = plys.begin(); vit != plys.end(); ++vit)
+    for (auto sv : plys)
     {
-        VNode * sv = *vit;
         int vo = setIntesection(sv, fval, isX, isBigger, interVs);
         onlineNums.push_back(vo);
     }
@@ -927,11 +917,11 @@ void BoxPlyClip::clip(double fval, bool isX, bool isBigger, list<BoxPlyClip *> &
             c_ply nply(c_ply::PIN);
             convertClipToPly(nv, nply);
             const Point2d & ctr = nply.getCenter();
-            for (list<BoxPlyClip *>::iterator bit = cres.begin(); bit != cres.end(); ++bit)
+            for (auto & cre : cres)
             {
-                if (ClipPlyEnclose((*bit)->first, ctr))
+                if (ClipPlyEnclose(cre->first, ctr))
                 {
-                    (*bit)->plys.push_back(copyOnePly(nv));
+                    cre->plys.push_back(copyOnePly(nv));
                     haveAdded = true;
                     break;
                 }
@@ -952,27 +942,24 @@ void BoxPlyClip::clip(double xmin, double xmax, double ymin, double ymax, list<B
     list<BoxPlyClip *> res1, res2, res3;
     this->clip(xmin, true, true, res1);
 
-    for (list<BoxPlyClip *>::iterator lit = res1.begin(); lit != res1.end(); ++lit)
+    for (auto bpc : res1)
     {
-        BoxPlyClip * bpc = *lit;
         bpc->clip(xmax, true, false, res2);
 
         bpc->destroy();
         delete bpc;
     }
 
-    for (list<BoxPlyClip *>::iterator lit = res2.begin(); lit != res2.end(); ++lit)
+    for (auto bpc : res2)
     {
-        BoxPlyClip * bpc = *lit;
         bpc->clip(ymin, false, true, res3);
 
         bpc->destroy();
         delete bpc;
     }
 
-    for (list<BoxPlyClip *>::iterator lit = res3.begin(); lit != res3.end(); ++lit)
+    for (auto bpc : res3)
     {
-        BoxPlyClip * bpc = *lit;
         bpc->clip(ymax, false, false, cres);
 
         bpc->destroy();
@@ -1047,9 +1034,8 @@ void convertClipToPly(VNode * fv, c_ply & resPly)
 BoxPlyClip * convertCPolygonToClip(const GIS_polygon & polygon)
 {
     BoxPlyClip * bpc = new BoxPlyClip();
-    for (GIS_polygon::const_iterator cit = polygon.begin(); cit != polygon.end(); ++cit)
+    for (const auto & ccp : polygon)
     {
-        const c_ply & ccp = *cit;
         if (ccp.getType() == c_ply::POUT)
         {
             VNode * nvn = convertPlyToVN(ccp);
@@ -1091,9 +1077,8 @@ void convertClipToPolygon(BoxPlyClip * bpc, GIS_polygon * cpolygon)
 BoxPlyClip * convertSimplePolygonToClip(const c_polygon & polygon)
 {
     BoxPlyClip * bpc = new BoxPlyClip();
-    for (c_polygon::const_iterator cit = polygon.begin(); cit != polygon.end(); ++cit)
+    for (const auto & ccp : polygon)
     {
-        const c_ply & ccp = *cit;
         if (ccp.getType() == c_ply::POUT)
         {
             VNode * nvn = convertPlyToVN(ccp);
@@ -1160,13 +1145,13 @@ double intersectTwoBox(Point2d ld, Point2d rd, Point2d ru, Point2d lu, double xm
     list<BoxPlyClip *> cres;
     bpc.clip(xmin2, xmax2, ymin2, ymax2, cres);
 
-    for (list<BoxPlyClip *>::iterator cit = cres.begin(); cit != cres.end(); ++cit)
+    for (auto & cre : cres)
     {
 
-        area += getOutBdArea(*cit);
+        area += getOutBdArea(cre);
 
-        (*cit)->destroy();
-        delete *cit;
+        cre->destroy();
+        delete cre;
     }
 
     bpc.destroy();

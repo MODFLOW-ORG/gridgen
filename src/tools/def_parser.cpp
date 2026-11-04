@@ -61,10 +61,10 @@ static const map<string, set<string>> & block_records()
         {"active_domain", active_domain},        {"grid_to_shapefile", grid_to_shapefile},
         {"grid_to_usgdata", grid_to_usgdata},    {"grid_to_vtkfile", grid_to_vtkfile},
         {"grid_intersection", grid_intersection}};
-    for (size_t b = 0; b < sizeof(blocks) / sizeof(blocks[0]); b++)
+    for (auto & block : blocks)
     {
-        set<string> & known = records[blocks[b].type];
-        for (const char ** n = blocks[b].names; *n != nullptr; n++) known.insert(*n);
+        set<string> & known = records[block.type];
+        for (const char ** n = block.names; *n != nullptr; n++) known.insert(*n);
     }
     return records;
 }
@@ -84,7 +84,7 @@ static const map<string, map<string, string>> & ignored_records()
 
 static string upper(string s)
 {
-    for (size_t i = 0; i < s.size(); i++) s[i] = (char)toupper((unsigned char)s[i]);
+    for (char & i : s) i = (char)toupper((unsigned char)i);
     return s;
 }
 
@@ -145,9 +145,9 @@ DefinitionParser::DefinitionParser()
 DefinitionParser::~DefinitionParser()
 {
     using IT = map<string, block_raw_data *>::iterator;
-    for (IT i = m_blocks.begin(); i != m_blocks.end(); i++)
+    for (auto & m_block : m_blocks)
     {
-        delete i->second;
+        delete m_block.second;
     }
 
     m_blocks.clear();
@@ -224,8 +224,7 @@ bool DefinitionParser::parse(istream & in, string folder)
         if (m_block_type_map.find(block.type) != m_block_type_map.end())
         {
             list<string> warnings = unrecognized_records(block);
-            for (list<string>::iterator w = warnings.begin(); w != warnings.end(); w++)
-                cerr << "! Warning: " << *w << endl;
+            for (auto & warning : warnings) cerr << "! Warning: " << warning << endl;
             m_warnings.splice(m_warnings.end(), warnings);
             block_raw_data * ptr_block = m_block_type_map[block.type](block);
             if (ptr_block != nullptr)

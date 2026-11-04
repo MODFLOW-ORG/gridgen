@@ -23,9 +23,8 @@ static double ringArea(ply_vertex * head)
 
 bool checkAttributesContain(const char * attriName, vector<string> & attributes)
 {
-    for (vector<string>::iterator sit = attributes.begin(); sit != attributes.end(); ++sit)
+    for (auto & str : attributes)
     {
-        string & str = *sit;
         if (str == attriName || str == "all")
             return true;
         else if (str == "none")
@@ -42,42 +41,42 @@ void checkShpAttrContain(GridIntersection * gridInter, vector<bool> & bIntFld,
     vector<ShapeDoubleField> & m_dbFlds = gridInter->m_shp_reader.getDBFields();
     vector<ShapeStringField> & m_strFlds = gridInter->m_shp_reader.getStrFields();
     vector<ShapeLogField> & m_logFlds = gridInter->m_shp_reader.getLogicalFields();
-    for (vector<ShapeIntField>::iterator sit = m_intFlds.begin(); sit != m_intFlds.end(); ++sit)
+    for (auto & fld : m_intFlds)
     {
-        if (checkAttributesContain(sit->name.c_str(), attributes))
+        if (checkAttributesContain(fld.name.c_str(), attributes))
         {
             bIntFld.push_back(true);
-            iName.push_back(sit->name);
+            iName.push_back(fld.name);
         }
         else
             bIntFld.push_back(false);
     }
-    for (vector<ShapeDoubleField>::iterator sit = m_dbFlds.begin(); sit != m_dbFlds.end(); ++sit)
+    for (auto & fld : m_dbFlds)
     {
-        if (checkAttributesContain(sit->name.c_str(), attributes))
+        if (checkAttributesContain(fld.name.c_str(), attributes))
         {
             bDBFld.push_back(true);
-            dName.push_back(sit->name);
+            dName.push_back(fld.name);
         }
         else
             bDBFld.push_back(false);
     }
-    for (vector<ShapeStringField>::iterator sit = m_strFlds.begin(); sit != m_strFlds.end(); ++sit)
+    for (auto & fld : m_strFlds)
     {
-        if (checkAttributesContain(sit->name.c_str(), attributes))
+        if (checkAttributesContain(fld.name.c_str(), attributes))
         {
             bStrFld.push_back(true);
-            sName.push_back(sit->name);
+            sName.push_back(fld.name);
         }
         else
             bStrFld.push_back(false);
     }
-    for (vector<ShapeLogField>::iterator sit = m_logFlds.begin(); sit != m_logFlds.end(); ++sit)
+    for (auto & fld : m_logFlds)
     {
-        if (checkAttributesContain(sit->name.c_str(), attributes))
+        if (checkAttributesContain(fld.name.c_str(), attributes))
         {
             bLogFld.push_back(true);
-            lName.push_back(sit->name);
+            lName.push_back(fld.name);
         }
         else
             bLogFld.push_back(false);
@@ -489,10 +488,8 @@ void writePntIntersect(GridIntersection * gridInter, string file, vector<string>
     checkShpAttrContain(gridInter, bIntFld, bDBFld, bStrFld, bLogFld, intFldName, dbFldName,
                         strFldName, logFldName, attributes);
 
-    for (vector<PointCellIntersectionInfo>::iterator pit = pntInters.begin();
-         pit != pntInters.end(); ++pit)
+    for (auto & pci : pntInters)
     {
-        PointCellIntersectionInfo & pci = *pit;
         vector<int> pints;
         vector<double> dbs;
         vector<string> strs;
@@ -549,10 +546,8 @@ void writeLineIntersect(GridIntersection * gridInter, string file, vector<string
     checkShpAttrContain(gridInter, bIntFld, bDBFld, bStrFld, bLogFld, intFldName, dbFldName,
                         strFldName, logFldName, attributes);
 
-    for (vector<PolylineCellIntersectionInfo>::iterator sit = pcti.begin(); sit != pcti.end();
-         ++sit)
+    for (auto & sio : pcti)
     {
-        PolylineCellIntersectionInfo & sio = *sit;
         vector<int> pints;
         vector<double> dbs;
         vector<string> strs;
@@ -606,9 +601,8 @@ void writePolyIntersect(GridIntersection * gridInter, string file, vector<string
     checkShpAttrContain(gridInter, bIntFld, bDBFld, bStrFld, bLogFld, intFldName, dbFldName,
                         strFldName, logFldName, attributes);
 
-    for (vector<PolygonCellIntersectionInfo>::iterator pit = sci.begin(); pit != sci.end(); ++pit)
+    for (auto & pio : sci)
     {
-        PolygonCellIntersectionInfo & pio = *pit;
         vector<int> pints;
         vector<double> dbs;
         vector<string> strs;

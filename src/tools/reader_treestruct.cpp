@@ -45,9 +45,8 @@ void parseNodeStr(string & nodeStr, TreeStructNode & node)
     if ((unsigned)(comIdx5 + 1) < nodeStr.size())
     {
         string tmpCandStr = nodeStr.substr(comIdx5 + 1, nodeStr.size() - comIdx5 - 1);
-        for (string::iterator site = tmpCandStr.begin(); site != tmpCandStr.end(); ++site)
+        for (char t : tmpCandStr)
         {
-            char t = *site;
             if (t >= '1' && t <= '4') node.code.push_back(t);
         }
     }

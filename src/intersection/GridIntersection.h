@@ -97,22 +97,19 @@ public:
     }
     ~GridIntersection()
     {
-        for (vector<PolygonCellIntersectionInfo>::iterator pit = m_ply_interaction_info.begin();
-             pit != m_ply_interaction_info.end(); ++pit)
+        for (auto & pit : m_ply_interaction_info)
         {
-            pit->m_interPolygon->destroy();
+            pit.m_interPolygon->destroy();
 
-            delete pit->m_interPolygon;
-            pit->m_interPolygon = nullptr;
+            delete pit.m_interPolygon;
+            pit.m_interPolygon = nullptr;
         }
-        for (vector<PolylineCellIntersectionInfo>::iterator lit =
-                 m_plyline_intersection_info.begin();
-             lit != m_plyline_intersection_info.end(); ++lit)
+        for (auto & lit : m_plyline_intersection_info)
         {
-            lit->m_plyline->destroy();
+            lit.m_plyline->destroy();
 
-            delete lit->m_plyline;
-            lit->m_plyline = nullptr;
+            delete lit.m_plyline;
+            lit.m_plyline = nullptr;
         }
     }
 
@@ -376,14 +373,13 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply, list<Box *> & bd_i
         //record the relationship between the boxes and this segment
         if (m_b_save_intersection_info)
         {
-            for (vector<Box *>::iterator i = m_intersection.begin(); i != m_intersection.end(); i++)
-                boxvertexMap[*i].push_back(ptr);
+            for (auto & i : m_intersection) boxvertexMap[i].push_back(ptr);
         }
 
         //boundary cells in the order found, the set only skips duplicates
-        for (vector<Box *>::iterator ib = m_intersection.begin(); ib != m_intersection.end(); ib++)
+        for (auto & ib : m_intersection)
         {
-            if (visited.insert(*ib).second) bd_intersection.push_back(*ib);
+            if (visited.insert(ib).second) bd_intersection.push_back(ib);
         }
         m_intersection.clear();
         ptr = next;
@@ -413,9 +409,9 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply, list<Box *> & bd_i
         }
 
         //check if cells are inside the polygon
-        for (int i = 0; i < 4; i++)
+        for (auto & neighbor : neighbors)
         {
-            for (list<Box *>::iterator n = neighbors[i].begin(); n != neighbors[i].end(); n++)
+            for (list<Box *>::iterator n = neighbor.begin(); n != neighbor.end(); n++)
             {
                 Box * nb = *n;
 
@@ -466,10 +462,8 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
     set<Box *> visited;
 
     //get all boundary cells
-    for (c_polygon::const_iterator i = polygon.begin(); i != polygon.end(); i++)
+    for (const auto & ply : polygon)
     {
-        const c_ply & ply = *i;
-
         ply_vertex * ptr = ply.getHead();
 
         do
@@ -485,16 +479,13 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
             //record the relationship between the boxes and this segment
             if (m_b_save_intersection_info)
             {
-                for (vector<Box *>::iterator ib = m_intersection.begin();
-                     ib != m_intersection.end(); ib++)
-                    boxvertexMap[*ib].push_back(ptr);
+                for (auto & ib : m_intersection) boxvertexMap[ib].push_back(ptr);
             }
 
             //boundary cells in the order found, the set only skips duplicates
-            for (vector<Box *>::iterator ib = m_intersection.begin(); ib != m_intersection.end();
-                 ib++)
+            for (auto & ib : m_intersection)
             {
-                if (visited.insert(*ib).second) bd_intersection.push_back(*ib);
+                if (visited.insert(ib).second) bd_intersection.push_back(ib);
             }
             m_intersection.clear();
             ptr = next;
@@ -525,9 +516,9 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
         }
 
         //check if cells are inside the polygon
-        for (int i = 0; i < 4; i++)
+        for (auto & neighbor : neighbors)
         {
-            for (list<Box *>::iterator n = neighbors[i].begin(); n != neighbors[i].end(); n++)
+            for (list<Box *>::iterator n = neighbor.begin(); n != neighbor.end(); n++)
             {
                 Box * nb = *n;
 
@@ -679,9 +670,9 @@ template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_P
     if (this->m_b_save_intersection_info && r)
     {
         //store intersection info here...
-        for (vector<Box *>::iterator i = m_intersection.begin(); i != m_intersection.end(); i++)
+        for (auto & i : m_intersection)
         {
-            m_pt_interaction_info.push_back(buildIntersectionInfo(*i, pt));
+            m_pt_interaction_info.push_back(buildIntersectionInfo(i, pt));
         }
     }
 
@@ -703,9 +694,9 @@ template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_L
     if (this->m_b_save_intersection_info && r)
     {
         //store intersection info here...
-        for (vector<Box *>::iterator i = m_intersection.begin(); i != m_intersection.end(); i++)
+        for (auto & i : m_intersection)
         {
-            m_seg_interaction_info.push_back(buildIntersectionInfo(*i, line));
+            m_seg_interaction_info.push_back(buildIntersectionInfo(i, line));
         } //end for i
 
     } //end if
@@ -733,11 +724,8 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
         if (this->m_b_save_intersection_info)
         {
             //store intersection info here...
-            for (list<Box *>::iterator i = enclosed_intersection.begin();
-                 i != enclosed_intersection.end(); i++)
+            for (auto box : enclosed_intersection)
             {
-                Box * box = *i;
-
                 //store intersection info here...
                 vector<PolygonCellIntersectionInfo> infos;
                 buildIntersectionInfo(box, ply, infos, bpc);
@@ -755,13 +743,12 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
             if (this->m_b_save_intersection_info)
             {
                 //store intersection info here...
-                for (list<Box *>::iterator i = bd_intersection.begin(); i != bd_intersection.end();
-                     i++)
+                for (auto & i : bd_intersection)
                 {
 
                     //store intersection info here...
                     vector<PolygonCellIntersectionInfo> infos;
-                    buildIntersectionInfo(*i, ply, infos, bpc);
+                    buildIntersectionInfo(i, ply, infos, bpc);
                     m_ply_interaction_info.insert(m_ply_interaction_info.end(), infos.begin(),
                                                   infos.end());
                 }

@@ -132,9 +132,9 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
     domain_boxes.insert(domain_boxes.end(), boxes.begin(), boxes.end());
 
     //now go through the intersections and disable the boxes
-    for (vector<Box *>::iterator i = domain_boxes.begin(); i != domain_boxes.end(); i++)
+    for (auto & box : domain_boxes)
     {
-        (*i)->active = true;
+        box->active = true;
     }
 }
 

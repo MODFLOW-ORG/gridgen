@@ -147,12 +147,11 @@ void GridIntersection::build(grid_intersection_raw_data & data)
             checkHole(polygons[j], tvplygons);
 
             //loop over all the polygons
-            for (vector<GIS_polygon *>::iterator git = tvplygons.begin(); git != tvplygons.end();
-                 ++git)
+            for (auto & tvplygon : tvplygons)
             {
-                GIS_polygon gp = *(*git);
+                GIS_polygon gp = *tvplygon;
 
-                BoxPlyClip * bpc = convertCPolygonToClip(*(*git));
+                BoxPlyClip * bpc = convertCPolygonToClip(*tvplygon);
 
                 if (qtgrid != nullptr)
                     intersect(qtgrid, gp, bpc); //polygons[j]);
@@ -164,10 +163,8 @@ void GridIntersection::build(grid_intersection_raw_data & data)
                 bpc->destroy();
                 delete bpc;
             }
-            for (vector<GIS_polygon *>::iterator vit = tvplygons.begin(); vit != tvplygons.end();
-                 ++vit)
+            for (auto gp : tvplygons)
             {
-                GIS_polygon * gp = *vit;
                 gp->destroy();
                 delete gp;
             }
@@ -483,9 +480,8 @@ void GridIntersection::buildIntersectionInfo(Box * box, const GIS_polygon & ply,
 {
     vector<GIS_polygon *> resPlygons;
     intersect_polygon(box, ply, resPlygons, bpc);
-    for (vector<GIS_polygon *>::iterator pit = resPlygons.begin(); pit != resPlygons.end(); ++pit)
+    for (auto gp : resPlygons)
     {
-        GIS_polygon * gp = *pit;
         PolygonCellIntersectionInfo info;
         info.m_interPolygon = gp;
         info.box = box;
@@ -756,9 +752,8 @@ bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
         int int_count = 0;       //# of intersections
 
         //loop through each ply
-        for (c_polygon::const_iterator i = pgon.begin(); i != pgon.end(); i++)
+        for (const auto & ply : pgon)
         {
-            const c_ply & ply = *i;
             ply_vertex * ptr = ply.getHead();
 
             do
@@ -817,14 +812,14 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & plygon,
     list<BoxPlyClip *> cres;
     bpc->clip(xmin, xmax, ymin, ymax, cres);
 
-    for (list<BoxPlyClip *>::iterator cit = cres.begin(); cit != cres.end(); ++cit)
+    for (auto & cre : cres)
     {
         GIS_polygon * nplygon = new GIS_polygon();
-        convertClipToPolygon(*cit, nplygon);
+        convertClipToPolygon(cre, nplygon);
         resultPlygons.push_back(nplygon);
 
-        (*cit)->destroy();
-        delete *cit;
+        cre->destroy();
+        delete cre;
     }
 
     bpc->resetStatus();
@@ -916,9 +911,9 @@ void GridIntersection::floodGrid(Box * sb, set<Box *> & visited, list<Box *> & f
         }
 
         //get all unvisited cells
-        for (int i = 0; i < 4; i++)
+        for (auto & neighbor : neighbors)
         {
-            for (list<Box *>::iterator n = neighbors[i].begin(); n != neighbors[i].end(); n++)
+            for (list<Box *>::iterator n = neighbor.begin(); n != neighbor.end(); n++)
             {
                 Box * nb = *n;
                 if (visited.find(nb) != visited.end()) continue; //visited

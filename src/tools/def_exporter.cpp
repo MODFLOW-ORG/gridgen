@@ -14,9 +14,9 @@ namespace cusg
 inline ostream & operator<<(ostream & out, list<string> & strlist)
 {
     using IT = list<string>::iterator;
-    for (IT i = strlist.begin(); i != strlist.end(); i++)
+    for (auto & i : strlist)
     {
-        out << " " << *i;
+        out << " " << i;
     }
     return out;
 }
@@ -37,9 +37,9 @@ bool DefinitionExporter::save(ostream & out, modflow_grid_raw_data & data)
     out << "\tTOP = " << data.top_str << "\n";
 
     using IT = map<int, list<string>>::iterator;
-    for (IT i = data.bot_str.begin(); i != data.bot_str.end(); i++)
+    for (auto & i : data.bot_str)
     {
-        out << "\tBOTTOM LAYER " << i->first + 1 << " = " << i->second << "\n";
+        out << "\tBOTTOM LAYER " << i.first + 1 << " = " << i.second << "\n";
     }
 
     out << "END MODFLOW_GRID\n";
@@ -225,9 +225,8 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
 
     //count the total number of cells needed to be saved
     int total = 0, conNum = 0;
-    for (NodeGroup::iterator nit = grid->nodegroup.begin(); nit != grid->nodegroup.end(); nit++)
+    for (auto b : grid->nodegroup)
     {
-        Box * b = *nit;
         if (b->active && b->isLeaf)
         {
             total++;
@@ -254,9 +253,8 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
     vector<pair<long, Box *>> sorted_boxes;
     sorted_boxes.reserve(total);
 
-    for (NodeGroup::iterator i = grid->nodegroup.begin(); i != grid->nodegroup.end(); i++)
+    for (auto box : grid->nodegroup)
     {
-        Box * box = *i;
         if (box->active == false || box->isLeaf == false) continue;
         sorted_boxes.push_back(make_pair(box->number + id_offset, box));
     }
@@ -266,11 +264,11 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
     // cell centers, rotated and offset
     GridVertices gv(grid);
 
-    for (vector<pair<long, Box *>>::iterator i = sorted_boxes.begin(); i != sorted_boxes.end(); i++)
+    for (auto & entry : sorted_boxes)
     {
-        Box * box = i->second;
+        Box * box = entry.second;
         const Point2d & ctr = gv.center(box);
-        fout << i->first << " " << box->layer + id_offset << " " << round_trip(ctr[0]) << " "
+        fout << entry.first << " " << box->layer + id_offset << " " << round_trip(ctr[0]) << " "
              << round_trip(ctr[1]) << " " << round_trip(box->z) << " " << round_trip(box->dx) << " "
              << round_trip(box->dy) << " " << round_trip(box->dz) << "\n";
     }

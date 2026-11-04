@@ -25,25 +25,21 @@ void ShapeReader::destroy()
 //read field attributes from DBF file according to id
 bool ShapeReader::readAttributes(DBFHandle & dbfHandle, int iShape)
 {
-    for (vector<ShapeIntField>::iterator iit = m_intFlds.begin(); iit != m_intFlds.end(); ++iit)
+    for (auto & sifld : m_intFlds)
     {
-        ShapeIntField & sifld = *iit;
         sifld.vals.insert(make_pair(iShape, DBFReadIntegerAttribute(dbfHandle, iShape, sifld.id)));
     }
-    for (vector<ShapeDoubleField>::iterator iit = m_dbFlds.begin(); iit != m_dbFlds.end(); ++iit)
+    for (auto & sifld : m_dbFlds)
     {
-        ShapeDoubleField & sifld = *iit;
         sifld.vals.insert(make_pair(iShape, DBFReadDoubleAttribute(dbfHandle, iShape, sifld.id)));
     }
-    for (vector<ShapeStringField>::iterator iit = m_strFlds.begin(); iit != m_strFlds.end(); ++iit)
+    for (auto & sifld : m_strFlds)
     {
-        ShapeStringField & sifld = *iit;
         sifld.vals.insert(
             make_pair(iShape, string(DBFReadStringAttribute(dbfHandle, iShape, sifld.id))));
     }
-    for (vector<ShapeLogField>::iterator iit = m_logFlds.begin(); iit != m_logFlds.end(); ++iit)
+    for (auto & sifld : m_logFlds)
     {
-        ShapeLogField & sifld = *iit;
         sifld.vals.insert(
             make_pair(iShape, string(DBFReadLogicalAttribute(dbfHandle, iShape, sifld.id))));
     }

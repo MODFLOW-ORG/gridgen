@@ -123,9 +123,8 @@ NodeGroup::size_type NodeGroup::get_total_leaf_size()
 
 void NodeGroup::disable_nodes_in_layer(int layer)
 {
-    for (iterator i = begin(); i != end(); i++)
+    for (auto box : *this)
     {
-        Box * box = *i;
         if (box == nullptr) continue;
         if (box->layer != layer) continue;
         box->active = false;
@@ -142,13 +141,13 @@ void NodeGroup::build_node_info()
     //count the number of leaf nodes
     this->total_leaf_number = 0;
     this->active_leaf_number = 0;
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        if ((*i) == nullptr) continue;
-        if ((*i)->isLeaf)
+        if (i == nullptr) continue;
+        if (i->isLeaf)
         {
             total_leaf_number++;
-            if ((*i)->active) active_leaf_number += 1;
+            if (i->active) active_leaf_number += 1;
         }
     }
 
@@ -168,10 +167,8 @@ void NodeGroup::build_node_info()
 
     //node number is ordered by layer
     //node id is the position in this class
-    for (iterator i = begin(); i != end(); i++)
+    for (auto box : *this)
     {
-        Box * box = *i;
-
         if (box == nullptr) continue;
 
         if (box->isLeaf)

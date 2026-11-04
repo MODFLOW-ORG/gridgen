@@ -15,12 +15,11 @@ namespace cusg
 static set<int> named_layers(map<string, list<string>> & name_value_map)
 {
     set<int> layers;
-    for (map<string, list<string>>::iterator r = name_value_map.begin(); r != name_value_map.end();
-         r++)
+    for (auto & r : name_value_map)
     {
-        size_t pos = r->first.rfind(" layer ");
+        size_t pos = r.first.rfind(" layer ");
         if (pos == string::npos) continue;
-        long layer = strtol(r->first.c_str() + pos + 7, nullptr, 10);
+        long layer = strtol(r.first.c_str() + pos + 7, nullptr, 10);
         if (layer > 0 && layer <= INT_MAX) layers.insert((int)layer - 1);
     }
     return layers;
@@ -219,9 +218,9 @@ string BaseParser::merge(const list<string> & name, string del)
 string BaseParser::tolower(const string & s)
 {
     string lower;
-    for (string::const_iterator i = s.begin(); i != s.end(); i++)
+    for (char i : s)
     {
-        char c = ::tolower(*i);
+        char c = ::tolower(i);
         lower.push_back(c);
     }
     return lower;
@@ -239,10 +238,10 @@ bool modflow_grid_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -427,10 +426,10 @@ bool quadtree_grid_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -464,9 +463,8 @@ bool quadtree_grid_raw_data::parse()
 
     //read the surfaces of each layer named, independently of the other layers
     set<int> layers = named_layers(name_value_map);
-    for (set<int>::iterator l = layers.begin(); l != layers.end(); l++)
+    for (int i : layers)
     {
-        int i = *l;
         list<string> v = layer_record(name_value_map, "top", i);
         if (!v.empty()) top_str[i] = v;
         v = layer_record(name_value_map, "bottom", i);
@@ -659,10 +657,10 @@ bool quadtree_builder_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -719,9 +717,8 @@ bool quadtree_builder_raw_data::parse()
 
     //read the records of each layer named, independently of the other layers
     set<int> layers = named_layers(name_value_map);
-    for (set<int>::iterator l = layers.begin(); l != layers.end(); l++)
+    for (int i : layers)
     {
-        int i = *l;
         list<string> v;
 
         v = layer_record(name_value_map, "active_domain", i);
@@ -765,9 +762,9 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
     {
         list<active_domain_raw_data *> aF;
         list<string> & aF_str = active_domain_str[i];
-        for (list<string>::iterator s = aF_str.begin(); s != aF_str.end(); s++)
+        for (auto & s : aF_str)
         {
-            active_domain_raw_data * af = dynamic_cast<active_domain_raw_data *>(blocks[*s]);
+            active_domain_raw_data * af = dynamic_cast<active_domain_raw_data *>(blocks[s]);
             if (af != nullptr)
             {
                 if (af->initialize(blocks) == false)
@@ -779,8 +776,8 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
             }
             else
             {
-                cerr << "! Error: Quadtree Builder: Block " << *s
-                     << " is referenced but not defined" << endl;
+                cerr << "! Error: Quadtree Builder: Block " << s << " is referenced but not defined"
+                     << endl;
                 assert(false);
                 return false;
             }
@@ -814,14 +811,14 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
         //refine by features
         list<refinement_raw_data *> rF;
         list<string> & rF_str = refine_by_features_str[i];
-        for (list<string>::iterator s = rF_str.begin(); s != rF_str.end(); s++)
+        for (auto & s : rF_str)
         {
-            refinement_raw_data * rf = dynamic_cast<refinement_raw_data *>(blocks[*s]);
+            refinement_raw_data * rf = dynamic_cast<refinement_raw_data *>(blocks[s]);
             if (rf != nullptr)
                 rF.push_back(rf);
             else
             {
-                cerr << "! Error: Quadtree Builder: There is no refinement feature named " << *s
+                cerr << "! Error: Quadtree Builder: There is no refinement feature named " << s
                      << endl;
                 assert(false);
                 return false;
@@ -908,10 +905,10 @@ bool grid_intersection_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1074,10 +1071,10 @@ bool active_domain_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1135,10 +1132,10 @@ bool refinement_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1198,10 +1195,10 @@ bool grid_to_usgdata_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1293,10 +1290,10 @@ bool gridtoshape_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1432,10 +1429,10 @@ bool gridtovtk_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
