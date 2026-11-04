@@ -1,0 +1,3 @@
+section = "internal"
+subsection = ""
+description = "The arrays that hold the cell connections and the program's working data are released automatically rather than by hand. The program and its output are unchanged."
