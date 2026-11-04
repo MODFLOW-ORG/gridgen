@@ -1,6 +1,7 @@
 #include "def_parser.h"
 
 #include <cctype>
+#include <memory>
 #include <set>
 
 namespace cusg
@@ -225,17 +226,15 @@ bool DefinitionParser::parse(istream & in, string folder)
             list<string> warnings = unrecognized_records(block);
             for (auto & warning : warnings) cerr << "! Warning: " << warning << endl;
             m_warnings.splice(m_warnings.end(), warnings);
-            block_raw_data * ptr_block = m_block_type_map[block.type](block);
+            //held until parsed, so a block whose records are in error is freed
+            unique_ptr<block_raw_data> ptr_block(m_block_type_map[block.type](block));
             if (ptr_block != nullptr)
             {
                 bool r = ptr_block->parse();
                 if (r)
-                    m_blocks[block.name] = ptr_block;
+                    m_blocks[block.name] = ptr_block.release();
                 else
-                {
                     cerr << "! Error: Something wrong paring the definition file" << endl;
-                    delete ptr_block;
-                }
             } //end if
         }
         else
