@@ -375,17 +375,21 @@ bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
     if (m_initizlied) return true;
 
-    delr = createArray<REAL>(delr_str, ncol, getFolderPath());
-    delc = createArray<REAL>(delc_str, nrow, getFolderPath());
-    top = createArray<REAL>(top_str, ncol * nrow, getFolderPath());
-
-    bot.reserve(nlay + 1);
-    bot.push_back(top);
+    //kept only when every array is read, so an error leaves none
+    unique_ptr<REAL[]> r(createArray<REAL>(delr_str, ncol, getFolderPath()));
+    unique_ptr<REAL[]> c(createArray<REAL>(delc_str, nrow, getFolderPath()));
+    vector<unique_ptr<REAL[]>> b;
+    b.emplace_back(createArray<REAL>(top_str, ncol * nrow, getFolderPath()));
     for (int i = 0; i < nlay; i++)
     {
-        REAL * B = createArray<REAL>(bot_str[i], ncol * nrow, getFolderPath());
-        bot.push_back(B);
+        b.emplace_back(createArray<REAL>(bot_str[i], ncol * nrow, getFolderPath()));
     }
+
+    delr = r.release();
+    delc = c.release();
+    bot.reserve(nlay + 1);
+    for (auto & a : b) bot.push_back(a.release());
+    top = bot[0];
 
     m_initizlied = true;
 
@@ -508,36 +512,43 @@ Grid * quadtree_grid_raw_data::build()
         }
 
         qtree_grid = new QuadTree3D(modflowGrid);
-        assert(qtree_grid);
-
-        //fill the QuadTree3d
-        fillQuadTree3D();
-
-        //copy surface data from top/bottom to those in qtree_grid
-        int nodesize = qtree_grid->nodes();
-        if (qtree_grid->top != nullptr) delete[] qtree_grid->top;
-        if (qtree_grid->bot != nullptr) delete[] qtree_grid->bot;
-        qtree_grid->top = new double[nodesize];
-        qtree_grid->bot = new double[nodesize];
-        assert(qtree_grid->top && qtree_grid->bot);
-        int index = 0;
-        for (int layer = 0; layer < modflowGrid->nlay; layer++)
+        try
         {
-            int node_per_layer = qtree_grid->nodegroup.nodelay_array[layer];
+            //fill the QuadTree3d
+            fillQuadTree3D();
 
-            double * top_tmp = createArray<REAL>(top_str[layer], node_per_layer, getFolderPath());
-            memcpy(&qtree_grid->top[index], top_tmp, sizeof(double) * node_per_layer);
-            delete[] top_tmp; //free data
+            //copy surface data from top/bottom to those in qtree_grid
+            int nodesize = qtree_grid->nodes();
+            if (qtree_grid->top != nullptr) delete[] qtree_grid->top;
+            if (qtree_grid->bot != nullptr) delete[] qtree_grid->bot;
+            qtree_grid->top = new double[nodesize];
+            qtree_grid->bot = new double[nodesize];
+            int index = 0;
+            for (int layer = 0; layer < modflowGrid->nlay; layer++)
+            {
+                int node_per_layer = qtree_grid->nodegroup.nodelay_array[layer];
 
-            double * bot_tmp = createArray<REAL>(bot_str[layer], node_per_layer, getFolderPath());
-            memcpy(&qtree_grid->bot[index], bot_tmp, sizeof(double) * node_per_layer);
-            delete[] bot_tmp; //free data
+                unique_ptr<REAL[]> top_tmp(
+                    createArray<REAL>(top_str[layer], node_per_layer, getFolderPath()));
+                memcpy(&qtree_grid->top[index], top_tmp.get(), sizeof(double) * node_per_layer);
 
-            index += node_per_layer;
-        } //end for layer
+                unique_ptr<REAL[]> bot_tmp(
+                    createArray<REAL>(bot_str[layer], node_per_layer, getFolderPath()));
+                memcpy(&qtree_grid->bot[index], bot_tmp.get(), sizeof(double) * node_per_layer);
 
-        //done
-        qtree_grid->name = this->name;
+                index += node_per_layer;
+            } //end for layer
+
+            //done
+            qtree_grid->name = this->name;
+        }
+        catch (...)
+        {
+            //a grid left half built would be returned by the next call
+            delete qtree_grid;
+            qtree_grid = nullptr;
+            throw;
+        }
     }
 
     return (Grid *)qtree_grid;
@@ -869,7 +880,17 @@ Grid * quadtree_builder_raw_data::build()
         }
 
         Quadtree_Builder builder;
-        builder.build(qtree_grid, *this);
+        try
+        {
+            builder.build(qtree_grid, *this);
+        }
+        catch (...)
+        {
+            //a grid left half built would be returned by the next call
+            delete qtree_grid;
+            qtree_grid = nullptr;
+            throw;
+        }
     }
 
     return (Grid *)qtree_grid;

@@ -78,15 +78,19 @@ TEST(DefinitionParser, MissingRequiredRecordIsAnError)
 
 TEST(DefinitionParser, ArrayErrors)
 {
-    for (const char * delr : {"OPEN/CLOSE gridgen_unit_missing.dat", "BOGUS 50."})
+    // DELC is read after DELR, which an error must not leave behind
+    for (const char * delc : {"OPEN/CLOSE gridgen_unit_missing.dat", "BOGUS 25."})
     {
-        SCOPED_TRACE(delr);
-        std::istringstream dfn(mfg_block_with("CONSTANT 50.", delr));
+        SCOPED_TRACE(delc);
+        std::istringstream dfn(mfg_block_with("CONSTANT 25.", delc));
         DefinitionParser parser;
         ASSERT_TRUE(parser.parse(dfn));
-        block_raw_data * data = parser.getBlockData("mfg");
+        modflow_grid_raw_data * data =
+            dynamic_cast<modflow_grid_raw_data *>(parser.getBlockData("mfg"));
         ASSERT_NE(data, nullptr);
         EXPECT_THROW(data->initialize(parser.getBlockData()), GridgenError);
+        EXPECT_EQ(data->delr, nullptr);
+        EXPECT_TRUE(data->bot.empty());
     }
 }
 
