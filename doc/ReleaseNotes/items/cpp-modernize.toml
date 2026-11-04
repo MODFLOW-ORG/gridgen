@@ -1,0 +1,3 @@
+section = "internal"
+subsection = ""
+description = "The C++ source uses C++11 features in place of older forms: nullptr for null pointers, override on overriding functions, using for type aliases, and range-based for loops. The program and its output are unchanged."

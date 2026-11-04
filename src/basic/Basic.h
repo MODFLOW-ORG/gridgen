@@ -86,7 +86,6 @@ extern "C"
     long krand48(unsigned short * xsubi, unsigned short m);
     long lrand48();
     long mrand48();
-    static void next();
     void srand48(long seedval);
     unsigned short * seed48(unsigned short seed16v[3]);
     void lcong48(unsigned short param[7]);
