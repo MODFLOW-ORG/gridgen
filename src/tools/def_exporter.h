@@ -41,7 +41,7 @@ public:
 
     //
 
-    template <typename T> bool save(const string & filename, T & data, int size)
+    template <typename T> bool save(const string & filename, const T & data, int size)
     {
         ofstream fout(filename.c_str());
         if (fout.good() == false)
@@ -56,7 +56,8 @@ public:
     }
 
     //
-    template <typename T> bool save(const string & filename, T & data, int size, int * formating)
+    template <typename T>
+    bool save(const string & filename, const T & data, int size, int * formating)
     {
         ofstream fout(filename.c_str());
         if (fout.good() == false)

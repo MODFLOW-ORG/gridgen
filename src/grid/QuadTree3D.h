@@ -63,7 +63,7 @@ public:
     void refine(c_polygon & pgon, int max_level, int at_layer = 0);
 
     /// Return a numpy array of size (nodes) that contains the area for all cells.
-    double * get_cell_areas() override;
+    vector<double> get_cell_areas() override;
 
     /*!
         \brief Return the four vertices for the specified nodeid.

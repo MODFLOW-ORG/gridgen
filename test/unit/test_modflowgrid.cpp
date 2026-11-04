@@ -48,7 +48,6 @@ TEST(ModflowGrid, CsrConnectivityOneLayer)
             ADD_FAILURE() << "unexpected fldr " << csr.fldr[ipos];
         }
     }
-    csr.destory();
 }
 
 TEST(ModflowGrid, CsrVerticalConnections)
@@ -74,7 +73,6 @@ TEST(ModflowGrid, CsrVerticalConnections)
         }
     }
     EXPECT_EQ(nvert, 8);
-    csr.destory();
 }
 
 TEST(ModflowGrid, CsrFaceAreaUsesBothCellThicknesses)
@@ -122,7 +120,6 @@ TEST(ModflowGrid, CsrFaceAreaUsesBothCellThicknesses)
             EXPECT_DOUBLE_EQ(csr.fahl[ipos], width * 0.5 * (thk[n] + thk[m]));
         }
     }
-    csr.destory();
 }
 
 TEST(ModflowGrid, NodeConnectionsMatchCsr)
@@ -144,5 +141,4 @@ TEST(ModflowGrid, NodeConnectionsMatchCsr)
             ipos++;
         }
     }
-    csr.destory();
 }

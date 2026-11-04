@@ -108,7 +108,8 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
 {
     const int size = 1024;
     const char * ignore = " \t[]()<>,!{}\r\n";
-    char * tmp = new char[size];
+    vector<char> buffer(size);
+    char * tmp = buffer.data();
 
     //
     while (!in.eof())
@@ -167,8 +168,6 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
             block.push_back(data);
         }
     } //end while
-
-    delete[] tmp;
 
     if (block.name.empty()) return false; //read nothing...
 

@@ -47,5 +47,4 @@ TEST(GhostNode, RefinedCenterCell)
         EXPECT_DOUBLE_EQ(gn.apha1, 0.125);
         EXPECT_DOUBLE_EQ(gn.apha2, 0.125);
     }
-    csr.destory();
 }

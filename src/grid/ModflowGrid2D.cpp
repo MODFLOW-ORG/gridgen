@@ -179,13 +179,12 @@ double * ModflowGrid2D::get_local_Ye_array()
 }
 
 /// Return a numpy array of size (nodes) that contains the area for all cells.
-double * ModflowGrid2D::get_cell_areas()
+vector<double> ModflowGrid2D::get_cell_areas()
 {
     //log the creation
     cout << "Getting cell areas." << endl;
 
-    double * area = new double(nrow * ncol);
-    assert(area);
+    vector<double> area(nrow * ncol);
 
     for (int r = 0; r < nrow; r++)
     {
