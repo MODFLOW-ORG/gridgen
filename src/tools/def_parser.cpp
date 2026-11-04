@@ -144,10 +144,9 @@ DefinitionParser::DefinitionParser()
 //destructor
 DefinitionParser::~DefinitionParser()
 {
-    using IT = map<string, block_raw_data *>::iterator;
-    for (auto & m_block : m_blocks)
+    for (auto & entry : m_blocks)
     {
-        delete m_block.second;
+        delete entry.second;
     }
 
     m_blocks.clear();

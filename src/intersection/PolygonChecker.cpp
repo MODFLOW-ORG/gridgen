@@ -46,11 +46,11 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
 {
 
     vector<PlyAreaPair> plyareas;
-    for (auto & git : plygon)
+    for (auto & ply : plygon)
     {
         PlyAreaPair pap;
-        pap.cply = &git;
-        pap.area = fabs(git.getArea());
+        pap.cply = &ply;
+        pap.area = fabs(ply.getArea());
         plyareas.push_back(pap);
     }
     //sort the ply based on the area descendingly
@@ -81,13 +81,13 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
             allInPlygon = false;
             bool b = false;
             const Point2d & pad = pap.cply->getCenter();
-            for (auto & plygon : plygons)
+            for (auto & outer : plygons)
             {
-                c_ply & outp = getOutBound(*plygon);
+                c_ply & outp = getOutBound(*outer);
                 if (CPlyEnclose(outp, pad))
                 {
                     pap.cply->set(c_ply::PIN, pap.cply->getHead());
-                    plygon->push_back(*(pap.cply));
+                    outer->push_back(*(pap.cply));
                     b = true;
                     break;
                 }

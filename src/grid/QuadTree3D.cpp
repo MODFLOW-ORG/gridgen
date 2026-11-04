@@ -414,7 +414,6 @@ bool QuadTree3D::smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq,
 
     //check the neighbors
     // go through each connection
-    using IT = list<pair<int, int>>::iterator;
     for (auto & ic : connectionlist)
     {
         int tonodeid = ic.first;
@@ -864,7 +863,6 @@ CSRData QuadTree3D::get_usg_csr_data()
         }
 
         // go through each connection
-        using IT = list<pair<int, int>>::iterator;
         vector<double>::const_iterator fit = conAreas.begin();
         for (auto & ic : connectionlist)
         {
@@ -932,7 +930,6 @@ CSRData QuadTree3D::get_usg_csr_data()
 void QuadTree3D::sortconnectionbynodenumber(list<pair<int, int>> & connectionlist)
 {
     //get node numbers
-    using IT = list<pair<int, int>>::iterator;
     vector<pair<int, pair<int, int>>> sorted_connection_list;
     for (auto & ic : connectionlist)
     {
