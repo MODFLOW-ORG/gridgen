@@ -69,7 +69,8 @@ void GridIntersection::build(grid_intersection_raw_data & data)
         for (int j = 0; j < arcssize; j++)
         {
             int previousSegInterNum = m_seg_interaction_info.size();
-            bool touched = false;
+            //intersect returns true even for a segment outside the grid, so count the cells found
+            size_t ncells = m_intersection.size();
 
             int seg_size = arcs[j].getSize() - 1; //getSize returns the number of vertices
             for (int is = 0; is < seg_size; is++)
@@ -79,13 +80,13 @@ void GridIntersection::build(grid_intersection_raw_data & data)
                 if (angle != 0) line.rotate(cx, cy, -angle);
 
                 if (qtgrid != nullptr)
-                    touched |= intersect(qtgrid, line);
+                    intersect(qtgrid, line);
                 else if (mfgrid != nullptr)
-                    touched |= intersect(mfgrid, line);
+                    intersect(mfgrid, line);
                 else if (mf2dqtgrid != nullptr)
-                    touched |= intersect(mf2dqtgrid, line);
+                    intersect(mf2dqtgrid, line);
             } //end for i
-            if (!touched) noutside++;
+            if (m_intersection.size() == ncells) noutside++;
 
             //merge the intersection segments that are inside the same box
             int afterSegInterNum = m_seg_interaction_info.size();

@@ -211,6 +211,14 @@ TEST(QuadTreeBuilder, RefinementErrors)
     build_qtree(builder_dfn(path, "polygon", "REFINEMENT_LEVEL_BY_ATTRIBUTE = LEVEL"));
 }
 
+// lines across the 3x3 grid of 100 m cells, within one cell, and beside the grid
+std::vector<Ring> lines_one_outside()
+{
+    return {{{10.0, 10.0}, {290.0, 10.0}},
+            {{10.0, 10.0}, {20.0, 10.0}},
+            {{400.0, 10.0}, {500.0, 10.0}}};
+}
+
 TEST(GridDomain, FeatureOutsideGridIsReported)
 {
     std::string path = write_shapefile("gridgen_unit_domain_outside", SHPT_POLYGON,
@@ -226,6 +234,15 @@ TEST(GridDomain, FeatureOutsideGridIsReported)
     clear_warnings();
     GridDomain().build(qtree.get(), 0, &domain);
     EXPECT_TRUE(warned("1 of the 2 features in shapefile " + path +
+                       " (ACTIVE_DOMAIN domain) do not intersect layer 1 of the grid; no cells "
+                       "are made active by it."));
+
+    // a line within one cell is inside; one beside the grid is not
+    domain.shapefile = write_shapefile("gridgen_unit_domain_lines", SHPT_ARC, lines_one_outside());
+    domain.feature_type = "line";
+    clear_warnings();
+    GridDomain().build(qtree.get(), 0, &domain);
+    EXPECT_TRUE(warned("1 of the 3 features in shapefile " + domain.shapefile +
                        " (ACTIVE_DOMAIN domain) do not intersect layer 1 of the grid; no cells "
                        "are made active by it."));
 
@@ -250,6 +267,15 @@ TEST(GridIntersection, FeatureOutsideGridIsReported)
     GridIntersection gi(0, 0);
     gi.build(data);
     EXPECT_TRUE(warned("1 of the 2 features in shapefile " + path +
+                       " (GRID_INTERSECTION points) do not intersect layer 1 of the grid; no "
+                       "intersections are written for it."));
+
+    data.shapefile = write_shapefile("gridgen_unit_intersect_lines", SHPT_ARC, lines_one_outside());
+    data.feature_type = "line";
+    clear_warnings();
+    GridIntersection gi_lines(0, 0);
+    gi_lines.build(data);
+    EXPECT_TRUE(warned("1 of the 3 features in shapefile " + data.shapefile +
                        " (GRID_INTERSECTION points) do not intersect layer 1 of the grid; no "
                        "intersections are written for it."));
 
@@ -285,6 +311,22 @@ TEST(DefinitionParser, FeatureTypeIsCheckedAndCaseInsensitive)
         DefinitionParser parser;
         EXPECT_THROW(parser.parse(dfn), GridgenError);
     }
+}
+
+TEST(DefinitionParser, IgnoredRecordsAndBlocksAreReported)
+{
+    std::string block = "BEGIN ACTIVE_DOMAIN domain\n"
+                        "  SHAPEFILE = domain\n"
+                        "  FEATURE_TYPE = polygon\n";
+    std::istringstream dfn(block + "  NO_SUCH_RECORD = 1\nEND ACTIVE_DOMAIN\n" + block +
+                           "END ACTIVE_DOMAIN\n");
+    DefinitionParser parser;
+    clear_warnings();
+    ASSERT_TRUE(parser.parse(dfn));
+    ASSERT_EQ(get_warnings().size(), 2u);
+    EXPECT_NE(get_warnings()[0].find("NO_SUCH_RECORD"), std::string::npos);
+    EXPECT_TRUE(
+        warned("Block domain is defined more than once; only the last definition is used."));
 }
 
 TEST(DefinitionParser, MalformedInputIsAnError)

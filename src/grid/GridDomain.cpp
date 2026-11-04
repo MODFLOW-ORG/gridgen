@@ -59,7 +59,8 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
         {
             if (angle != 0) arcs[j].rotate(cx, cy, -angle);
 
-            bool touched = false;
+            //intersect returns true even for a segment outside the grid, so count the cells found
+            int ncells = gi.getIntersectionSize();
             ply_vertex * ptr = arcs[j].getHead();
             do
             {
@@ -69,15 +70,15 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
                     LineSeg2d line(ptr->getPos(), next->getPos());
 
                     if (qtgrid != nullptr)
-                        touched |= gi.intersect(qtgrid, line);
+                        gi.intersect(qtgrid, line);
                     else if (mfgrid != nullptr)
-                        touched |= gi.intersect(mfgrid, line);
+                        gi.intersect(mfgrid, line);
                     else if (mf2dqtgrid != nullptr)
-                        touched |= gi.intersect(mf2dqtgrid, line);
+                        gi.intersect(mf2dqtgrid, line);
                 }
                 ptr = next;
             } while (ptr != nullptr);
-            if (!touched) noutside++;
+            if (gi.getIntersectionSize() == ncells) noutside++;
             if (angle != 0) arcs[j].rotate(cx, cy, angle);
         }
     } //end if

@@ -91,7 +91,7 @@ protected:
 
             char tmp[1024];
             ifstream fin(filePath.c_str());
-            if (!fin.good()) throw GridgenError("Cannot open file:" + filePath);
+            if (!fin.good()) throw GridgenError("cannot open array file " + filePath);
 
             T * A = new T[size];
             if (fin.peek() == '#')
@@ -111,8 +111,7 @@ protected:
         }
         else
         {
-            throw GridgenError("Unknown operator: " + spec.front() +
-                               " (in BaseParser::createArray)");
+            throw GridgenError("array input " + spec.front() + " is not CONSTANT or OPEN/CLOSE");
         }
     }
 };
