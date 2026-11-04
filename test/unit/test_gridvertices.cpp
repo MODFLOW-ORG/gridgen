@@ -32,11 +32,11 @@ const double YOFF = 2792250.0;
 
 // a quadtree with cell sizes that are not exact in binary, at projected
 // coordinate offsets, refined to three levels around two points
-QuadTree3D * make_refined(double angle)
+std::unique_ptr<QuadTree3D> make_refined(double angle)
 {
-    ModflowGrid * mfgrid = make_mfgrid(1, 6, 6, 812.7, 793.3, 10.0, XOFF, YOFF, angle);
-    return make_qtree(
-        mfgrid, {{XOFF + 1700.0, YOFF + 2500.0, 3, 0}, {XOFF + 3900.0, YOFF + 1100.0, 2, 0}}, true);
+    return make_qtree(make_mfgrid(1, 6, 6, 812.7, 793.3, 10.0, XOFF, YOFF, angle),
+                      {{XOFF + 1700.0, YOFF + 2500.0, 3, 0}, {XOFF + 3900.0, YOFF + 1100.0, 2, 0}},
+                      true);
 }
 
 // polygon vertices of a shapefile
@@ -71,16 +71,15 @@ group_corners(const std::vector<std::pair<double, double>> & xy)
 
 void expect_one_coordinate_per_corner(double angle, const std::string & name)
 {
-    QuadTree3D * qtree = make_refined(angle);
+    std::unique_ptr<QuadTree3D> qtree = make_refined(angle);
     std::string shp = ::testing::TempDir() + name + ".shp";
-    writeQuadtree2Shp(qtree, shp, "polygon");
+    writeQuadtree2Shp(qtree.get(), shp, "polygon");
 
     std::vector<std::pair<double, double>> xy = read_shp_vertices(shp);
     ASSERT_FALSE(xy.empty());
     for (const auto & g : group_corners(xy))
         EXPECT_EQ(g.second.size(), 1u)
             << "corner near (" << g.first.first / 1e3 << ", " << g.first.second / 1e3 << ")";
-    delete qtree;
 }
 
 // the corner of a leaf box nearest a point
@@ -157,8 +156,8 @@ TEST(SharedVertices, AdjacentCellsShareVertexIndex)
 {
     for (double angle : {0.0, 17.3 * PI_DOUBLE / 180.0})
     {
-        QuadTree3D * qtree = make_refined(angle);
-        GridVertices gv(qtree);
+        std::unique_ptr<QuadTree3D> qtree = make_refined(angle);
+        GridVertices gv(qtree.get());
 
         // every corner of every leaf, by position, maps to one vertex index
         std::map<std::pair<long long, long long>, std::set<int>> groups;
@@ -194,15 +193,15 @@ TEST(SharedVertices, AdjacentCellsShareVertexIndex)
                 }
             }
         }
-        delete qtree;
     }
 }
 
 TEST(SharedVertices, QuarterTurnAboutLowerLeftCorner)
 {
     // one 4 x 2 cell with its lower-left corner at (8, 19)
-    ModflowGrid * mfgrid = make_mfgrid(1, 1, 1, 4.0, 2.0, 10.0, 8.0, 19.0, 0.5 * PI_DOUBLE);
-    GridVertices gv(mfgrid);
+    std::unique_ptr<ModflowGrid> mfgrid =
+        make_mfgrid(1, 1, 1, 4.0, 2.0, 10.0, 8.0, 19.0, 0.5 * PI_DOUBLE);
+    GridVertices gv(mfgrid.get());
     double x[4], y[4];
     gv.get_corners(mfgrid->nodegroup[0], x, y);
 
@@ -217,13 +216,12 @@ TEST(SharedVertices, QuarterTurnAboutLowerLeftCorner)
     const Point2d & c = gv.center(mfgrid->nodegroup[0]);
     EXPECT_NEAR(c[0], 7.0, 1e-12);
     EXPECT_NEAR(c[1], 21.0, 1e-12);
-    delete mfgrid;
 }
 
 TEST(SharedVertices, UnrotatedCornersAreEdges)
 {
-    QuadTree3D * qtree = make_refined(0.0);
-    GridVertices gv(qtree);
+    std::unique_ptr<QuadTree3D> qtree = make_refined(0.0);
+    GridVertices gv(qtree.get());
     ModflowGrid * mfgrid = qtree->getModflowGrid();
 
     // the base grid corners are the offset plus the summed cell sizes
@@ -236,7 +234,6 @@ TEST(SharedVertices, UnrotatedCornersAreEdges)
     const Point2d & p = gv.vertices()[gv.corners(ne)[1]];
     EXPECT_EQ(p[0], XOFF + xe);
     EXPECT_EQ(p[1], YOFF + ye);
-    delete qtree;
 }
 
 TEST(SharedVertices, RotationUsesExactPi)
@@ -299,7 +296,7 @@ TEST(Precision, ArraysRoundTrip)
 TEST(Precision, ConnectionLengthsAreDouble)
 {
     // 812.7 / 32 has no float representation
-    ModflowGrid * mfgrid = make_mfgrid(1, 1, 2, 812.7 / 16, 50.0);
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 1, 2, 812.7 / 16, 50.0);
     CSRData csr = mfgrid->get_usg_csr_data();
     int nconn = 0;
     for (int ipos = 0; ipos < csr.nja; ipos++)
@@ -310,7 +307,6 @@ TEST(Precision, ConnectionLengthsAreDouble)
         nconn++;
     }
     EXPECT_EQ(nconn, 2);
-    delete mfgrid;
 }
 
 TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
@@ -354,9 +350,10 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
     double width = 0.0, height = 0.0;
     for (double v : delr) width += v;
     for (double v : delc) height += v;
-    QuadTree3D * qtree = make_qtree(mfgrid, {{XOFF + width - 1.0, YOFF + height - 1.0, 3, 0},
-                                             {XOFF + 900.0, YOFF + 400.0, 2, 0}});
-    GridVertices gv(qtree);
+    std::unique_ptr<QuadTree3D> qtree =
+        make_qtree(mfgrid, {{XOFF + width - 1.0, YOFF + height - 1.0, 3, 0},
+                            {XOFF + 900.0, YOFF + 400.0, 2, 0}});
+    GridVertices gv(qtree.get());
 
     // the northeast leaf's upper-right corner is the far grid corner, with
     // the edges summed west to east and south to north; compared to 4 ulps,
@@ -386,30 +383,29 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
     }
     for (const auto & g : groups) EXPECT_EQ(g.second.size(), 1u);
     EXPECT_EQ(groups.size(), gv.vertices().size());
-    delete qtree;
 }
 
 TEST(SharedVertices, LineShapefileEndsAreGridCorners)
 {
-    QuadTree3D * qtree = make_refined(17.3 * PI_DOUBLE / 180.0);
-    GridVertices gv(qtree);
+    std::unique_ptr<QuadTree3D> qtree = make_refined(17.3 * PI_DOUBLE / 180.0);
+    GridVertices gv(qtree.get());
     std::set<std::pair<double, double>> corners;
     for (const Point2d & p : gv.vertices()) corners.insert(std::make_pair(p[0], p[1]));
 
     std::string shp = ::testing::TempDir() + "gridgen_lines.shp";
-    writeQuadtree2Shp(qtree, shp, "line");
+    writeQuadtree2Shp(qtree.get(), shp, "line");
     std::vector<std::pair<double, double>> xy = read_shp_vertices(shp);
     ASSERT_FALSE(xy.empty());
     for (const std::pair<double, double> & p : xy)
         EXPECT_EQ(corners.count(p), 1u) << "line end (" << p.first << ", " << p.second << ")";
-    delete qtree;
 }
 
 TEST(Precision, PassThroughAreasAreDouble)
 {
     // the center cell of layer 2 is inactive, so with pass-through the
     // center cells of layers 1 and 3 connect over the full cell area
-    QuadTree3D * qtree = make_qtree(make_mfgrid(3, 3, 3, 812.7 / 16, 793.3 / 16), {});
+    std::unique_ptr<QuadTree3D> qtree =
+        make_qtree(make_mfgrid(3, 3, 3, 812.7 / 16, 793.3 / 16), {});
     ModflowGrid * mfgrid = qtree->getModflowGrid();
     qtree->nodegroup[mfgrid->get_nodeid(1, 1, 1)]->active = false;
     qtree->number_nodes();
@@ -425,33 +421,31 @@ TEST(Precision, PassThroughAreasAreDouble)
         nvert++;
     }
     EXPECT_GT(nvert, 0);
-    delete qtree;
 }
 
 TEST(Precision, VtkPointsAreGridCorners)
 {
     for (double angle : {0.0, 17.3 * PI_DOUBLE / 180.0})
     {
-        QuadTree3D * qtree = make_refined(angle);
-        GridVertices gv(qtree);
+        std::unique_ptr<QuadTree3D> qtree = make_refined(angle);
+        GridVertices gv(qtree.get());
         std::set<std::pair<double, double>> corners;
         for (const Point2d & p : gv.vertices()) corners.insert(std::make_pair(p[0], p[1]));
 
         // every x and y written, with and without shared vertices, is a grid
         // corner
         std::string name = ::testing::TempDir() + "gridgen_vtk_precision";
-        writeQuadtreeGrid2VTK(qtree, name);
+        writeQuadtreeGrid2VTK(qtree.get(), name);
         std::vector<std::pair<double, double>> xy = read_vtu_xy(name + ".vtu");
         EXPECT_EQ(xy.size(), 8u * qtree->nodes());
         for (const std::pair<double, double> & p : xy)
             EXPECT_EQ(corners.count(p), 1u) << "point (" << p.first << ", " << p.second << ")";
 
-        writeQuadtreeGrid2VTK_shareV(qtree, name + "_sv");
+        writeQuadtreeGrid2VTK_shareV(qtree.get(), name + "_sv");
         xy = read_vtu_xy(name + "_sv.vtu");
         EXPECT_FALSE(xy.empty());
         for (const std::pair<double, double> & p : xy)
             EXPECT_EQ(corners.count(p), 1u)
                 << "shared point (" << p.first << ", " << p.second << ")";
-        delete qtree;
     }
 }

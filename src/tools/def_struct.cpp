@@ -380,6 +380,15 @@ bool modflow_grid_raw_data::parse()
     return true;
 }
 
+modflow_grid_raw_data::~modflow_grid_raw_data()
+{
+    delete mfgrid;
+    delete[] delr;
+    delete[] delc;
+    //bot[0] is top
+    for (REAL * b : bot) delete[] b;
+}
+
 bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
     if (m_initizlied) return true;
@@ -495,6 +504,11 @@ bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 
     m_initizlied = true;
     return true;
+}
+
+quadtree_grid_raw_data::~quadtree_grid_raw_data()
+{
+    delete qtree_grid;
 }
 
 Grid * quadtree_grid_raw_data::build()
@@ -851,6 +865,11 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
 
     m_initizlied = true;
     return true;
+}
+
+quadtree_builder_raw_data::~quadtree_builder_raw_data()
+{
+    delete qtree_grid;
 }
 
 Grid * quadtree_builder_raw_data::build()

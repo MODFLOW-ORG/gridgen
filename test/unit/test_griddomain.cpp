@@ -33,7 +33,7 @@ TEST(GridDomain, PolygonEnclosingGridActivatesEveryCell)
     // test/shapefiles/enclosing_domain is a rectangle 5 km beyond grid01mfg;
     // applied to layer 2 of a grid with its dimensions, every cell in layer 2
     // is active and layer 1 is unchanged (#53)
-    QuadTree3D * qtree =
+    std::unique_ptr<QuadTree3D> qtree =
         make_qtree(make_mfgrid(2, 100, 58, 800.0, 800.0, 10.0, 543750.0, 2792250.0),
                    {{567000.0, 2830000.0, 2, 1}}, true);
 
@@ -44,14 +44,14 @@ TEST(GridDomain, PolygonEnclosingGridActivatesEveryCell)
 
     qtree->nodegroup.disable_nodes_in_layer(1);
     int active = 0, total = 0;
-    count_cells(qtree, 1, active, total);
+    count_cells(qtree.get(), 1, active, total);
     ASSERT_EQ(active, 0);
 
-    GridDomain().build(qtree, 1, &domain);
-    count_cells(qtree, 1, active, total);
+    GridDomain().build(qtree.get(), 1, &domain);
+    count_cells(qtree.get(), 1, active, total);
     EXPECT_GT(total, 5800);
     EXPECT_EQ(active, total);
 
-    count_cells(qtree, 0, active, total);
+    count_cells(qtree.get(), 0, active, total);
     EXPECT_EQ(active, total);
 }

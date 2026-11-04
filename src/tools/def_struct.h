@@ -96,6 +96,7 @@ protected:
             {
                 cerr << "! Error: Cannot open file:" << filePath << endl;
                 delete[] A;
+                A = nullptr;
             } //end good
             else
             {
@@ -232,6 +233,8 @@ public:
         length_unit = "undefined";
     }
 
+    ~modflow_grid_raw_data() override;
+
     bool parse() override;
     bool initialize(map<string, block_raw_data *> & blocks) override;
     Grid * build() override;
@@ -273,6 +276,8 @@ public:
         qtree_grid = nullptr;
     }
 
+    ~quadtree_grid_raw_data() override;
+
     bool parse() override;
     bool initialize(map<string, block_raw_data *> & blocks) override;
     Grid * build() override;
@@ -308,6 +313,8 @@ public:
         one_based_node_numbering = true;
         auto_alignment = true;
     }
+
+    ~quadtree_builder_raw_data() override;
 
     bool parse() override;
     bool initialize(map<string, block_raw_data *> & blocks) override;

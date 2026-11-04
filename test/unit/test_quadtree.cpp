@@ -42,7 +42,8 @@ int max_level_jump(QuadTree3D * qtree, const CSRData & csr, bool vertical)
 // numbered by row from the top and then by column
 std::set<int> line_refined_cells(const std::vector<std::pair<double, double>> & points)
 {
-    QuadTree3D * qtree = new QuadTree3D(make_mfgrid(1, 3, 3, 100.0, 100.0));
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 3, 3, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = std::make_unique<QuadTree3D>(mfgrid.get());
     c_plyline arc;
     arc.beginPoly();
     for (const auto & pt : points) arc.addVertex(pt.first, pt.second);
@@ -68,12 +69,12 @@ std::set<int> line_refined_cells(const std::vector<std::pair<double, double>> & 
 TEST(QuadTree, RefineCenterCell)
 {
     // 3 x 3 cells of 100; refine the center cell once
-    ModflowGrid * mfgrid = make_mfgrid(1, 3, 3, 100.0, 100.0);
-    QuadTree3D * qtree = make_qtree(mfgrid, {{150.0, 150.0, 1, 0}});
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 3, 3, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{150.0, 150.0, 1, 0}});
     CSRData csr = qtree->get_usg_csr_data();
 
     EXPECT_EQ(csr.nodes, 12);
-    expect_faces_cover_sides(qtree, csr, 10.0);
+    expect_faces_cover_sides(qtree.get(), csr, 10.0);
 
     double total = 0.0;
     int nsmall = 0;
@@ -105,16 +106,16 @@ TEST(QuadTree, RefineCenterCell)
 
 TEST(QuadTree, SmoothingLimitsHorizontalLevelJump)
 {
-    QuadTree3D * rough =
+    std::unique_ptr<QuadTree3D> rough =
         make_qtree(make_mfgrid(1, 5, 5, 100.0, 100.0), {{250.0, 250.0, 3, 0}}, false);
     CSRData csr = rough->get_usg_csr_data();
-    EXPECT_GT(max_level_jump(rough, csr, false), 1);
+    EXPECT_GT(max_level_jump(rough.get(), csr, false), 1);
 
-    QuadTree3D * smooth =
+    std::unique_ptr<QuadTree3D> smooth =
         make_qtree(make_mfgrid(1, 5, 5, 100.0, 100.0), {{250.0, 250.0, 3, 0}}, true);
     csr = smooth->get_usg_csr_data();
-    EXPECT_EQ(max_level_jump(smooth, csr, false), 1);
-    expect_faces_cover_sides(smooth, csr, 10.0);
+    EXPECT_EQ(max_level_jump(smooth.get(), csr, false), 1);
+    expect_faces_cover_sides(smooth.get(), csr, 10.0);
     expect_symmetric(csr);
     expect_csr_valid(csr);
 }
@@ -122,12 +123,12 @@ TEST(QuadTree, SmoothingLimitsHorizontalLevelJump)
 TEST(QuadTree, SmoothingLimitsVerticalLevelJump)
 {
     // refine only the top layer; smoothing propagates refinement downward
-    ModflowGrid * mfgrid = make_mfgrid(3, 4, 4, 100.0, 100.0);
-    QuadTree3D * qtree = make_qtree(mfgrid, {{150.0, 150.0, 3, 0}}, true);
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(3, 4, 4, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{150.0, 150.0, 3, 0}}, true);
     CSRData csr = qtree->get_usg_csr_data();
 
-    EXPECT_EQ(max_level_jump(qtree, csr, true), 1);
-    expect_faces_cover_sides(qtree, csr, 10.0);
+    EXPECT_EQ(max_level_jump(qtree.get(), csr, true), 1);
+    expect_faces_cover_sides(qtree.get(), csr, 10.0);
     expect_symmetric(csr);
     expect_csr_valid(csr);
 
@@ -147,7 +148,7 @@ TEST(QuadTree, VerticalPassThroughInactiveCell)
 {
     // 3 layers of 3 x 3 cells; the center cell of layer 2 is inactive, so
     // with pass-through the center cells of layers 1 and 3 connect
-    QuadTree3D * qtree = make_qtree(make_mfgrid(3, 3, 3, 100.0, 100.0), {});
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(3, 3, 3, 100.0, 100.0), {});
     Box * center = nullptr;
     for (int n = 0; n < qtree->nodes(); n++)
     {
