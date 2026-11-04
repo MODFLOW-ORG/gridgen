@@ -27,23 +27,12 @@ namespace cusg
 	be a ModflowGrid object.
 	*/
 
-QuadTree3D::QuadTree3D(ModflowGrid * mfgrid, int * chunksize)
-    : nodeid_array(nullptr), nodenumber_array(nullptr), nodelay_array(nullptr)
+QuadTree3D::QuadTree3D(ModflowGrid * mfgrid) : nodeid_array(nullptr), nodelay_array(nullptr)
 {
     cout << "- A QuadTree object was instantiated." << endl;
 
     // Store the modflowgrid, too
     m_mfgrid = mfgrid;
-
-    //Set the chunksize, which is used to allocate node memory.
-    if (chunksize == nullptr)
-    {
-        this->m_chunksize = new int(m_mfgrid->nodes * 0.2);
-    }
-    else
-    {
-        this->m_chunksize = chunksize;
-    }
 
     //determine if this is a 2d or 3d grid
     is3d = m_mfgrid->is3d;
@@ -59,7 +48,7 @@ QuadTree3D::QuadTree3D(ModflowGrid * mfgrid, int * chunksize)
     rebuild_nodenumber_array = true;
     one_based_node_numbering = true;
     nodeid_array = getnodeid_array();
-    nodenumber_array = getnodenumber_array();
+    getnodenumber_array();
 
     //how z values of top and bot should be determined
     m_bot_layer_z_operator = m_top_layer_z_operator = vector<LAYER_Z_VALUE_OPEARTOR>(
@@ -68,7 +57,7 @@ QuadTree3D::QuadTree3D(ModflowGrid * mfgrid, int * chunksize)
     vertical_pass_through = false;
 }
 
-QuadTree3D::~QuadTree3D(void) {}
+QuadTree3D::~QuadTree3D(void) = default;
 
 void getSpecialPointIntersection(QuadTree3D * qtree, const Point2d & pt, int max_level,
                                  int at_layer, list<Box *> & result)
@@ -576,9 +565,9 @@ int * QuadTree3D::get_nodelay()
 int * QuadTree3D::createnodenumber_array()
 {
     int nsize = nodegroup.size();
-    int * nodenumber_array = new int[nsize];
-    assert(nodenumber_array);
-    memset(nodenumber_array, (int)-INT_MAX, sizeof(int) * nsize);
+    nodenumber_array.resize(nsize);
+    //fill every byte with that of -INT_MAX, as memset did
+    memset(nodenumber_array.data(), (int)-INT_MAX, sizeof(int) * nsize);
 
     int leaf_size = nodes();
 
@@ -588,7 +577,7 @@ int * QuadTree3D::createnodenumber_array()
         nodenumber_array[nodeid] = nodenumber;
     }
 
-    return nodenumber_array;
+    return nodenumber_array.data();
 }
 
 /*! 
@@ -603,13 +592,13 @@ int * QuadTree3D::createnodenumber_array()
 	*/
 int * QuadTree3D::getnodenumber_array()
 {
-    if (nodenumber_array == nullptr || rebuild_nodenumber_array)
+    if (nodenumber_array.empty() || rebuild_nodenumber_array)
     {
-        nodenumber_array = createnodenumber_array();
+        createnodenumber_array();
         rebuild_nodenumber_array = false;
     }
 
-    return nodenumber_array;
+    return nodenumber_array.data();
 }
 
 ///get box from id
@@ -965,7 +954,7 @@ void QuadTree3D::sortareabyconid(const list<pair<int, int>> & connectionlist, ve
 void QuadTree3D::_add_root_nodes()
 {
     // Copy the nodegroup from the base modflow grid
-    nodegroup = m_mfgrid->nodegroup;
+    nodegroup.share(m_mfgrid->nodegroup);
     nodegroup.nlay = m_mfgrid->nlay;
     nodegroup.grid = this;
 
@@ -1182,7 +1171,7 @@ void QuadTree3D::refresh()
 {
     rebuild_nodeid_array = true;
     nodeid_array = getnodeid_array();
-    nodenumber_array = getnodenumber_array();
+    getnodenumber_array();
 }
 
 //print the information of the leaves
@@ -1319,12 +1308,11 @@ static double require_valid(double value, ascii_grid * ag, const Point2d & cente
 double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_filename,
                                           bool useAreaWeighted)
 {
-    ascii_grid * ag = m_str2ag[arcinfo_filename];
+    ascii_grid * ag = m_str2ag[arcinfo_filename].get();
 
     if (ag == nullptr) //not found, build from filename
     {
-        arcinfo_ascii_grid * aag = new arcinfo_ascii_grid();
-        assert(aag);
+        auto aag = make_unique<arcinfo_ascii_grid>();
         bool br = aag->build(arcinfo_filename);
         if (br == false)
         {
@@ -1334,7 +1322,8 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
             exit(1);
         }
 
-        m_str2ag[arcinfo_filename] = ag = aag;
+        ag = aag.get();
+        m_str2ag[arcinfo_filename] = std::move(aag);
     }
 
     //rotate box center if the grid is rotated...

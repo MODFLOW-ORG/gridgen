@@ -59,10 +59,10 @@ public:
     double * get_local_y_array();
 
     /// x coord of all edges
-    double * get_local_Xe_array();
+    vector<double> get_local_Xe_array();
 
     /// y coord of all edges
-    double * get_local_Ye_array();
+    vector<double> get_local_Ye_array();
 
     /// Return a numpy array of size (nodes) that contains the area for all cells.
     vector<double> get_cell_areas() override;
@@ -123,8 +123,8 @@ public:
     // DELR is the column widths along a row.  It is of dimension NCOL
     // DELC is the row widths along a column.  It is of dimension NROW.
 
-    double * delr;
-    double * delc;
+    vector<double> delr;
+    vector<double> delc;
     double xoffset;
     double yoffset;
     double rotation;
@@ -133,8 +133,8 @@ public:
     double height;
 
     //x and y coordinate of edges
-    double * Xe; //x coord of all edges
-    double * Ye; //y coord of all edges
+    vector<double> Xe; //x coord of all edges
+    vector<double> Ye; //y coord of all edges
 
 protected:
     void init2D();

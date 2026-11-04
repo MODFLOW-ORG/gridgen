@@ -406,8 +406,8 @@ void buildSharingVertices_mfgrid(ModflowGrid * mfgrid, vector<Vertex *> & vdata,
     int mfgrid_csize = (mfgrid->nrow) * (mfgrid->ncol);
 
     //get all the Xe and Ye
-    double * Xe = mfgrid->get_local_Xe_array();
-    double * Ye = mfgrid->get_local_Ye_array();
+    vector<double> Xe = mfgrid->get_local_Xe_array();
+    vector<double> Ye = mfgrid->get_local_Ye_array();
 
     //use the edges to locate the box corners
     int vid = 0;
@@ -777,8 +777,8 @@ void buildVE(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> & edat
              VTK_Box * boxdata)
 {
     ModflowGrid * mfgrid = qtree->getModflowGrid();
-    double * Xe = mfgrid->get_local_Xe_array();
-    double * Ye = mfgrid->get_local_Ye_array();
+    vector<double> Xe = mfgrid->get_local_Xe_array();
+    vector<double> Ye = mfgrid->get_local_Ye_array();
 
     //////////////////////////////////////////////////////////////////////////////
     //initialize sharing v
