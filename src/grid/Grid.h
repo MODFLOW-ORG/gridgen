@@ -62,7 +62,7 @@ public:
     virtual list<pair<int, int>> get_node_connections(int nodeid) = 0;
 
     //
-    virtual double * get_cell_areas() = 0;
+    virtual vector<double> get_cell_areas() = 0;
 
     //get the box of this grid by node id
     virtual Box * get_nodeobj(int nodeid) = 0;

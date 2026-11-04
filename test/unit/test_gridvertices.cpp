@@ -310,7 +310,6 @@ TEST(Precision, ConnectionLengthsAreDouble)
         nconn++;
     }
     EXPECT_EQ(nconn, 2);
-    csr.destory();
     delete mfgrid;
 }
 
@@ -426,7 +425,6 @@ TEST(Precision, PassThroughAreasAreDouble)
         nvert++;
     }
     EXPECT_GT(nvert, 0);
-    csr.destory();
     delete qtree;
 }
 

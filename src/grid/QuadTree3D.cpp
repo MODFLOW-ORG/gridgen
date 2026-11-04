@@ -505,14 +505,13 @@ void QuadTree3D::smooth_refinement(int level_tol_horizontal, int level_tol_verti
 }
 
 /// Return an array of size (nodes) that contains the area for all cells.
-double * QuadTree3D::get_cell_areas()
+vector<double> QuadTree3D::get_cell_areas()
 {
     //log the creation
     //cout<<"Getting cell areas."<<endl;
     int nodesize = nodes();
 
-    double * area = new double[nodesize];
-    assert(area);
+    vector<double> area(nodesize);
 
     for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
     {
@@ -810,16 +809,14 @@ CSRData QuadTree3D::get_usg_csr_data()
     //allocate the CSR arrays.
     //cout<<"Allocating ia of size "<<box_size+1<<" and ja of size "<<nja<<endl;
 
-    int * ia = new int[box_size + 1];
-    int * ja = new int[nja];
-    double * area = get_cell_areas();
-    double * cl1 = new double[nja];
-    double * cl2 = new double[nja];
-    double * fahl = new double[nja];
-    int * fldr = new int[nja];
-    int * iac = new int[box_size]; // number of connection +1 for each cell, array of size  nodes
-
-    assert(ia && ja && cl1 && cl2 && fahl && fldr && iac);
+    vector<int> ia(box_size + 1);
+    vector<int> ja(nja);
+    vector<double> area = get_cell_areas();
+    vector<double> cl1(nja);
+    vector<double> cl2(nja);
+    vector<double> fahl(nja);
+    vector<int> fldr(nja);
+    vector<int> iac(box_size); // number of connection +1 for each cell, array of size  nodes
 
     //Go through each connection and fill the arrays.
     int japos = 0;
@@ -924,7 +921,8 @@ CSRData QuadTree3D::get_usg_csr_data()
 
     ia[box_size] = japos + id_offset;
 
-    return CSRData(box_size, nja, area, ia, ja, cl1, cl2, fahl, fldr, iac);
+    return CSRData(box_size, nja, std::move(area), std::move(ia), std::move(ja), std::move(cl1),
+                   std::move(cl2), std::move(fahl), std::move(fldr), std::move(iac));
 }
 
 void QuadTree3D::sortconnectionbynodenumber(list<pair<int, int>> & connectionlist)

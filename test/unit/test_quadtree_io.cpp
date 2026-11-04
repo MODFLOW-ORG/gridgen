@@ -79,8 +79,6 @@ TEST(QuadTreeIO, BuildTwiceIsIdentical)
     CSRData a = make_refined()->get_usg_csr_data();
     CSRData b = make_refined()->get_usg_csr_data();
     expect_csr_equal(a, b);
-    a.destory();
-    b.destory();
 }
 
 TEST(QuadTreeIO, RotationDoesNotChangeConnectivity)
@@ -88,8 +86,6 @@ TEST(QuadTreeIO, RotationDoesNotChangeConnectivity)
     CSRData a = make_refined()->get_usg_csr_data();
     CSRData b = make_refined(0.5236)->get_usg_csr_data();
     expect_csr_equal(a, b);
-    a.destory();
-    b.destory();
 }
 
 TEST(QuadTreeIO, NodesNumberedLayerByLayer)
@@ -119,8 +115,6 @@ TEST(QuadTreeIO, OneBasedNumberingOffsetsIaAndJa)
     ASSERT_EQ(zero.nja, one.nja);
     for (int n = 0; n <= zero.nodes; n++) EXPECT_EQ(one.ia[n], zero.ia[n] + 1);
     for (int i = 0; i < zero.nja; i++) EXPECT_EQ(one.ja[i], zero.ja[i] + 1);
-    zero.destory();
-    one.destory();
 }
 
 TEST(QuadTreeIO, TreeStructureFileRoundTrip)
@@ -134,8 +128,6 @@ TEST(QuadTreeIO, TreeStructureFileRoundTrip)
     CSRData a = qtree->get_usg_csr_data();
     CSRData b = rebuilt->get_usg_csr_data();
     expect_csr_equal(a, b);
-    a.destory();
-    b.destory();
 }
 
 TEST(QuadTreeIO, TreeStructureFileRoundTripZeroBased)
@@ -149,8 +141,6 @@ TEST(QuadTreeIO, TreeStructureFileRoundTripZeroBased)
     CSRData a = qtree->get_usg_csr_data();
     CSRData b = rebuilt->get_usg_csr_data();
     expect_csr_equal(a, b);
-    a.destory();
-    b.destory();
 }
 
 TEST(QuadTreeIO, TreeStructureFileIdentifiersAreOneBased)

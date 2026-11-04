@@ -43,10 +43,9 @@ ModflowGrid::ModflowGrid(int lay, int row, int col, double dr, double dc, vector
 }
 
 /// Return a numpy array of size (nodes) that contains the area for all cells.
-double * ModflowGrid::get_cell_areas()
+vector<double> ModflowGrid::get_cell_areas()
 {
-    double * area = new double[nodes];
-    assert(area);
+    vector<double> area(nodes);
 
     for (int k = 0; k < nlay; k++)
     {
@@ -174,16 +173,14 @@ CSRData ModflowGrid::get_usg_csr_data()
                2 * ncol * nrow * (nlay - 1) + //z connections
                ncol * nrow * nlay);           //diagonal
 
-    int * ia = new int[box_size + 1];
-    int * ja = new int[nja];
-    double * area = get_cell_areas();
-    double * cl1 = new double[nja];
-    double * cl2 = new double[nja];
-    double * fahl = new double[nja];
-    int * fldr = new int[nja];
-    int * iac = new int[box_size]; // number of connection +1 for each cell, array of size  nodes
-
-    assert(ia && ja && area && cl1 && cl2 && fahl && fldr && iac);
+    vector<int> ia(box_size + 1);
+    vector<int> ja(nja);
+    vector<double> area = get_cell_areas();
+    vector<double> cl1(nja);
+    vector<double> cl2(nja);
+    vector<double> fahl(nja);
+    vector<int> fldr(nja);
+    vector<int> iac(box_size); // number of connection +1 for each cell, array of size  nodes
 
     //Go through each connection and fill the arrays.
     int japos = 0;
@@ -301,7 +298,8 @@ CSRData ModflowGrid::get_usg_csr_data()
 
     ia[nodenumber] = japos + 1;
 
-    return CSRData(nodes, nja, area, ia, ja, cl1, cl2, fahl, fldr, iac);
+    return CSRData(nodes, nja, std::move(area), std::move(ia), std::move(ja), std::move(cl1),
+                   std::move(cl2), std::move(fahl), std::move(fldr), std::move(iac));
 }
 
 ///number the nodes (i.e. leaves) in the grid

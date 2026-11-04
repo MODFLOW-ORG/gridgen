@@ -12,6 +12,8 @@
 #pragma once
 
 #include <iostream>
+#include <utility>
+#include <vector>
 using namespace std;
 
 namespace cusg
@@ -25,45 +27,15 @@ namespace cusg
  */
 struct CSRData
 {
-    CSRData()
-    {
-        nodes = 0;
-        nja = 0;
-        ja = nullptr;
-        ia = nullptr;
-        area = nullptr;
-        cl1 = nullptr;
-        cl2 = nullptr;
-        fahl = nullptr;
-        fldr = nullptr;
-        iac = nullptr;
-    }
+    CSRData() : nodes(0), nja(0) {}
 
-    CSRData(int _nodes, int _nja, double * _area, int * _ia, int * _ja, double * _cl1,
-            double * _cl2, double * _fahl, int * _fldr, int * _iac = nullptr)
+    CSRData(int _nodes, int _nja, vector<double> _area, vector<int> _ia, vector<int> _ja,
+            vector<double> _cl1, vector<double> _cl2, vector<double> _fahl, vector<int> _fldr,
+            vector<int> _iac = vector<int>())
+        : nodes(_nodes), nja(_nja), ja(std::move(_ja)), ia(std::move(_ia)), area(std::move(_area)),
+          cl1(std::move(_cl1)), cl2(std::move(_cl2)), fahl(std::move(_fahl)),
+          fldr(std::move(_fldr)), iac(std::move(_iac))
     {
-        nodes = _nodes;
-        nja = _nja;
-        ja = _ja;
-        ia = _ia;
-        area = _area;
-        cl1 = _cl1;
-        cl2 = _cl2;
-        fahl = _fahl;
-        fldr = _fldr;
-        iac = _iac;
-    }
-
-    void destory()
-    {
-        delete[] ja;
-        delete[] ia;
-        delete[] area;
-        delete[] cl1;
-        delete[] cl2;
-        delete[] fahl;
-        delete[] fldr;
-        delete[] iac;
     }
 
     /// total # of cells
@@ -73,28 +45,28 @@ struct CSRData
     int nja;
 
     /// array of size nja for connections
-    int * ja;
+    vector<int> ja;
 
     /// index array of size  nodes+1
-    int * ia;
+    vector<int> ia;
 
     /// surface area from a plane view, size is nodes
-    double * area;
+    vector<double> area;
 
     /// size of nja storing distance to the shared face of each connection
-    double * cl1;
+    vector<double> cl1;
 
     /// size of nja storing reversed distance to the shared face from each connection
-    double * cl2;
+    vector<double> cl2;
 
     /// area of the connection of size nja
-    double * fahl;
+    vector<double> fahl;
 
     /// direction indicator of size nja (+-1 for x, +-2 for y +-3 for z)
-    int * fldr;
+    vector<int> fldr;
 
-    /// number of connection +1 for each cell, array of size  nodes
-    int * iac;
+    /// number of connection +1 for each cell, array of size  nodes; empty if not computed
+    vector<int> iac;
 };
 
 inline ostream & operator<<(ostream & out, CSRData & data)
@@ -137,15 +109,13 @@ inline istream & operator>>(istream & ins, CSRData & data)
     ins >> data.nodes;
     ins >> data.nja;
 
-    data.ia = new int[data.nodes + 1];
-    data.ja = new int[data.nja];
-    data.area = new double[data.nodes];
-    data.cl1 = new double[data.nja];
-    data.cl2 = new double[data.nja];
-    data.fahl = new double[data.nja];
-    data.fldr = new int[data.nja];
-
-    assert(data.ia && data.ja && data.cl1 && data.cl2 && data.fahl && data.fldr);
+    data.ia.resize(data.nodes + 1);
+    data.ja.resize(data.nja);
+    data.area.resize(data.nodes);
+    data.cl1.resize(data.nja);
+    data.cl2.resize(data.nja);
+    data.fahl.resize(data.nja);
+    data.fldr.resize(data.nja);
 
     //locate space for CSR data here
     for (int i = 0; i < data.nja; i++) ins >> data.ja[i];

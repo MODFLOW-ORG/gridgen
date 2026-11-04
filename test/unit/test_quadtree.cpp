@@ -101,7 +101,6 @@ TEST(QuadTree, RefineCenterCell)
     }
     expect_symmetric(csr);
     expect_csr_valid(csr);
-    csr.destory();
 }
 
 TEST(QuadTree, SmoothingLimitsHorizontalLevelJump)
@@ -110,7 +109,6 @@ TEST(QuadTree, SmoothingLimitsHorizontalLevelJump)
         make_qtree(make_mfgrid(1, 5, 5, 100.0, 100.0), {{250.0, 250.0, 3, 0}}, false);
     CSRData csr = rough->get_usg_csr_data();
     EXPECT_GT(max_level_jump(rough, csr, false), 1);
-    csr.destory();
 
     QuadTree3D * smooth =
         make_qtree(make_mfgrid(1, 5, 5, 100.0, 100.0), {{250.0, 250.0, 3, 0}}, true);
@@ -119,7 +117,6 @@ TEST(QuadTree, SmoothingLimitsHorizontalLevelJump)
     expect_faces_cover_sides(smooth, csr, 10.0);
     expect_symmetric(csr);
     expect_csr_valid(csr);
-    csr.destory();
 }
 
 TEST(QuadTree, SmoothingLimitsVerticalLevelJump)
@@ -144,7 +141,6 @@ TEST(QuadTree, SmoothingLimitsVerticalLevelJump)
             EXPECT_DOUBLE_EQ(csr.fahl[ipos], amin);
         }
     }
-    csr.destory();
 }
 
 TEST(QuadTree, VerticalPassThroughInactiveCell)
@@ -179,7 +175,6 @@ TEST(QuadTree, VerticalPassThroughInactiveCell)
     }
     // layer 1 to layer 3 and back
     EXPECT_EQ(nlong, 2);
-    csr.destory();
 }
 
 TEST(QuadTree, LineRefinesCellsItCrosses)

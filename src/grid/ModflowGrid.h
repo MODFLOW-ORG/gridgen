@@ -43,7 +43,7 @@ public:
     ~ModflowGrid() override {}
 
     /// Return a numpy array of size (nodes) that contains the area for all cells.
-    double * get_cell_areas() override;
+    vector<double> get_cell_areas() override;
 
     ///Return the nodeid for the modflow grid.
     virtual int get_nodeid(int k, int i, int j);

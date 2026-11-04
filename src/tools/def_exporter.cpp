@@ -104,9 +104,6 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
 
     out << "END QUADTREE\n";
 
-    //free memory
-    //csr.destory();
-
     return true;
 }
 
@@ -127,14 +124,14 @@ bool DefinitionExporter::save(const string & prefix, CSRData & csr, int * nperla
 
     //save csr data
     this->set_record_per_line(200);
-    save(ia_data_name, csr.ia, csr.nodes + 1);
-    save(ja_data_name, csr.ja, csr.nja, csr.ia);
-    save(connection_direction_array, csr.fldr, csr.nja, csr.ia);
-    save(cell_area_array, csr.area, csr.nodes, nperlay);
-    save(connection_area_array, csr.fahl, csr.nja, csr.ia);
-    save(connection_length_array, csr.cl1, csr.nja, csr.ia);
-    save(connection_length_array_reversed, csr.cl2, csr.nja, csr.ia);
-    if (csr.iac != nullptr) save(connection_count_array, csr.iac, csr.nodes);
+    save(ia_data_name, csr.ia.data(), csr.nodes + 1);
+    save(ja_data_name, csr.ja.data(), csr.nja, csr.ia.data());
+    save(connection_direction_array, csr.fldr.data(), csr.nja, csr.ia.data());
+    save(cell_area_array, csr.area.data(), csr.nodes, nperlay);
+    save(connection_area_array, csr.fahl.data(), csr.nja, csr.ia.data());
+    save(connection_length_array, csr.cl1.data(), csr.nja, csr.ia.data());
+    save(connection_length_array_reversed, csr.cl2.data(), csr.nja, csr.ia.data());
+    if (!csr.iac.empty()) save(connection_count_array, csr.iac.data(), csr.nodes);
 
     return true;
 }
@@ -184,7 +181,6 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
     assert(data.grid);
     CSRData csr = data.grid->get_usg_csr_data();
     save(data.usg_data_prefix, csr, nperlay);
-    csr.destory(); //free memory
 
     //save extra information for irregular map
     if (quadGrid != nullptr)
