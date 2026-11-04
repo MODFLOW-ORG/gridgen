@@ -11,6 +11,7 @@
 #include <cassert>
 #include <fstream>
 #include "Basic.h"
+#include "GridgenError.h"
 #include "reader_treestruct.h"
 //#include "LGR_Grid.h"
 //#include "LGR_Child_Grid.h"
@@ -76,8 +77,6 @@ protected:
         }
         else if (tolower(spec.front()) == "open/close")
         {
-            T * A = new T[size];
-            assert(A);
             string filePath = folderPath;
             filePath += spec.back().c_str();
             //replace the '\' with '/'
@@ -92,33 +91,23 @@ protected:
 
             char tmp[1024];
             ifstream fin(filePath.c_str());
-            if (!fin.good())
+            if (!fin.good()) throw GridgenError("Cannot open file:" + filePath);
+
+            T * A = new T[size];
+            if (fin.peek() == '#')
             {
-                cerr << "! Error: Cannot open file:" << filePath << endl;
-                delete[] A;
-                A = nullptr;
-            } //end good
-            else
-            {
-                if (fin.peek() == '#')
-                {
-                    fin.getline(tmp, 1024);
-                }
-                for (int i = 0; i < size; i++) fin >> A[i];
+                fin.getline(tmp, 1024);
             }
+            for (int i = 0; i < size; i++) fin >> A[i];
 
             fin.close();
             return A;
         }
         else
         {
-            //throw spec.back(); //don't know what to do in this function
-            cerr << "! Error: Unknown operator: " << spec.front() << " (in BaseParser::createArray)"
-                 << endl;
-            exit(1);
+            throw GridgenError("Unknown operator: " + spec.front() +
+                               " (in BaseParser::createArray)");
         }
-
-        return nullptr;
     }
 };
 

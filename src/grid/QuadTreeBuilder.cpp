@@ -12,6 +12,7 @@
 #include <locale>
 #include <string>
 #include "QuadTreeBuilder.h"
+#include "GridgenError.h"
 #include "shapefile/shpReader.h"
 #include "GridDomain.h"
 
@@ -70,9 +71,8 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
         }
         else
         {
-            cerr << "! Error: Unknown top " << i << " elevation operator: " << rawdata.top[i].first
-                 << endl;
-            exit(1);
+            throw GridgenError("Unknown top " + to_string(i) +
+                               " elevation operator: " + rawdata.top[i].first);
         }
 
         string operation_bot = tolower(rawdata.bot[i].first);
@@ -92,9 +92,8 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
         }
         else
         {
-            cerr << "! Error: Unknown bottom " << i << " elevation operator: ("
-                 << rawdata.bot[i].first << ")" << endl;
-            exit(1);
+            throw GridgenError("Unknown bottom " + to_string(i) + " elevation operator: (" +
+                               rawdata.bot[i].first + ")");
         }
     }
 
@@ -186,8 +185,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
             }
             else
             {
-                cerr << " ! Error: Unknown feature type: " << rf->featuretype << endl;
-                exit(1);
+                throw GridgenError("Unknown feature type: " + rf->featuretype);
             }
         } //end for f
 
