@@ -1,4 +1,5 @@
 #include "reader_treestruct.h"
+#include "GridgenError.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -74,9 +75,7 @@ void parseTreeStructFile(string fileName, vector<TreeStructNode> & tree, string 
     ifstream fin(filePath.c_str());
     if (!fin.good())
     {
-        cerr << "! Error: Cannot open tree structure file:" << filePath << endl;
-        exit(1);
-        return;
+        throw cusg::GridgenError("Cannot open tree structure file:" + filePath);
     } //end good
 
     /************************************************************************/

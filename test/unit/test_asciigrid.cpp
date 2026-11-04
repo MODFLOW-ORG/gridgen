@@ -1,9 +1,11 @@
 // Elevations interpolated from ESRI ASCII grids
+#include <cstdio>
 #include <fstream>
 #include <string>
 
 #include <gtest/gtest.h>
 
+#include "GridgenError.h"
 #include "grid_helpers.h"
 
 using namespace cusg;
@@ -100,8 +102,16 @@ TEST(AsciiGrid, CellOverOnlyNodataIsAnError)
         SCOPED_TRACE(area_weighted ? "area weighted" : "bilinear");
         std::unique_ptr<QuadTree3D> qtree = qtree_over(path);
         qtree->setBotAreaWeighted(0, area_weighted);
-        EXPECT_EXIT(qtree->get_bot(), testing::ExitedWithCode(1), "");
+        EXPECT_THROW(qtree->get_bot(), GridgenError);
     }
+}
+
+TEST(AsciiGrid, UnreadableFileIsAnError)
+{
+    std::string path = testing::TempDir() + "gridgen_unit_missing.asc";
+    std::remove(path.c_str());
+    std::unique_ptr<QuadTree3D> qtree = qtree_over(path);
+    EXPECT_THROW(qtree->get_bot(), GridgenError);
 }
 
 TEST(AsciiGrid, CellBeyondGridTakesEdgeValue)

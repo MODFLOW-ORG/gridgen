@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <climits>
 #include <set>
+#include <sstream>
 #include "def_struct.h"
 #include "ModflowGrid.h"
 #include "QuadTree3D.h"
@@ -260,9 +261,7 @@ bool modflow_grid_raw_data::parse()
     }
     else
     {
-        cerr << "! Error: missing rotation_angle" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing rotation_angle");
     }
 
     value = name_value_map["x_offset"];
@@ -270,9 +269,7 @@ bool modflow_grid_raw_data::parse()
         x_offset = atof(value.front().c_str());
     else
     {
-        cerr << "! Error: missing x_offset" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing x_offset");
     }
 
     value = name_value_map["y_offset"];
@@ -280,9 +277,7 @@ bool modflow_grid_raw_data::parse()
         y_offset = atof(value.front().c_str());
     else
     {
-        cerr << "! Error: missing y_offset" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing y_offset");
     }
 
     value = name_value_map["length_unit"];
@@ -297,9 +292,7 @@ bool modflow_grid_raw_data::parse()
         nlay = atoi(value.front().c_str());
     else
     {
-        cerr << "! Error: missing nlay" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing nlay");
     }
 
     value = name_value_map["nrow"];
@@ -307,9 +300,7 @@ bool modflow_grid_raw_data::parse()
         nrow = atoi(value.front().c_str());
     else
     {
-        cerr << "! Error: missing nrow" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing nrow");
     }
 
     value = name_value_map["ncol"];
@@ -317,9 +308,7 @@ bool modflow_grid_raw_data::parse()
         ncol = atoi(value.front().c_str());
     else
     {
-        cerr << "! Error: missing ncol" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing ncol");
     }
 
     value = name_value_map["delr"];
@@ -329,9 +318,7 @@ bool modflow_grid_raw_data::parse()
     }
     else
     {
-        cerr << "! Error: missing delr" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing delr");
     }
 
     value = name_value_map["delc"];
@@ -341,9 +328,7 @@ bool modflow_grid_raw_data::parse()
     }
     else
     {
-        cerr << "! Error: missing delc" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing delc");
     }
 
     value = name_value_map["top"];
@@ -353,9 +338,7 @@ bool modflow_grid_raw_data::parse()
     }
     else
     {
-        cerr << "! Error: missing top layer" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing top layer");
     }
 
     for (int i = 0; i < nlay; i++)
@@ -370,10 +353,9 @@ bool modflow_grid_raw_data::parse()
         }
         else
         {
-            cerr << "! Error: missing bottom layer " << i + 1 << "(" << i
-                 << " for 0 based numbering)" << endl;
-            assert(false);
-            return false;
+            stringstream msg;
+            msg << "missing bottom layer " << i + 1 << "(" << i << " for 0 based numbering)";
+            throw GridgenError(msg.str());
         }
     }
 
@@ -393,17 +375,21 @@ bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
     if (m_initizlied) return true;
 
-    delr = createArray<REAL>(delr_str, ncol, getFolderPath());
-    delc = createArray<REAL>(delc_str, nrow, getFolderPath());
-    top = createArray<REAL>(top_str, ncol * nrow, getFolderPath());
-
-    bot.reserve(nlay + 1);
-    bot.push_back(top);
+    //kept only when every array is read, so an error leaves none
+    unique_ptr<REAL[]> r(createArray<REAL>(delr_str, ncol, getFolderPath()));
+    unique_ptr<REAL[]> c(createArray<REAL>(delc_str, nrow, getFolderPath()));
+    vector<unique_ptr<REAL[]>> b;
+    b.emplace_back(createArray<REAL>(top_str, ncol * nrow, getFolderPath()));
     for (int i = 0; i < nlay; i++)
     {
-        REAL * B = createArray<REAL>(bot_str[i], ncol * nrow, getFolderPath());
-        bot.push_back(B);
+        b.emplace_back(createArray<REAL>(bot_str[i], ncol * nrow, getFolderPath()));
     }
+
+    delr = r.release();
+    delc = c.release();
+    bot.reserve(nlay + 1);
+    for (auto & a : b) bot.push_back(a.release());
+    top = bot[0];
 
     m_initizlied = true;
 
@@ -454,9 +440,7 @@ bool quadtree_grid_raw_data::parse()
         modflow_grid = value.front();
     else
     {
-        cerr << "! Error: missing modflow_grid" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing modflow_grid");
     }
 
     value = name_value_map["structure_file"];
@@ -464,9 +448,7 @@ bool quadtree_grid_raw_data::parse()
         tree_structure_file = value.back(); //value.front();
     else
     {
-        cerr << "! Error: missing tree_structure_file" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing tree_structure_file");
     }
 
     //read the surfaces of each layer named, independently of the other layers
@@ -530,36 +512,43 @@ Grid * quadtree_grid_raw_data::build()
         }
 
         qtree_grid = new QuadTree3D(modflowGrid);
-        assert(qtree_grid);
-
-        //fill the QuadTree3d
-        fillQuadTree3D();
-
-        //copy surface data from top/bottom to those in qtree_grid
-        int nodesize = qtree_grid->nodes();
-        if (qtree_grid->top != nullptr) delete[] qtree_grid->top;
-        if (qtree_grid->bot != nullptr) delete[] qtree_grid->bot;
-        qtree_grid->top = new double[nodesize];
-        qtree_grid->bot = new double[nodesize];
-        assert(qtree_grid->top && qtree_grid->bot);
-        int index = 0;
-        for (int layer = 0; layer < modflowGrid->nlay; layer++)
+        try
         {
-            int node_per_layer = qtree_grid->nodegroup.nodelay_array[layer];
+            //fill the QuadTree3d
+            fillQuadTree3D();
 
-            double * top_tmp = createArray<REAL>(top_str[layer], node_per_layer, getFolderPath());
-            memcpy(&qtree_grid->top[index], top_tmp, sizeof(double) * node_per_layer);
-            delete[] top_tmp; //free data
+            //copy surface data from top/bottom to those in qtree_grid
+            int nodesize = qtree_grid->nodes();
+            if (qtree_grid->top != nullptr) delete[] qtree_grid->top;
+            if (qtree_grid->bot != nullptr) delete[] qtree_grid->bot;
+            qtree_grid->top = new double[nodesize];
+            qtree_grid->bot = new double[nodesize];
+            int index = 0;
+            for (int layer = 0; layer < modflowGrid->nlay; layer++)
+            {
+                int node_per_layer = qtree_grid->nodegroup.nodelay_array[layer];
 
-            double * bot_tmp = createArray<REAL>(bot_str[layer], node_per_layer, getFolderPath());
-            memcpy(&qtree_grid->bot[index], bot_tmp, sizeof(double) * node_per_layer);
-            delete[] bot_tmp; //free data
+                unique_ptr<REAL[]> top_tmp(
+                    createArray<REAL>(top_str[layer], node_per_layer, getFolderPath()));
+                memcpy(&qtree_grid->top[index], top_tmp.get(), sizeof(double) * node_per_layer);
 
-            index += node_per_layer;
-        } //end for layer
+                unique_ptr<REAL[]> bot_tmp(
+                    createArray<REAL>(bot_str[layer], node_per_layer, getFolderPath()));
+                memcpy(&qtree_grid->bot[index], bot_tmp.get(), sizeof(double) * node_per_layer);
 
-        //done
-        qtree_grid->name = this->name;
+                index += node_per_layer;
+            } //end for layer
+
+            //done
+            qtree_grid->name = this->name;
+        }
+        catch (...)
+        {
+            //a grid left half built would be returned by the next call
+            delete qtree_grid;
+            qtree_grid = nullptr;
+            throw;
+        }
     }
 
     return (Grid *)qtree_grid;
@@ -701,9 +690,7 @@ bool quadtree_builder_raw_data::parse()
         modflow_grid = value.front();
     else
     {
-        cerr << "! Error: missing modflow_grid" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing modflow_grid");
     }
 
     value = name_value_map["grid_definition_file"];
@@ -711,9 +698,7 @@ bool quadtree_builder_raw_data::parse()
         grid_definition_file = value.front();
     else
     {
-        cerr << "! Error: missing grid_definition_file" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing grid_definition_file");
     }
 
     value = name_value_map["smoothing"];
@@ -789,10 +774,9 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
             }
             else
             {
-                cerr << "! Error: Quadtree Builder: Block " << s << " is referenced but not defined"
-                     << endl;
-                assert(false);
-                return false;
+                stringstream msg;
+                msg << "Quadtree Builder: Block " << s << " is referenced but not defined";
+                throw GridgenError(msg.str());
             }
         } // end for s
         active_domain_data.push_back(aF);
@@ -831,10 +815,9 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
                 rF.push_back(rf);
             else
             {
-                cerr << "! Error: Quadtree Builder: There is no refinement feature named " << s
-                     << endl;
-                assert(false);
-                return false;
+                stringstream msg;
+                msg << "Quadtree Builder: There is no refinement feature named " << s;
+                throw GridgenError(msg.str());
             }
         }
 
@@ -897,7 +880,17 @@ Grid * quadtree_builder_raw_data::build()
         }
 
         Quadtree_Builder builder;
-        builder.build(qtree_grid, *this);
+        try
+        {
+            builder.build(qtree_grid, *this);
+        }
+        catch (...)
+        {
+            //a grid left half built would be returned by the next call
+            delete qtree_grid;
+            qtree_grid = nullptr;
+            throw;
+        }
     }
 
     return (Grid *)qtree_grid;
@@ -943,9 +936,7 @@ bool grid_intersection_raw_data::parse()
         grid_name = value.front();
     else
     {
-        cerr << "! Error: missing grid" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing grid");
     }
 
     value = name_value_map["shapefile"];
@@ -965,9 +956,7 @@ bool grid_intersection_raw_data::parse()
     }
     else
     {
-        cerr << "! Error: missing shapefile" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing shapefile");
     }
 
     value = name_value_map["feature_type"];
@@ -975,9 +964,7 @@ bool grid_intersection_raw_data::parse()
         feature_type = value.front();
     else
     {
-        cerr << "! Error: missing feature_type" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing feature_type");
     }
 
     value = name_value_map["output_file"];
@@ -996,9 +983,7 @@ bool grid_intersection_raw_data::parse()
     }
     else
     {
-        cerr << "! Error: missing output_file" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing output_file");
     }
 
     value = name_value_map["output_shapefile"];
@@ -1021,9 +1006,7 @@ bool grid_intersection_raw_data::parse()
         layer = atoi(value.front().c_str()) - 1;
     else
     {
-        cerr << "! Error: missing layer" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing layer");
     }
 
     value = name_value_map["attributes"];
@@ -1108,9 +1091,7 @@ bool active_domain_raw_data::parse()
         shapefile = value.front();
     else
     {
-        cerr << "! Error: missing shapefile" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing shapefile");
     }
 
     value = name_value_map["feature_type"];
@@ -1118,9 +1099,7 @@ bool active_domain_raw_data::parse()
         feature_type = value.front();
     else
     {
-        cerr << "! Error: missing feature_type" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing feature_type");
     }
 
     value = name_value_map["include_boundary"];
@@ -1170,9 +1149,7 @@ bool refinement_raw_data::parse()
         shapefile = value.front();
     else
     {
-        cerr << "! Error: missing shapefile" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing shapefile");
     }
 
     value = name_value_map["feature_type"];
@@ -1180,9 +1157,7 @@ bool refinement_raw_data::parse()
         featuretype = value.front();
     else
     {
-        cerr << "! Error: missing feature_type" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing feature_type");
     }
 
     //a level from a shapefile attribute overrides refinement_level
@@ -1193,9 +1168,7 @@ bool refinement_raw_data::parse()
     if (!attribute.empty()) refinement_level_by_attribute = attribute.front();
     if (value.empty() && attribute.empty())
     {
-        cerr << "! Error: missing refinement_level or refine_level_by_attribute" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing refinement_level or refine_level_by_attribute");
     }
 
     return true;
@@ -1233,9 +1206,7 @@ bool grid_to_usgdata_raw_data::parse()
         grid_name = value.front();
     else
     {
-        cerr << "! Error: missing grid" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing grid");
     }
 
     value = name_value_map["usg_data_prefix"];
@@ -1243,9 +1214,7 @@ bool grid_to_usgdata_raw_data::parse()
         usg_data_prefix = value.front();
     else
     {
-        cerr << "! Error: missing usg_data_prefix" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing usg_data_prefix");
     }
 
     value = name_value_map["vertical_pass_through"];
@@ -1328,9 +1297,7 @@ bool gridtoshape_raw_data::parse()
         grid_name = value.front();
     else
     {
-        cerr << "! Error: missing grid" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing grid");
     }
 
     value = name_value_map["shapefile"];
@@ -1349,9 +1316,7 @@ bool gridtoshape_raw_data::parse()
     }
     else
     {
-        cerr << "! Error: missing shapefile" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing shapefile");
     }
 
     value = name_value_map["node_numbering"];
@@ -1377,9 +1342,7 @@ bool gridtoshape_raw_data::parse()
         feature_type = value.front();
     else
     {
-        cerr << "! Error: missing feature_type" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing feature_type");
     }
 
     return true;
@@ -1467,9 +1430,7 @@ bool gridtovtk_raw_data::parse()
         grid_name = value.front();
     else
     {
-        cerr << "! Error: missing grid" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing grid");
     }
 
     value = name_value_map["vtkfile"];
@@ -1488,9 +1449,7 @@ bool gridtovtk_raw_data::parse()
     }
     else
     {
-        cerr << "! Error: missing vtkfile" << endl;
-        assert(false);
-        return false;
+        throw GridgenError("missing vtkfile");
     }
 
     value = name_value_map["without_inactive"];

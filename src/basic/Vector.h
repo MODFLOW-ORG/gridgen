@@ -183,11 +183,7 @@ template <class T, int D> T Vector<T, D>::operator*(const Vector<T, D> & v2) con
 
 template <class T, int D> Vector<T, D> Vector<T, D>::operator%(const Vector<T, D> & v2) const
 {
-    if (D > 3)
-    {
-        cerr << "cannot take cross product of " << D << "D Vector";
-        exit(1);
-    }
+    static_assert(D <= 3, "cannot take cross product of a Vector of more than 3 dimensions");
     if (D == 2) return Vector<T, D>(0, 0);
     //D==3
     Vector<T, D> newv(*this);

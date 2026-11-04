@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include "GridgenError.h"
 #include "def_parser.h"
 #include "def_struct.h"
 
@@ -28,6 +29,14 @@ const char * MFG_BLOCK = "BEGIN MODFLOW_GRID mfg\n"
                          "  BOTTOM LAYER 1 = CONSTANT 0.\n"
                          "  BOTTOM LAYER 2 = CONSTANT -10.\n"
                          "END MODFLOW_GRID\n";
+
+// MFG_BLOCK with one record replaced
+std::string mfg_block_with(const std::string & from, const std::string & to)
+{
+    std::string block = MFG_BLOCK;
+    block.replace(block.find(from), from.size(), to);
+    return block;
+}
 
 } // namespace
 
@@ -58,6 +67,31 @@ TEST(DefinitionParser, ModflowGridBlock)
 
     EXPECT_DOUBLE_EQ(data->rotation_angle, 30.0 * std::acos(-1.0) / 180);
     EXPECT_EQ(data->rotation_degrees, 30.0);
+}
+
+TEST(DefinitionParser, MissingRequiredRecordIsAnError)
+{
+    std::istringstream dfn(mfg_block_with("  NROW = 3\n", ""));
+    DefinitionParser parser;
+    EXPECT_THROW(parser.parse(dfn), GridgenError);
+}
+
+TEST(DefinitionParser, ArrayErrors)
+{
+    // DELC is read after DELR, which an error must not leave behind
+    for (const char * delc : {"OPEN/CLOSE gridgen_unit_missing.dat", "BOGUS 25."})
+    {
+        SCOPED_TRACE(delc);
+        std::istringstream dfn(mfg_block_with("CONSTANT 25.", delc));
+        DefinitionParser parser;
+        ASSERT_TRUE(parser.parse(dfn));
+        modflow_grid_raw_data * data =
+            dynamic_cast<modflow_grid_raw_data *>(parser.getBlockData("mfg"));
+        ASSERT_NE(data, nullptr);
+        EXPECT_THROW(data->initialize(parser.getBlockData()), GridgenError);
+        EXPECT_EQ(data->delr, nullptr);
+        EXPECT_TRUE(data->bot.empty());
+    }
 }
 
 TEST(DefinitionParser, UnknownBlockIsNull)

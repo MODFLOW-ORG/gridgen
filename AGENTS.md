@@ -118,9 +118,11 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   such a test passes locally and fails only in CI. Have the code under test
   record what it reports, for example with an accessor like
   `DefinitionParser::getWarnings()` (see `UnrecognizedRecordIsReported`),
-  and check a death test by its exit code alone, with an empty message
-  matcher: `EXPECT_EXIT(..., testing::ExitedWithCode(1), "")` (see
-  `test_asciigrid.cpp`).
+  and check an error by the exception it throws:
+  `EXPECT_THROW(..., GridgenError)` (see `test_asciigrid.cpp`).
+- **Errors:** report an error that stops the action by throwing
+  `GridgenError` (`src/basic/GridgenError.h`) with a message, never by
+  calling `exit()`; `main` prints the message and returns 1.
 - **Formatting:** before each commit that changes C++, Python, or text, run
   `pixi run check-format`; if it fails, run `pixi run fix-format`, check the
   result, and include it in the commit, since the lint job runs the same
