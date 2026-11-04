@@ -10,6 +10,8 @@
 #include "GridDomain.h"
 #include "shapefile/shpReader.h"
 #include "GridIntersection.h"
+#include "GridgenError.h"
+#include "Warnings.h"
 
 namespace cusg
 {
@@ -39,8 +41,11 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
     rmfgrid->getRotatePara(cx, cy, angle);
 
     //read from shapefile
+    string block = "ACTIVE_DOMAIN " + data->name;
     ShapeReader shp_reader;
-    shp_reader.read(data->shapefile);
+    if (!shp_reader.read(data->shapefile))
+        throw GridgenError("cannot open shapefile " + data->shapefile + " (" + block + ")");
+    int nfeatures = 0, noutside = 0;
 
     //start to find the domain
     GridIntersection gi(0, layer);
@@ -49,10 +54,12 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
         vector<GIS_plyline> & arcs = shp_reader.getArcList();
         //subdivide the qtree using the features
         int arcssize = arcs.size();
+        nfeatures = arcssize;
         for (int j = 0; j < arcssize; j++)
         {
             if (angle != 0) arcs[j].rotate(cx, cy, -angle);
 
+            bool touched = false;
             ply_vertex * ptr = arcs[j].getHead();
             do
             {
@@ -62,14 +69,15 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
                     LineSeg2d line(ptr->getPos(), next->getPos());
 
                     if (qtgrid != nullptr)
-                        gi.intersect(qtgrid, line);
+                        touched |= gi.intersect(qtgrid, line);
                     else if (mfgrid != nullptr)
-                        gi.intersect(mfgrid, line);
+                        touched |= gi.intersect(mfgrid, line);
                     else if (mf2dqtgrid != nullptr)
-                        gi.intersect(mf2dqtgrid, line);
+                        touched |= gi.intersect(mf2dqtgrid, line);
                 }
                 ptr = next;
             } while (ptr != nullptr);
+            if (!touched) noutside++;
             if (angle != 0) arcs[j].rotate(cx, cy, angle);
         }
     } //end if
@@ -78,6 +86,7 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
         gi.set_include_poly_boundary_flag(data->include_boundary);
         vector<GIS_polygon> & polygons = shp_reader.getPolyList();
         int pgonsize = polygons.size();
+        nfeatures = pgonsize;
 
         for (int j = 0; j < pgonsize; j++)
         {
@@ -91,12 +100,14 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
             polygons[j].buildBoxAndCenter();
 
             //determine intersection
+            bool touched = false;
             if (qtgrid != nullptr)
-                gi.intersect(qtgrid, (c_polygon &)polygons[j]);
+                touched = gi.intersect(qtgrid, (c_polygon &)polygons[j]);
             else if (mfgrid != nullptr)
-                gi.intersect(mfgrid, polygons[j]);
+                touched = gi.intersect(mfgrid, polygons[j]);
             else if (mf2dqtgrid != nullptr)
-                gi.intersect(mf2dqtgrid, polygons[j]);
+                touched = gi.intersect(mf2dqtgrid, polygons[j]);
+            if (!touched) noutside++;
 
             //rotate back
             if (angle != 0)
@@ -111,22 +122,31 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
 
         //subdivide the qtree using the features
         int psize = pts.size();
+        nfeatures = psize;
         for (int j = 0; j < psize; j++)
         {
             //rotate
             if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
+            bool touched = false;
             if (qtgrid != nullptr)
-                gi.intersect(qtgrid, pts[j]);
+                touched = gi.intersect(qtgrid, pts[j]);
             else if (mfgrid != nullptr)
-                gi.intersect(mfgrid, pts[j]);
+                touched = gi.intersect(mfgrid, pts[j]);
             else if (mf2dqtgrid != nullptr)
-                gi.intersect(mf2dqtgrid, pts[j]);
+                touched = gi.intersect(mf2dqtgrid, pts[j]);
+            if (!touched) noutside++;
 
             //rotate back
             if (angle != 0) pts[j].rotate(cx, cy, angle);
         }
     } //end if
+
+    if (nfeatures == 0)
+        warn("Shapefile " + data->shapefile + " (" + block + ") has no " + data->feature_type +
+             " features; no cells in layer " + to_string(layer + 1) + " are made active by it.");
+    warn_features_outside(noutside, nfeatures, data->shapefile, block, layer,
+                          "no cells are made active by them");
 
     vector<Box *> & boxes = gi.getIntersections();
     domain_boxes.insert(domain_boxes.end(), boxes.begin(), boxes.end());

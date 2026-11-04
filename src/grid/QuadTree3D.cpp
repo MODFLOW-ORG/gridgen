@@ -93,10 +93,11 @@ void getSpecialPointIntersection(QuadTree3D * qtree, const Point2d & pt, int max
     }
 }
 
-void QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
+bool QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
 {
     list<Box *> bl;
     getSpecialPointIntersection(this, pt, max_level, at_layer, bl);
+    bool touched = !bl.empty();
 
     while (!bl.empty())
     {
@@ -115,6 +116,8 @@ void QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
 
         this->rebuild_nodeid_array = true;
     }
+
+    return touched;
 }
 
 /**************************************************************/
@@ -264,10 +267,11 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
 //				//check if really intersect
 //				//todo:
 
-void QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
+bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
 {
 
     bool refined = true;
+    bool touched = false;
 
     do
     {
@@ -294,6 +298,8 @@ void QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
             ptr = next;
 
         } while (ptr != nullptr);
+        //r is true even for a line outside the grid, so use the cells found
+        touched = touched || !results.empty();
 
         if (r)
         {
@@ -315,6 +321,8 @@ void QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
         }
 
     } while (refined);
+
+    return touched;
 }
 
 //	do
@@ -359,15 +367,17 @@ bool isReallyIntersect(c_polygon & pgon, Box * b)
 }
 
 //refine cells enclosed by pgon
-void QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
+bool QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
 {
     bool refined = true;
+    bool touched = false;
 
     do
     {
         refined = false;
         GridIntersection gi(max_level, at_layer);
         bool r = gi.intersect((QuadTree3D *)this, pgon);
+        touched = touched || r;
 
         if (r)
         {
@@ -377,12 +387,7 @@ void QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
             {
                 if (b->depth >= max_level) continue; //too deep
 
-                if (!isReallyIntersect(pgon, b))
-                {
-                    cout
-                        << "warning: QuadTree3D::refine( c_polygon& pgon, int max_level, int at_layer) no intersection!\n";
-                    continue; //not really intersect
-                }
+                if (!isReallyIntersect(pgon, b)) continue; //not really intersect
 
                 if (!b->split(0)) continue; //already split
 
@@ -394,6 +399,8 @@ void QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
         }
 
     } while (refined);
+
+    return touched;
 }
 
 ///return true if this is the final refinement

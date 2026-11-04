@@ -157,11 +157,7 @@ DefinitionParser::~DefinitionParser()
 bool DefinitionParser::parse(string filename)
 {
     ifstream fin(filename.c_str());
-    if (!fin.good())
-    {
-        cerr << "! Error: Cannot open file:" << filename << endl;
-        return false;
-    } //end good
+    if (!fin.good()) throw GridgenError("cannot open definition file " + filename);
 
     bool r = parse(fin);
     fin.close();
@@ -205,10 +201,7 @@ bool DefinitionParser::parse(istream & in, string folder)
 
             ifstream relfin(dfnPath.c_str());
             if (!relfin.good())
-            {
-                cerr << "! Error: Cannot open file:" << dfnPath << endl;
-                continue;
-            } //end good()
+                throw GridgenError("cannot open included definition file " + dfnPath);
 
             int dotIdx = dfnPath.find_last_of('/');
             string relFolder = "";
@@ -234,7 +227,7 @@ bool DefinitionParser::parse(istream & in, string folder)
                 if (r)
                     m_blocks[block.name] = ptr_block.release();
                 else
-                    cerr << "! Error: Something wrong paring the definition file" << endl;
+                    throw GridgenError("block " + block.name + " cannot be read");
             } //end if
         }
         else

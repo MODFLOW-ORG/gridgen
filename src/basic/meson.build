@@ -3,6 +3,7 @@ basic_sources = files(
     'Util.cpp',
     'Basic.cpp',
     'polyline.cpp',
+    'Warnings.cpp',
     'Point.h',
 )
 

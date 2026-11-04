@@ -99,6 +99,12 @@ protected:
                 fin.getline(tmp, 1024);
             }
             for (int i = 0; i < size; i++) fin >> A[i];
+            if (fin.fail())
+            {
+                delete[] A;
+                throw GridgenError("file " + filePath + " has fewer than " + to_string(size) +
+                                   " numbers");
+            }
 
             fin.close();
             return A;

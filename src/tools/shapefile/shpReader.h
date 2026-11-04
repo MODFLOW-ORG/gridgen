@@ -93,6 +93,7 @@ private:
     double bbox[4];
 
     bool already_read;
+    string m_filename; //for warnings
 
     ////add by Guilin
 

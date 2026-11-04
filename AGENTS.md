@@ -116,13 +116,16 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   `testing::internal::CaptureStderr()` returns nothing on the
   `windows-2022 intel 2025.0` CI build, though it works on the others, so
   such a test passes locally and fails only in CI. Have the code under test
-  record what it reports, for example with an accessor like
-  `DefinitionParser::getWarnings()` (see `UnrecognizedRecordIsReported`),
-  and check an error by the exception it throws:
-  `EXPECT_THROW(..., GridgenError)` (see `test_asciigrid.cpp`).
-- **Errors:** report an error that stops the action by throwing
-  `GridgenError` (`src/basic/GridgenError.h`) with a message, never by
-  calling `exit()`; `main` prints the message and returns 1.
+  record what it reports: check a warning with `get_warnings()` after
+  `clear_warnings()` (see `test_warnings.cpp`), and an error by the
+  exception it throws: `EXPECT_THROW(..., GridgenError)`.
+- **Errors and warnings:** report an error that stops the action by
+  throwing `GridgenError` (`src/basic/GridgenError.h`) with a message, never
+  by calling `exit()` or printing a message and continuing; `main` prints the
+  message and returns 1. Report input that is ignored or has no effect on the
+  grid with `warn()` (`src/basic/Warnings.h`). Write each message as a
+  plain-language sentence that names the block, file, and feature and says
+  what it means for the grid, not the class or function that reports it.
 - **Formatting:** before each commit that changes C++, Python, or text, run
   `pixi run check-format`; if it fails, run `pixi run fix-format`, check the
   result, and include it in the commit, since the lint job runs the same
