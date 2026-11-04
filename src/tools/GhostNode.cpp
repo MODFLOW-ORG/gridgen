@@ -101,10 +101,8 @@ void computeGN(Box * m, Box * n, int dir, vector<GhostNode> & gns)
 void computeGNNeigh(Box * m, list<Box *> & nlist, int dir, vector<GhostNode> & gns)
 {
     //neighbors
-    for (list<Box *>::iterator lit = nlist.begin(); lit != nlist.end(); ++lit)
+    for (auto tb : nlist)
     {
-        Box * tb = *lit;
-
         if (tb->number == -1) continue;
 
         if (tb->depth >= m->depth) continue;
@@ -117,9 +115,8 @@ void computeGNNeigh(Box * m, list<Box *> & nlist, int dir, vector<GhostNode> & g
 void computeGNC(QuadTree3D * qtree, vector<GhostNode> & gns)
 {
     //loop over all the leaf node
-    for (NodeGroup::iterator nit = qtree->nodegroup.begin(); nit != qtree->nodegroup.end(); ++nit)
+    for (auto b : qtree->nodegroup)
     {
-        Box * b = *nit;
         if (!b->isLeaf || b->number == -1) continue;
 
         list<Box *> nei[4];
@@ -139,9 +136,8 @@ void writeGhostNode(string filePath, vector<GhostNode> & gns, int offset = 1)
 {
     ofstream ofile;
     ofile.open(filePath.c_str(), std::ofstream::out | std::ofstream::trunc);
-    for (vector<GhostNode>::iterator git = gns.begin(); git != gns.end(); ++git)
+    for (auto & ghn : gns)
     {
-        GhostNode & ghn = *git;
         ofile << ghn.nNum + offset << "\t" << ghn.mNum + offset << "\t" << ghn.j1 + offset << "\t"
               << ghn.j2 + offset << "\t" << round_trip(ghn.apha1) << "\t" << round_trip(ghn.apha2)
               << endl;

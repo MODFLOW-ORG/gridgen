@@ -71,7 +71,7 @@ namespace cusg
  *                   - 2: South
  *                   - 3: West
  */
-BoxIter::BoxIter(const Box * bb, int direc) : b(bb), direction(direc), neighbor(0)
+BoxIter::BoxIter(const Box * bb, int direc) : b(bb), direction(direc), neighbor(nullptr)
 {
     prev = (direc + 3) % 4;
     next = (direc + 1) % 4;
@@ -102,7 +102,7 @@ Box * BoxIter::First()
     {
         // There's no nodes when we walk in this direction,
         // so return a null pointer.
-        return 0;
+        return nullptr;
     }
 
     // If 'b' is a leaf node, its depth will be the same as the
@@ -119,10 +119,10 @@ Box * BoxIter::First()
         while (true)
         {
             // If we've made it here, n shouldn't be a null pointer.
-            assert(n != 0);
+            assert(n != nullptr);
 
             //when the n->pChildren[next] is out of bound of b
-            if (n->pChildren[next] == NULL || Box::isOverLimit(b, n->pChildren[next]))
+            if (n->pChildren[next] == nullptr || Box::isOverLimit(b, n->pChildren[next]))
             {
                 break;
             }
@@ -139,7 +139,7 @@ Box * BoxIter::First()
         //get the box that touches b
         while (true)
         {
-            assert(n != 0);
+            assert(n != nullptr);
             if (n->pChildren[cross] == b)
             {
                 break;
@@ -158,12 +158,12 @@ Box * BoxIter::First()
  */
 Box * BoxIter::End()
 {
-    if (b->pChildren[direction] != NULL)
+    if (b->pChildren[direction] != nullptr)
     {
         return b->pChildren[direction]->pChildren[prev];
     }
 
-    return 0;
+    return nullptr;
 }
 
 /*! \brief   Advances to the next neighboring box node
@@ -174,7 +174,7 @@ Box * BoxIter::Next()
 {
     if (!neighbor)
     {
-        return 0;
+        return nullptr;
     }
 
     neighbor = neighbor->pChildren[prev];
@@ -210,7 +210,7 @@ void Box::getNeighbors(list<Box *> & neighbors, int dir)
     BoxIter iter(this, dir);
     Box * neighbor = iter.First();
 
-    if (neighbor == NULL) return; //no neighbors...
+    if (neighbor == nullptr) return; //no neighbors...
 
     while (neighbor != iter.End())
     {
@@ -258,7 +258,7 @@ bool Box::split(double epsilon)
     //initialize the new nodes
     for (int i = 0; i < 4; ++i)
     {
-        if (children[i] == NULL)
+        if (children[i] == nullptr)
         {
             cerr << "! Error: Box::split: Not enough memory" << endl;
             return false;
@@ -354,16 +354,16 @@ bool Box::split(double epsilon)
     }
 
     //setup/update connections to pUp
-    if (this->pUp != NULL)
+    if (this->pUp != nullptr)
     {
         this->refine_pUp();
 
         if (pUp->isLeaf)
         {
-            for (int i = 0; i < 4; ++i)
+            for (auto & i : children)
             {
-                children[i]->pUp = pUp;
-                assert(children[i]->pUp->in(children[i]->x, children[i]->y));
+                i->pUp = pUp;
+                assert(i->pUp->in(i->x, i->y));
             }
         }
         else
@@ -380,13 +380,13 @@ bool Box::split(double epsilon)
     }
 
     //setup/update connections to pDown
-    if (this->pDown != NULL)
+    if (this->pDown != nullptr)
     {
         this->refine_pDown();
 
         if (pDown->isLeaf)
         {
-            for (int i = 0; i < 4; ++i) children[i]->pDown = pDown;
+            for (auto & i : children) i->pDown = pDown;
         }
         else
         {
@@ -432,7 +432,7 @@ bool Box::refine_pDown()
 
 bool Box::refine_pUpDown(Box ** ppbox)
 {
-    if ((*ppbox) == NULL) return true; //nothing to refine...
+    if ((*ppbox) == nullptr) return true; //nothing to refine...
 
     if ((*ppbox)->in(x, y) == false)
     {
@@ -451,11 +451,11 @@ bool Box::refine_pUpDown(Box ** ppbox)
     //(*ppbox)->depth<this->depth
     if ((*ppbox)->isLeaf) return true; //nothing to do
 
-    for (int i = 0; i < 4; i++)
+    for (auto & i : (*ppbox)->pChildren)
     {
-        if ((*ppbox)->pChildren[i]->in(x, y))
+        if (i->in(x, y))
         {
-            (*ppbox) = (*ppbox)->pChildren[i];
+            (*ppbox) = i;
             break;
         }
     }
@@ -470,13 +470,13 @@ Box * Box::find(double qx, double qy)
 
     assert(!isLeaf);
 
-    for (int i = 0; i < 4; i++)
+    for (auto & i : pChildren)
     {
-        if (pChildren[i]->in(qx, qy)) return pChildren[i]->find(qx, qy);
+        if (i->in(qx, qy)) return i->find(qx, qy);
     }
 
     cerr << "! Error: Box::find: Locate a box error!" << endl;
-    return NULL;
+    return nullptr;
 }
 
 void Box::rotateCtr(double cx, double cy, double rotation, double & resx, double & resy)

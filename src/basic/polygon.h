@@ -25,7 +25,7 @@ using namespace std;
 
 #include <limits.h>
 #include <float.h>
-typedef unsigned int uint;
+using uint = unsigned int;
 
 namespace cusg
 {
@@ -44,12 +44,12 @@ public:
     void setNext(ply_vertex * n)
     {
         next = n;
-        if (n != NULL) n->pre = this;
+        if (n != nullptr) n->pre = this;
     }
     void setPre(ply_vertex * n)
     {
         pre = n;
-        if (n != NULL) n->next = this;
+        if (n != nullptr) n->next = this;
     }
     void computeExtraInfo();
 
@@ -75,7 +75,7 @@ public:
 private:
     void init()
     {
-        next = pre = NULL;
+        next = pre = nullptr;
         reflex = false;
         vid = UINT_MAX;
     }
@@ -109,14 +109,14 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     c_ply()
     {
-        head = tail = NULL;
+        head = tail = nullptr;
         type = UNKNOWN;
         radius = -1;
         area = -FLT_MAX;
     }
     c_ply(POLYTYPE t)
     {
-        head = tail = NULL;
+        head = tail = nullptr;
         type = t;
         radius = -1;
         area = -FLT_MAX;
@@ -140,13 +140,13 @@ public:
     {
         type = t;
         head = h;
-        if (h != NULL)
+        if (h != nullptr)
         {
             tail = h->getPre();
         }
         else
         {
-            tail = NULL;
+            tail = nullptr;
         }
     }
 

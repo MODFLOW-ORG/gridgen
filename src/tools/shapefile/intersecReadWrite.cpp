@@ -23,9 +23,8 @@ static double ringArea(ply_vertex * head)
 
 bool checkAttributesContain(const char * attriName, vector<string> & attributes)
 {
-    for (vector<string>::iterator sit = attributes.begin(); sit != attributes.end(); ++sit)
+    for (auto & str : attributes)
     {
-        string & str = *sit;
         if (str == attriName || str == "all")
             return true;
         else if (str == "none")
@@ -42,42 +41,42 @@ void checkShpAttrContain(GridIntersection * gridInter, vector<bool> & bIntFld,
     vector<ShapeDoubleField> & m_dbFlds = gridInter->m_shp_reader.getDBFields();
     vector<ShapeStringField> & m_strFlds = gridInter->m_shp_reader.getStrFields();
     vector<ShapeLogField> & m_logFlds = gridInter->m_shp_reader.getLogicalFields();
-    for (vector<ShapeIntField>::iterator sit = m_intFlds.begin(); sit != m_intFlds.end(); ++sit)
+    for (auto & fld : m_intFlds)
     {
-        if (checkAttributesContain(sit->name.c_str(), attributes))
+        if (checkAttributesContain(fld.name.c_str(), attributes))
         {
             bIntFld.push_back(true);
-            iName.push_back(sit->name);
+            iName.push_back(fld.name);
         }
         else
             bIntFld.push_back(false);
     }
-    for (vector<ShapeDoubleField>::iterator sit = m_dbFlds.begin(); sit != m_dbFlds.end(); ++sit)
+    for (auto & fld : m_dbFlds)
     {
-        if (checkAttributesContain(sit->name.c_str(), attributes))
+        if (checkAttributesContain(fld.name.c_str(), attributes))
         {
             bDBFld.push_back(true);
-            dName.push_back(sit->name);
+            dName.push_back(fld.name);
         }
         else
             bDBFld.push_back(false);
     }
-    for (vector<ShapeStringField>::iterator sit = m_strFlds.begin(); sit != m_strFlds.end(); ++sit)
+    for (auto & fld : m_strFlds)
     {
-        if (checkAttributesContain(sit->name.c_str(), attributes))
+        if (checkAttributesContain(fld.name.c_str(), attributes))
         {
             bStrFld.push_back(true);
-            sName.push_back(sit->name);
+            sName.push_back(fld.name);
         }
         else
             bStrFld.push_back(false);
     }
-    for (vector<ShapeLogField>::iterator sit = m_logFlds.begin(); sit != m_logFlds.end(); ++sit)
+    for (auto & fld : m_logFlds)
     {
-        if (checkAttributesContain(sit->name.c_str(), attributes))
+        if (checkAttributesContain(fld.name.c_str(), attributes))
         {
             bLogFld.push_back(true);
-            lName.push_back(sit->name);
+            lName.push_back(fld.name);
         }
         else
             bLogFld.push_back(false);
@@ -193,7 +192,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
 {
     //create a shape file
     ofstream ofile;
-    SHPHandle handler = NULL;
+    SHPHandle handler = nullptr;
     if (wtype == WRITE_POINT)
     {
         if (!isTxt)
@@ -223,7 +222,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
     }
 
     //create a .dbf file
-    DBFHandle dbfhdl = NULL;
+    DBFHandle dbfhdl = nullptr;
     if (!isTxt)
     {
         string dbf = file;
@@ -276,7 +275,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
     vector<vector<double>>::iterator dit = dbfldVals.begin();
     vector<vector<string>>::iterator sit = strfldVals.begin();
     vector<vector<string>>::iterator lit = logfldVals.begin();
-    double *x = NULL, *y = NULL;
+    double *x = nullptr, *y = nullptr;
     //write points
     if (wtype == WRITE_POINT)
     {
@@ -293,11 +292,11 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             x[0] = pit->pnt[0];
             y[0] = pit->pnt[1];
 
-            SHPObject * shpObj = NULL;
+            SHPObject * shpObj = nullptr;
             int entity = -1;
             if (!isTxt)
             {
-                shpObj = SHPCreateSimpleObject(SHPT_POINT, 1, x, y, NULL);
+                shpObj = SHPCreateSimpleObject(SHPT_POINT, 1, x, y, nullptr);
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
 
@@ -347,11 +346,11 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                 y[idx] = pv->getPos()[1];
             } while (pv != lineInfo.m_plyline->getTail());
 
-            SHPObject * shpObj = NULL;
+            SHPObject * shpObj = nullptr;
             int entity = -1;
             if (!isTxt)
             {
-                shpObj = SHPCreateSimpleObject(SHPT_ARC, vsize, x, y, NULL);
+                shpObj = SHPCreateSimpleObject(SHPT_ARC, vsize, x, y, nullptr);
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
 
@@ -435,12 +434,12 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
 
             //create a polygon shape here
             //SHPObject * shpObj = SHPCreateObject(SHPT_POLYGON,vsize,x, y,NULL);
-            SHPObject * shpObj = NULL;
+            SHPObject * shpObj = nullptr;
             int entity = 0;
             if (!isTxt)
             {
-                shpObj = SHPCreateObject(SHPT_POLYGON, iShape, partSize, nParts, NULL, vsize, x, y,
-                                         NULL, NULL);
+                shpObj = SHPCreateObject(SHPT_POLYGON, iShape, partSize, nParts, nullptr, vsize, x,
+                                         y, nullptr, nullptr);
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
             //write nodenumber
@@ -489,10 +488,8 @@ void writePntIntersect(GridIntersection * gridInter, string file, vector<string>
     checkShpAttrContain(gridInter, bIntFld, bDBFld, bStrFld, bLogFld, intFldName, dbFldName,
                         strFldName, logFldName, attributes);
 
-    for (vector<PointCellIntersectionInfo>::iterator pit = pntInters.begin();
-         pit != pntInters.end(); ++pit)
+    for (auto & pci : pntInters)
     {
-        PointCellIntersectionInfo & pci = *pit;
         vector<int> pints;
         vector<double> dbs;
         vector<string> strs;
@@ -549,10 +546,8 @@ void writeLineIntersect(GridIntersection * gridInter, string file, vector<string
     checkShpAttrContain(gridInter, bIntFld, bDBFld, bStrFld, bLogFld, intFldName, dbFldName,
                         strFldName, logFldName, attributes);
 
-    for (vector<PolylineCellIntersectionInfo>::iterator sit = pcti.begin(); sit != pcti.end();
-         ++sit)
+    for (auto & sio : pcti)
     {
-        PolylineCellIntersectionInfo & sio = *sit;
         vector<int> pints;
         vector<double> dbs;
         vector<string> strs;
@@ -606,9 +601,8 @@ void writePolyIntersect(GridIntersection * gridInter, string file, vector<string
     checkShpAttrContain(gridInter, bIntFld, bDBFld, bStrFld, bLogFld, intFldName, dbFldName,
                         strFldName, logFldName, attributes);
 
-    for (vector<PolygonCellIntersectionInfo>::iterator pit = sci.begin(); pit != sci.end(); ++pit)
+    for (auto & pio : sci)
     {
-        PolygonCellIntersectionInfo & pio = *pit;
         vector<int> pints;
         vector<double> dbs;
         vector<string> strs;

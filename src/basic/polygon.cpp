@@ -22,7 +22,7 @@ void ply_vertex::computeExtraInfo()
     reflex = true;
 
     //compute normal direction
-    if (next != NULL)
+    if (next != nullptr)
     {
         Vector2d v = next->pos - pos;
         if (v[0] == 0)
@@ -51,7 +51,7 @@ void ply_vertex::computeExtraInfo()
 
         normal = normal.normalize();
 
-        if (pre != NULL)
+        if (pre != nullptr)
         {
             //compute if left or right turn
             Vector2d u = pos - pre->pos;
@@ -72,7 +72,7 @@ void ply_vertex::reverse()
 // clean up the space allocated
 void c_ply::destroy()
 {
-    if (head == NULL) return;
+    if (head == nullptr) return;
     ply_vertex * ptr = head;
     do
     {
@@ -80,7 +80,7 @@ void c_ply::destroy()
         delete ptr;
         ptr = n;
     } while (ptr != head);
-    head = tail = NULL;
+    head = tail = nullptr;
 
     all.clear();
 }
@@ -88,7 +88,7 @@ void c_ply::destroy()
 // Create a empty polygon
 void c_ply::beginPoly()
 {
-    head = tail = NULL;
+    head = tail = nullptr;
     all.clear();
 }
 
@@ -97,18 +97,18 @@ void c_ply::addVertex(double x, double y, bool remove_duplicate)
 {
     Point2d pt(x, y);
 
-    if (tail != NULL)
+    if (tail != nullptr)
     {
         if (tail->getPos() == pt && remove_duplicate) return; //don't add
     }
 
     ply_vertex * v = new ply_vertex(pt);
-    if (tail != NULL)
+    if (tail != nullptr)
     {
         tail->setNext(v);
     }
     tail = v;
-    if (head == NULL) head = tail;
+    if (head == nullptr) head = tail;
     v->setVID(all.size()); //id of the vertex in this ply
     all.push_back(v);
 }
@@ -116,7 +116,7 @@ void c_ply::addVertex(double x, double y, bool remove_duplicate)
 // finish building the polygon
 void c_ply::endPoly(bool remove_duplicate)
 {
-    if (head != NULL && tail != NULL)
+    if (head != nullptr && tail != nullptr)
     {
         if (remove_duplicate)
         {
@@ -284,10 +284,10 @@ void c_plylist::buildBoxAndCenter()
     {
         box[0] = box[2] = FLT_MAX;
         box[1] = box[3] = -FLT_MAX;
-        for (iterator i = begin(); i != end(); i++)
+        for (auto & i : *this)
         {
 
-            ply_vertex * ptr = i->getHead();
+            ply_vertex * ptr = i.getHead();
             do
             {
                 const Point2d & p = ptr->getPos();
@@ -296,7 +296,7 @@ void c_plylist::buildBoxAndCenter()
                 if (p[1] < box[2]) box[2] = p[1];
                 if (p[1] > box[3]) box[3] = p[1];
                 ptr = ptr->getNext();
-            } while (ptr != i->getHead()); //end while
+            } while (ptr != i.getHead()); //end while
         }
 
         center[0] = (box[0] + box[1]) / 2;
@@ -308,9 +308,9 @@ void c_plylist::buildBoxAndCenter()
 
 void c_polygon::destroy()
 {
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        i->destroy();
+        i.destroy();
     }
     clear(); //remove all ply from this list
     all.clear();
@@ -319,13 +319,13 @@ void c_polygon::destroy()
 void c_polygon::build_all()
 {
     uint vid = 0;
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        uint vsize = i->getSize();
+        uint vsize = i.getSize();
         for (uint j = 0; j < vsize; j++)
         {
-            (*i)[j]->setVID(vid++); //id of vertex in the polygons
-            all.push_back((*i)[j]);
+            i[j]->setVID(vid++); //id of vertex in the polygons
+            all.push_back(i[j]);
         }
     } //end for i
 }
@@ -334,9 +334,9 @@ double c_polygon::getArea()
 {
     if (area == 0)
     {
-        for (iterator i = begin(); i != end(); i++)
+        for (auto & i : *this)
         {
-            area += i->getArea();
+            area += i.getArea();
         } //end for i
     }
 

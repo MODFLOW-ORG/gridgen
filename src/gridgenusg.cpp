@@ -52,7 +52,7 @@ int main(int argc, char ** argv)
 
     block_raw_data * data = def_parser.getBlockData(action);
 
-    if (data == NULL)
+    if (data == nullptr)
     {
         cerr << "! Error: There is no block named: " << action << endl;
         return 1;
@@ -65,7 +65,7 @@ int main(int argc, char ** argv)
         return 1;
     }
 
-    Grid * grid = NULL;
+    Grid * grid = nullptr;
 
     //try to case the data to various blocks
     grid_raw_data * grid_data = dynamic_cast<grid_raw_data *>(data);
@@ -78,28 +78,28 @@ int main(int argc, char ** argv)
     gridtovtk_raw_data * grid2vtk = dynamic_cast<gridtovtk_raw_data *>(data);
 
     //check if this is a type of grid
-    if (grid_data != NULL)
+    if (grid_data != nullptr)
     {
         grid = grid_data->build();
-        if (grid == NULL)
+        if (grid == nullptr)
         {
             cerr << "! Error: Failed to build block: " << action << endl;
             return 1;
         }
     }
-    else if (grid2shp != NULL)
+    else if (grid2shp != nullptr)
     {
         grid = grid2shp->grid;
     }
-    else if (grid2usg != NULL)
+    else if (grid2usg != nullptr)
     {
         grid = grid2usg->grid;
     }
-    else if (gridintersection != NULL)
+    else if (gridintersection != nullptr)
     {
         grid = gridintersection->grid;
     }
-    else if (grid2vtk != NULL)
+    else if (grid2vtk != nullptr)
     {
         grid = grid2vtk->grid;
     }
@@ -108,24 +108,24 @@ int main(int argc, char ** argv)
     ModflowGrid * modflow_grid = dynamic_cast<ModflowGrid *>(grid);
 
     //check if save files
-    if (qtree_builder_data != NULL)
+    if (qtree_builder_data != nullptr)
     {
         DefinitionExporter def_exporter;
         const string & outputfile = qtree_builder_data->grid_definition_file;
 
         def_exporter.save(outputfile, *qtree_builder_data);
     }
-    else if (grid2shp != NULL)
+    else if (grid2shp != nullptr)
     {
         cout << "- Saving grid: " << grid2shp->grid_name << " to shapefile: " << grid2shp->shapefile
              << endl;
         //save to shapefile...
-        if (qtree_grid != NULL)
+        if (qtree_grid != nullptr)
         {
             writeQuadtree2Shp(qtree_grid, grid2shp->shapefile, grid2shp->feature_type,
                               grid2shp->concide);
         }
-        else if (modflow_grid != NULL)
+        else if (modflow_grid != nullptr)
         {
             writeModflowGrid2Shp(modflow_grid, grid2shp->shapefile, grid2shp->feature_type,
                                  grid2shp->without_inactive, grid2shp->one_based_node_numbering,
@@ -136,12 +136,12 @@ int main(int argc, char ** argv)
             cerr << "! Error: Unknown Grid type" << endl;
         }
     }
-    else if (grid2vtk != NULL)
+    else if (grid2vtk != nullptr)
     {
         cout << "- Saving grid: " << grid2vtk->grid_name << " to vtkfile: " << grid2vtk->vtkfile
              << endl;
         //save to shapefile...
-        if (qtree_grid != NULL)
+        if (qtree_grid != nullptr)
         {
             if (grid2vtk->b_share_vertex)
             {
@@ -152,7 +152,7 @@ int main(int argc, char ** argv)
                 writeQuadtreeGrid2VTK(qtree_grid, grid2vtk->vtkfile);
             }
         }
-        else if (modflow_grid != NULL)
+        else if (modflow_grid != nullptr)
         {
             if (grid2vtk->b_share_vertex)
             {
@@ -171,13 +171,13 @@ int main(int argc, char ** argv)
             cerr << "! Error: Unknown Grid type" << endl;
         }
     }
-    else if (grid2usg != NULL)
+    else if (grid2usg != nullptr)
     {
         DefinitionExporter def_exporter;
         def_exporter.save(*grid2usg);
         def_exporter.save_node_coordinate(grid2usg->usg_data_prefix, grid2usg->grid);
     }
-    else if (gridintersection != NULL)
+    else if (gridintersection != nullptr)
     {
         GridIntersection gi(0, gridintersection->layer);
         gi.set_save_intersection_info(true);

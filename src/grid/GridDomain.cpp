@@ -27,11 +27,11 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
 
     //rotate
     ModflowGrid * rmfgrid = mfgrid;
-    if (rmfgrid == NULL)
+    if (rmfgrid == nullptr)
     {
-        if (qtgrid != NULL) rmfgrid = qtgrid->getModflowGrid();
+        if (qtgrid != nullptr) rmfgrid = qtgrid->getModflowGrid();
     }
-    if (rmfgrid == NULL)
+    if (rmfgrid == nullptr)
     {
         cerr << "error: abnormal grid !" << endl;
     }
@@ -57,19 +57,19 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
             do
             {
                 ply_vertex * next = ptr->getNext();
-                if (next != NULL)
+                if (next != nullptr)
                 {
                     LineSeg2d line(ptr->getPos(), next->getPos());
 
-                    if (qtgrid != NULL)
+                    if (qtgrid != nullptr)
                         gi.intersect(qtgrid, line);
-                    else if (mfgrid != NULL)
+                    else if (mfgrid != nullptr)
                         gi.intersect(mfgrid, line);
-                    else if (mf2dqtgrid != NULL)
+                    else if (mf2dqtgrid != nullptr)
                         gi.intersect(mf2dqtgrid, line);
                 }
                 ptr = next;
-            } while (ptr != NULL);
+            } while (ptr != nullptr);
             if (angle != 0) arcs[j].rotate(cx, cy, angle);
         }
     } //end if
@@ -91,11 +91,11 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
             polygons[j].buildBoxAndCenter();
 
             //determine intersection
-            if (qtgrid != NULL)
+            if (qtgrid != nullptr)
                 gi.intersect(qtgrid, (c_polygon &)polygons[j]);
-            else if (mfgrid != NULL)
+            else if (mfgrid != nullptr)
                 gi.intersect(mfgrid, polygons[j]);
-            else if (mf2dqtgrid != NULL)
+            else if (mf2dqtgrid != nullptr)
                 gi.intersect(mf2dqtgrid, polygons[j]);
 
             //rotate back
@@ -116,11 +116,11 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
             //rotate
             if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
-            if (qtgrid != NULL)
+            if (qtgrid != nullptr)
                 gi.intersect(qtgrid, pts[j]);
-            else if (mfgrid != NULL)
+            else if (mfgrid != nullptr)
                 gi.intersect(mfgrid, pts[j]);
-            else if (mf2dqtgrid != NULL)
+            else if (mf2dqtgrid != nullptr)
                 gi.intersect(mf2dqtgrid, pts[j]);
 
             //rotate back
@@ -132,9 +132,9 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
     domain_boxes.insert(domain_boxes.end(), boxes.begin(), boxes.end());
 
     //now go through the intersections and disable the boxes
-    for (vector<Box *>::iterator i = domain_boxes.begin(); i != domain_boxes.end(); i++)
+    for (auto & box : domain_boxes)
     {
-        (*i)->active = true;
+        box->active = true;
     }
 }
 

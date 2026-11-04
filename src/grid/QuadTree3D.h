@@ -47,9 +47,9 @@ public:
         be a ModflowGrid object.
 	*/
 
-    QuadTree3D(ModflowGrid * mfgrid, int * chunksize = NULL);
+    QuadTree3D(ModflowGrid * mfgrid, int * chunksize = nullptr);
 
-    virtual ~QuadTree3D(void);
+    ~QuadTree3D(void) override;
 
     //compute the intersection
     //void intersection(int layer=0);
@@ -63,7 +63,7 @@ public:
     void refine(c_polygon & pgon, int max_level, int at_layer = 0);
 
     /// Return a numpy array of size (nodes) that contains the area for all cells.
-    double * get_cell_areas();
+    double * get_cell_areas() override;
 
     /*!
         \brief Return the four vertices for the specified nodeid.
@@ -105,7 +105,7 @@ public:
     int * getnodenumber_array();
 
     ///get box from id
-    Box * get_nodeobj(int nodenumber);
+    Box * get_nodeobj(int nodenumber) override;
 
     int get_nodenumber(int nodeid);
 
@@ -119,7 +119,7 @@ public:
     ///notice that this function takes "nodenumber" not "nodeid"
     ///remember again that the return is for node id.
 
-    list<pair<int, int>> get_node_connections(int nodenumber);
+    list<pair<int, int>> get_node_connections(int nodenumber) override;
     list<pair<int, int>> get_node_connections(Box * box);
 
     list<pair<int, int>> get_node_connections_vp(int nodenumber, vector<double> * area);
@@ -136,7 +136,7 @@ public:
         calculation of fahl.
 
      */
-    CSRData get_usg_csr_data();
+    CSRData get_usg_csr_data() override;
 
     ///get the underline ModflowGrid
     ModflowGrid * getModflowGrid() { return m_mfgrid; }
@@ -156,7 +156,7 @@ public:
     bool recompute_z_of_cells();
 
     ///number the nodes (i.e. leaves) in the grid
-    void number_nodes();
+    void number_nodes() override;
 
     ///save the Ghost Node to file
     void saveGhostNode(string filePath);

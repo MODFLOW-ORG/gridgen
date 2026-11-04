@@ -255,10 +255,10 @@ void DFSWriteQDT2VTK(QuadTree3D * qtree, ofstream & ofile, int & pntNum, Box * b
     }
     else if (b->isLeaf == false) //b is not a leaf, call this function recursively
     {
-        for (int i = 0; i < 4; i++)
+        for (auto & i : b->pChildren)
         {
-            DFSWriteQDT2VTK(qtree, ofile, pntNum, b->pChildren[i], l, r, c, one_based_numbering, gv,
-                            intvals, dbvals);
+            DFSWriteQDT2VTK(qtree, ofile, pntNum, i, l, r, c, one_based_numbering, gv, intvals,
+                            dbvals);
         }
     } //end b->isLeaf
 }
@@ -357,9 +357,8 @@ void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intval
 
     int rid = 0;
     int cellNum = allBoxes.size();
-    for (vector<Box *>::iterator bit = allBoxes.begin(); bit != allBoxes.end(); ++bit)
+    for (auto b : allBoxes)
     {
-        Box * b = *bit;
         ofile << boxVts[b->id].vertices[0]->id << "\t" << boxVts[b->id].vertices[1]->id << "\t"
               << boxVts[b->id].vertices[3]->id << "\t" << boxVts[b->id].vertices[2]->id << "\t"
               << boxVts[b->id].vertices[4]->id << "\t" << boxVts[b->id].vertices[5]->id << "\t"
@@ -564,9 +563,8 @@ void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool with
     ofile << "<Points>\n";
     ofile << "<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n";
     int flash = 0;
-    for (vector<Vertex *>::iterator vit = vdata.begin(); vit != vdata.end(); ++vit)
+    for (auto nv : vdata)
     {
-        Vertex * nv = *vit;
         ofile << round_trip(nv->pos[0]) << "\t" << round_trip(nv->pos[1]) << "\t"
               << round_trip(nv->pos[2] * ZSCALE) << "\t";
 
@@ -603,9 +601,9 @@ void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool with
     ofile.close();
 
     //clear memory
-    for (vector<Vertex *>::iterator vit = vdata.begin(); vit != vdata.end(); ++vit)
+    for (auto & vit : vdata)
     {
-        delete (*vit);
+        delete vit;
     }
     delete[] boxVts;
 }
@@ -652,9 +650,9 @@ void DFScollectCell_share(Box * b, int k, int r, int c, QuadTree3D * qtree,
     }
     else if (b->isLeaf == false)
     {
-        for (int i = 0; i < 4; i++)
+        for (auto & i : b->pChildren)
         {
-            DFScollectCell_share(b->pChildren[i], k, r, c, qtree, allBoxes, boxNum, intvals, dbvals,
+            DFScollectCell_share(i, k, r, c, qtree, allBoxes, boxNum, intvals, dbvals,
                                  one_based_numbering);
         }
     }
@@ -717,7 +715,7 @@ struct VTK_V
     VTK_V()
     {
         num = -1;
-        for (int i = 0; i < 8; i++) box[i] = NULL;
+        for (auto & i : box) i = nullptr;
     }
 
     Point3d pos;
@@ -740,19 +738,19 @@ struct VTK_E
 {
     VTK_E()
     {
-        child_v = NULL;
-        v[0] = NULL;
-        v[1] = NULL;
-        child_e[0] = NULL;
-        child_e[1] = NULL;
+        child_v = nullptr;
+        v[0] = nullptr;
+        v[1] = nullptr;
+        child_e[0] = nullptr;
+        child_e[1] = nullptr;
     }
     VTK_E(VTK_V * v1, VTK_V * v2)
     {
-        child_v = NULL;
+        child_v = nullptr;
         v[0] = v1;
         v[1] = v2;
-        child_e[0] = NULL;
-        child_e[1] = NULL;
+        child_e[0] = nullptr;
+        child_e[1] = nullptr;
     }
 
     VTK_V * child_v;
@@ -767,7 +765,7 @@ struct VTK_Box
 {
     VTK_Box()
     {
-        for (int i = 0; i < 8; i++) e[i] = NULL;
+        for (auto & i : e) i = nullptr;
     }
     VTK_E * e[8];
 };
@@ -892,7 +890,7 @@ void DFSbuildBox(Box * box, vector<VTK_V *> & vdata, vector<VTK_E *> & edata, VT
         for (int t = 0; t < 4; t++)
         {
             VTK_E * te = boxdata[box->id].e[k * 4 + t];
-            if (te->child_v == NULL)
+            if (te->child_v == nullptr)
             {
                 VTK_V * nv = new VTK_V();
                 nv->pos[0] = (te->v[0]->pos[0] + te->v[1]->pos[0]) / 2;
@@ -961,9 +959,9 @@ void DFSbuildBox(Box * box, vector<VTK_V *> & vdata, vector<VTK_E *> & edata, VT
     assignBoxEdge(box, vdata, edata, boxdata);
 
     //boxdata
-    for (int i = 0; i < 4; i++)
+    for (auto & i : box->pChildren)
     {
-        DFSbuildBox(box->pChildren[i], vdata, edata, boxdata);
+        DFSbuildBox(i, vdata, edata, boxdata);
     }
 }
 void buildBox(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> & edata,
@@ -1052,44 +1050,44 @@ void determineVtoBox(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *
         vb.e[6]->v[1]->box[0] = tbox;
 
         //child
-        if (vb.e[0]->child_v != NULL)
+        if (vb.e[0]->child_v != nullptr)
         {
             vb.e[0]->child_v->box[6] = tbox;
             vb.e[0]->child_v->box[7] = tbox;
         }
-        if (vb.e[1]->child_v != NULL)
+        if (vb.e[1]->child_v != nullptr)
         {
             vb.e[1]->child_v->box[4] = tbox;
             vb.e[1]->child_v->box[7] = tbox;
         }
-        if (vb.e[2]->child_v != NULL)
+        if (vb.e[2]->child_v != nullptr)
         {
             vb.e[2]->child_v->box[4] = tbox;
             vb.e[2]->child_v->box[5] = tbox;
         }
-        if (vb.e[3]->child_v != NULL)
+        if (vb.e[3]->child_v != nullptr)
         {
             vb.e[3]->child_v->box[5] = tbox;
             vb.e[3]->child_v->box[6] = tbox;
         }
 
         //child
-        if (vb.e[4]->child_v != NULL)
+        if (vb.e[4]->child_v != nullptr)
         {
             vb.e[4]->child_v->box[2] = tbox;
             vb.e[4]->child_v->box[3] = tbox;
         }
-        if (vb.e[5]->child_v != NULL)
+        if (vb.e[5]->child_v != nullptr)
         {
             vb.e[5]->child_v->box[0] = tbox;
             vb.e[5]->child_v->box[3] = tbox;
         }
-        if (vb.e[6]->child_v != NULL)
+        if (vb.e[6]->child_v != nullptr)
         {
             vb.e[6]->child_v->box[1] = tbox;
             vb.e[6]->child_v->box[2] = tbox;
         }
-        if (vb.e[7]->child_v != NULL)
+        if (vb.e[7]->child_v != nullptr)
         {
             vb.e[7]->child_v->box[1] = tbox;
             vb.e[7]->child_v->box[2] = tbox;
@@ -1209,9 +1207,8 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
 {
     double * ztop = qtree->top;
     double * zbot = qtree->bot;
-    for (vector<VTK_V *>::iterator vit = vtk_vertices.begin(); vit != vtk_vertices.end(); ++vit)
+    for (auto v : vtk_vertices)
     {
-        VTK_V * v = *vit;
         //cells in the order found, the sets only skip duplicates
         set<Box *> bset1, bset2;
         vector<Box *> vb1, vb2;
@@ -1219,7 +1216,7 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
         vector<int> depth1, depth2;
         for (int i = 0; i < 4; i++)
         {
-            if (v->box[i] != NULL && v->box[i]->isLeaf && v->box[i]->active)
+            if (v->box[i] != nullptr && v->box[i]->isLeaf && v->box[i]->active)
             {
                 if (bset1.find(v->box[i]) == bset1.end())
                 {
@@ -1229,7 +1226,7 @@ void interpolate_z(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> 
                     depth1.push_back(v->box[i]->depth);
                 }
             }
-            if (v->box[i + 4] != NULL && v->box[i + 4]->isLeaf && v->box[i + 4]->active)
+            if (v->box[i + 4] != nullptr && v->box[i + 4]->isLeaf && v->box[i + 4]->active)
             {
                 if (bset2.find(v->box[i + 4]) == bset2.end())
                 {
@@ -1277,9 +1274,8 @@ void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intval
     int rid = 0;
     VTK_V * vids[8];
     int cellNum = allBoxes.size();
-    for (vector<Box *>::iterator bit = allBoxes.begin(); bit != allBoxes.end(); ++bit)
+    for (auto b : allBoxes)
     {
-        Box * b = *bit;
         VTK_Box & s_box = boxdata[b->id];
         vids[0] = s_box.e[0]->v[0];
         vids[1] = s_box.e[0]->v[1];
@@ -1355,17 +1351,17 @@ void write_vtu_file(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *>
     //world coordinates of each point from the nearest corner of a cell it bounds
     GridVertices gv(qtree);
     map<VTK_V *, Point2d> world;
-    for (vector<Box *>::iterator bit = allBoxes.begin(); bit != allBoxes.end(); ++bit)
+    for (auto & box : allBoxes)
     {
-        VTK_Box & s_box = boxdata[(*bit)->id];
+        VTK_Box & s_box = boxdata[box->id];
         VTK_V * vids[8] = {s_box.e[0]->v[0], s_box.e[0]->v[1], s_box.e[1]->v[1], s_box.e[2]->v[0],
                            s_box.e[4]->v[0], s_box.e[4]->v[1], s_box.e[5]->v[1], s_box.e[6]->v[0]};
-        const int * ids = gv.corners(*bit);
-        for (int i = 0; i < 8; i++)
+        const int * ids = gv.corners(box);
+        for (auto & vid : vids)
         {
-            if (world.count(vids[i])) continue;
+            if (world.count(vid)) continue;
             double resx, resy, dmin = DBL_MAX;
-            rotateOnePnt(vids[i]->pos[0], vids[i]->pos[1], cx, cy, rotation, resx, resy);
+            rotateOnePnt(vid->pos[0], vid->pos[1], cx, cy, rotation, resx, resy);
             for (int j = 0; j < 4; j++)
             {
                 const Point2d & p = gv.vertices()[ids[j]];
@@ -1373,7 +1369,7 @@ void write_vtu_file(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *>
                 if (d < dmin)
                 {
                     dmin = d;
-                    world[vids[i]] = p;
+                    world[vid] = p;
                 }
             }
         }
@@ -1394,9 +1390,8 @@ void write_vtu_file(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *>
     ofile << "<Points>\n";
     ofile << "<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n";
     int flash = 0;
-    for (vector<VTK_V *>::iterator vit = vtk_vertices.begin(); vit != vtk_vertices.end(); ++vit)
+    for (auto sv : vtk_vertices)
     {
-        VTK_V * sv = *vit;
         //points and cells both come from the active leaves
         assert(world.count(sv));
         const Point2d & xy = world[sv];
@@ -1464,13 +1459,13 @@ void writeQuadtreeGrid2VTK_shareV(QuadTree3D * qtree, string vtkName)
     write_vtu_file(qtree, vdata, edata, boxdata, vtk_vertices, vtkName);
 
     //clear memory
-    for (vector<VTK_V *>::iterator vit = vdata.begin(); vit != vdata.end(); ++vit)
+    for (auto & vit : vdata)
     {
-        delete (*vit);
+        delete vit;
     }
-    for (vector<VTK_E *>::iterator eit = edata.begin(); eit != edata.end(); ++eit)
+    for (auto & eit : edata)
     {
-        delete (*eit);
+        delete eit;
     }
     delete[] boxdata;
 }

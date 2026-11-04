@@ -105,7 +105,7 @@ protected:
 
     template <typename T> void save(ostream & out, const list<T> & A)
     {
-        typedef typename list<T>::iterator IT;
+        using IT = typename list<T>::iterator;
         for (IT i = A.begin(); i != A.end(); i++)
         {
             T & t = *i;

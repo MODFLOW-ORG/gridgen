@@ -36,7 +36,7 @@ GridVertices::GridVertices(Grid * grid)
 {
     QuadTree3D * qtree = dynamic_cast<QuadTree3D *>(grid);
     ModflowGrid * mfgrid =
-        (qtree != NULL) ? qtree->getModflowGrid() : dynamic_cast<ModflowGrid *>(grid);
+        (qtree != nullptr) ? qtree->getModflowGrid() : dynamic_cast<ModflowGrid *>(grid);
     assert(mfgrid);
 
     int nrow = mfgrid->nrow;

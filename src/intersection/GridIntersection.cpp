@@ -38,11 +38,11 @@ void GridIntersection::build(grid_intersection_raw_data & data)
 
     //rotate
     ModflowGrid * rmfgrid = mfgrid;
-    if (rmfgrid == NULL)
+    if (rmfgrid == nullptr)
     {
-        if (qtgrid != NULL) rmfgrid = qtgrid->getModflowGrid();
+        if (qtgrid != nullptr) rmfgrid = qtgrid->getModflowGrid();
     }
-    if (rmfgrid == NULL)
+    if (rmfgrid == nullptr)
     {
         cerr << "error: abnormal grid !" << endl;
     }
@@ -71,11 +71,11 @@ void GridIntersection::build(grid_intersection_raw_data & data)
                 //rotate
                 if (angle != 0) line.rotate(cx, cy, -angle);
 
-                if (qtgrid != NULL)
+                if (qtgrid != nullptr)
                     intersect(qtgrid, line);
-                else if (mfgrid != NULL)
+                else if (mfgrid != nullptr)
                     intersect(mfgrid, line);
-                else if (mf2dqtgrid != NULL)
+                else if (mf2dqtgrid != nullptr)
                     intersect(mf2dqtgrid, line);
             } //end for i
 
@@ -147,27 +147,24 @@ void GridIntersection::build(grid_intersection_raw_data & data)
             checkHole(polygons[j], tvplygons);
 
             //loop over all the polygons
-            for (vector<GIS_polygon *>::iterator git = tvplygons.begin(); git != tvplygons.end();
-                 ++git)
+            for (auto & tvplygon : tvplygons)
             {
-                GIS_polygon gp = *(*git);
+                GIS_polygon gp = *tvplygon;
 
-                BoxPlyClip * bpc = convertCPolygonToClip(*(*git));
+                BoxPlyClip * bpc = convertCPolygonToClip(*tvplygon);
 
-                if (qtgrid != NULL)
+                if (qtgrid != nullptr)
                     intersect(qtgrid, gp, bpc); //polygons[j]);
-                else if (mfgrid != NULL)
+                else if (mfgrid != nullptr)
                     intersect(mfgrid, gp, bpc); //polygons[j]);
-                else if (mf2dqtgrid != NULL)
+                else if (mf2dqtgrid != nullptr)
                     intersect(mf2dqtgrid, gp, bpc); //polygons[j]);
 
                 bpc->destroy();
                 delete bpc;
             }
-            for (vector<GIS_polygon *>::iterator vit = tvplygons.begin(); vit != tvplygons.end();
-                 ++vit)
+            for (auto gp : tvplygons)
             {
-                GIS_polygon * gp = *vit;
                 gp->destroy();
                 delete gp;
             }
@@ -194,11 +191,11 @@ void GridIntersection::build(grid_intersection_raw_data & data)
             //rotate
             if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
-            if (qtgrid != NULL)
+            if (qtgrid != nullptr)
                 intersect(qtgrid, pts[j]);
-            else if (mfgrid != NULL)
+            else if (mfgrid != nullptr)
                 intersect(mfgrid, pts[j]);
-            else if (mf2dqtgrid != NULL)
+            else if (mf2dqtgrid != nullptr)
                 intersect(mf2dqtgrid, pts[j]);
         }
         //rotate back
@@ -483,9 +480,8 @@ void GridIntersection::buildIntersectionInfo(Box * box, const GIS_polygon & ply,
 {
     vector<GIS_polygon *> resPlygons;
     intersect_polygon(box, ply, resPlygons, bpc);
-    for (vector<GIS_polygon *>::iterator pit = resPlygons.begin(); pit != resPlygons.end(); ++pit)
+    for (auto gp : resPlygons)
     {
-        GIS_polygon * gp = *pit;
         PolygonCellIntersectionInfo info;
         info.m_interPolygon = gp;
         info.box = box;
@@ -585,7 +581,7 @@ bool GridIntersection::getIntersection(Box * b, const LineSeg2d & line, LineSeg2
             {
                 //compute the union between the edge of box and the line
                 Point2d seg[2];
-                const double * u[2] = {NULL, NULL};
+                const double * u[2] = {nullptr, nullptr};
 
                 switch (i)
                 {
@@ -756,9 +752,8 @@ bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
         int int_count = 0;       //# of intersections
 
         //loop through each ply
-        for (c_polygon::const_iterator i = pgon.begin(); i != pgon.end(); i++)
+        for (const auto & ply : pgon)
         {
-            const c_ply & ply = *i;
             ply_vertex * ptr = ply.getHead();
 
             do
@@ -809,7 +804,7 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & plygon,
 
     /*****************************************************************/
     BoxPlyClip * bpc = bpcInit;
-    if (bpcInit == NULL)
+    if (bpcInit == nullptr)
     {
         bpc = convertCPolygonToClip(plygon);
     }
@@ -817,19 +812,19 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & plygon,
     list<BoxPlyClip *> cres;
     bpc->clip(xmin, xmax, ymin, ymax, cres);
 
-    for (list<BoxPlyClip *>::iterator cit = cres.begin(); cit != cres.end(); ++cit)
+    for (auto & cre : cres)
     {
         GIS_polygon * nplygon = new GIS_polygon();
-        convertClipToPolygon(*cit, nplygon);
+        convertClipToPolygon(cre, nplygon);
         resultPlygons.push_back(nplygon);
 
-        (*cit)->destroy();
-        delete *cit;
+        cre->destroy();
+        delete cre;
     }
 
     bpc->resetStatus();
 
-    if (bpcInit == NULL)
+    if (bpcInit == nullptr)
     {
         bpc->destroy();
         delete bpc;
@@ -916,9 +911,9 @@ void GridIntersection::floodGrid(Box * sb, set<Box *> & visited, list<Box *> & f
         }
 
         //get all unvisited cells
-        for (int i = 0; i < 4; i++)
+        for (auto & neighbor : neighbors)
         {
-            for (list<Box *>::iterator n = neighbors[i].begin(); n != neighbors[i].end(); n++)
+            for (list<Box *>::iterator n = neighbor.begin(); n != neighbor.end(); n++)
             {
                 Box * nb = *n;
                 if (visited.find(nb) != visited.end()) continue; //visited

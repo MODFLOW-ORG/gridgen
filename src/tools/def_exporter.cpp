@@ -13,10 +13,9 @@ namespace cusg
 
 inline ostream & operator<<(ostream & out, list<string> & strlist)
 {
-    typedef list<string>::iterator IT;
-    for (IT i = strlist.begin(); i != strlist.end(); i++)
+    for (auto & i : strlist)
     {
-        out << " " << *i;
+        out << " " << i;
     }
     return out;
 }
@@ -36,10 +35,9 @@ bool DefinitionExporter::save(ostream & out, modflow_grid_raw_data & data)
     out << "\tDELC = " << data.delc_str << "\n";
     out << "\tTOP = " << data.top_str << "\n";
 
-    typedef map<int, list<string>>::iterator IT;
-    for (IT i = data.bot_str.begin(); i != data.bot_str.end(); i++)
+    for (auto & i : data.bot_str)
     {
-        out << "\tBOTTOM LAYER " << i->first + 1 << " = " << i->second << "\n";
+        out << "\tBOTTOM LAYER " << i.first + 1 << " = " << i.second << "\n";
     }
 
     out << "END MODFLOW_GRID\n";
@@ -136,7 +134,7 @@ bool DefinitionExporter::save(const string & prefix, CSRData & csr, int * nperla
     save(connection_area_array, csr.fahl, csr.nja, csr.ia);
     save(connection_length_array, csr.cl1, csr.nja, csr.ia);
     save(connection_length_array_reversed, csr.cl2, csr.nja, csr.ia);
-    if (csr.iac != NULL) save(connection_count_array, csr.iac, csr.nodes);
+    if (csr.iac != nullptr) save(connection_count_array, csr.iac, csr.nodes);
 
     return true;
 }
@@ -154,15 +152,15 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
     QuadTree3D * quadGrid = dynamic_cast<QuadTree3D *>(data.grid);
 
     //needed information about number of nodes per layer here
-    int * nperlay = NULL;
-    if (quadGrid != NULL)
+    int * nperlay = nullptr;
+    if (quadGrid != nullptr)
     {
         nperlay = quadGrid->get_nodelay();
     }
     else //get number of nodes per lay onfly
     {
         ModflowGrid * mflowgrid = dynamic_cast<ModflowGrid *>(data.grid);
-        if (mflowgrid != NULL)
+        if (mflowgrid != nullptr)
         {
             nperlay = new int[mflowgrid->nlay];
             assert(nperlay);
@@ -174,7 +172,7 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
     //vertical pass-through applies only to a quadtree grid
     if (data.vertical_pass_through)
     {
-        if (quadGrid != NULL)
+        if (quadGrid != nullptr)
             quadGrid->vertical_pass_through = true;
         else
             cerr
@@ -189,7 +187,7 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
     csr.destory(); //free memory
 
     //save extra information for irregular map
-    if (quadGrid != NULL)
+    if (quadGrid != nullptr)
     {
         // Save ghost nodes to file
         string ghostnode_name = data.usg_data_prefix + ".gnc.dat";
@@ -225,13 +223,12 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
 
     //count the total number of cells needed to be saved
     int total = 0, conNum = 0;
-    for (NodeGroup::iterator nit = grid->nodegroup.begin(); nit != grid->nodegroup.end(); nit++)
+    for (auto b : grid->nodegroup)
     {
-        Box * b = *nit;
         if (b->active && b->isLeaf)
         {
             total++;
-            if (qtree_grid != NULL)
+            if (qtree_grid != nullptr)
             {
                 if (qtree_grid->vertical_pass_through)
                 {
@@ -241,7 +238,7 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
                 else
                     conNum += qtree_grid->get_node_connections(b).size();
             }
-            else if (modflow_grid != NULL)
+            else if (modflow_grid != nullptr)
             {
                 conNum += modflow_grid->get_node_connections(b->id).size();
             }
@@ -254,9 +251,8 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
     vector<pair<long, Box *>> sorted_boxes;
     sorted_boxes.reserve(total);
 
-    for (NodeGroup::iterator i = grid->nodegroup.begin(); i != grid->nodegroup.end(); i++)
+    for (auto box : grid->nodegroup)
     {
-        Box * box = *i;
         if (box->active == false || box->isLeaf == false) continue;
         sorted_boxes.push_back(make_pair(box->number + id_offset, box));
     }
@@ -266,11 +262,11 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
     // cell centers, rotated and offset
     GridVertices gv(grid);
 
-    for (vector<pair<long, Box *>>::iterator i = sorted_boxes.begin(); i != sorted_boxes.end(); i++)
+    for (auto & entry : sorted_boxes)
     {
-        Box * box = i->second;
+        Box * box = entry.second;
         const Point2d & ctr = gv.center(box);
-        fout << i->first << " " << box->layer + id_offset << " " << round_trip(ctr[0]) << " "
+        fout << entry.first << " " << box->layer + id_offset << " " << round_trip(ctr[0]) << " "
              << round_trip(ctr[1]) << " " << round_trip(box->z) << " " << round_trip(box->dx) << " "
              << round_trip(box->dy) << " " << round_trip(box->dz) << "\n";
     }

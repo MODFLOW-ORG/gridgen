@@ -31,8 +31,8 @@ using namespace std;
 namespace cusg
 {
 
-typedef Point<int, 2> Index2d; //!< 2d index
-typedef Point<int, 3> Index3d; //!< 3d index
+using Index2d = Point<int, 2>; //!< 2d index
+using Index3d = Point<int, 3>; //!< 3d index
 
 class ModflowGrid;
 class Box; //defined later in this file
@@ -101,16 +101,16 @@ public:
      * \param h   height of the box
      */
     Box(double xx, double yy, double w, double h)
-        : depth(0), x(xx), y(yy), z(0), dx(w), dy(h), dz(0), isLeaf(true), pParent(NULL),
+        : depth(0), x(xx), y(yy), z(0), dx(w), dy(h), dz(0), isLeaf(true), pParent(nullptr),
           dirty(false), number(0), layer(0), locator(0), id(0),
           active(true) //, childmfgrid(NULL), bRegular(true)
     {
-        for (int i = 0; i < 4; ++i)
+        for (auto & i : pChildren)
         {
-            pChildren[i] = NULL;
+            i = nullptr;
         }
 
-        pUp = pDown = NULL;
+        pUp = pDown = nullptr;
         priority = 0;
     }
 
@@ -124,7 +124,7 @@ public:
      * \param dims   A vector specifying the width and height of the box
      */
     Box(const Point3d & center, Vector3d & dims)
-        : depth(0), isLeaf(true), pParent(NULL), dirty(false), number(0), layer(0), locator(0),
+        : depth(0), isLeaf(true), pParent(nullptr), dirty(false), number(0), layer(0), locator(0),
           id(0), active(true) //, childmfgrid(NULL), bRegular(true)
     {
         x = center[0];
@@ -135,12 +135,12 @@ public:
         dy = dims[1];
         dz = dims[2];
 
-        for (int i = 0; i < 4; ++i)
+        for (auto & i : pChildren)
         {
-            pChildren[i] = NULL;
+            i = nullptr;
         }
 
-        pUp = pDown = NULL;
+        pUp = pDown = nullptr;
         priority = 0;
     }
 
@@ -227,7 +227,7 @@ public:
             return;
         }
 
-        for (int i = 0; i < 4; i++) pChildren[i]->getLeaves(leaves);
+        for (auto & i : pChildren) i->getLeaves(leaves);
     }
 
     /*!

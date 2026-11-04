@@ -36,16 +36,16 @@ public:
     {
         is3d = false;
         sortconnections = true;
-        X = Y = top = bot = NULL;
+        X = Y = top = bot = nullptr;
         name = "anonymous-grid";
     }
 
     virtual ~Grid()
     {
-        if (X != NULL) delete[] X;
-        if (Y != NULL) delete[] Y;
-        if (bot != NULL) delete[] bot;
-        if (top != NULL) delete[] top;
+        if (X != nullptr) delete[] X;
+        if (Y != nullptr) delete[] Y;
+        if (bot != nullptr) delete[] bot;
+        if (top != nullptr) delete[] top;
     }
 
     /*! \brief Obtain CSRData 
@@ -78,9 +78,9 @@ public:
     //
     virtual void deactive_nodes(vector<Box *> & boxes)
     {
-        for (vector<Box *>::iterator i = boxes.begin(); i != boxes.end(); i++)
+        for (auto & box : boxes)
         {
-            (*i)->active = false;
+            box->active = false;
         }
     }
 

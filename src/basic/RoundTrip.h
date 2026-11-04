@@ -24,7 +24,7 @@ inline std::ostream & operator<<(std::ostream & out, const round_trip & r)
     for (int digits = 15; digits <= 17; digits++)
     {
         snprintf(buf, sizeof(buf), "%.*g", digits, r.value);
-        if (strtod(buf, NULL) == r.value) break;
+        if (strtod(buf, nullptr) == r.value) break;
     }
     return out << buf;
 }

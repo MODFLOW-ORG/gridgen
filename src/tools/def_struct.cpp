@@ -15,12 +15,11 @@ namespace cusg
 static set<int> named_layers(map<string, list<string>> & name_value_map)
 {
     set<int> layers;
-    for (map<string, list<string>>::iterator r = name_value_map.begin(); r != name_value_map.end();
-         r++)
+    for (auto & r : name_value_map)
     {
-        size_t pos = r->first.rfind(" layer ");
+        size_t pos = r.first.rfind(" layer ");
         if (pos == string::npos) continue;
-        long layer = strtol(r->first.c_str() + pos + 7, NULL, 10);
+        long layer = strtol(r.first.c_str() + pos + 7, nullptr, 10);
         if (layer > 0 && layer <= INT_MAX) layers.insert((int)layer - 1);
     }
     return layers;
@@ -181,10 +180,10 @@ list<string> BaseParser::tokenize(char * tmp, const char * ignore)
 {
     list<string> tokens;
     char * tok = strtok(tmp, ignore);
-    while (tok != NULL)
+    while (tok != nullptr)
     {
         tokens.push_back(tok);
-        tok = strtok(NULL, ignore);
+        tok = strtok(nullptr, ignore);
     }
     return tokens;
 }
@@ -193,7 +192,7 @@ list<string> BaseParser::tokenize(char * tmp, const char * ignore)
 pair<char *, char *> BaseParser::split(char * tmp)
 {
     char * pos = strchr(tmp, '=');
-    if (pos != NULL)
+    if (pos != nullptr)
     {
         *pos = '\0';
         pos++;
@@ -205,7 +204,7 @@ pair<char *, char *> BaseParser::split(char * tmp)
 string BaseParser::merge(const list<string> & name, string del)
 {
     string merged;
-    typedef list<string>::const_iterator IT;
+    using IT = list<string>::const_iterator;
     IT last = --name.end();
     for (IT i = name.begin(); i != name.end(); i++)
     {
@@ -219,9 +218,9 @@ string BaseParser::merge(const list<string> & name, string del)
 string BaseParser::tolower(const string & s)
 {
     string lower;
-    for (string::const_iterator i = s.begin(); i != s.end(); i++)
+    for (char i : s)
     {
-        char c = ::tolower(*i);
+        char c = ::tolower(i);
         lower.push_back(c);
     }
     return lower;
@@ -239,10 +238,10 @@ bool modflow_grid_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -405,7 +404,7 @@ bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 
 Grid * modflow_grid_raw_data::build()
 {
-    if (mfgrid == NULL)
+    if (mfgrid == nullptr)
     {
         mfgrid = new ModflowGrid(*this);
         assert(mfgrid);
@@ -427,10 +426,10 @@ bool quadtree_grid_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -464,9 +463,8 @@ bool quadtree_grid_raw_data::parse()
 
     //read the surfaces of each layer named, independently of the other layers
     set<int> layers = named_layers(name_value_map);
-    for (set<int>::iterator l = layers.begin(); l != layers.end(); l++)
+    for (int i : layers)
     {
-        int i = *l;
         list<string> v = layer_record(name_value_map, "top", i);
         if (!v.empty()) top_str[i] = v;
         v = layer_record(name_value_map, "bottom", i);
@@ -482,7 +480,7 @@ bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 
     this->modflow_data = dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
 
-    if (modflow_data == NULL)
+    if (modflow_data == nullptr)
     {
         cerr << "! Error: Cannot resolve referenced modflow_grid name: " << modflow_grid << endl;
         return false;
@@ -503,19 +501,19 @@ bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 Grid * quadtree_grid_raw_data::build()
 {
     //
-    if (this->modflow_data == NULL)
+    if (this->modflow_data == nullptr)
     {
         cerr << "! Error: Cannot resolve referenced modflow_grid name: " << modflow_grid << endl;
-        return NULL;
+        return nullptr;
     }
 
-    if (qtree_grid == NULL) //if it's not already built
+    if (qtree_grid == nullptr) //if it's not already built
     {
         ModflowGrid * modflowGrid = dynamic_cast<ModflowGrid *>(modflow_data->build());
-        if (modflowGrid == NULL)
+        if (modflowGrid == nullptr)
         {
             cerr << "! Error: quadtree_grid_raw_data::build: Cannot retrieve ModflowGrid" << endl;
-            return NULL;
+            return nullptr;
         }
 
         qtree_grid = new QuadTree3D(modflowGrid);
@@ -526,8 +524,8 @@ Grid * quadtree_grid_raw_data::build()
 
         //copy surface data from top/bottom to those in qtree_grid
         int nodesize = qtree_grid->nodes();
-        if (qtree_grid->top != NULL) delete[] qtree_grid->top;
-        if (qtree_grid->bot != NULL) delete[] qtree_grid->bot;
+        if (qtree_grid->top != nullptr) delete[] qtree_grid->top;
+        if (qtree_grid->bot != nullptr) delete[] qtree_grid->bot;
         qtree_grid->top = new double[nodesize];
         qtree_grid->bot = new double[nodesize];
         assert(qtree_grid->top && qtree_grid->bot);
@@ -659,10 +657,10 @@ bool quadtree_builder_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -719,9 +717,8 @@ bool quadtree_builder_raw_data::parse()
 
     //read the records of each layer named, independently of the other layers
     set<int> layers = named_layers(name_value_map);
-    for (set<int>::iterator l = layers.begin(); l != layers.end(); l++)
+    for (int i : layers)
     {
-        int i = *l;
         list<string> v;
 
         v = layer_record(name_value_map, "active_domain", i);
@@ -748,7 +745,7 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
 
     //initialize modflow_data if it has not been initialized yet
     this->modflow_data = dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
-    if (modflow_data == NULL)
+    if (modflow_data == nullptr)
     {
         cerr << "! Error: InQuadtree Builder: Cannot resolve referenced modflow_grid name: "
              << modflow_grid << endl;
@@ -765,10 +762,10 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
     {
         list<active_domain_raw_data *> aF;
         list<string> & aF_str = active_domain_str[i];
-        for (list<string>::iterator s = aF_str.begin(); s != aF_str.end(); s++)
+        for (auto & s : aF_str)
         {
-            active_domain_raw_data * af = dynamic_cast<active_domain_raw_data *>(blocks[*s]);
-            if (af != NULL)
+            active_domain_raw_data * af = dynamic_cast<active_domain_raw_data *>(blocks[s]);
+            if (af != nullptr)
             {
                 if (af->initialize(blocks) == false)
                 {
@@ -779,8 +776,8 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
             }
             else
             {
-                cerr << "! Error: Quadtree Builder: Block " << *s
-                     << " is referenced but not defined" << endl;
+                cerr << "! Error: Quadtree Builder: Block " << s << " is referenced but not defined"
+                     << endl;
                 assert(false);
                 return false;
             }
@@ -814,14 +811,14 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
         //refine by features
         list<refinement_raw_data *> rF;
         list<string> & rF_str = refine_by_features_str[i];
-        for (list<string>::iterator s = rF_str.begin(); s != rF_str.end(); s++)
+        for (auto & s : rF_str)
         {
-            refinement_raw_data * rf = dynamic_cast<refinement_raw_data *>(blocks[*s]);
-            if (rf != NULL)
+            refinement_raw_data * rf = dynamic_cast<refinement_raw_data *>(blocks[s]);
+            if (rf != nullptr)
                 rF.push_back(rf);
             else
             {
-                cerr << "! Error: Quadtree Builder: There is no refinement feature named " << *s
+                cerr << "! Error: Quadtree Builder: There is no refinement feature named " << s
                      << endl;
                 assert(false);
                 return false;
@@ -860,14 +857,14 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
 Grid * quadtree_builder_raw_data::build()
 {
     //
-    if (this->modflow_data == NULL)
+    if (this->modflow_data == nullptr)
     {
         cerr << "! Error: Quadtree Builder: Cannot resolve referenced modflow_grid name: "
              << modflow_grid << endl;
-        return NULL;
+        return nullptr;
     }
 
-    if (qtree_grid == NULL) //if it's not already built
+    if (qtree_grid == nullptr) //if it's not already built
     {
         Grid * modflowGrid = modflow_data->build();
 
@@ -908,10 +905,10 @@ bool grid_intersection_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1032,7 +1029,7 @@ bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & bloc
     block_raw_data * block = blocks[grid_name];
 
     grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
-    if (grid == NULL)
+    if (grid == nullptr)
     {
         cerr << "! Error: " << grid_name << " is not a grid" << endl;
         return false;
@@ -1051,7 +1048,7 @@ bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & bloc
     this->grid = grid->build();
 
     //check again
-    if (this->grid == NULL)
+    if (this->grid == nullptr)
     {
         cerr << "! Error: build " << grid_name << " failed" << endl;
         return false;
@@ -1074,10 +1071,10 @@ bool active_domain_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1135,10 +1132,10 @@ bool refinement_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1198,10 +1195,10 @@ bool grid_to_usgdata_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1251,7 +1248,7 @@ bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks
     block_raw_data * block = blocks[grid_name];
 
     grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
-    if (grid == NULL)
+    if (grid == nullptr)
     {
         cerr << "! Error: " << grid_name << " is not a grid" << endl;
         return false;
@@ -1270,7 +1267,7 @@ bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks
     this->grid = grid->build();
 
     //check again
-    if (this->grid == NULL)
+    if (this->grid == nullptr)
     {
         cerr << "! Error: build " << grid_name << " failed" << endl;
         return false;
@@ -1293,10 +1290,10 @@ bool gridtoshape_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1377,7 +1374,7 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
     block_raw_data * block = blocks[grid_name];
 
     grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
-    if (grid == NULL)
+    if (grid == nullptr)
     {
         cerr << "! Error: " << grid_name << " is not a grid" << endl;
         return false;
@@ -1396,7 +1393,7 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
     this->grid = grid->build();
 
     //check again
-    if (this->grid == NULL)
+    if (this->grid == nullptr)
     {
         cerr << "! Error: build " << grid_name << " failed" << endl;
         return false;
@@ -1411,7 +1408,7 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
 //records that do not change any output of a quadtree grid
 void block_raw_data::warnQuadtreeExportRecords(Grid * grid)
 {
-    if (dynamic_cast<QuadTree3D *>(grid) == NULL) return;
+    if (dynamic_cast<QuadTree3D *>(grid) == nullptr) return;
     if (hasRecord("node_numbering"))
         warnIgnored("node_numbering",
                     "it has no effect on a QUADTREE grid, which keeps the node numbering "
@@ -1432,10 +1429,10 @@ bool gridtovtk_raw_data::parse()
 {
     map<string, list<string>> name_value_map;
 
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        string & name = i->name;
-        list<string> & value = i->value;
+        string & name = i.name;
+        list<string> & value = i.value;
 
         if (name.empty() || value.empty())
         {
@@ -1503,7 +1500,7 @@ bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
     block_raw_data * block = blocks[grid_name];
 
     grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
-    if (grid == NULL)
+    if (grid == nullptr)
     {
         cerr << "! Error: " << grid_name << " is not a grid" << endl;
         return false;
@@ -1522,7 +1519,7 @@ bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
     this->grid = grid->build();
 
     //check again
-    if (this->grid == NULL)
+    if (this->grid == nullptr)
     {
         cerr << "! Error: build " << grid_name << " failed" << endl;
         return false;

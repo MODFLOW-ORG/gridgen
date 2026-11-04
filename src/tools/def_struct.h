@@ -64,7 +64,7 @@ protected:
     //
     template <class T> T * createArray(list<string> & spec, int size, string folderPath = "")
     {
-        if (spec.empty()) return NULL;
+        if (spec.empty()) return nullptr;
 
         if (tolower(spec.front()) == "constant")
         {
@@ -117,7 +117,7 @@ protected:
             exit(1);
         }
 
-        return NULL;
+        return nullptr;
     }
 };
 
@@ -153,7 +153,7 @@ public:
         folderPath = other.folderPath;
     }
 
-    virtual ~block_raw_data() {}
+    ~block_raw_data() override {}
 
     virtual bool parse() { return true; } //do nothing by default
     virtual bool initialize(map<string, block_raw_data *> & blocks)
@@ -180,8 +180,8 @@ public:
     //whether the block has a record of this name
     bool hasRecord(const string & rname) const
     {
-        for (const_iterator e = begin(); e != end(); e++)
-            if (e->name == rname) return true;
+        for (const auto & e : *this)
+            if (e.name == rname) return true;
         return false;
     }
 
@@ -193,8 +193,8 @@ protected:
     void warnIgnored(const string & rname, const string & reason)
     {
         string upper_name = rname, upper_type = type;
-        for (size_t i = 0; i < upper_name.size(); i++) upper_name[i] = toupper(upper_name[i]);
-        for (size_t i = 0; i < upper_type.size(); i++) upper_type[i] = toupper(upper_type[i]);
+        for (char & i : upper_name) i = toupper(i);
+        for (char & i : upper_type) i = toupper(i);
         string w = "record " + upper_name + " in " + upper_type + " block " + name +
                    " is ignored; " + reason;
         cerr << "! Warning: " << w << endl;
@@ -226,15 +226,15 @@ public:
     {
         rotation_angle = rotation_degrees = x_offset = y_offset = 0;
         nlay = nrow = ncol = 0;
-        delr = delc = NULL;
-        top = NULL;
-        mfgrid = NULL;
+        delr = delc = nullptr;
+        top = nullptr;
+        mfgrid = nullptr;
         length_unit = "undefined";
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
-    virtual Grid * build();
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
+    Grid * build() override;
 
     REAL rotation_angle;   //radians
     REAL rotation_degrees; //as given, so it is written back unchanged
@@ -269,13 +269,13 @@ class quadtree_grid_raw_data : public grid_raw_data
 public:
     quadtree_grid_raw_data(block_raw_data & block) : grid_raw_data(block)
     {
-        modflow_data = NULL;
-        qtree_grid = NULL;
+        modflow_data = nullptr;
+        qtree_grid = nullptr;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
-    virtual Grid * build();
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
+    Grid * build() override;
 
     string modflow_grid;
 
@@ -302,16 +302,16 @@ public:
     quadtree_builder_raw_data(block_raw_data & block) : grid_raw_data(block)
     {
         smoothing_level_horizontal = smoothing_level_vertical = 1;
-        modflow_data = NULL;
-        qtree_grid = NULL;
+        modflow_data = nullptr;
+        qtree_grid = nullptr;
         smoothing = false;
         one_based_node_numbering = true;
         auto_alignment = true;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
-    virtual Grid * build();
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
+    Grid * build() override;
 
     int smoothing_level_horizontal;
     int smoothing_level_vertical;
@@ -356,7 +356,7 @@ class refinement_raw_data : public block_raw_data
 public:
     refinement_raw_data(block_raw_data & block) : block_raw_data(block) { refinement_level = 1; }
 
-    virtual bool parse();
+    bool parse() override;
 
     string shapefile;
     string featuretype;
@@ -384,12 +384,12 @@ class grid_intersection_raw_data : public block_raw_data
 public:
     grid_intersection_raw_data(block_raw_data & block) : block_raw_data(block)
     {
-        grid = NULL;
+        grid = nullptr;
         layer = 0;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
 
     string grid_name; //name of the grid to convert usg_data from
     string shapefile;
@@ -410,12 +410,12 @@ class grid_to_usgdata_raw_data : public block_raw_data
 public:
     grid_to_usgdata_raw_data(block_raw_data & block) : block_raw_data(block)
     {
-        grid = NULL;
+        grid = nullptr;
         vertical_pass_through = false;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
 
     string grid_name;       //name of the grid to convert usg_data from
     string usg_data_prefix; //name of the usg_data file
@@ -431,15 +431,15 @@ class gridtoshape_raw_data : public block_raw_data
 public:
     gridtoshape_raw_data(block_raw_data & block) : block_raw_data(block)
     {
-        grid = NULL;
+        grid = nullptr;
         feature_type = "polygon";
         one_based_node_numbering = true;
         without_inactive = true;
         concide = true;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
 
     string grid_name;
     string feature_type;
@@ -464,8 +464,8 @@ public:
         include_boundary = true;
     }
 
-    virtual bool parse();
-    bool initialize(map<string, block_raw_data *> & blocks);
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
 
     string feature_type;
     string shapefile;
@@ -481,14 +481,14 @@ class gridtovtk_raw_data : public block_raw_data
 public:
     gridtovtk_raw_data(block_raw_data & block) : block_raw_data(block)
     {
-        grid = NULL;
+        grid = nullptr;
         b_share_vertex = true;
         one_based_node_numbering = true;
         without_inactive = true;
     }
 
-    virtual bool parse();
-    virtual bool initialize(map<string, block_raw_data *> & blocks);
+    bool parse() override;
+    bool initialize(map<string, block_raw_data *> & blocks) override;
 
     string grid_name;
 

@@ -32,7 +32,7 @@ SHPHandle createShpHandle(string shpName, string feature_type, int & shptype)
     else
     {
         cerr << "! Error: only support exporting as polygon/point shape files!" << endl;
-        return NULL;
+        return nullptr;
     }
     return handler;
 }
@@ -63,7 +63,7 @@ void writeFeatEntity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<i
 {
     QuadTree3D * qtree = dynamic_cast<QuadTree3D *>(grid);
     ModflowGrid * mfgrid = dynamic_cast<ModflowGrid *>(grid);
-    bool isqtree = (qtree != NULL);
+    bool isqtree = (qtree != nullptr);
 
     double padfX[5] = {0}, padfY[5] = {0}, ctrX[1] = {0}, ctrY[1] = {0};
     GridVertices gv(grid);
@@ -75,24 +75,24 @@ void writeFeatEntity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<i
 
         boxCorners(gv, b_vec[id], padfX, padfY, ctrX, ctrY);
 
-        SHPObject * shpObj = NULL;
+        SHPObject * shpObj = nullptr;
         int entityNum = -1;
         if (shptype == 1)
         {
             if (!bConcide)
-                shpObj = SHPCreateSimpleObject(SHPT_POLYGON, 4, padfX, padfY, NULL);
+                shpObj = SHPCreateSimpleObject(SHPT_POLYGON, 4, padfX, padfY, nullptr);
             else
             {
                 padfX[4] = padfX[0];
                 padfY[4] = padfY[0];
-                shpObj = SHPCreateSimpleObject(SHPT_POLYGON, 5, padfX, padfY, NULL);
+                shpObj = SHPCreateSimpleObject(SHPT_POLYGON, 5, padfX, padfY, nullptr);
             }
 
             entityNum = SHPWriteObject(handler, -1, shpObj);
         }
         else if (shptype == 0)
         {
-            shpObj = SHPCreateSimpleObject(SHPT_POINT, 1, ctrX, ctrY, NULL);
+            shpObj = SHPCreateSimpleObject(SHPT_POINT, 1, ctrX, ctrY, nullptr);
 
             entityNum = SHPWriteObject(handler, -1, shpObj);
         }
@@ -172,7 +172,7 @@ void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, 
     //create a shape file
     int shptype = true; //polygon : true ; point : false
     SHPHandle handler = createShpHandle(shpName, feature_type, shptype);
-    if (handler == NULL)
+    if (handler == nullptr)
     {
         cerr << "! Error: failed to open shapefile: " << shpName << endl;
         return;
@@ -266,7 +266,7 @@ void writeModflowGrid2Shp(ModflowGrid * modflow, string gridShpName, string feat
     //create a shape file
     int shptype = 0; //polygon : true ; point : false
     SHPHandle handler = createShpHandle(gridShpName, feature_type, shptype);
-    if (handler == NULL) return;
+    if (handler == nullptr) return;
 
     //create a .dbf file
     string dbfName = gridShpName; /*

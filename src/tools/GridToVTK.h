@@ -31,7 +31,7 @@ class BoxVtx
 public:
     BoxVtx()
     {
-        for (int i = 0; i < 8; i++) vertices[i] = NULL;
+        for (auto & v : vertices) v = nullptr;
     }
     Vertex * vertices[8];
 };

@@ -143,13 +143,13 @@ public:
 };
 
 // Typedef common used vector type
-typedef Point<REAL, 2> Point2d;
-typedef Point<REAL, 3> Point3d;
-typedef Point<REAL, 4> Point4d;
+using Point2d = Point<REAL, 2>;
+using Point3d = Point<REAL, 3>;
+using Point4d = Point<REAL, 4>;
 
-typedef GIS_Point<REAL, 2> GIS_Point2d;
-typedef GIS_Point<REAL, 3> GIS_Point3d;
-typedef GIS_Point<REAL, 4> GIS_Point4d;
+using GIS_Point2d = GIS_Point<REAL, 2>;
+using GIS_Point3d = GIS_Point<REAL, 3>;
+using GIS_Point4d = GIS_Point<REAL, 4>;
 
 } //end of namespace
 

@@ -12,7 +12,7 @@ void cornerPoint(const GridVertices & gv, const Box * b, int corner, double & x,
 void prepareWriteLine(string gridShpName, SHPHandle * shd, DBFHandle * dbf, int * lyrId)
 {
     *shd = SHPCreate(gridShpName.c_str(), SHPT_ARC);
-    if ((*shd) == NULL)
+    if ((*shd) == nullptr)
     {
         cerr << "can't create shape file: " << gridShpName.c_str() << endl;
         return;
@@ -35,9 +35,9 @@ void prepareWriteLine(string gridShpName, SHPHandle * shd, DBFHandle * dbf, int 
 void writeOneLine(int vNum, double * tmpX, double * tmpY, int lyrID, int layer, SHPHandle handler,
                   DBFHandle dbfHandle)
 {
-    SHPObject * shpObj = NULL;
+    SHPObject * shpObj = nullptr;
     //write to the shape file
-    shpObj = SHPCreateSimpleObject(SHPT_ARC, vNum, tmpX, tmpY, NULL);
+    shpObj = SHPCreateSimpleObject(SHPT_ARC, vNum, tmpX, tmpY, nullptr);
     int entityNum = SHPWriteObject(handler, -1, shpObj);
     //clear memory
     SHPDestroyObject(shpObj);
@@ -95,9 +95,8 @@ void writeQuadtree2ShpLine(cusg::QuadTree3D * qtree, string gridShpName)
 
     double resX[2], resY[2];
     //get through each cell
-    for (NodeGroup::iterator nit = qtree->nodegroup.begin(); nit != qtree->nodegroup.end(); ++nit)
+    for (auto b : qtree->nodegroup)
     {
-        Box * b = *nit;
         if (b->isLeaf == false)
         {
             //from the south edge to the north edge through the center

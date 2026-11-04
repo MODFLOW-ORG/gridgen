@@ -40,10 +40,10 @@ public:
     ModflowGrid(int lay, int row, int col, double dr, double dc, vector<double *> & bot,
                 double xoffset, double yoffset, double angle);
 
-    virtual ~ModflowGrid() {}
+    ~ModflowGrid() override {}
 
     /// Return a numpy array of size (nodes) that contains the area for all cells.
-    double * get_cell_areas();
+    double * get_cell_areas() override;
 
     ///Return the nodeid for the modflow grid.
     virtual int get_nodeid(int k, int i, int j);
@@ -54,14 +54,14 @@ public:
     Index3d get_indices(int nodeid);
 
     ///get box from id
-    Box * get_nodeobj(int nodeid);
+    Box * get_nodeobj(int nodeid) override;
 
     virtual Box * get_nodeobj(int i, int j, int k);
 
     ///get box connections from id
     ///Return a sorted list of connections, where a connection is
     ///a list [tonodeid, fldir].  fldir is -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z.
-    list<pair<int, int>> get_node_connections(int nodeid);
+    list<pair<int, int>> get_node_connections(int nodeid) override;
 
     /*! \brief Obtain CSRData
 
@@ -70,10 +70,10 @@ public:
 
         not implemented yet
      */
-    CSRData get_usg_csr_data();
+    CSRData get_usg_csr_data() override;
 
     ///number the nodes (i.e. leaves) in the grid
-    virtual void number_nodes();
+    void number_nodes() override;
 
     ////rotate all the boxes
     void getRotatePara(double & cx, double & cy, double & angle)

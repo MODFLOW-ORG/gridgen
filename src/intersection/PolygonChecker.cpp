@@ -18,9 +18,9 @@ bool compPlyAreaGreater(const PlyAreaPair & pa1, const PlyAreaPair & pa2)
 }
 c_ply & getOutBound(GIS_polygon & gp)
 {
-    for (GIS_polygon::iterator git = gp.begin(); git != gp.end(); ++git)
+    for (auto & git : gp)
     {
-        if (git->getType() == c_ply::POUT) return *git;
+        if (git.getType() == c_ply::POUT) return git;
     }
     return gp.front();
 }
@@ -46,11 +46,11 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
 {
 
     vector<PlyAreaPair> plyareas;
-    for (GIS_polygon::iterator git = plygon.begin(); git != plygon.end(); ++git)
+    for (auto & ply : plygon)
     {
         PlyAreaPair pap;
-        pap.cply = &(*git);
-        pap.area = fabs(git->getArea());
+        pap.cply = &ply;
+        pap.area = fabs(ply.getArea());
         plyareas.push_back(pap);
     }
     //sort the ply based on the area descendingly
@@ -81,13 +81,13 @@ bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
             allInPlygon = false;
             bool b = false;
             const Point2d & pad = pap.cply->getCenter();
-            for (vector<GIS_polygon *>::iterator vit = plygons.begin(); vit != plygons.end(); ++vit)
+            for (auto & outer : plygons)
             {
-                c_ply & outp = getOutBound(*(*vit));
+                c_ply & outp = getOutBound(*outer);
                 if (CPlyEnclose(outp, pad))
                 {
                     pap.cply->set(c_ply::PIN, pap.cply->getHead());
-                    (*vit)->push_back(*(pap.cply));
+                    outer->push_back(*(pap.cply));
                     b = true;
                     break;
                 }

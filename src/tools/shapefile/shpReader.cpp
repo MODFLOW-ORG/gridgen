@@ -7,7 +7,7 @@ using namespace std;
 namespace cusg
 {
 
-typedef unsigned int uint;
+using uint = unsigned int;
 
 void ShapeReader::destroy()
 {
@@ -25,25 +25,21 @@ void ShapeReader::destroy()
 //read field attributes from DBF file according to id
 bool ShapeReader::readAttributes(DBFHandle & dbfHandle, int iShape)
 {
-    for (vector<ShapeIntField>::iterator iit = m_intFlds.begin(); iit != m_intFlds.end(); ++iit)
+    for (auto & sifld : m_intFlds)
     {
-        ShapeIntField & sifld = *iit;
         sifld.vals.insert(make_pair(iShape, DBFReadIntegerAttribute(dbfHandle, iShape, sifld.id)));
     }
-    for (vector<ShapeDoubleField>::iterator iit = m_dbFlds.begin(); iit != m_dbFlds.end(); ++iit)
+    for (auto & sifld : m_dbFlds)
     {
-        ShapeDoubleField & sifld = *iit;
         sifld.vals.insert(make_pair(iShape, DBFReadDoubleAttribute(dbfHandle, iShape, sifld.id)));
     }
-    for (vector<ShapeStringField>::iterator iit = m_strFlds.begin(); iit != m_strFlds.end(); ++iit)
+    for (auto & sifld : m_strFlds)
     {
-        ShapeStringField & sifld = *iit;
         sifld.vals.insert(
             make_pair(iShape, string(DBFReadStringAttribute(dbfHandle, iShape, sifld.id))));
     }
-    for (vector<ShapeLogField>::iterator iit = m_logFlds.begin(); iit != m_logFlds.end(); ++iit)
+    for (auto & sifld : m_logFlds)
     {
-        ShapeLogField & sifld = *iit;
         sifld.vals.insert(
             make_pair(iShape, string(DBFReadLogicalAttribute(dbfHandle, iShape, sifld.id))));
     }
@@ -63,7 +59,7 @@ bool ShapeReader::read(const string & filename)
     hSHP = SHPOpen(filename.c_str(), "rb");
 
     //something is wrong
-    if (hSHP == NULL)
+    if (hSHP == nullptr)
     {
         cout << "- Error: Unable to open: " << filename << endl;
         return false;
@@ -73,7 +69,7 @@ bool ShapeReader::read(const string & filename)
     DBFHandle hDBF = DBFOpen(filename.c_str(), "rb");
 
     //check
-    if (hDBF == NULL)
+    if (hDBF == nullptr)
     {
         cerr << "! Error: DBFOpen(" << filename << ") failed." << endl;
         return false;

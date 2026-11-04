@@ -65,7 +65,7 @@ public:
     double * get_local_Ye_array();
 
     /// Return a numpy array of size (nodes) that contains the area for all cells.
-    double * get_cell_areas();
+    double * get_cell_areas() override;
 
     /*!
         \brief Return the four vertices for the specified nodeid.
@@ -96,7 +96,7 @@ public:
     ///get box connections from id
     ///Return a sorted list of connections, where a connection is
     ///a list [tonodeid, fldir].  fldir is -1, +1, -2, +2 for -x, +x, -y, +y.
-    list<pair<int, int>> get_node_connections(int nodeid);
+    list<pair<int, int>> get_node_connections(int nodeid) override;
 
     //	/*!
     //	    Method for intersecting the model grid with a point, line, rectangle,
@@ -109,7 +109,7 @@ public:
     //    }
 
     ///number the nodes (i.e. leaves) in the grid
-    virtual void number_nodes();
+    void number_nodes() override;
 
     //access the value of the values in bottom
     double botm(int layer, int row, int col);

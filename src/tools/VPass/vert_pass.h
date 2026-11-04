@@ -14,8 +14,8 @@ struct VPTPair
 {
     VPTPair()
     {
-        bSrc = NULL;
-        bDst = NULL;
+        bSrc = nullptr;
+        bDst = nullptr;
         area = 0.0;
     }
     VPTPair(Box * b1, Box * b2, double d)
@@ -39,8 +39,8 @@ struct VPassBox
 {
     VPassBox()
     {
-        bSrc = NULL;
-        bDst = NULL;
+        bSrc = nullptr;
+        bDst = nullptr;
         area = 0.0;
     }
     VPassBox(const VPassBox & other)

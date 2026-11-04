@@ -17,7 +17,7 @@ class c_plyline
 
 public:
     ///////////////////////////////////////////////////////////////////////////
-    c_plyline() { head = tail = NULL; }
+    c_plyline() { head = tail = nullptr; }
 
     void destroy();
 

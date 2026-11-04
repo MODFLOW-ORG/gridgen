@@ -15,8 +15,9 @@ static const map<string, set<string>> & block_records()
 
     const char * modflow_grid[] = {"rotation_angle", "x_offset", "y_offset",     "length_unit",
                                    "nlay",           "nrow",     "ncol",         "delr",
-                                   "delc",           "top",      "bottom layer", NULL};
-    const char * quadtree[] = {"modflow_grid", "structure_file", "top layer", "bottom layer", NULL};
+                                   "delc",           "top",      "bottom layer", nullptr};
+    const char * quadtree[] = {"modflow_grid", "structure_file", "top layer", "bottom layer",
+                               nullptr};
     const char * quadtree_builder[] = {"modflow_grid",
                                        "grid_definition_file",
                                        "refinement_features layer",
@@ -32,22 +33,23 @@ static const map<string, set<string>> & block_records()
                                        "bottom layer",
                                        "autoalignment",
                                        "node_numbering",
-                                       NULL};
+                                       nullptr};
     const char * refinement_features[] = {"shapefile",
                                           "feature_type",
                                           "refinement_level",
                                           "refine_level_by_attribute",
                                           "refinement_level_by_attribute",
-                                          NULL};
-    const char * active_domain[] = {"shapefile", "feature_type", "include_boundary", NULL};
-    const char * grid_to_shapefile[] = {
-        "grid", "shapefile", "feature_type", "node_numbering", "without_inactive", "concide", NULL};
-    const char * grid_to_usgdata[] = {"grid", "usg_data_prefix", "vertical_pass_through", NULL};
+                                          nullptr};
+    const char * active_domain[] = {"shapefile", "feature_type", "include_boundary", nullptr};
+    const char * grid_to_shapefile[] = {"grid",           "shapefile",        "feature_type",
+                                        "node_numbering", "without_inactive", "concide",
+                                        nullptr};
+    const char * grid_to_usgdata[] = {"grid", "usg_data_prefix", "vertical_pass_through", nullptr};
     const char * grid_to_vtkfile[] = {"grid",           "vtkfile",          "share_vertex",
-                                      "node_numbering", "without_inactive", NULL};
+                                      "node_numbering", "without_inactive", nullptr};
     const char * grid_intersection[] = {"grid",         "layer",       "shapefile",
                                         "feature_type", "output_file", "output_shapefile",
-                                        "attributes",   NULL};
+                                        "attributes",   nullptr};
 
     struct
     {
@@ -59,10 +61,10 @@ static const map<string, set<string>> & block_records()
         {"active_domain", active_domain},        {"grid_to_shapefile", grid_to_shapefile},
         {"grid_to_usgdata", grid_to_usgdata},    {"grid_to_vtkfile", grid_to_vtkfile},
         {"grid_intersection", grid_intersection}};
-    for (size_t b = 0; b < sizeof(blocks) / sizeof(blocks[0]); b++)
+    for (auto & block : blocks)
     {
-        set<string> & known = records[blocks[b].type];
-        for (const char ** n = blocks[b].names; *n != NULL; n++) known.insert(*n);
+        set<string> & known = records[block.type];
+        for (const char ** n = block.names; *n != nullptr; n++) known.insert(*n);
     }
     return records;
 }
@@ -82,7 +84,7 @@ static const map<string, map<string, string>> & ignored_records()
 
 static string upper(string s)
 {
-    for (size_t i = 0; i < s.size(); i++) s[i] = (char)toupper((unsigned char)s[i]);
+    for (char & i : s) i = (char)toupper((unsigned char)i);
     return s;
 }
 
@@ -142,10 +144,9 @@ DefinitionParser::DefinitionParser()
 //destructor
 DefinitionParser::~DefinitionParser()
 {
-    typedef map<string, block_raw_data *>::iterator IT;
-    for (IT i = m_blocks.begin(); i != m_blocks.end(); i++)
+    for (auto & entry : m_blocks)
     {
-        delete i->second;
+        delete entry.second;
     }
 
     m_blocks.clear();
@@ -183,7 +184,7 @@ bool DefinitionParser::parse(istream & in, string folder)
             cerr << "! Warning: duplicated record " << block.name
                  << "found; replace the previous record" << endl;
             delete m_blocks[block.name];
-            m_blocks[block.name] = NULL;
+            m_blocks[block.name] = nullptr;
         }
 
         //load the related path's .dfn file
@@ -222,11 +223,10 @@ bool DefinitionParser::parse(istream & in, string folder)
         if (m_block_type_map.find(block.type) != m_block_type_map.end())
         {
             list<string> warnings = unrecognized_records(block);
-            for (list<string>::iterator w = warnings.begin(); w != warnings.end(); w++)
-                cerr << "! Warning: " << *w << endl;
+            for (auto & warning : warnings) cerr << "! Warning: " << warning << endl;
             m_warnings.splice(m_warnings.end(), warnings);
             block_raw_data * ptr_block = m_block_type_map[block.type](block);
-            if (ptr_block != NULL)
+            if (ptr_block != nullptr)
             {
                 bool r = ptr_block->parse();
                 if (r)

@@ -40,9 +40,9 @@ namespace cusg
 NodeGroup::NodeGroup(Grid * g)
 {
     grid = g;
-    nodeid_array = NULL;  //node ids
-    nodelay_array = NULL; //number of nodes per layer
-    nlay = 1;             //number of layers (? why is this here)
+    nodeid_array = nullptr;  //node ids
+    nodelay_array = nullptr; //number of nodes per layer
+    nlay = 1;                //number of layers (? why is this here)
     rebuild_nodeid_array = true;
     nextnodenumber = 0;
     chunksize = 10;
@@ -89,7 +89,7 @@ int NodeGroup::add(Box * box)
 */
 int * NodeGroup::get_nodeid_array()
 {
-    if (nodeid_array == NULL || rebuild_nodeid_array) build_node_info();
+    if (nodeid_array == nullptr || rebuild_nodeid_array) build_node_info();
     return nodeid_array;
 }
 
@@ -103,30 +103,29 @@ int * NodeGroup::get_nodeid_array()
  */
 int * NodeGroup::get_nodelay_array()
 {
-    if (nodelay_array == NULL || rebuild_nodeid_array) build_node_info();
+    if (nodelay_array == nullptr || rebuild_nodeid_array) build_node_info();
     return nodelay_array;
 }
 
 ///number of (active) leaf nodes in this group
 NodeGroup::size_type NodeGroup::node_size()
 {
-    if (nodelay_array == NULL || rebuild_nodeid_array) build_node_info();
+    if (nodelay_array == nullptr || rebuild_nodeid_array) build_node_info();
     return active_leaf_number;
 }
 
 ///get the total number of leaf size including inactive leaves
 NodeGroup::size_type NodeGroup::get_total_leaf_size()
 {
-    if (nodelay_array == NULL || rebuild_nodeid_array) build_node_info();
+    if (nodelay_array == nullptr || rebuild_nodeid_array) build_node_info();
     return total_leaf_number;
 }
 
 void NodeGroup::disable_nodes_in_layer(int layer)
 {
-    for (iterator i = begin(); i != end(); i++)
+    for (auto box : *this)
     {
-        Box * box = *i;
-        if (box == NULL) continue;
+        if (box == nullptr) continue;
         if (box->layer != layer) continue;
         box->active = false;
     }
@@ -142,19 +141,19 @@ void NodeGroup::build_node_info()
     //count the number of leaf nodes
     this->total_leaf_number = 0;
     this->active_leaf_number = 0;
-    for (iterator i = begin(); i != end(); i++)
+    for (auto & i : *this)
     {
-        if ((*i) == NULL) continue;
-        if ((*i)->isLeaf)
+        if (i == nullptr) continue;
+        if (i->isLeaf)
         {
             total_leaf_number++;
-            if ((*i)->active) active_leaf_number += 1;
+            if (i->active) active_leaf_number += 1;
         }
     }
 
     //reset things...
-    if (nodeid_array != NULL) delete[] nodeid_array;
-    if (nodelay_array != NULL) delete[] nodelay_array;
+    if (nodeid_array != nullptr) delete[] nodeid_array;
+    if (nodelay_array != nullptr) delete[] nodelay_array;
 
     nodeid_array = new int[this->active_leaf_number];
     nodelay_array = new int[nlay]; // number of nodes per layer
@@ -168,11 +167,9 @@ void NodeGroup::build_node_info()
 
     //node number is ordered by layer
     //node id is the position in this class
-    for (iterator i = begin(); i != end(); i++)
+    for (auto box : *this)
     {
-        Box * box = *i;
-
-        if (box == NULL) continue;
+        if (box == nullptr) continue;
 
         if (box->isLeaf)
         {
