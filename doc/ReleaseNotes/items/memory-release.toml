@@ -1,0 +1,3 @@
+section = "internal"
+subsection = ""
+description = "The program now releases the memory it allocates for grids, shapefile features, and intersections, and the checks run in continuous integration report memory that is not released. The program and its output are unchanged."
