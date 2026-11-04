@@ -243,6 +243,35 @@ jobs:
           name: ${{ env.DIST }}-${{ matrix.os }}
           path: ${{ env.PROGRAM_NAME }}/*.zip
 
+  sanitize:
+    name: ubuntu-22.04 gcc 13 sanitizers
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout ${{ env.PROGRAM_NAME }}
+        uses: actions/checkout@v5
+        with:
+          path: ${{ env.PROGRAM_NAME }}
+
+      - name: Setup gcc 13
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 13
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.11.2
+        with:
+          pixi-version: v0.82.1
+          manifest-path: "${{ env.PROGRAM_NAME }}/pixi.toml"
+
+      - name: Test ${{ env.PROGRAM_NAME }} with the sanitizers
+        working-directory: ${{ env.PROGRAM_NAME }}
+        run: pixi run sanitize
+
   release_notes:
     name: Release notes
     if: github.event_name == 'workflow_dispatch'

@@ -1,0 +1,3 @@
+section = "internal"
+subsection = "build"
+description = "The unit and regression tests are also run in continuous integration with checks for invalid memory use and undefined behavior (`pixi run sanitize`). The program and its output are unchanged."

@@ -1030,7 +1030,7 @@ double * QuadTree3D::get_bot()
 {
     if (this->bot != nullptr)
     {
-        delete this->bot;
+        delete[] this->bot;
     }
 
     int nodesize = nodes();
