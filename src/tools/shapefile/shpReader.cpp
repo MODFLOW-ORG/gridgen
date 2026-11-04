@@ -11,9 +11,11 @@ using uint = unsigned int;
 
 void ShapeReader::destroy()
 {
+    for (auto & ply : m_ply_list) ply.destroy();
+    for (auto & arc : m_arc_list) arc.destroy();
     m_ply_list.clear();
     m_arc_list.clear();
-    m_ply_list.clear();
+    m_pt_list.clear();
 
     m_intFlds.clear();
     m_dbFlds.clear();
@@ -72,6 +74,7 @@ bool ShapeReader::read(const string & filename)
     if (hDBF == nullptr)
     {
         cerr << "! Error: DBFOpen(" << filename << ") failed." << endl;
+        SHPClose(hSHP);
         return false;
     }
 
@@ -79,6 +82,8 @@ bool ShapeReader::read(const string & filename)
     if (DBFGetFieldCount(hDBF) == 0)
     {
         cerr << "! Warning: There are no fields in this table!" << endl;
+        SHPClose(hSHP);
+        DBFClose(hDBF);
         return true;
     }
 
@@ -200,6 +205,7 @@ bool ShapeReader::read(const string & filename)
     }
 
     SHPClose(hSHP);
+    DBFClose(hDBF);
 
     //done readh shp file
 

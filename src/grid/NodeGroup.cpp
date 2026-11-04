@@ -40,9 +40,7 @@ namespace cusg
 NodeGroup::NodeGroup(Grid * g)
 {
     grid = g;
-    nodeid_array = nullptr;  //node ids
-    nodelay_array = nullptr; //number of nodes per layer
-    nlay = 1;                //number of layers (? why is this here)
+    nlay = 1; //number of layers (? why is this here)
     rebuild_nodeid_array = true;
     nextnodenumber = 0;
     chunksize = 10;
@@ -66,6 +64,7 @@ int NodeGroup::add(Box * box)
         push_back(box);
     }
 
+    owned_boxes.emplace_back(box);
     box->id = nodeid; //nodeid is the position of the box in the array (group)
 
     rebuild_nodeid_array = true;
@@ -81,6 +80,22 @@ int NodeGroup::add(Box * box)
     return nodeid;
 }
 
+void NodeGroup::share(const NodeGroup & other)
+{
+    vector<Box *>::operator=(other);
+    owned_boxes.clear();
+    grid = other.grid;
+    nodeid_array = other.nodeid_array;
+    nodelay_array = other.nodelay_array;
+    nlay = other.nlay;
+    rebuild_nodeid_array = other.rebuild_nodeid_array;
+    nextnodenumber = other.nextnodenumber;
+    chunksize = other.chunksize;
+    removed_nodes = other.removed_nodes;
+    total_leaf_number = other.total_leaf_number;
+    active_leaf_number = other.active_leaf_number;
+}
+
 /*!
     Return an array of size of the number of active leaf nodes
     and include in the array the nodeid.
@@ -89,8 +104,8 @@ int NodeGroup::add(Box * box)
 */
 int * NodeGroup::get_nodeid_array()
 {
-    if (nodeid_array == nullptr || rebuild_nodeid_array) build_node_info();
-    return nodeid_array;
+    if (rebuild_nodeid_array) build_node_info();
+    return nodeid_array.data();
 }
 
 /*!
@@ -103,21 +118,21 @@ int * NodeGroup::get_nodeid_array()
  */
 int * NodeGroup::get_nodelay_array()
 {
-    if (nodelay_array == nullptr || rebuild_nodeid_array) build_node_info();
-    return nodelay_array;
+    if (rebuild_nodeid_array) build_node_info();
+    return nodelay_array.data();
 }
 
 ///number of (active) leaf nodes in this group
 NodeGroup::size_type NodeGroup::node_size()
 {
-    if (nodelay_array == nullptr || rebuild_nodeid_array) build_node_info();
+    if (rebuild_nodeid_array) build_node_info();
     return active_leaf_number;
 }
 
 ///get the total number of leaf size including inactive leaves
 NodeGroup::size_type NodeGroup::get_total_leaf_size()
 {
-    if (nodelay_array == nullptr || rebuild_nodeid_array) build_node_info();
+    if (rebuild_nodeid_array) build_node_info();
     return total_leaf_number;
 }
 
@@ -152,13 +167,8 @@ void NodeGroup::build_node_info()
     }
 
     //reset things...
-    if (nodeid_array != nullptr) delete[] nodeid_array;
-    if (nodelay_array != nullptr) delete[] nodelay_array;
-
-    nodeid_array = new int[this->active_leaf_number];
-    nodelay_array = new int[nlay]; // number of nodes per layer
-    assert(nodeid_array && nodelay_array);
-    memset(nodelay_array, 0, sizeof(int) * nlay);
+    nodeid_array.assign(this->active_leaf_number, 0);
+    nodelay_array.assign(nlay, 0); // number of nodes per layer
 
     //number the nodes, starting with the lowest layer number
     //this is the id of the node in CSR/COO

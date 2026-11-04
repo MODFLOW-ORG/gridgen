@@ -406,8 +406,8 @@ void buildSharingVertices_mfgrid(ModflowGrid * mfgrid, vector<Vertex *> & vdata,
     int mfgrid_csize = (mfgrid->nrow) * (mfgrid->ncol);
 
     //get all the Xe and Ye
-    double * Xe = mfgrid->get_local_Xe_array();
-    double * Ye = mfgrid->get_local_Ye_array();
+    vector<double> Xe = mfgrid->get_local_Xe_array();
+    vector<double> Ye = mfgrid->get_local_Ye_array();
 
     //use the edges to locate the box corners
     int vid = 0;
@@ -777,8 +777,8 @@ void buildVE(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> & edat
              VTK_Box * boxdata)
 {
     ModflowGrid * mfgrid = qtree->getModflowGrid();
-    double * Xe = mfgrid->get_local_Xe_array();
-    double * Ye = mfgrid->get_local_Ye_array();
+    vector<double> Xe = mfgrid->get_local_Xe_array();
+    vector<double> Ye = mfgrid->get_local_Ye_array();
 
     //////////////////////////////////////////////////////////////////////////////
     //initialize sharing v
@@ -913,6 +913,7 @@ void DFSbuildBox(Box * box, vector<VTK_V *> & vdata, vector<VTK_E *> & edata, VT
     {
         //center v
         VTK_V * cv1 = new VTK_V();
+        vdata.push_back(cv1);
         cv1->pos[0] = (vtkBox.e[0]->v[0]->pos[0] + vtkBox.e[2]->v[1]->pos[0]) / 2;
         cv1->pos[1] = (vtkBox.e[0]->v[0]->pos[1] + vtkBox.e[2]->v[1]->pos[1]) / 2;
 
@@ -936,6 +937,7 @@ void DFSbuildBox(Box * box, vector<VTK_V *> & vdata, vector<VTK_E *> & edata, VT
     {
         //center v
         VTK_V * cv2 = new VTK_V();
+        vdata.push_back(cv2);
         cv2->pos[0] = (vtkBox.e[4]->v[0]->pos[0] + vtkBox.e[6]->v[1]->pos[0]) / 2;
         cv2->pos[1] = (vtkBox.e[4]->v[0]->pos[1] + vtkBox.e[6]->v[1]->pos[1]) / 2;
 

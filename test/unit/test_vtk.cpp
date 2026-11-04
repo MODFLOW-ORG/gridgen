@@ -45,8 +45,8 @@ std::vector<double> read_vtu_points(const std::string & path)
 // cells
 std::vector<double> center_vertex_z(int rf, int cf, int ri, int ci)
 {
-    ModflowGrid * mfgrid = make_mfgrid(1, 2, 2, 100.0, 100.0);
-    QuadTree3D * qtree = new QuadTree3D(mfgrid);
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 2, 2, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = std::make_unique<QuadTree3D>(mfgrid.get());
     Point2d pt(50.0 + 100.0 * cf, 150.0 - 100.0 * rf);
     qtree->refine(pt, 1, 0);
     qtree->nodegroup[mfgrid->get_nodeid(0, ri, ci)]->active = false;
@@ -64,7 +64,7 @@ std::vector<double> center_vertex_z(int rf, int cf, int ri, int ci)
     }
 
     std::string name = ::testing::TempDir() + "gridgen_sharedvertex";
-    writeQuadtreeGrid2VTK_shareV(qtree, name);
+    writeQuadtreeGrid2VTK_shareV(qtree.get(), name);
     std::vector<double> xyz = read_vtu_points(name + ".vtu");
 
     std::vector<double> zs;
@@ -74,8 +74,6 @@ std::vector<double> center_vertex_z(int rf, int cf, int ri, int ci)
             zs.push_back(xyz[i + 2]);
     }
 
-    delete qtree;
-    delete mfgrid;
     return zs;
 }
 

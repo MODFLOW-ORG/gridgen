@@ -27,6 +27,9 @@ TEST(Box, SplitCreatesFourQuarterChildren)
         EXPECT_DOUBLE_EQ(child->dx, 4.0);
         EXPECT_DOUBLE_EQ(child->dy, 2.0);
     }
+
+    // in a grid, the node group owns the children
+    for (Box * child : box.pChildren) delete child;
 }
 
 TEST(Box, SplitRefusedForLeafSmallerThanEpsilon)

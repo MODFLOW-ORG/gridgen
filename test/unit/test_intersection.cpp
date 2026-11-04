@@ -84,8 +84,8 @@ TEST(GridIntersection, PolygonCellsStartAtFirstVertex)
 {
     // the cells are listed from the polygon's first vertex, whichever vertex
     // that is, rather than in memory-address order (#51)
-    ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
-    QuadTree3D * qtree = make_qtree(mfgrid, {});
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {});
 
     std::vector<XY> square = {{77.0, 23.0}, {77.0, 77.0}, {23.0, 77.0}, {23.0, 23.0}};
     std::set<Box *> first_cells;
@@ -97,7 +97,7 @@ TEST(GridIntersection, PolygonCellsStartAtFirstVertex)
         for (std::size_t i = 0; i < square.size(); i++)
             vertices.push_back(square[(start + i) % square.size()]);
 
-        std::vector<Box *> cells = intersect_square(qtree, vertices);
+        std::vector<Box *> cells = intersect_square(qtree.get(), vertices);
         ASSERT_FALSE(cells.empty());
         EXPECT_TRUE(contains(cells.front(), vertices.front()));
         if (start == 0) ncells = cells.size();
@@ -111,31 +111,32 @@ TEST(GridIntersection, PolygonEnclosingGridSelectsEveryCell)
 {
     // a polygon around the whole grid, with no edge crossing it, selects
     // every cell, and one beside the grid selects none (#53)
-    ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
-    expect_each_cell_once(intersect_square(mfgrid, square(-50.0, 150.0)), 100);
-    EXPECT_TRUE(intersect_square(mfgrid, square(200.0, 300.0)).empty());
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+    expect_each_cell_once(intersect_square(mfgrid.get(), square(-50.0, 150.0)), 100);
+    EXPECT_TRUE(intersect_square(mfgrid.get(), square(200.0, 300.0)).empty());
 
-    QuadTree3D * qtree = make_qtree(make_mfgrid(1, 10, 10, 10.0, 10.0), {{55.0, 55.0, 2, 0}}, true);
+    std::unique_ptr<QuadTree3D> qtree =
+        make_qtree(make_mfgrid(1, 10, 10, 10.0, 10.0), {{55.0, 55.0, 2, 0}}, true);
     std::size_t nodes = static_cast<std::size_t>(qtree->nodes());
     ASSERT_GT(nodes, 100u);
-    expect_each_cell_once(intersect_square(qtree, square(-50.0, 150.0)), nodes);
-    EXPECT_TRUE(intersect_square(qtree, square(200.0, 300.0)).empty());
+    expect_each_cell_once(intersect_square(qtree.get(), square(-50.0, 150.0)), nodes);
+    EXPECT_TRUE(intersect_square(qtree.get(), square(200.0, 300.0)).empty());
 }
 
 TEST(GridIntersection, HoleEnclosingGridSelectsNoCell)
 {
     // a hole that also encloses the whole grid leaves it outside the polygon
-    ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
     std::vector<XY> hole = square(-20.0, 120.0);
     std::reverse(hole.begin(), hole.end());
-    EXPECT_TRUE(intersect_square(mfgrid, square(-50.0, 150.0), {hole}).empty());
+    EXPECT_TRUE(intersect_square(mfgrid.get(), square(-50.0, 150.0), {hole}).empty());
 }
 
 TEST(QuadTree, RefineByPolygonEnclosingGrid)
 {
     // a refinement polygon around the whole grid refines every cell, as one
     // crossing the grid refines the cells inside it (#53)
-    QuadTree3D * qtree = make_qtree(make_mfgrid(1, 10, 10, 10.0, 10.0), {});
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 10, 10, 10.0, 10.0), {});
     c_polygon polygon = make_polygon(square(-50.0, 150.0));
     qtree->refine(polygon, 1, 0);
     polygon.destroy();
@@ -196,13 +197,16 @@ TEST(GridIntersection, PolygonHoleIsNotPartOfTheArea)
         {
             SCOPED_TRACE(std::string(refined ? "quadtree" : "MODFLOW grid") + ", hole from " +
                          std::to_string(c.lo) + " to " + std::to_string(c.hi));
-            ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+            std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+            std::unique_ptr<QuadTree3D> qtree;
             std::map<Box *, double> areas;
             if (refined)
-                areas = polygon_areas(make_qtree(mfgrid, {{45.0, 45.0, 2, 0}}, true),
-                                      square(20.0, 80.0), {hole});
+            {
+                qtree = make_qtree(mfgrid.get(), {{45.0, 45.0, 2, 0}}, true);
+                areas = polygon_areas(qtree.get(), square(20.0, 80.0), {hole});
+            }
             else
-                areas = polygon_areas(mfgrid, square(20.0, 80.0), {hole});
+                areas = polygon_areas(mfgrid.get(), square(20.0, 80.0), {hole});
 
             double total = 0.0;
             for (const auto & a : areas)
@@ -280,15 +284,18 @@ TEST(GridIntersection, PolygonVerticesOnGridLines)
             {
                 SCOPED_TRACE(std::string(refined ? "quadtree" : "MODFLOW grid") + ", " + c.name +
                              ", repeat " + std::to_string(repeat));
-                ModflowGrid * mfgrid =
+                std::unique_ptr<ModflowGrid> mfgrid =
                     make_mfgrid(1, c.n, c.n, c.size, c.size, 10.0, c.offset, c.offset);
+                std::unique_ptr<QuadTree3D> qtree;
                 std::map<Box *, double> areas;
                 if (refined)
-                    areas = polygon_areas(
-                        make_qtree(mfgrid, {{45.0 + c.offset, 45.0 + c.offset, 2, 0}}, true),
-                        c.outer, c.holes, false);
+                {
+                    qtree =
+                        make_qtree(mfgrid.get(), {{45.0 + c.offset, 45.0 + c.offset, 2, 0}}, true);
+                    areas = polygon_areas(qtree.get(), c.outer, c.holes, false);
+                }
                 else
-                    areas = polygon_areas(mfgrid, c.outer, c.holes, false);
+                    areas = polygon_areas(mfgrid.get(), c.outer, c.holes, false);
 
                 double total = 0.0;
                 for (const auto & a : areas) total += a.second;
@@ -302,9 +309,9 @@ TEST(GridIntersection, LineAlongGridLine)
 {
     // a line along a grid line that ends inside a cell edge selects the cells
     // on both sides of it (#109)
-    ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
     GridIntersection gi(0, 0);
-    gi.intersect(mfgrid, LineSeg2d(95.0, 60.0, 30.0, 60.0));
+    gi.intersect(mfgrid.get(), LineSeg2d(95.0, 60.0, 30.0, 60.0));
     expect_each_cell_once(gi.getIntersections(), 14);
 }
 
@@ -314,7 +321,7 @@ TEST(GridIntersection, OutputShapefileRingsAreClosedAndOriented)
     // first vertex at the end, outer rings run clockwise and holes
     // counterclockwise, and the cell holding the whole hole has the area in
     // the intersection (#110)
-    ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
     std::vector<XY> hole = square(41.0, 48.0);
     std::reverse(hole.begin(), hole.end());
     GIS_polygon polygon;
@@ -322,7 +329,7 @@ TEST(GridIntersection, OutputShapefileRingsAreClosedAndOriented)
     BoxPlyClip * bpc = convertCPolygonToClip(polygon);
     GridIntersection gi(0, 0);
     gi.set_save_intersection_info(true);
-    gi.intersect(mfgrid, polygon, bpc);
+    gi.intersect(mfgrid.get(), polygon, bpc);
 
     std::string path = testing::TempDir() + "gridgen_unit_rings";
     std::vector<std::string> attributes;
@@ -388,13 +395,16 @@ TEST(GridIntersection, HoleSeenAcrossThinOuterEdge)
     for (int refined = 0; refined < 2; refined++)
     {
         SCOPED_TRACE(refined ? "quadtree" : "MODFLOW grid");
-        ModflowGrid * mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+        std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
+        std::unique_ptr<QuadTree3D> qtree;
         std::map<Box *, double> areas;
         if (refined)
-            areas = polygon_areas(make_qtree(mfgrid, {{45.0, 45.0, 2, 0}}, true), thin_outer,
-                                  {thin_hole});
+        {
+            qtree = make_qtree(mfgrid.get(), {{45.0, 45.0, 2, 0}}, true);
+            areas = polygon_areas(qtree.get(), thin_outer, {thin_hole});
+        }
         else
-            areas = polygon_areas(mfgrid, thin_outer, {thin_hole});
+            areas = polygon_areas(mfgrid.get(), thin_outer, {thin_hole});
 
         double total = 0.0;
         for (const auto & a : areas) total += a.second;

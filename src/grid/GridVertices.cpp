@@ -42,7 +42,7 @@ GridVertices::GridVertices(Grid * grid)
     int nrow = mfgrid->nrow;
     int ncol = mfgrid->ncol;
     m_xe.assign(ncol + 1, 0.0);
-    m_delr.assign(mfgrid->delr, mfgrid->delr + ncol);
+    m_delr.assign(mfgrid->delr.begin(), mfgrid->delr.begin() + ncol);
     for (int c = 0; c < ncol; c++) m_xe[c + 1] = m_xe[c] + m_delr[c];
     m_ys.assign(nrow + 1, 0.0);
     m_dely.assign(nrow, 0.0);

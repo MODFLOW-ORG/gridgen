@@ -21,15 +21,15 @@ namespace
 {
 
 // 2 layers of 3 x 3 cells of 100, refined twice at the center, smoothed
-QuadTree3D * make_refined(double angle = 0.0)
+std::unique_ptr<QuadTree3D> make_refined(double angle = 0.0)
 {
     return make_qtree(make_mfgrid(2, 3, 3, 100.0, 100.0, 10.0, 0.0, 0.0, angle),
                       {{150.0, 150.0, 2, 0}}, true);
 }
 
 // write qtree to a tree structure file, read it back through a QUADTREE
-// block, and return the rebuilt quadtree
-QuadTree3D * round_trip(QuadTree3D * qtree, const std::string & name)
+// block, and return the rebuilt quadtree, which parser owns
+QuadTree3D * round_trip(DefinitionParser & parser, QuadTree3D * qtree, const std::string & name)
 {
     std::string tsf = testing::TempDir() + name;
     {
@@ -57,7 +57,6 @@ QuadTree3D * round_trip(QuadTree3D * qtree, const std::string & name)
     dfn << "END QUADTREE\n";
 
     std::istringstream in(dfn.str());
-    DefinitionParser parser;
     QuadTree3D * rebuilt = nullptr;
     if (parser.parse(in))
     {
@@ -90,7 +89,7 @@ TEST(QuadTreeIO, RotationDoesNotChangeConnectivity)
 
 TEST(QuadTreeIO, NodesNumberedLayerByLayer)
 {
-    QuadTree3D * qtree = make_refined();
+    std::unique_ptr<QuadTree3D> qtree = make_refined();
     int nodes = qtree->nodes();
 
     int * nodelay = qtree->get_nodelay();
@@ -105,7 +104,7 @@ TEST(QuadTreeIO, NodesNumberedLayerByLayer)
 
 TEST(QuadTreeIO, OneBasedNumberingOffsetsIaAndJa)
 {
-    QuadTree3D * qtree = make_refined();
+    std::unique_ptr<QuadTree3D> qtree = make_refined();
     CSRData zero = qtree->get_usg_csr_data();
     expect_csr_valid(zero);
 
@@ -119,9 +118,10 @@ TEST(QuadTreeIO, OneBasedNumberingOffsetsIaAndJa)
 
 TEST(QuadTreeIO, TreeStructureFileRoundTrip)
 {
-    QuadTree3D * qtree = make_refined();
+    std::unique_ptr<QuadTree3D> qtree = make_refined();
     qtree->set_one_based_node_numbering(true);
-    QuadTree3D * rebuilt = round_trip(qtree, "gridgen_unit_roundtrip.tsf");
+    DefinitionParser parser;
+    QuadTree3D * rebuilt = round_trip(parser, qtree.get(), "gridgen_unit_roundtrip.tsf");
     ASSERT_NE(rebuilt, nullptr);
     EXPECT_TRUE(rebuilt->get_one_based_node_numbering());
 
@@ -133,8 +133,9 @@ TEST(QuadTreeIO, TreeStructureFileRoundTrip)
 TEST(QuadTreeIO, TreeStructureFileRoundTripZeroBased)
 {
     // the numbering is read back from the file (#50)
-    QuadTree3D * qtree = make_refined();
-    QuadTree3D * rebuilt = round_trip(qtree, "gridgen_unit_roundtrip0.tsf");
+    std::unique_ptr<QuadTree3D> qtree = make_refined();
+    DefinitionParser parser;
+    QuadTree3D * rebuilt = round_trip(parser, qtree.get(), "gridgen_unit_roundtrip0.tsf");
     ASSERT_NE(rebuilt, nullptr);
     EXPECT_FALSE(rebuilt->get_one_based_node_numbering());
 
@@ -147,7 +148,7 @@ TEST(QuadTreeIO, TreeStructureFileIdentifiersAreOneBased)
 {
     // the (layer, row, column) identifiers and quadrant numbers follow the
     // report whatever the node numbering; only the node numbers differ (#50)
-    QuadTree3D * qtree = make_refined();
+    std::unique_ptr<QuadTree3D> qtree = make_refined();
     std::ostringstream zero;
     zero << *qtree;
     qtree->set_one_based_node_numbering(true);

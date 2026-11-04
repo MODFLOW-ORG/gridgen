@@ -48,12 +48,8 @@ ModflowGrid2D::ModflowGrid2D(int nrow, int ncol, double delr, double delc, doubl
     this->nrow = nrow;
     this->ncol = ncol;
     this->nodes = nrow * ncol;
-    this->delr = new double[ncol]; //ModflowArray(delr, arrayshape=(ncol,)).as_ndarray();
-    this->delc = new double[nrow]; //ModflowArray(delc, arrayshape=(nrow,)).as_ndarray();
-
-    assert(this->delr && this->delc);
-    for (int i = 0; i < ncol; i++) this->delr[i] = delr;
-    for (int i = 0; i < nrow; i++) this->delc[i] = delc;
+    this->delr.assign(ncol, delr);
+    this->delc.assign(nrow, delc);
 
     height = delc * nrow;
     width = delr * ncol;
@@ -98,10 +94,8 @@ ModflowGrid2D::ModflowGrid2D(int nrow, int ncol, double * delr, double * delc, d
     this->nrow = nrow;
     this->ncol = ncol;
     this->nodes = nrow * ncol;
-    this->delr = new double[ncol]; //ModflowArray(delr, arrayshape=(ncol,)).as_ndarray();
-    this->delc = new double[nrow]; //ModflowArray(delc, arrayshape=(nrow,)).as_ndarray();
-
-    assert(this->delr && this->delc);
+    this->delr.resize(ncol);
+    this->delc.resize(nrow);
 
     height = width = 0;
     for (int i = 0; i < ncol; i++)
@@ -151,12 +145,11 @@ double * ModflowGrid2D::get_local_y_array()
 }
 
 /// x coord of all edges
-double * ModflowGrid2D::get_local_Xe_array()
+vector<double> ModflowGrid2D::get_local_Xe_array()
 {
     //The Xe array contains the edge coordinate for each cell
     int size = ncol + 1;
-    double * Xe = new double[size];
-    assert(Xe);
+    vector<double> Xe(size);
     Xe[0] = 0;
     for (int i = 1; i < size; i++) Xe[i] = Xe[i - 1] + delr[i - 1];
     for (int i = 0; i < size; i++) Xe[i] += xoffset;
@@ -165,12 +158,11 @@ double * ModflowGrid2D::get_local_Xe_array()
 }
 
 /// y coord of all edges
-double * ModflowGrid2D::get_local_Ye_array()
+vector<double> ModflowGrid2D::get_local_Ye_array()
 {
     //allocate space
     int size = nrow + 1;
-    double * Ye = new double[size];
-    assert(Ye);
+    vector<double> Ye(size);
     Ye[size - 1] = 0;
     for (int i = size - 2; i >= 0; i--) Ye[i] = Ye[i + 1] + delc[i];
     for (int i = 0; i < size; i++) Ye[i] += yoffset;
@@ -378,8 +370,8 @@ Index2d ModflowGrid2D::getIndex(const Point2d & pt)
     int i_y = INT_MAX;
     bool bContain = true;
 
-    double * Xe = this->Xe;
-    double * Ye = this->Ye;
+    double * Xe = this->Xe.data();
+    double * Ye = this->Ye.data();
 
     bool xAsc = delr[0] > 0;
     bool yAsc = delc[0] > 0;

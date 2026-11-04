@@ -20,6 +20,8 @@
 #include "polygon.h"
 #include "polyline.h"
 #include "GhostNode.h"
+#include <map>
+#include <memory>
 #include <vector>
 using namespace std;
 
@@ -30,7 +32,8 @@ namespace cusg
 
 struct GhostNode;
 
-class ascii_grid; //defined in ascii_grid.h
+class ascii_grid;         //defined in ascii_grid.h
+class arcinfo_ascii_grid; //defined in ascii_grid.h
 
 /*! \brief QuadTree 3D grid
 
@@ -47,7 +50,7 @@ public:
         be a ModflowGrid object.
 	*/
 
-    QuadTree3D(ModflowGrid * mfgrid, int * chunksize = nullptr);
+    QuadTree3D(ModflowGrid * mfgrid);
 
     ~QuadTree3D(void) override;
 
@@ -200,9 +203,8 @@ public:
 protected:
     ///modflow grid
     ModflowGrid * m_mfgrid;
-    int * m_chunksize;
 
-    int * nodenumber_array;
+    vector<int> nodenumber_array;
     int * nodeid_array;
     int * nodelay_array; //? used, there is a same member in nodegroup...
     bool rebuild_nodenumber_array;
@@ -259,7 +261,7 @@ protected:
     map<int, bool> m_bot_area_weighted_interpolate;
 
     //map filename to ascii grid
-    map<string, ascii_grid *> m_str2ag;
+    map<string, unique_ptr<arcinfo_ascii_grid>> m_str2ag;
 
 public:
     bool vertical_pass_through;

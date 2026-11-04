@@ -15,7 +15,7 @@ using gridgen_test::make_mfgrid;
 TEST(ModflowGrid, CsrConnectivityOneLayer)
 {
     // 2 rows x 3 columns, delr 10, delc 20, 7.5 thick
-    ModflowGrid * mfgrid = make_mfgrid(1, 2, 3, 10.0, 20.0, 7.5);
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 2, 3, 10.0, 20.0, 7.5);
     CSRData csr = mfgrid->get_usg_csr_data();
 
     // 6 diagonal entries plus 7 connections stored in both directions
@@ -53,7 +53,7 @@ TEST(ModflowGrid, CsrConnectivityOneLayer)
 TEST(ModflowGrid, CsrVerticalConnections)
 {
     // 2 layers of 2 x 2 cells; each cell connects to the cell below
-    ModflowGrid * mfgrid = make_mfgrid(2, 2, 2, 10.0, 10.0);
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(2, 2, 2, 10.0, 10.0);
     CSRData csr = mfgrid->get_usg_csr_data();
 
     EXPECT_EQ(csr.nodes, 8);
@@ -125,7 +125,7 @@ TEST(ModflowGrid, CsrFaceAreaUsesBothCellThicknesses)
 TEST(ModflowGrid, NodeConnectionsMatchCsr)
 {
     // 2 layers of 3 rows x 4 columns; the node file counts these connections
-    ModflowGrid * mfgrid = make_mfgrid(2, 3, 4, 10.0, 10.0);
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(2, 3, 4, 10.0, 10.0);
     CSRData csr = mfgrid->get_usg_csr_data();
 
     for (int n = 0; n < csr.nodes; n++)

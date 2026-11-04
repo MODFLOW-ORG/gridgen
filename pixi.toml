@@ -35,8 +35,9 @@ test-determinism = { cmd = "meson test --verbose --no-rebuild -C builddir determ
 coverage = { cmd = "rm -rf builddir-coverage && meson setup -Db_coverage=true -Dunit_tests=disabled --buildtype=debug builddir-coverage && meson compile -C builddir-coverage && meson test -C builddir-coverage determinism && gcovr -r . builddir-coverage --gcov-ignore-parse-errors=suspicious_hits.warn_once_per_file -e src/tools/shapefile/shapelib/ -e subprojects/ -e test/ --print-summary -o builddir-coverage/coverage.txt" }
 
 # unit and regression tests built with the address and undefined behavior
-# sanitizers; any error they report fails the test
-sanitize = { cmd = "rm -rf builddir-sanitize && meson setup -Db_sanitize=address,undefined -Db_lundef=false -Dcpp_args=-fno-sanitize-recover=undefined -Dunit_tests=enabled --buildtype=debug builddir-sanitize && meson compile -C builddir-sanitize && meson test -C builddir-sanitize --print-errorlogs --timeout-multiplier 4 unit determinism", env = { ASAN_OPTIONS = "alloc_dealloc_mismatch=1:detect_leaks=0:halt_on_error=1", UBSAN_OPTIONS = "print_stacktrace=1:halt_on_error=1" } }
+# sanitizers; any error they report fails the test, and so does a leak where
+# the leak sanitizer runs by default (Linux)
+sanitize = { cmd = "rm -rf builddir-sanitize && meson setup -Db_sanitize=address,undefined -Db_lundef=false -Dcpp_args=-fno-sanitize-recover=undefined -Dunit_tests=enabled --buildtype=debug builddir-sanitize && meson compile -C builddir-sanitize && meson test -C builddir-sanitize --print-errorlogs --timeout-multiplier 4 unit determinism", env = { ASAN_OPTIONS = "alloc_dealloc_mismatch=1:halt_on_error=1", UBSAN_OPTIONS = "print_stacktrace=1:halt_on_error=1" } }
 
 # compare outputs with a build of main checked out at ../gridgen-main
 # (e.g., git worktree add ../gridgen-main main)

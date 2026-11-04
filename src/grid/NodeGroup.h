@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 using namespace std;
 
@@ -44,7 +45,16 @@ public:
     //constructor
     NodeGroup(Grid * g = nullptr);
 
+    NodeGroup(const NodeGroup &) = delete;
+    NodeGroup & operator=(const NodeGroup &) = delete;
+    NodeGroup(NodeGroup &&) = default;
+    NodeGroup & operator=(NodeGroup &&) = default;
+
+    ///add a box, which this group then owns, and return its node id
     int add(Box * box);
+
+    ///refer to the boxes of another group, which keeps ownership of them
+    void share(const NodeGroup & other);
 
     /*!
             Return an array of size of the number of active leaf nodes
@@ -78,10 +88,10 @@ public:
     // Data (TODO: move these to protected section)
     //
     //
-    Grid * grid;         //the hosting Grid
-    int * nodeid_array;  //node ids (mapping node number to node id)
-    int * nodelay_array; //number of nodes per layer
-    int nlay;            //total number of layers
+    Grid * grid;               //the hosting Grid
+    vector<int> nodeid_array;  //node ids (mapping node number to node id)
+    vector<int> nodelay_array; //number of nodes per layer
+    int nlay;                  //total number of layers
 
     bool rebuild_nodeid_array; //rebuild node id
 
@@ -91,6 +101,8 @@ public:
     list<int> removed_nodes;
 
 protected:
+    vector<unique_ptr<Box>> owned_boxes; //the boxes added to this group
+
     int total_leaf_number;  //number of leaves store in this group (totoal number of leaves)
     int active_leaf_number; //number of leaves store in this group (active nodes only)
 

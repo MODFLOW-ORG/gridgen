@@ -163,12 +163,8 @@ void GridIntersection::build(grid_intersection_raw_data & data)
                 bpc->destroy();
                 delete bpc;
             }
-            for (auto gp : tvplygons)
-            {
-                gp->destroy();
-                delete gp;
-            }
-            //polygons[j].destroy();//delete the object
+            //the rings are those of polygons[j], which the reader frees
+            for (auto gp : tvplygons) delete gp;
         }
         int afterSize = m_ply_interaction_info.size();
         if (angle != 0)
