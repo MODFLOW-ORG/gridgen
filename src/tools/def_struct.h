@@ -77,8 +77,6 @@ protected:
         }
         else if (tolower(spec.front()) == "open/close")
         {
-            T * A = new T[size];
-            assert(A);
             string filePath = folderPath;
             filePath += spec.back().c_str();
             //replace the '\' with '/'
@@ -93,20 +91,14 @@ protected:
 
             char tmp[1024];
             ifstream fin(filePath.c_str());
-            if (!fin.good())
+            if (!fin.good()) throw GridgenError("Cannot open file:" + filePath);
+
+            T * A = new T[size];
+            if (fin.peek() == '#')
             {
-                cerr << "! Error: Cannot open file:" << filePath << endl;
-                delete[] A;
-                A = nullptr;
-            } //end good
-            else
-            {
-                if (fin.peek() == '#')
-                {
-                    fin.getline(tmp, 1024);
-                }
-                for (int i = 0; i < size; i++) fin >> A[i];
+                fin.getline(tmp, 1024);
             }
+            for (int i = 0; i < size; i++) fin >> A[i];
 
             fin.close();
             return A;

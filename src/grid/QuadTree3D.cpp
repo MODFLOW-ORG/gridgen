@@ -973,15 +973,10 @@ void QuadTree3D::_add_root_nodes()
 // Do not call this function if you just wanted to get the top array
 double * QuadTree3D::get_top()
 {
-    if (this->top != nullptr)
-    {
-        delete[] this->top;
-    }
-
     int nodesize = nodegroup.node_size();
     int mfgrid_csize = m_mfgrid->nrow * m_mfgrid->ncol;
-    this->top = new double[nodesize];
-    assert(this->top);
+    //filled in full before it replaces the array, so an error leaves the array unchanged
+    unique_ptr<double[]> z(new double[nodesize]);
 
     for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
     {
@@ -990,14 +985,13 @@ double * QuadTree3D::get_top()
         if (m_top_layer_z_operator[b->layer] == Z_VALUE_REPLICATE_OPEARTOR)
         {
             Index2d i = m_mfgrid->getIndex(Point2d(b->x, b->y));
-            this->top[nodenumber] = m_mfgrid->botm(b->layer, i[0], i[1]);
+            z[nodenumber] = m_mfgrid->botm(b->layer, i[0], i[1]);
         }
         else //if(m_top_layer_z_operator[b->layer]==Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR)
         {
             if (m_top_layer_z_source.find(b->layer) ==
                 m_top_layer_z_source.end()) //no name defined, interpolate from the based grid
-                this->top[nodenumber] =
-                    bilinear_interpolation(b, &m_mfgrid->bot[mfgrid_csize * b->layer]);
+                z[nodenumber] = bilinear_interpolation(b, &m_mfgrid->bot[mfgrid_csize * b->layer]);
             else //read from ascii file
             {
                 bool area_weigthed = true;
@@ -1005,12 +999,14 @@ double * QuadTree3D::get_top()
                     m_top_area_weighted_interpolate.end())
                     area_weigthed = m_top_area_weighted_interpolate[b->layer];
 
-                this->top[nodenumber] =
+                z[nodenumber] =
                     bilinear_interpolation(b, m_top_layer_z_source[b->layer], area_weigthed);
             }
         }
     }
 
+    delete[] this->top;
+    this->top = z.release();
     return this->top;
 }
 
@@ -1018,15 +1014,10 @@ double * QuadTree3D::get_top()
 // Do not call this function if you just wanted to get the bot array
 double * QuadTree3D::get_bot()
 {
-    if (this->bot != nullptr)
-    {
-        delete[] this->bot;
-    }
-
     int nodesize = nodes();
     int mfgrid_csize = m_mfgrid->nrow * m_mfgrid->ncol;
-    this->bot = new double[nodesize];
-    assert(this->bot);
+    //filled in full before it replaces the array, so an error leaves the array unchanged
+    unique_ptr<double[]> z(new double[nodesize]);
 
     for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
     {
@@ -1035,13 +1026,13 @@ double * QuadTree3D::get_bot()
         if (m_bot_layer_z_operator[b->layer] == Z_VALUE_REPLICATE_OPEARTOR)
         {
             Index2d i = m_mfgrid->getIndex(Point2d(b->x, b->y));
-            this->bot[nodenumber] = m_mfgrid->botm(b->layer + 1, i[0], i[1]);
+            z[nodenumber] = m_mfgrid->botm(b->layer + 1, i[0], i[1]);
         }
         else //if(m_bot_layer_z_operator[b->layer]==Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR)
         {
             if (m_bot_layer_z_source.find(b->layer) ==
                 m_bot_layer_z_source.end()) //no name defined, interpolate from the based grid
-                this->bot[nodenumber] =
+                z[nodenumber] =
                     bilinear_interpolation(b, &m_mfgrid->bot[mfgrid_csize * (b->layer + 1)]);
             else
             {
@@ -1051,12 +1042,14 @@ double * QuadTree3D::get_bot()
                     area_weigthed = m_bot_area_weighted_interpolate[b->layer];
 
                 //read from ascii file
-                this->bot[nodenumber] =
+                z[nodenumber] =
                     bilinear_interpolation(b, m_bot_layer_z_source[b->layer], area_weigthed);
             }
         }
     }
 
+    delete[] this->bot;
+    this->bot = z.release();
     return this->bot;
 }
 
@@ -1275,7 +1268,13 @@ ostream & operator<<(ostream & out, QuadTree3D & grid)
 
 void QuadTree3D::saveGhostNode(string filePath)
 {
-    if (m_gns.size() == 0) computeGNC(this, m_gns);
+    if (m_gns.size() == 0)
+    {
+        //computed in full before it is kept, so an error leaves no partial list
+        vector<GhostNode> gns;
+        computeGNC(this, gns);
+        m_gns.swap(gns);
+    }
 
     writeGhostNode(filePath, m_gns, ((this->one_based_node_numbering) ? 1 : 0));
     cout << "- Save data to file: " << filePath << endl;

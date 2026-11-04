@@ -227,7 +227,7 @@ Box * ModflowGrid2D::find_nodeobj(int i, int j)
     //get the box
     int id = get_nodeid(i, j);
 
-    if (nodegroup.empty() || id < 0 || ((unsigned)id) > nodegroup.size())
+    if (nodegroup.empty() || id < 0 || ((unsigned)id) >= nodegroup.size())
     {
         throw GridgenError("ModflowGrid2D::find_nodeobj index out of bound");
     }

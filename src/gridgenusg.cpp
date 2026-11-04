@@ -203,4 +203,9 @@ int main(int argc, char ** argv)
         cerr << "! Error: " << e.what() << endl;
         return 1;
     }
+    catch (const exception & e)
+    {
+        cerr << "! Error: " << e.what() << endl;
+        return 1;
+    }
 }
