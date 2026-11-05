@@ -1,4 +1,5 @@
 // Quadtree refinement, smoothing, and connectivity
+#include <algorithm>
 #include <cstdlib>
 #include <set>
 #include <string>
@@ -345,4 +346,32 @@ TEST(QuadTreeBuilder, PolygonWithTwoOuterRingsAndHoles)
     EXPECT_EQ(attribute_refined_cells("gridgen_unit_holes2", SHPT_POLYGON, "polygon",
                                       {{{a, b, bhole, ahole}, 1}}),
               separate);
+}
+
+TEST(QuadTreeBuilder, PolygonHoleTouchingOuterRingIsAHole)
+{
+    // the hole meets the outer ring along x = 290 and holds the middle right
+    // cell, which is not refined whichever vertex the hole starts at
+    gridgen_test::Ring outer = gridgen_test::square(10.0, 10.0, 280.0);
+    gridgen_test::Ring hole = {
+        {190.0, 90.0}, {190.0, 210.0}, {290.0, 210.0}, {290.0, 90.0}, {190.0, 90.0}};
+    gridgen_test::Ring hole_from_edge = {
+        {290.0, 210.0}, {290.0, 90.0}, {190.0, 90.0}, {190.0, 210.0}, {290.0, 210.0}};
+    auto cells = attribute_refined_cells("gridgen_unit_touching_hole", SHPT_POLYGON, "polygon",
+                                         {{{outer, hole}, 1}});
+    EXPECT_EQ(cells.size(), 1u + 8 * 4);
+    EXPECT_NE(std::find(cells.begin(), cells.end(), std::make_tuple(0, 250.0, 150.0)), cells.end());
+    EXPECT_EQ(cells, attribute_refined_cells("gridgen_unit_touching_hole1", SHPT_POLYGON, "polygon",
+                                             {{{outer, hole_from_edge}, 1}}));
+}
+
+TEST(QuadTreeBuilder, PolygonIslandInHoleIsAPolygon)
+{
+    gridgen_test::Ring outer = gridgen_test::square(10.0, 10.0, 280.0),
+                       hole = gridgen_test::square(60.0, 60.0, 180.0),
+                       island = gridgen_test::square(140.0, 140.0, 20.0);
+    EXPECT_EQ(attribute_refined_cells("gridgen_unit_island", SHPT_POLYGON, "polygon",
+                                      {{{island, outer, hole}, 1}}),
+              attribute_refined_cells("gridgen_unit_island1", SHPT_POLYGON, "polygon",
+                                      {{{outer, hole}, 1}, {{island}, 1}}));
 }
