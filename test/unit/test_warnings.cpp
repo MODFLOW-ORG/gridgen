@@ -344,6 +344,43 @@ TEST(DefinitionParser, FeatureTypeIsCheckedAndCaseInsensitive)
     }
 }
 
+// CLOSE_POLYGONS of a GRID_TO_SHAPEFILE block given the records
+bool close_polygons(const std::string & records)
+{
+    std::istringstream dfn("BEGIN GRID_TO_SHAPEFILE shp\n"
+                           "  GRID = qtg\n"
+                           "  SHAPEFILE = qtg_shp\n"
+                           "  FEATURE_TYPE = polygon\n" +
+                           records + "END GRID_TO_SHAPEFILE\n");
+    DefinitionParser parser;
+    EXPECT_TRUE(parser.parse(dfn));
+    auto * data = dynamic_cast<gridtoshape_raw_data *>(parser.getBlockData("shp"));
+    EXPECT_NE(data, nullptr);
+    return data != nullptr && data->close_polygons;
+}
+
+TEST(DefinitionParser, ConcideIsADeprecatedNameOfClosePolygons)
+{
+    const std::string deprecated =
+        "CONCIDE (GRID_TO_SHAPEFILE shp) is deprecated; use CLOSE_POLYGONS.";
+
+    clear_warnings();
+    EXPECT_TRUE(close_polygons(""));
+    EXPECT_TRUE(close_polygons("  CLOSE_POLYGONS = True\n"));
+    EXPECT_FALSE(close_polygons("  CLOSE_POLYGONS = False\n"));
+    EXPECT_TRUE(get_warnings().empty());
+
+    clear_warnings();
+    EXPECT_FALSE(close_polygons("  CONCIDE = False\n"));
+    EXPECT_TRUE(warned(deprecated));
+
+    // CLOSE_POLYGONS is used when both are given
+    clear_warnings();
+    EXPECT_TRUE(close_polygons("  CONCIDE = False\n  CLOSE_POLYGONS = True\n"));
+    EXPECT_TRUE(close_polygons("  CLOSE_POLYGONS = True\n  CONCIDE = False\n"));
+    EXPECT_TRUE(warned(deprecated));
+}
+
 TEST(DefinitionParser, IgnoredRecordsAndBlocksAreReported)
 {
     std::string block = "BEGIN ACTIVE_DOMAIN domain\n"

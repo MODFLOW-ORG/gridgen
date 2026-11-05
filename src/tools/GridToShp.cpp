@@ -60,7 +60,7 @@ void writeFeatEntity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<i
                      vector<int> & dbIds, vector<Box *> & b_vec, vector<int> & number_vec,
                      vector<int> & l_vec, vector<int> & r_vec, vector<int> & c_vec,
                      vector<string> & loc_vec, double cx, double cy, double rotation, int shptype,
-                     bool one_base_number, vector<size_t> sort_idx, bool bConcide)
+                     bool one_base_number, vector<size_t> sort_idx, bool close_polygons)
 {
     QuadTree3D * qtree = dynamic_cast<QuadTree3D *>(grid);
     ModflowGrid * mfgrid = dynamic_cast<ModflowGrid *>(grid);
@@ -80,7 +80,7 @@ void writeFeatEntity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<i
         int entityNum = -1;
         if (shptype == 1)
         {
-            if (!bConcide)
+            if (!close_polygons)
                 shpObj = SHPCreateSimpleObject(SHPT_POLYGON, 4, padfX, padfY, nullptr);
             else
             {
@@ -162,7 +162,7 @@ void DFSCollect(Grid * grid, Box * b, int l, int r, int c, string & location,
     }
 }
 
-void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, bool bConcide)
+void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, bool close_polygons)
 {
     if (feature_type == "line")
     {
@@ -244,7 +244,7 @@ void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, 
     //write the sorted
     writeFeatEntity(qtree, handler, dbfHandle, fieldIds, dbIds, b_vec, number_vec, l_vec, r_vec,
                     c_vec, loc_vec, cx, cy, rotation, shptype,
-                    qtree->get_one_based_node_numbering(), sort_idx, bConcide);
+                    qtree->get_one_based_node_numbering(), sort_idx, close_polygons);
 
     //close the shape file
     DBFClose(dbfHandle);
@@ -252,7 +252,7 @@ void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, 
 }
 
 void writeModflowGrid2Shp(ModflowGrid * modflow, string gridShpName, string feature_type,
-                          bool without_inactive, bool one_based_numbering, bool bConcide)
+                          bool without_inactive, bool one_based_numbering, bool close_polygons)
 {
     if (feature_type == "line")
     {
@@ -335,7 +335,7 @@ void writeModflowGrid2Shp(ModflowGrid * modflow, string gridShpName, string feat
     //write the sorted
     writeFeatEntity(modflow, handler, dbfHandle, fieldIds, dbIds, b_vec, number_vec, l_vec, r_vec,
                     c_vec, loc_vec, cx, cy, rotation, shptype, one_based_numbering, sort_idx,
-                    bConcide);
+                    close_polygons);
 
     //close the shape file
     DBFClose(dbfHandle);

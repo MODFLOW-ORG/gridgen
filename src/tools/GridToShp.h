@@ -12,12 +12,12 @@ using namespace cusg;
 
 //write a quadtree to a shape file
 void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type,
-                       bool bConcide = true);
+                       bool close_polygons = true);
 
 //write a modflow grid to a shape file
 void writeModflowGrid2Shp(ModflowGrid * modflow, string gridShpName, string feature_type,
                           bool without_inactive = true, bool one_based_numbering = true,
-                          bool bConcide = true);
+                          bool close_polygons = true);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation of sorting return index
