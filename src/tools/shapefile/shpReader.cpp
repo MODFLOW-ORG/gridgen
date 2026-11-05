@@ -2,7 +2,9 @@
 #include "shpReader.h"
 #include "GridgenError.h"
 #include "Warnings.h"
+#include "intersection.h"
 
+#include <algorithm>
 #include <cassert>
 using namespace std;
 
@@ -215,38 +217,40 @@ bool ShapeReader::read(const string & filename)
     return true;
 }
 
+//whether ring a is inside ring b, which it does not cross; most of the
+//vertices of a decide, since a vertex of a may touch b
+static bool ringInRing(const vector<Point2d> & a, const vector<Point2d> & b)
+{
+    int nin = 0;
+    for (const Point2d & p : a)
+    {
+        bool inside = false;
+        for (size_t k = 0; k < b.size(); k++)
+        {
+            if (CrossesRay(b[k].get(), b[(k + 1) % b.size()].get(), p.get())) inside = !inside;
+        }
+        nin += inside ? 1 : -1;
+    }
+    return nin > 0;
+}
+
 void ShapeReader::readPly(SHPObject * psShape, int iShape)
 {
-    //read each part
-    int iPart = 1;
-
-    //
-    c_ply ply(c_ply::POUT);
-    ply.beginPoly();
-
+    //the vertices of each part
+    vector<vector<Point2d>> rings;
+    int iPart = 0;
     for (int j = 0; j < psShape->nVertices; j++)
     {
-        string pszPartType;
-
-        if (j == 0 && psShape->nParts > 0) pszPartType = SHPPartTypeName(psShape->panPartType[0]);
-
-        //this defines a new loop...
-        if (iPart < psShape->nParts && psShape->panPartStart[iPart] == j)
+        if (rings.empty() || (iPart < psShape->nParts && psShape->panPartStart[iPart] == j))
         {
-            pszPartType = SHPPartTypeName(psShape->panPartType[iPart]);
+            rings.emplace_back();
             iPart++;
-            ply.endPoly();
-            add_ply(ply, iShape);
-
-            //create a new ply
-            ply = c_ply(c_ply::PIN);
-            ply.beginPoly();
         }
 
         //Points may duplicate....
         double & x = psShape->padfX[j];
         double & y = psShape->padfY[j];
-        ply.addVertex(x, y);
+        rings.back().emplace_back(x, y);
 
         if (x < bbox[0]) bbox[0] = x;
         if (x > bbox[1]) bbox[1] = x;
@@ -254,14 +258,59 @@ void ShapeReader::readPly(SHPObject * psShape, int iShape)
         if (y > bbox[3]) bbox[3] = y;
     }
 
-    ply.endPoly();
+    //a ring inside an odd number of the others is a hole of the smallest ring
+    //containing it, and any other ring is an outer boundary, whatever the
+    //order and orientation of the rings
+    size_t nrings = rings.size();
+    vector<int> depth(nrings, 0), parent(nrings, -1);
+    vector<double> extent(nrings);
+    for (size_t i = 0; i < nrings; i++)
+    {
+        double xmin = rings[i][0][0], xmax = xmin, ymin = rings[i][0][1], ymax = ymin;
+        for (const Point2d & p : rings[i])
+        {
+            xmin = min(xmin, p[0]);
+            xmax = max(xmax, p[0]);
+            ymin = min(ymin, p[1]);
+            ymax = max(ymax, p[1]);
+        }
+        extent[i] = (xmax - xmin) * (ymax - ymin);
+    }
+    for (size_t i = 0; i < nrings; i++)
+    {
+        for (size_t k = 0; k < nrings; k++)
+        {
+            if (k == i || !ringInRing(rings[i], rings[k])) continue;
+            depth[i]++;
+            if (parent[i] < 0 || extent[k] < extent[parent[i]]) parent[i] = static_cast<int>(k);
+        }
+    }
 
-    add_ply(ply, iShape);
+    //the polygon each outer ring starts
+    vector<int> polygon_of(nrings, -1);
+    for (int hole = 0; hole <= 1; hole++)
+    {
+        for (size_t i = 0; i < nrings; i++)
+        {
+            if (depth[i] % 2 != hole) continue;
+            c_ply ply(hole ? c_ply::PIN : c_ply::POUT);
+            ply.beginPoly();
+            for (const Point2d & p : rings[i]) ply.addVertex(p[0], p[1]);
+            ply.endPoly();
+            if (hole)
+                m_ply_list[polygon_of[parent[i]]].push_back(ply);
+            else
+            {
+                polygon_of[i] = static_cast<int>(m_ply_list.size());
+                add_ply(ply, iShape);
+            }
+        }
+    }
 }
 void ShapeReader::readMultiPatch(SHPObject * psShape, int iShape)
 {
     //outer and first rings start a polygon, and inner rings are its holes; a
-    //plain ring is a hole after another ring, as in a polygon shapefile
+    //plain ring is a hole after another ring
     bool started = false;
     for (int i = 0; i < psShape->nParts; i++)
     {
