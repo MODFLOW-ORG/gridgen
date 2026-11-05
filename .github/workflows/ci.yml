@@ -106,6 +106,24 @@ jobs:
           pixi-version: v0.82.1
           manifest-path: "${{ env.PROGRAM_NAME }}/pixi.toml"
 
+      # WrapDB, the only source of the meson patch for GoogleTest, can be down,
+      # so download it once for each change to the wraps and retry when the cache is empty
+      - name: Cache subproject downloads
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.PROGRAM_NAME }}/subprojects/packagecache
+          key: subprojects-${{ runner.os }}-${{ hashFiles('gridgen/subprojects/*.wrap') }}
+
+      - name: Download subprojects
+        shell: bash
+        working-directory: ${{ env.PROGRAM_NAME }}
+        run: |
+          for attempt in 1 2 3; do
+            pixi run -- meson subprojects download && exit 0
+            sleep 60
+          done
+          exit 1
+
       - name: Set ostag
         shell: bash
         working-directory: ${{ env.PROGRAM_NAME }}
@@ -212,7 +230,12 @@ jobs:
       - name: Build ${{ env.PROGRAM_NAME }} base branch
         if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'output-change') }}
         working-directory: ${{ env.PROGRAM_NAME }}
+        shell: bash
         run: |
+          # use the downloads of this branch; meson checks their hashes and
+          # downloads again if the base branch wraps differ
+          mkdir -p ../${{ env.PROGRAM_NAME }}-main/subprojects
+          cp -R subprojects/packagecache ../${{ env.PROGRAM_NAME }}-main/subprojects/
           pixi run setup-main
           pixi run build-main
 
@@ -267,6 +290,24 @@ jobs:
         with:
           pixi-version: v0.82.1
           manifest-path: "${{ env.PROGRAM_NAME }}/pixi.toml"
+
+      # WrapDB, the only source of the meson patch for GoogleTest, can be down,
+      # so download it once for each change to the wraps and retry when the cache is empty
+      - name: Cache subproject downloads
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.PROGRAM_NAME }}/subprojects/packagecache
+          key: subprojects-${{ runner.os }}-${{ hashFiles('gridgen/subprojects/*.wrap') }}
+
+      - name: Download subprojects
+        shell: bash
+        working-directory: ${{ env.PROGRAM_NAME }}
+        run: |
+          for attempt in 1 2 3; do
+            pixi run -- meson subprojects download && exit 0
+            sleep 60
+          done
+          exit 1
 
       - name: Test ${{ env.PROGRAM_NAME }} with the sanitizers
         working-directory: ${{ env.PROGRAM_NAME }}
