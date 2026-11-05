@@ -176,6 +176,36 @@ TEST(QuadTree, RefineReportsFeatureOutsideGrid)
 
     // a cell already at the level is still intersected
     EXPECT_TRUE(qtree->refine(inside, 1));
+
+    // a line that crosses the grid with both ends outside intersects it
+    c_plyline line_across;
+    line_across.beginPoly();
+    line_across.addVertex(-50.0, 250.0);
+    line_across.addVertex(350.0, 250.0);
+    line_across.endPoly();
+    EXPECT_TRUE(qtree->refine(line_across, 1));
+    line_across.destroy();
+}
+
+// a line with both ends outside the grid is not refined (issue #130)
+TEST(QuadTree, DISABLED_LineWithEndsOutsideGridIsRefined)
+{
+    auto refined_nodes = [](double x0)
+    {
+        std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 3, 3, 100.0, 100.0), {});
+        c_plyline line;
+        line.beginPoly();
+        line.addVertex(x0, 150.0);
+        line.addVertex(350.0, 150.0);
+        line.endPoly();
+        qtree->refine(line, 1);
+        line.destroy();
+        qtree->refresh();
+        return qtree->nodes();
+    };
+    // the same cells are crossed whether the line starts inside or beside the grid
+    EXPECT_GT(refined_nodes(10.0), 9);
+    EXPECT_EQ(refined_nodes(-50.0), refined_nodes(10.0));
 }
 
 TEST(QuadTreeBuilder, RefinementFeatureOutsideGridIsReported)
@@ -207,6 +237,7 @@ TEST(QuadTreeBuilder, RefinementErrors)
     EXPECT_THROW(
         build_qtree(builder_dfn(path, "polygon", "REFINEMENT_LEVEL_BY_ATTRIBUTE = NOSUCH")),
         GridgenError);
+    EXPECT_THROW(build_qtree(builder_dfn(path, "area")), GridgenError);
     // the field exists, so this refines
     build_qtree(builder_dfn(path, "polygon", "REFINEMENT_LEVEL_BY_ATTRIBUTE = LEVEL"));
 }
@@ -319,14 +350,15 @@ TEST(DefinitionParser, IgnoredRecordsAndBlocksAreReported)
                         "  SHAPEFILE = domain\n"
                         "  FEATURE_TYPE = polygon\n";
     std::istringstream dfn(block + "  NO_SUCH_RECORD = 1\nEND ACTIVE_DOMAIN\n" + block +
-                           "END ACTIVE_DOMAIN\n");
+                           "END ACTIVE_DOMAIN\nBEGIN NO_SUCH_TYPE other\nEND NO_SUCH_TYPE\n");
     DefinitionParser parser;
     clear_warnings();
     ASSERT_TRUE(parser.parse(dfn));
-    ASSERT_EQ(get_warnings().size(), 2u);
+    ASSERT_EQ(get_warnings().size(), 3u);
     EXPECT_NE(get_warnings()[0].find("NO_SUCH_RECORD"), std::string::npos);
     EXPECT_TRUE(
         warned("Block domain is defined more than once; only the last definition is used."));
+    EXPECT_TRUE(warned("Block other has the unrecognized type no_such_type and is ignored."));
 }
 
 TEST(DefinitionParser, MalformedInputIsAnError)

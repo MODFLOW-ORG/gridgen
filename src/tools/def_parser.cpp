@@ -234,9 +234,8 @@ bool DefinitionParser::parse(istream & in, string folder)
         else
         {
 
-            cerr << "! Unknown block type:" << block.type << " ignored;\n"
-                 << "! Do you forget to register block in DefinitionParser::DefinitionParser() "
-                 << endl;
+            warn("Block " + block.name + " has the unrecognized type " + block.type +
+                 " and is ignored.");
 
             continue;
         } //end if

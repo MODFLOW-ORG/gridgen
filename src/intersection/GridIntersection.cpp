@@ -56,7 +56,8 @@ void GridIntersection::build(grid_intersection_raw_data & data)
     string block = "GRID_INTERSECTION " + data.name;
     m_shp_reader.destroy();
     if (!m_shp_reader.read(data.shapefile))
-        throw GridgenError("cannot open shapefile " + data.shapefile + " (" + block + ")");
+        throw GridgenError("cannot open shapefile " + data.shapefile + " (" + block +
+                           "); its .shp or .dbf file is missing or cannot be read");
     int nfeatures = 0, noutside = 0;
 
     //only support

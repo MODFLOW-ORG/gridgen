@@ -1,5 +1,6 @@
 
 #include "shpReader.h"
+#include "GridgenError.h"
 #include "Warnings.h"
 
 #include <cassert>
@@ -139,8 +140,13 @@ bool ShapeReader::read(const string & filename)
         //
         SHPObject * psShape = SHPReadObject(hSHP, i);
 
-        //make sure psShape is not null
-        assert(psShape);
+        if (psShape == nullptr)
+        {
+            SHPClose(hSHP);
+            DBFClose(hDBF);
+            throw GridgenError("shape " + to_string(i + 1) + " in shapefile " + filename +
+                               " cannot be read");
+        }
 
         //some format check..
         if (psShape->nParts > 0 && psShape->panPartStart[0] != 0)

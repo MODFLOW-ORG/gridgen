@@ -44,7 +44,8 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
     string block = "ACTIVE_DOMAIN " + data->name;
     ShapeReader shp_reader;
     if (!shp_reader.read(data->shapefile))
-        throw GridgenError("cannot open shapefile " + data->shapefile + " (" + block + ")");
+        throw GridgenError("cannot open shapefile " + data->shapefile + " (" + block +
+                           "); its .shp or .dbf file is missing or cannot be read");
     int nfeatures = 0, noutside = 0;
 
     //start to find the domain

@@ -111,7 +111,8 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
             string block = "REFINEMENT_FEATURES " + rf->name;
             ShapeReader & shp_reader = shp_readers[rf->shapefile];
             if (!shp_reader.read(rf->shapefile))
-                throw GridgenError("cannot open shapefile " + rf->shapefile + " (" + block + ")");
+                throw GridgenError("cannot open shapefile " + rf->shapefile + " (" + block +
+                                   "); its .shp or .dbf file is missing or cannot be read");
 
             //prepare for attribute based refinement and store the specified using fid
             int fid = -1; //index of refinement_level
@@ -191,7 +192,8 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
             }
             else
             {
-                throw GridgenError("Unknown feature type: " + rf->featuretype);
+                throw GridgenError("FEATURE_TYPE " + rf->featuretype + " (" + block +
+                                   ") is not line, polygon, or point");
             }
 
             if (nfeatures == 0)

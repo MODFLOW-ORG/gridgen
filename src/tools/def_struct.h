@@ -103,7 +103,7 @@ protected:
             {
                 delete[] A;
                 throw GridgenError("file " + filePath + " has fewer than " + to_string(size) +
-                                   " numbers");
+                                   " numbers, or a value that is not a number");
             }
 
             fin.close();

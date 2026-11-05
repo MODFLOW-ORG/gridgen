@@ -291,6 +291,9 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
             if (next != nullptr)
             {
                 LineSeg2d line(ptr->getPos(), next->getPos());
+                LineSeg2d clipped;
+                if (gi.clip_line(this, line, clipped) && getSqLength(clipped) >= 1e-10)
+                    touched = true;
 
                 bool myr = specialLineIntersect(this, line, max_level, at_layer, results);
                 if (myr) r = true;
@@ -298,8 +301,6 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
             ptr = next;
 
         } while (ptr != nullptr);
-        //r is true even for a line outside the grid, so use the cells found
-        touched = touched || !results.empty();
 
         if (r)
         {
