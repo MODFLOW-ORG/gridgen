@@ -156,7 +156,11 @@ The following test problems are in the test directory of the source code archive
 
 \section{Known Issues}
 
-No defects are known in this version. Defects are tracked as issues on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}) and are listed here until they are fixed.
+The following defects are known in this version. Each is tracked as an issue on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}) and is removed from this list when it is fixed.
+
+\begin{itemize}
+  \item A line in a REFINEMENT\_FEATURES block is not refined where a segment of it crosses the grid with both ends outside the grid. Add a vertex to the line inside the grid near where the segment enters it, so that each segment that crosses the grid has an end inside (\ghissue{130}).
+\end{itemize}
 
 \section{Documentation}
 

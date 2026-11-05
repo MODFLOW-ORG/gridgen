@@ -61,9 +61,10 @@ public:
     void smooth_refinement(int level_tol_horizontal, int level_tol_vertical);
 
     //
-    void refine(Point2d & pt, int max_level, int at_layer = 0);
-    void refine(c_plyline & arc, int max_level, int at_layer = 0);
-    void refine(c_polygon & pgon, int max_level, int at_layer = 0);
+    //refine the cells a feature intersects, and return whether it intersects any
+    bool refine(Point2d & pt, int max_level, int at_layer = 0);
+    bool refine(c_plyline & arc, int max_level, int at_layer = 0);
+    bool refine(c_polygon & pgon, int max_level, int at_layer = 0);
 
     /// Return a numpy array of size (nodes) that contains the area for all cells.
     vector<double> get_cell_areas() override;

@@ -1,4 +1,5 @@
 #include "GridToShp.h"
+#include "GridgenError.h"
 #include "Box.h"
 #include "GridVertices.h"
 #include "shpGridToLine.h"
@@ -172,11 +173,7 @@ void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, 
     //create a shape file
     int shptype = true; //polygon : true ; point : false
     SHPHandle handler = createShpHandle(shpName, feature_type, shptype);
-    if (handler == nullptr)
-    {
-        cerr << "! Error: failed to open shapefile: " << shpName << endl;
-        return;
-    }
+    if (handler == nullptr) throw GridgenError("cannot write shapefile " + shpName);
 
     //create a .dbf file
     string dbfName = shpName;

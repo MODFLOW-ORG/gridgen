@@ -13,6 +13,8 @@
 #include <string>
 #include "QuadTreeBuilder.h"
 #include "GridgenError.h"
+#include "Warnings.h"
+#include <sstream>
 #include "shapefile/shpReader.h"
 #include "GridDomain.h"
 
@@ -106,8 +108,11 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
         list<refinement_raw_data *> & rF = rawdata.refine_by_features[i];
         for (auto rf : rF)
         {
+            string block = "REFINEMENT_FEATURES " + rf->name;
             ShapeReader & shp_reader = shp_readers[rf->shapefile];
-            shp_reader.read(rf->shapefile);
+            if (!shp_reader.read(rf->shapefile))
+                throw GridgenError("cannot open shapefile " + rf->shapefile + " (" + block +
+                                   "); its .shp or .dbf file is missing or cannot be read");
 
             //prepare for attribute based refinement and store the specified using fid
             int fid = -1; //index of refinement_level
@@ -118,28 +123,28 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
             {
                 fid = getField(rf->refinement_level_by_attribute, shp_reader);
                 if (fid == -1)
-                {
-                    cerr << "! Error: The field for refinement_level_by_attribute : "
-                         << rf->refinement_level_by_attribute
-                         << "is not found in shape file: " << rf->shapefile << endl;
-                    continue;
-                }
+                    throw GridgenError("shapefile " + rf->shapefile + " (" + block +
+                                       ") has no integer field named " +
+                                       rf->refinement_level_by_attribute +
+                                       " for REFINEMENT_LEVEL_BY_ATTRIBUTE");
             }
 
             // refine using the given feature (rf)
             string rftype = tolower(rf->featuretype);
+            int nfeatures = 0, noutside = 0;
             if (rftype == "line")
             {
                 vector<GIS_plyline> & arcs = shp_reader.getArcList();
                 //subdivide the qtree using the features
                 int arcssize = arcs.size();
+                nfeatures = arcssize;
                 for (int j = 0; j < arcssize; j++)
                 {
                     //rotate
                     if (angle != 0) arcs[j].rotate(cx, cy, -angle);
 
                     int rf_level = (bByAttribute) ? intFlds[fid].vals[j] : rf->refinement_level;
-                    qtree->refine((c_plyline &)arcs[j], rf_level, i);
+                    if (!qtree->refine((c_plyline &)arcs[j], rf_level, i)) noutside++;
 
                     //rotate back
                     if (angle != 0) arcs[j].rotate(cx, cy, angle);
@@ -150,6 +155,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
                 vector<GIS_polygon> & polygons = shp_reader.getPolyList();
                 //subdivide the qtree using the features
                 int psize = polygons.size();
+                nfeatures = psize;
 
                 for (int j = 0; j < psize; j++)
                 {
@@ -160,7 +166,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
                     if (angle != 0) polygons[j].rotate(cx, cy, -angle);
 
                     int rf_level = (bByAttribute) ? intFlds[fid].vals[j] : rf->refinement_level;
-                    qtree->refine(polygons[j], rf_level, i); //i is the level index
+                    if (!qtree->refine(polygons[j], rf_level, i)) noutside++; //i is the layer
 
                     //rotate back
                     if (angle != 0) polygons[j].rotate(cx, cy, angle);
@@ -171,13 +177,14 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
                 vector<GIS_Point2d> & pts = shp_reader.getPointList();
                 //subdivide the qtree using the features
                 int psize = pts.size();
+                nfeatures = psize;
                 for (int j = 0; j < psize; j++)
                 {
                     //rotate
                     if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
                     int rf_level = (bByAttribute) ? intFlds[fid].vals[j] : rf->refinement_level;
-                    qtree->refine(pts[j], rf_level, i);
+                    if (!qtree->refine(pts[j], rf_level, i)) noutside++;
 
                     //rotate back
                     if (angle != 0) pts[j].rotate(cx, cy, angle);
@@ -185,8 +192,15 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
             }
             else
             {
-                throw GridgenError("Unknown feature type: " + rf->featuretype);
+                throw GridgenError("FEATURE_TYPE " + rf->featuretype + " (" + block +
+                                   ") is not line, polygon, or point");
             }
+
+            if (nfeatures == 0)
+                warn("Shapefile " + rf->shapefile + " (" + block + ") has no " + rftype +
+                     " features; the grid is not refined for it.");
+            warn_features_outside(noutside, nfeatures, rf->shapefile, block, i,
+                                  "the grid is not refined for them");
         } //end for f
 
     } //end for i
@@ -268,9 +282,11 @@ void Quadtree_Builder::analyze_elevation(QuadTree3D * qtree, double * top_elev, 
 
     if (neg_thinkness_count > 0)
     {
-        cerr << "! Warning: There are " << neg_thinkness_count
-             << " cells with negative thinkness. Node #" << max_neg_thinkness_node
-             << " has the largest negative thinkness=" << -max_neg_thinkness << endl;
+        stringstream msg;
+        msg << "There are " << neg_thinkness_count << " cells with negative thinkness. Node #"
+            << max_neg_thinkness_node
+            << " has the largest negative thinkness=" << -max_neg_thinkness;
+        warn(msg.str());
     }
     //
 }

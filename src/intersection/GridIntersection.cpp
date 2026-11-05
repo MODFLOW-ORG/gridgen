@@ -16,6 +16,8 @@
 #include "intersecReadWrite.h"
 #include "BoxPlyClip.h"
 #include "PolygonChecker.h"
+#include "GridgenError.h"
+#include "Warnings.h"
 using namespace std;
 
 namespace cusg
@@ -51,8 +53,12 @@ void GridIntersection::build(grid_intersection_raw_data & data)
 
     //read from shapefile
     //ShapeReader shp_reader;
+    string block = "GRID_INTERSECTION " + data.name;
     m_shp_reader.destroy();
-    m_shp_reader.read(data.shapefile);
+    if (!m_shp_reader.read(data.shapefile))
+        throw GridgenError("cannot open shapefile " + data.shapefile + " (" + block +
+                           "); its .shp or .dbf file is missing or cannot be read");
+    int nfeatures = 0, noutside = 0;
 
     //only support
     if (data.feature_type == "line")
@@ -60,9 +66,12 @@ void GridIntersection::build(grid_intersection_raw_data & data)
         vector<GIS_plyline> & arcs = m_shp_reader.getArcList();
         //subdivide the qtree using the features
         int arcssize = arcs.size();
+        nfeatures = arcssize;
         for (int j = 0; j < arcssize; j++)
         {
             int previousSegInterNum = m_seg_interaction_info.size();
+            //intersect returns true even for a segment outside the grid, so count the cells found
+            size_t ncells = m_intersection.size();
 
             int seg_size = arcs[j].getSize() - 1; //getSize returns the number of vertices
             for (int is = 0; is < seg_size; is++)
@@ -78,6 +87,7 @@ void GridIntersection::build(grid_intersection_raw_data & data)
                 else if (mf2dqtgrid != nullptr)
                     intersect(mf2dqtgrid, line);
             } //end for i
+            if (m_intersection.size() == ncells) noutside++;
 
             //merge the intersection segments that are inside the same box
             int afterSegInterNum = m_seg_interaction_info.size();
@@ -135,6 +145,7 @@ void GridIntersection::build(grid_intersection_raw_data & data)
         vector<GIS_polygon> & polygons = m_shp_reader.getPolyList();
         //subdivide the qtree using the features
         int psize = polygons.size();
+        nfeatures = psize;
         for (int j = 0; j < psize; j++)
         {
 
@@ -147,6 +158,7 @@ void GridIntersection::build(grid_intersection_raw_data & data)
             checkHole(polygons[j], tvplygons);
 
             //loop over all the polygons
+            bool intersects = false;
             for (auto & tvplygon : tvplygons)
             {
                 GIS_polygon gp = *tvplygon;
@@ -154,17 +166,18 @@ void GridIntersection::build(grid_intersection_raw_data & data)
                 BoxPlyClip * bpc = convertCPolygonToClip(*tvplygon);
 
                 if (qtgrid != nullptr)
-                    intersect(qtgrid, gp, bpc); //polygons[j]);
+                    intersects |= intersect(qtgrid, gp, bpc); //polygons[j]);
                 else if (mfgrid != nullptr)
-                    intersect(mfgrid, gp, bpc); //polygons[j]);
+                    intersects |= intersect(mfgrid, gp, bpc); //polygons[j]);
                 else if (mf2dqtgrid != nullptr)
-                    intersect(mf2dqtgrid, gp, bpc); //polygons[j]);
+                    intersects |= intersect(mf2dqtgrid, gp, bpc); //polygons[j]);
 
                 bpc->destroy();
                 delete bpc;
             }
             //the rings are those of polygons[j], which the reader frees
             for (auto gp : tvplygons) delete gp;
+            if (!intersects) noutside++;
         }
         int afterSize = m_ply_interaction_info.size();
         if (angle != 0)
@@ -181,18 +194,21 @@ void GridIntersection::build(grid_intersection_raw_data & data)
         vector<GIS_Point2d> & pts = m_shp_reader.getPointList();
         //subdivide the qtree using the features
         int psize = pts.size();
+        nfeatures = psize;
         for (int j = 0; j < psize; j++)
         {
 
             //rotate
             if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
+            bool intersects = false;
             if (qtgrid != nullptr)
-                intersect(qtgrid, pts[j]);
+                intersects = intersect(qtgrid, pts[j]);
             else if (mfgrid != nullptr)
-                intersect(mfgrid, pts[j]);
+                intersects = intersect(mfgrid, pts[j]);
             else if (mf2dqtgrid != nullptr)
-                intersect(mf2dqtgrid, pts[j]);
+                intersects = intersect(mf2dqtgrid, pts[j]);
+            if (!intersects) noutside++;
         }
         //rotate back
         int afterSize = this->m_pt_interaction_info.size();
@@ -205,6 +221,12 @@ void GridIntersection::build(grid_intersection_raw_data & data)
         }
 
     } //end if
+
+    if (nfeatures == 0)
+        warn("Shapefile " + data.shapefile + " (" + block + ") has no " + data.feature_type +
+             " features; it has no intersections with the grid.");
+    warn_features_outside(noutside, nfeatures, data.shapefile, block, m_layer,
+                          "no intersections are written for them");
 }
 
 //shape file
@@ -227,7 +249,7 @@ bool GridIntersection::saveShp(string & shpName, vector<string> & attributes)
         }
         else
         {
-            cerr << "! Warning: no data to write!\n";
+            warn("No feature intersects the grid, so " + shpName + " is not written.");
             return true;
         }
         cout << "- Save shape data to file: " << shpName << endl;
@@ -256,7 +278,7 @@ bool GridIntersection::save(string & filename, vector<string> & attributes)
         }
         else
         {
-            cerr << "no data to write!\n";
+            warn("No feature intersects the grid, so " + filename + " is not written.");
             return true;
         }
         cout << "- Save txt data to file: " << filename << endl;

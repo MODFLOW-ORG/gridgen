@@ -11,6 +11,7 @@ unit_sources = files(
     'test_quadtree_io.cpp',
     'test_shapereader.cpp',
     'test_vtk.cpp',
+    'test_warnings.cpp',
 )
 
 unit_exe = executable(

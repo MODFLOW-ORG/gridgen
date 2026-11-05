@@ -3,6 +3,7 @@
 #include <set>
 #include <sstream>
 #include "def_struct.h"
+#include "Warnings.h"
 #include "ModflowGrid.h"
 #include "QuadTree3D.h"
 #include "QuadTreeBuilder.h"
@@ -69,7 +70,7 @@ inline int skip_comment_line(std::ifstream & in)
         }
     } while (c == ' ' || c == '\t' || c == '\n' || c == '\r'); //ignore white spaces and newlines
 
-    if (c == EOF) std::cout << "! Warning: Unexpected end of file." << std::endl;
+    if (c == EOF) warn("The definition file ends unexpectedly.");
 
     in.putback(c); // this is non-white and non-comment char!
     return c;
@@ -92,7 +93,8 @@ inline int skip_backslash_new_line(std::istream & in)
         if (c == '\n' || c == '\r')
             c = in.get();
         else // assuming the very special file format noted above!
-            cout << "! Warning: continuation line \\ must be immediately followed by new line.\n";
+            warn("A continuation character \\ in the definition file is not at the end of a "
+                 "line and is ignored.");
     } //while
     return c;
 } //skip_backslash_new_line
@@ -153,10 +155,8 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
             name.pop_front();
             string end_type = tolower(name.front());
             if (block.type != end_type)
-            {
-                cerr << "! Error: block starts with type=" << block.type
-                     << " but ends with a different type=" << end_type << endl;
-            }
+                throw GridgenError("block " + block.name + " begins as " + block.type +
+                                   " but ends as " + end_type);
 
             break; //we are done for this block
         }
@@ -244,10 +244,7 @@ bool modflow_grid_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-        {
-            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
-            continue;
-        }
+            throw GridgenError("a record in block " + this->name + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -426,10 +423,7 @@ bool quadtree_grid_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-        {
-            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
-            continue;
-        }
+            throw GridgenError("a record in block " + this->name + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -665,10 +659,7 @@ bool quadtree_builder_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-        {
-            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
-            continue;
-        }
+            throw GridgenError("a record in block " + this->name + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -922,10 +913,7 @@ bool grid_intersection_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-        {
-            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
-            continue;
-        }
+            throw GridgenError("a record in block " + this->name + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -961,11 +949,14 @@ bool grid_intersection_raw_data::parse()
 
     value = name_value_map["feature_type"];
     if (!value.empty())
-        feature_type = value.front();
+        feature_type = tolower(value.front());
     else
     {
         throw GridgenError("missing feature_type");
     }
+    if (feature_type != "line" && feature_type != "polygon" && feature_type != "point")
+        throw GridgenError("FEATURE_TYPE " + value.front() + " (GRID_INTERSECTION " + name +
+                           ") is not line, polygon, or point");
 
     value = name_value_map["output_file"];
     if (!value.empty())
@@ -1078,10 +1069,7 @@ bool active_domain_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-        {
-            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
-            continue;
-        }
+            throw GridgenError("a record in block " + this->name + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -1096,11 +1084,14 @@ bool active_domain_raw_data::parse()
 
     value = name_value_map["feature_type"];
     if (!value.empty())
-        feature_type = value.front();
+        feature_type = tolower(value.front());
     else
     {
         throw GridgenError("missing feature_type");
     }
+    if (feature_type != "line" && feature_type != "polygon" && feature_type != "point")
+        throw GridgenError("FEATURE_TYPE " + value.front() + " (ACTIVE_DOMAIN " + name +
+                           ") is not line, polygon, or point");
 
     value = name_value_map["include_boundary"];
     if (!value.empty()) include_boundary = (::tolower(value.front()[0]) == 'f') ? false : true;
@@ -1135,10 +1126,7 @@ bool refinement_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-        {
-            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
-            continue;
-        }
+            throw GridgenError("a record in block " + this->name + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -1192,10 +1180,7 @@ bool grid_to_usgdata_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-        {
-            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
-            continue;
-        }
+            throw GridgenError("a record in block " + this->name + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -1283,10 +1268,7 @@ bool gridtoshape_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-        {
-            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
-            continue;
-        }
+            throw GridgenError("a record in block " + this->name + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -1339,11 +1321,14 @@ bool gridtoshape_raw_data::parse()
 
     value = name_value_map["feature_type"];
     if (!value.empty())
-        feature_type = value.front();
+        feature_type = tolower(value.front());
     else
     {
         throw GridgenError("missing feature_type");
     }
+    if (feature_type != "line" && feature_type != "polygon" && feature_type != "point")
+        throw GridgenError("FEATURE_TYPE " + value.front() + " (GRID_TO_SHAPEFILE " + name +
+                           ") is not line, polygon, or point");
 
     return true;
 }
@@ -1416,10 +1401,7 @@ bool gridtovtk_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-        {
-            cerr << "! Error: Cannot parse record: empty name or empty value" << endl;
-            continue;
-        }
+            throw GridgenError("a record in block " + this->name + " has no name or no value");
 
         name_value_map[name] = value;
     }

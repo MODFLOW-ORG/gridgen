@@ -64,11 +64,7 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
     //save quadtree structure...
     {
         ofstream fout(tree_structure_file.c_str());
-        if (fout.good() == false)
-        {
-            cerr << "! Error: Cannot open file:" << tree_structure_file << endl;
-            return false;
-        }
+        if (fout.good() == false) throw GridgenError("cannot write file " + tree_structure_file);
         fout << (*grid);
         fout.close();
         cout << "- Save Quadtree to file: " << tree_structure_file << endl;
@@ -202,11 +198,7 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
     int id_offset = 1;
     string filename = prefix + ".nod";
     ofstream fout(filename.c_str());
-    if (fout.good() == false)
-    {
-        cerr << "! Error: Failed to open file: " << filename << endl;
-        return false;
-    }
+    if (fout.good() == false) throw GridgenError("cannot write file " + filename);
 
     ///////////////////////////////////////////////////////
     QuadTree3D * qtree_grid = dynamic_cast<QuadTree3D *>(grid);

@@ -27,11 +27,7 @@ public:
     template <typename T> bool save(const string & filename, T & data)
     {
         ofstream fout(filename.c_str());
-        if (fout.good() == false)
-        {
-            cerr << "! Error: Failed to open file: " << filename << endl;
-            return false;
-        }
+        if (fout.good() == false) throw GridgenError("cannot write file " + filename);
 
         save(fout, data);
         fout.close();
@@ -44,11 +40,7 @@ public:
     template <typename T> bool save(const string & filename, const T & data, int size)
     {
         ofstream fout(filename.c_str());
-        if (fout.good() == false)
-        {
-            cerr << "! Error: Failed to open file: " << filename << endl;
-            return false;
-        }
+        if (fout.good() == false) throw GridgenError("cannot write file " + filename);
         save(fout, data, size);
         fout.close();
         cout << "- Save data to file: " << filename << endl;
@@ -60,11 +52,7 @@ public:
     bool save(const string & filename, const T & data, int size, int * formating)
     {
         ofstream fout(filename.c_str());
-        if (fout.good() == false)
-        {
-            cerr << "! Error: Failed to open file: " << filename << endl;
-            return false;
-        }
+        if (fout.good() == false) throw GridgenError("cannot write file " + filename);
         save(fout, data, size, formating);
         fout.close();
         cout << "- Save data to file: " << filename << endl;

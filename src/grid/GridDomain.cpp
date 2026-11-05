@@ -10,6 +10,8 @@
 #include "GridDomain.h"
 #include "shapefile/shpReader.h"
 #include "GridIntersection.h"
+#include "GridgenError.h"
+#include "Warnings.h"
 
 namespace cusg
 {
@@ -39,8 +41,12 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
     rmfgrid->getRotatePara(cx, cy, angle);
 
     //read from shapefile
+    string block = "ACTIVE_DOMAIN " + data->name;
     ShapeReader shp_reader;
-    shp_reader.read(data->shapefile);
+    if (!shp_reader.read(data->shapefile))
+        throw GridgenError("cannot open shapefile " + data->shapefile + " (" + block +
+                           "); its .shp or .dbf file is missing or cannot be read");
+    int nfeatures = 0, noutside = 0;
 
     //start to find the domain
     GridIntersection gi(0, layer);
@@ -49,10 +55,13 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
         vector<GIS_plyline> & arcs = shp_reader.getArcList();
         //subdivide the qtree using the features
         int arcssize = arcs.size();
+        nfeatures = arcssize;
         for (int j = 0; j < arcssize; j++)
         {
             if (angle != 0) arcs[j].rotate(cx, cy, -angle);
 
+            //intersect returns true even for a segment outside the grid, so count the cells found
+            int ncells = gi.getIntersectionSize();
             ply_vertex * ptr = arcs[j].getHead();
             do
             {
@@ -70,6 +79,7 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
                 }
                 ptr = next;
             } while (ptr != nullptr);
+            if (gi.getIntersectionSize() == ncells) noutside++;
             if (angle != 0) arcs[j].rotate(cx, cy, angle);
         }
     } //end if
@@ -78,6 +88,7 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
         gi.set_include_poly_boundary_flag(data->include_boundary);
         vector<GIS_polygon> & polygons = shp_reader.getPolyList();
         int pgonsize = polygons.size();
+        nfeatures = pgonsize;
 
         for (int j = 0; j < pgonsize; j++)
         {
@@ -91,12 +102,14 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
             polygons[j].buildBoxAndCenter();
 
             //determine intersection
+            bool intersects = false;
             if (qtgrid != nullptr)
-                gi.intersect(qtgrid, (c_polygon &)polygons[j]);
+                intersects = gi.intersect(qtgrid, (c_polygon &)polygons[j]);
             else if (mfgrid != nullptr)
-                gi.intersect(mfgrid, polygons[j]);
+                intersects = gi.intersect(mfgrid, polygons[j]);
             else if (mf2dqtgrid != nullptr)
-                gi.intersect(mf2dqtgrid, polygons[j]);
+                intersects = gi.intersect(mf2dqtgrid, polygons[j]);
+            if (!intersects) noutside++;
 
             //rotate back
             if (angle != 0)
@@ -111,22 +124,31 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
 
         //subdivide the qtree using the features
         int psize = pts.size();
+        nfeatures = psize;
         for (int j = 0; j < psize; j++)
         {
             //rotate
             if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
+            bool intersects = false;
             if (qtgrid != nullptr)
-                gi.intersect(qtgrid, pts[j]);
+                intersects = gi.intersect(qtgrid, pts[j]);
             else if (mfgrid != nullptr)
-                gi.intersect(mfgrid, pts[j]);
+                intersects = gi.intersect(mfgrid, pts[j]);
             else if (mf2dqtgrid != nullptr)
-                gi.intersect(mf2dqtgrid, pts[j]);
+                intersects = gi.intersect(mf2dqtgrid, pts[j]);
+            if (!intersects) noutside++;
 
             //rotate back
             if (angle != 0) pts[j].rotate(cx, cy, angle);
         }
     } //end if
+
+    if (nfeatures == 0)
+        warn("Shapefile " + data->shapefile + " (" + block + ") has no " + data->feature_type +
+             " features; no cells in layer " + to_string(layer + 1) + " are made active by it.");
+    warn_features_outside(noutside, nfeatures, data->shapefile, block, layer,
+                          "no cells are made active by them");
 
     vector<Box *> & boxes = gi.getIntersections();
     domain_boxes.insert(domain_boxes.end(), boxes.begin(), boxes.end());

@@ -1,5 +1,7 @@
 
 #include "shpReader.h"
+#include "GridgenError.h"
+#include "Warnings.h"
 
 #include <cassert>
 using namespace std;
@@ -60,12 +62,9 @@ bool ShapeReader::read(const string & filename)
     SHPHandle hSHP;
     hSHP = SHPOpen(filename.c_str(), "rb");
 
-    //something is wrong
-    if (hSHP == nullptr)
-    {
-        cout << "- Error: Unable to open: " << filename << endl;
-        return false;
-    }
+    //the caller reports a shapefile that cannot be opened
+    if (hSHP == nullptr) return false;
+    m_filename = filename;
 
     /************************************************************/
     DBFHandle hDBF = DBFOpen(filename.c_str(), "rb");
@@ -73,18 +72,8 @@ bool ShapeReader::read(const string & filename)
     //check
     if (hDBF == nullptr)
     {
-        cerr << "! Error: DBFOpen(" << filename << ") failed." << endl;
         SHPClose(hSHP);
         return false;
-    }
-
-    //check
-    if (DBFGetFieldCount(hDBF) == 0)
-    {
-        cerr << "! Warning: There are no fields in this table!" << endl;
-        SHPClose(hSHP);
-        DBFClose(hDBF);
-        return true;
     }
 
     ////check more
@@ -144,14 +133,20 @@ bool ShapeReader::read(const string & filename)
     m_ply_list.reserve(nEntities);
 
     //	Skim over the list of shapes, printing all the vertices
+    int nunsupported = 0;
     for (uint i = 0; i < (uint)nEntities; i++)
     {
 
         //
         SHPObject * psShape = SHPReadObject(hSHP, i);
 
-        //make sure psShape is not null
-        assert(psShape);
+        if (psShape == nullptr)
+        {
+            SHPClose(hSHP);
+            DBFClose(hDBF);
+            throw GridgenError("shape " + to_string(i + 1) + " in shapefile " + filename +
+                               " cannot be read");
+        }
 
         //some format check..
         if (psShape->nParts > 0 && psShape->panPartStart[0] != 0)
@@ -192,8 +187,7 @@ bool ShapeReader::read(const string & filename)
             }
             default:
             {
-                cerr << "! Error: ShapeReader::read: type unsupported: " << psShape->nSHPType
-                     << endl;
+                nunsupported++;
                 break;
             }
         }
@@ -206,6 +200,10 @@ bool ShapeReader::read(const string & filename)
 
     SHPClose(hSHP);
     DBFClose(hDBF);
+
+    if (nunsupported > 0)
+        warn(to_string(nunsupported) + " of the " + to_string(nEntities) + " shapes in shapefile " +
+             filename + " have no geometry or a type that is not supported, and are ignored.");
 
     //done readh shp file
 
@@ -277,15 +275,17 @@ void ShapeReader::readMultiPatch(SHPObject * psShape, int iShape)
         if (type != SHPP_OUTERRING && type != SHPP_INNERRING && type != SHPP_FIRSTRING &&
             type != SHPP_RING)
         {
-            cerr << "! Warning: part " << i + 1 << " of multipatch shape " << iShape + 1 << " is a "
-                 << SHPPartTypeName(type) << ", which is not supported, and is skipped" << endl;
+            warn("Part " + to_string(i + 1) + " of multipatch shape " + to_string(iShape + 1) +
+                 " in shapefile " + m_filename + " is a " + SHPPartTypeName(type) +
+                 ", which is not supported, and is skipped.");
             continue;
         }
 
         if (type == SHPP_INNERRING && !started)
         {
-            cerr << "! Warning: part " << i + 1 << " of multipatch shape " << iShape + 1
-                 << " is an inner ring that follows no outer ring, and is skipped" << endl;
+            warn("Part " + to_string(i + 1) + " of multipatch shape " + to_string(iShape + 1) +
+                 " in shapefile " + m_filename +
+                 " is an inner ring that follows no outer ring, and is skipped.");
             continue;
         }
 

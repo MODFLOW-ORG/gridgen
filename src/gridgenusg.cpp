@@ -109,7 +109,7 @@ static int run(const string & action, const string & dfn_file)
         }
         else
         {
-            cerr << "! Error: Unknown Grid type" << endl;
+            throw GridgenError("the grid to export is neither a MODFLOW grid nor a quadtree grid");
         }
     }
     else if (grid2vtk != nullptr)
@@ -144,7 +144,7 @@ static int run(const string & action, const string & dfn_file)
         }
         else
         {
-            cerr << "! Error: Unknown Grid type" << endl;
+            throw GridgenError("the grid to export is neither a MODFLOW grid nor a quadtree grid");
         }
     }
     else if (grid2usg != nullptr)
