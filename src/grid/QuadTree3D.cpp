@@ -196,9 +196,10 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
 
     gi.getIntersections().clear();
 
+    //start from the ends of the clipped segment, since an end outside the grid is in no box
     list<Box *> bl1, bl2;
-    getSpecialPointIntersection(qtree, line.pt[0], max_level, at_layer, bl1);
-    getSpecialPointIntersection(qtree, line.pt[1], max_level, at_layer, bl2);
+    getSpecialPointIntersection(qtree, clipped_line.pt[0], max_level, at_layer, bl1);
+    getSpecialPointIntersection(qtree, clipped_line.pt[1], max_level, at_layer, bl2);
 
     //now, visit b2 neighbors recursively until we reaches b1
     set<Box *> bs; //, cur_res;

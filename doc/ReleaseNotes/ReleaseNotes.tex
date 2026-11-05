@@ -160,7 +160,7 @@ The following test problems are in the test directory of the source code archive
 The following defects are known in this version. Each is tracked as an issue on GitHub (\url{https://github.com/MODFLOW-ORG/gridgen/issues}) and is removed from this list when it is fixed.
 
 \begin{itemize}
-  \item A line in a REFINEMENT\_FEATURES block is not refined where a segment of it crosses the grid with both ends outside the grid. Add a vertex to the line inside the grid near where the segment enters it, so that each segment that crosses the grid has an end inside (\ghissue{130}).
+  \item With REFINEMENT\_LEVEL\_BY\_ATTRIBUTE, a line shape with several parts, a polygon shape with several outer rings, a multipoint shape, or a null shape gives the features after it in the shapefile the refinement level of another shape, or no refinement. Split such shapes into single-part shapes and remove null shapes before using the attribute (\ghissue{133}).
 \end{itemize}
 
 \section{Documentation}
