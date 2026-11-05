@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include "builder_helpers.h"
 #include "csr_checks.h"
 #include "grid_helpers.h"
 #include "polyline.h"
@@ -218,4 +219,28 @@ TEST(QuadTree, PolylineVertexOnEdgeRefinesCellsEachSegmentEnters)
 {
     EXPECT_EQ(line_refined_cells({{150.0, 250.0}, {150.0, 200.0}, {250.0, 150.0}}),
               (std::set<int>{1, 4, 5}));
+}
+
+TEST(QuadTree, LineWithEndsOutsideGridRefinesCellsItCrosses)
+{
+    EXPECT_EQ(line_refined_cells({{-50.0, 150.0}, {350.0, 150.0}}), (std::set<int>{3, 4, 5}));
+}
+
+TEST(QuadTree, PolylineSegmentsWithEndsOutsideGridRefineCellsTheyCross)
+{
+    // the second segment is outside the grid
+    EXPECT_EQ(line_refined_cells({{-50.0, 250.0}, {350.0, 250.0}, {350.0, 50.0}, {-50.0, 50.0}}),
+              (std::set<int>{0, 1, 2, 6, 7, 8}));
+}
+
+TEST(QuadTreeBuilder, LineWithEndsOutsideRotatedGridRefinesCellsItCrosses)
+{
+    // rotated 90 degrees, the grid covers x from -300 to 0, and the line
+    // crosses its middle row
+    std::string path = gridgen_test::write_shapefile("gridgen_unit_rotated_line", SHPT_ARC,
+                                                     {{{-150.0, -50.0}, {-150.0, 350.0}}});
+    int nodes = 0;
+    gridgen_test::build_qtree(gridgen_test::builder_dfn(path, "line", "REFINEMENT_LEVEL = 1", "90"),
+                              &nodes);
+    EXPECT_EQ(nodes, 18);
 }

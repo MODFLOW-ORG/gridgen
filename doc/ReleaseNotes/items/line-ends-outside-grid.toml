@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "gridding"
+description = "A line refinement feature was not refined where a segment of the line crossed the grid with both ends outside it. The cells such a segment crosses are now refined, so a grid refined by such a line can have more cells than before."
