@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -75,6 +76,55 @@ inline std::string write_shapefile(const std::string & name, int type,
     return path;
 }
 
+// a shape of a shapefile written by write_shapes: its parts, none for a null
+// shape, and its LEVEL
+struct Shape
+{
+    std::vector<Ring> parts;
+    int level;
+};
+
+// write a shapefile of type with an integer field LEVEL; the points of a
+// point or multipoint shape are its first part, and each part of a multipatch
+// shape is an outer ring
+inline std::string write_shapes(const std::string & name, int type,
+                                const std::vector<Shape> & shapes)
+{
+    std::string path = testing::TempDir() + name;
+    SHPHandle shp = SHPCreate(path.c_str(), type);
+    DBFHandle dbf = DBFCreate(path.c_str());
+    DBFAddField(dbf, "LEVEL", FTInteger, 4, 0);
+    bool has_parts = type == SHPT_ARC || type == SHPT_POLYGON || type == SHPT_MULTIPATCH;
+    for (size_t i = 0; i < shapes.size(); i++)
+    {
+        std::vector<double> x, y;
+        std::vector<int> starts, part_types;
+        for (const Ring & part : shapes[i].parts)
+        {
+            starts.push_back(static_cast<int>(x.size()));
+            part_types.push_back(SHPP_OUTERRING);
+            for (const auto & p : part)
+            {
+                x.push_back(p.first);
+                y.push_back(p.second);
+            }
+        }
+        SHPObject * obj =
+            shapes[i].parts.empty()
+                ? SHPCreateSimpleObject(SHPT_NULL, 0, nullptr, nullptr, nullptr)
+                : SHPCreateObject(type, -1, has_parts ? static_cast<int>(starts.size()) : 0,
+                                  starts.data(),
+                                  type == SHPT_MULTIPATCH ? part_types.data() : nullptr,
+                                  static_cast<int>(x.size()), x.data(), y.data(), nullptr, nullptr);
+        SHPWriteObject(shp, -1, obj);
+        SHPDestroyObject(obj);
+        DBFWriteIntegerAttribute(dbf, static_cast<int>(i), 0, shapes[i].level);
+    }
+    SHPClose(shp);
+    DBFClose(dbf);
+    return path;
+}
+
 // a quadtree builder over a 3 x 3 grid of 100 m cells from (0, 0), rotated
 // by rotation degrees about (0, 0), refined by a shapefile
 inline std::string builder_dfn(const std::string & shapefile, const std::string & feature_type,
@@ -107,8 +157,9 @@ inline std::string builder_dfn(const std::string & shapefile, const std::string 
 }
 
 // build the quadtree of builder_dfn; nodes, if given, is set to its number of
-// cells
-inline void build_qtree(const std::string & dfn_text, int * nodes = nullptr)
+// cells, and cells to the refinement level and center of each cell in node order
+inline void build_qtree(const std::string & dfn_text, int * nodes = nullptr,
+                        std::vector<std::tuple<int, double, double>> * cells = nullptr)
 {
     std::istringstream dfn(dfn_text);
     DefinitionParser parser;
@@ -119,6 +170,15 @@ inline void build_qtree(const std::string & dfn_text, int * nodes = nullptr)
     auto * qtree = dynamic_cast<QuadTree3D *>(data->build());
     ASSERT_NE(qtree, nullptr);
     if (nodes != nullptr) *nodes = qtree->nodes();
+    if (cells != nullptr)
+    {
+        cells->clear();
+        for (int n = 0; n < qtree->nodes(); n++)
+        {
+            Box * box = qtree->get_nodeobj(n);
+            cells->emplace_back(box->depth, box->x, box->y);
+        }
+    }
 }
 
 } // namespace gridgen_test

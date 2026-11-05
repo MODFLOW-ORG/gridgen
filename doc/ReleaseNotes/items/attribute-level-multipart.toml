@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "gridding"
+description = "With REFINEMENT_LEVEL_BY_ATTRIBUTE, a line shape with several parts, a multipoint shape, a multipatch shape with several outer rings, or a null shape gave the features after it in the shapefile the refinement level of another shape, or no refinement. Each feature is now refined to the level of the shape it belongs to, so a grid refined by such a shapefile can differ from before."

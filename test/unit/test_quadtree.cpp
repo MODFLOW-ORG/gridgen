@@ -1,6 +1,8 @@
 // Quadtree refinement, smoothing, and connectivity
 #include <cstdlib>
 #include <set>
+#include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -63,6 +65,20 @@ std::set<int> line_refined_cells(const std::vector<std::pair<double, double>> & 
         int col = static_cast<int>(box->x / 100.0);
         cells.insert(3 * row + col);
     }
+    return cells;
+}
+
+// the level and center of each cell of the 3 x 3 grid of builder_dfn refined
+// by shapes with REFINEMENT_LEVEL_BY_ATTRIBUTE = LEVEL
+std::vector<std::tuple<int, double, double>>
+attribute_refined_cells(const std::string & name, int type, const std::string & feature_type,
+                        const std::vector<gridgen_test::Shape> & shapes)
+{
+    std::string path = gridgen_test::write_shapes(name, type, shapes);
+    std::vector<std::tuple<int, double, double>> cells;
+    gridgen_test::build_qtree(
+        gridgen_test::builder_dfn(path, feature_type, "REFINEMENT_LEVEL_BY_ATTRIBUTE = LEVEL"),
+        nullptr, &cells);
     return cells;
 }
 
@@ -243,4 +259,60 @@ TEST(QuadTreeBuilder, LineWithEndsOutsideRotatedGridRefinesCellsItCrosses)
     gridgen_test::build_qtree(gridgen_test::builder_dfn(path, "line", "REFINEMENT_LEVEL = 1", "90"),
                               &nodes);
     EXPECT_EQ(nodes, 18);
+}
+
+// each feature of a shape is refined to the level of that shape (issue #133)
+TEST(QuadTreeBuilder, MultipartLineIsRefinedToItsShapeLevel)
+{
+    gridgen_test::Ring a = {{10.0, 250.0}, {90.0, 250.0}}, b = {{210.0, 250.0}, {290.0, 250.0}},
+                       c = {{110.0, 50.0}, {190.0, 50.0}};
+    auto cells = attribute_refined_cells("gridgen_unit_level_lines", SHPT_ARC, "line",
+                                         {{{a, b}, 2}, {{c}, 1}});
+    EXPECT_EQ(cells.size(), 9u + 2 * 15 + 3);
+    EXPECT_EQ(cells, attribute_refined_cells("gridgen_unit_level_lines1", SHPT_ARC, "line",
+                                             {{{a}, 2}, {{b}, 2}, {{c}, 1}}));
+}
+
+TEST(QuadTreeBuilder, MultipointIsRefinedToItsShapeLevel)
+{
+    gridgen_test::Ring ab = {{50.0, 250.0}, {250.0, 250.0}}, c = {{150.0, 50.0}};
+    auto cells = attribute_refined_cells("gridgen_unit_level_points", SHPT_MULTIPOINT, "point",
+                                         {{{ab}, 2}, {{c}, 1}});
+    EXPECT_EQ(cells.size(), 9u + 2 * 15 + 3);
+    EXPECT_EQ(cells, attribute_refined_cells("gridgen_unit_level_points1", SHPT_MULTIPOINT, "point",
+                                             {{{{ab[0]}}, 2}, {{{ab[1]}}, 2}, {{c}, 1}}));
+}
+
+TEST(QuadTreeBuilder, MultipatchIsRefinedToItsShapeLevel)
+{
+    gridgen_test::Ring a = gridgen_test::square(20.0, 220.0, 40.0),
+                       b = gridgen_test::square(220.0, 220.0, 40.0),
+                       c = gridgen_test::square(120.0, 20.0, 40.0);
+    auto cells = attribute_refined_cells("gridgen_unit_level_polygons", SHPT_MULTIPATCH, "polygon",
+                                         {{{a, b}, 2}, {{c}, 1}});
+    EXPECT_EQ(cells.size(), 9u + 2 * 15 + 3);
+    EXPECT_EQ(cells, attribute_refined_cells("gridgen_unit_level_polygons1", SHPT_MULTIPATCH,
+                                             "polygon", {{{a}, 2}, {{b}, 2}, {{c}, 1}}));
+}
+
+TEST(QuadTreeBuilder, NullShapeDoesNotShiftLevels)
+{
+    gridgen_test::Ring a = {{10.0, 250.0}, {90.0, 250.0}};
+    auto cells =
+        attribute_refined_cells("gridgen_unit_level_null", SHPT_ARC, "line", {{{}, 2}, {{a}, 1}});
+    EXPECT_EQ(cells.size(), 9u + 3);
+    EXPECT_EQ(cells,
+              attribute_refined_cells("gridgen_unit_level_null1", SHPT_ARC, "line", {{{a}, 1}}));
+}
+
+// a polygon shape with two outer rings is read as one polygon with a hole, and
+// only the second ring is refined (issue #142)
+TEST(QuadTreeBuilder, DISABLED_PolygonWithTwoOuterRingsRefinesBoth)
+{
+    gridgen_test::Ring a = gridgen_test::square(20.0, 220.0, 40.0),
+                       b = gridgen_test::square(220.0, 220.0, 40.0);
+    EXPECT_EQ(
+        attribute_refined_cells("gridgen_unit_two_rings", SHPT_POLYGON, "polygon", {{{a, b}, 1}}),
+        attribute_refined_cells("gridgen_unit_two_rings1", SHPT_POLYGON, "polygon",
+                                {{{a}, 1}, {{b}, 1}}));
 }
