@@ -179,4 +179,7 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   `pixi run check-format` on every push and on pull requests to `main`.
   `release-notes.yml` builds the release notes on Ubuntu when
   `doc/ReleaseNotes/` changes and attaches the PDF to each GitHub release.
+  It installs only the TeX Live packages the release notes read, and caches
+  them; a LaTeX package newly used in the release notes is added to that
+  list.
 - **Tone:** reserve compliments for genuinely exceptional finds or ideas.
