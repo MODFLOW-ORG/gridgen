@@ -311,8 +311,8 @@ TEST(QuadTreeBuilder, PolygonWithTwoOuterRingsRefinesBoth)
 {
     gridgen_test::Ring a = gridgen_test::square(20.0, 220.0, 40.0),
                        b = gridgen_test::square(220.0, 220.0, 40.0);
-    auto cells = attribute_refined_cells("gridgen_unit_two_rings", SHPT_POLYGON, "polygon",
-                                         {{{a, b}, 2}});
+    auto cells =
+        attribute_refined_cells("gridgen_unit_two_rings", SHPT_POLYGON, "polygon", {{{a, b}, 2}});
     EXPECT_EQ(cells.size(), 9u + 2 * 15);
     EXPECT_EQ(cells, attribute_refined_cells("gridgen_unit_two_rings1", SHPT_POLYGON, "polygon",
                                              {{{a}, 2}, {{b}, 2}}));
@@ -323,8 +323,8 @@ TEST(QuadTreeBuilder, PolygonHoleIsNotRefined)
     // the hole holds the center cell, so the cells around it are refined
     gridgen_test::Ring outer = gridgen_test::square(10.0, 10.0, 280.0),
                        hole = gridgen_test::square(90.0, 90.0, 120.0);
-    auto cells = attribute_refined_cells("gridgen_unit_hole", SHPT_POLYGON, "polygon",
-                                         {{{outer, hole}, 1}});
+    auto cells =
+        attribute_refined_cells("gridgen_unit_hole", SHPT_POLYGON, "polygon", {{{outer, hole}, 1}});
     EXPECT_EQ(cells.size(), 1u + 8 * 4);
     EXPECT_EQ(cells, attribute_refined_cells("gridgen_unit_hole1", SHPT_POLYGON, "polygon",
                                              {{{hole, outer}, 1}}));

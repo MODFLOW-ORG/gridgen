@@ -221,7 +221,7 @@ bool ShapeReader::read(const string & filename)
 //vertices of a decide, since a vertex of a may touch b
 static bool ringInRing(const vector<Point2d> & a, const vector<Point2d> & b)
 {
-    int nin = 0;
+    int vote = 0;
     for (const Point2d & p : a)
     {
         bool inside = false;
@@ -229,9 +229,9 @@ static bool ringInRing(const vector<Point2d> & a, const vector<Point2d> & b)
         {
             if (CrossesRay(b[k].get(), b[(k + 1) % b.size()].get(), p.get())) inside = !inside;
         }
-        nin += inside ? 1 : -1;
+        vote += inside ? 1 : -1;
     }
-    return nin > 0;
+    return vote > 0;
 }
 
 void ShapeReader::readPly(SHPObject * psShape, int iShape)
