@@ -112,7 +112,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ env.PROGRAM_NAME }}/subprojects/packagecache
-          key: subprojects-${{ runner.os }}-${{ hashFiles('gridgen/subprojects/*.wrap') }}
+          key: subprojects-${{ runner.os }}-${{ hashFiles(format('{0}/subprojects/*.wrap', env.PROGRAM_NAME)) }}
 
       - name: Download subprojects
         shell: bash
@@ -120,7 +120,7 @@ jobs:
         run: |
           for attempt in 1 2 3; do
             pixi run -- meson subprojects download && exit 0
-            sleep 60
+            [ $attempt -lt 3 ] && sleep 60
           done
           exit 1
 
@@ -232,10 +232,11 @@ jobs:
         working-directory: ${{ env.PROGRAM_NAME }}
         shell: bash
         run: |
-          # use the downloads of this branch; meson checks their hashes and
-          # downloads again if the base branch wraps differ
-          mkdir -p ../${{ env.PROGRAM_NAME }}-main/subprojects
-          cp -R subprojects/packagecache ../${{ env.PROGRAM_NAME }}-main/subprojects/
+          # reuse the downloads of this branch when the base branch has the same
+          # wraps; meson stops on a cached file whose hash differs from its wrap
+          if cmp -s <(cat subprojects/*.wrap) <(cat ../${{ env.PROGRAM_NAME }}-main/subprojects/*.wrap); then
+            cp -R subprojects/packagecache ../${{ env.PROGRAM_NAME }}-main/subprojects/
+          fi
           pixi run setup-main
           pixi run build-main
 
@@ -297,7 +298,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ env.PROGRAM_NAME }}/subprojects/packagecache
-          key: subprojects-${{ runner.os }}-${{ hashFiles('gridgen/subprojects/*.wrap') }}
+          key: subprojects-${{ runner.os }}-${{ hashFiles(format('{0}/subprojects/*.wrap', env.PROGRAM_NAME)) }}
 
       - name: Download subprojects
         shell: bash
@@ -305,7 +306,7 @@ jobs:
         run: |
           for attempt in 1 2 3; do
             pixi run -- meson subprojects download && exit 0
-            sleep 60
+            [ $attempt -lt 3 ] && sleep 60
           done
           exit 1
 
