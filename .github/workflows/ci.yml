@@ -36,8 +36,10 @@ on:
       - '.git-blame-ignore-revs'
       - '.github/workflows/lint.yml'
   workflow_dispatch:
+# a label other than output-change runs nothing, so its run gets a group of
+# its own and cannot cancel the run in progress
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) && github.event.label.name != 'output-change' && format('-{0}', github.run_id) || '' }}
   cancel-in-progress: true
 env:
   PIXI_BETA_WARNING_OFF: true
@@ -46,6 +48,7 @@ env:
 jobs:
   build:
     name: ${{ matrix.os }} ${{ matrix.compiler }} ${{ matrix.version }}
+    if: ${{ !contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) || github.event.label.name == 'output-change' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -269,6 +272,7 @@ jobs:
 
   sanitize:
     name: ubuntu-22.04 gcc 13 sanitizers
+    if: ${{ !contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) || github.event.label.name == 'output-change' }}
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     defaults:

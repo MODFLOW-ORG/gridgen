@@ -168,13 +168,14 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   `LICENSE`, the lint configuration, `.clangd`, or
   `.git-blame-ignore-revs` skip the build and tests
   (`paths-ignore` in `.github/workflows/ci.yml`); update that list when adding
-  non-code files. Adding or removing a label on a pull request starts a new
-  run that cancels the one in progress (`cancel-in-progress`), including the
-  labels that `gh pr create --label` applies just after opening; judge a
-  pull request by its latest run (`gh run list -b <branch>`), not by the
-  cancelled jobs `gh pr checks` reports. The build and sanitizer jobs cache
-  the GoogleTest download (`subprojects/packagecache`, keyed on the wraps)
-  and retry it when the cache is empty. `lint.yml` runs
+  non-code files. Adding or removing the `output-change` label starts a new
+  run that cancels the one in progress (`cancel-in-progress`); any other
+  label, including those `gh pr create --label` applies just after opening,
+  starts a run whose jobs are skipped and which cancels nothing. Judge a pull
+  request by its latest full run (`gh run list -b <branch>`), not by the
+  skipped or cancelled jobs `gh pr checks` reports. The build and sanitizer
+  jobs cache the GoogleTest download (`subprojects/packagecache`, keyed on
+  the wraps) and retry it when the cache is empty. `lint.yml` runs
   `pixi run check-format` on every push and on pull requests to `main`.
   `release-notes.yml` builds the release notes on Ubuntu when
   `doc/ReleaseNotes/` changes and attaches the PDF to each GitHub release.
