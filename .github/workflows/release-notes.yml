@@ -39,7 +39,7 @@ jobs:
             latex-bin bibtex latexmk
             amsfonts amsmath atbegshi atveryend bigintcalc bitset caption cm
             cm-super cmap dvips ec eepic enumitem epstopdf-pkg eso-pic
-            etoolbox fancybox fancyhdr fontname gettitlestring graphics
+            etoolbox fancybox fancyhdr fontname geometry gettitlestring graphics
             graphics-cfg graphics-def hycolor hyperref iftex infwarerr intcalc
             kvdefinekeys kvoptions kvsetkeys latex latexconfig
             ltxcmds mmap mptopdf natbib nextpage pdfescape pdftexcmds
