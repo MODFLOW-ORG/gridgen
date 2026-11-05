@@ -97,7 +97,7 @@ bool QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
 {
     list<Box *> bl;
     getSpecialPointIntersection(this, pt, max_level, at_layer, bl);
-    bool touched = !bl.empty();
+    bool intersects = !bl.empty();
 
     while (!bl.empty())
     {
@@ -117,7 +117,7 @@ bool QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
         this->rebuild_nodeid_array = true;
     }
 
-    return touched;
+    return intersects;
 }
 
 /**************************************************************/
@@ -271,7 +271,7 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
 {
 
     bool refined = true;
-    bool touched = false;
+    bool intersects = false;
 
     do
     {
@@ -293,7 +293,7 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
                 LineSeg2d line(ptr->getPos(), next->getPos());
                 LineSeg2d clipped;
                 if (gi.clip_line(this, line, clipped) && getSqLength(clipped) >= 1e-10)
-                    touched = true;
+                    intersects = true;
 
                 bool myr = specialLineIntersect(this, line, max_level, at_layer, results);
                 if (myr) r = true;
@@ -323,7 +323,7 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
 
     } while (refined);
 
-    return touched;
+    return intersects;
 }
 
 //	do
@@ -371,14 +371,14 @@ bool isReallyIntersect(c_polygon & pgon, Box * b)
 bool QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
 {
     bool refined = true;
-    bool touched = false;
+    bool intersects = false;
 
     do
     {
         refined = false;
         GridIntersection gi(max_level, at_layer);
         bool r = gi.intersect((QuadTree3D *)this, pgon);
-        touched = touched || r;
+        intersects = intersects || r;
 
         if (r)
         {
@@ -401,7 +401,7 @@ bool QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
 
     } while (refined);
 
-    return touched;
+    return intersects;
 }
 
 ///return true if this is the final refinement

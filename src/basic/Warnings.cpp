@@ -16,27 +16,27 @@ void warn(const std::string & message)
     recorded.push_back(message);
 }
 
-void warn_features_outside(int count, int total, const std::string & shapefile,
+void warn_features_outside(int noutside, int nfeatures, const std::string & shapefile,
                            const std::string & block, int layer, const std::string & effect)
 {
-    if (count == 0) return;
-    std::string where = " in shapefile " + shapefile + " (" + block + ") ";
-    std::string what;
-    if (total == 1)
-        what = "The feature" + where + "does not intersect";
-    else if (count == total)
-        what = "None of the " + std::to_string(total) + " features" + where + "intersect";
+    if (noutside == 0) return;
+    std::string source = " in shapefile " + shapefile + " (" + block + ") ";
+    std::string subject;
+    if (nfeatures == 1)
+        subject = "The feature" + source + "does not intersect";
+    else if (noutside == nfeatures)
+        subject = "None of the " + std::to_string(nfeatures) + " features" + source + "intersect";
     else
-        what = std::to_string(count) + " of the " + std::to_string(total) + " features" + where +
-               "do not intersect";
+        subject = std::to_string(noutside) + " of the " + std::to_string(nfeatures) + " features" +
+                  source + "do not intersect";
     //the effect refers to the features as "them"
-    std::string said = effect;
-    if (count == 1)
+    std::string consequence = effect;
+    if (noutside == 1)
     {
-        size_t pos = said.find("them");
-        if (pos != std::string::npos) said.replace(pos, 4, "it");
+        size_t pos = consequence.find("them");
+        if (pos != std::string::npos) consequence.replace(pos, 4, "it");
     }
-    warn(what + " layer " + std::to_string(layer + 1) + " of the grid; " + said + ".");
+    warn(subject + " layer " + std::to_string(layer + 1) + " of the grid; " + consequence + ".");
 }
 
 const std::vector<std::string> & get_warnings()

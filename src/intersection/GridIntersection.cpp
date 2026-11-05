@@ -158,7 +158,7 @@ void GridIntersection::build(grid_intersection_raw_data & data)
             checkHole(polygons[j], tvplygons);
 
             //loop over all the polygons
-            bool touched = false;
+            bool intersects = false;
             for (auto & tvplygon : tvplygons)
             {
                 GIS_polygon gp = *tvplygon;
@@ -166,18 +166,18 @@ void GridIntersection::build(grid_intersection_raw_data & data)
                 BoxPlyClip * bpc = convertCPolygonToClip(*tvplygon);
 
                 if (qtgrid != nullptr)
-                    touched |= intersect(qtgrid, gp, bpc); //polygons[j]);
+                    intersects |= intersect(qtgrid, gp, bpc); //polygons[j]);
                 else if (mfgrid != nullptr)
-                    touched |= intersect(mfgrid, gp, bpc); //polygons[j]);
+                    intersects |= intersect(mfgrid, gp, bpc); //polygons[j]);
                 else if (mf2dqtgrid != nullptr)
-                    touched |= intersect(mf2dqtgrid, gp, bpc); //polygons[j]);
+                    intersects |= intersect(mf2dqtgrid, gp, bpc); //polygons[j]);
 
                 bpc->destroy();
                 delete bpc;
             }
             //the rings are those of polygons[j], which the reader frees
             for (auto gp : tvplygons) delete gp;
-            if (!touched) noutside++;
+            if (!intersects) noutside++;
         }
         int afterSize = m_ply_interaction_info.size();
         if (angle != 0)
@@ -201,14 +201,14 @@ void GridIntersection::build(grid_intersection_raw_data & data)
             //rotate
             if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
-            bool touched = false;
+            bool intersects = false;
             if (qtgrid != nullptr)
-                touched = intersect(qtgrid, pts[j]);
+                intersects = intersect(qtgrid, pts[j]);
             else if (mfgrid != nullptr)
-                touched = intersect(mfgrid, pts[j]);
+                intersects = intersect(mfgrid, pts[j]);
             else if (mf2dqtgrid != nullptr)
-                touched = intersect(mf2dqtgrid, pts[j]);
-            if (!touched) noutside++;
+                intersects = intersect(mf2dqtgrid, pts[j]);
+            if (!intersects) noutside++;
         }
         //rotate back
         int afterSize = this->m_pt_interaction_info.size();

@@ -102,14 +102,14 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
             polygons[j].buildBoxAndCenter();
 
             //determine intersection
-            bool touched = false;
+            bool intersects = false;
             if (qtgrid != nullptr)
-                touched = gi.intersect(qtgrid, (c_polygon &)polygons[j]);
+                intersects = gi.intersect(qtgrid, (c_polygon &)polygons[j]);
             else if (mfgrid != nullptr)
-                touched = gi.intersect(mfgrid, polygons[j]);
+                intersects = gi.intersect(mfgrid, polygons[j]);
             else if (mf2dqtgrid != nullptr)
-                touched = gi.intersect(mf2dqtgrid, polygons[j]);
-            if (!touched) noutside++;
+                intersects = gi.intersect(mf2dqtgrid, polygons[j]);
+            if (!intersects) noutside++;
 
             //rotate back
             if (angle != 0)
@@ -130,14 +130,14 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
             //rotate
             if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
-            bool touched = false;
+            bool intersects = false;
             if (qtgrid != nullptr)
-                touched = gi.intersect(qtgrid, pts[j]);
+                intersects = gi.intersect(qtgrid, pts[j]);
             else if (mfgrid != nullptr)
-                touched = gi.intersect(mfgrid, pts[j]);
+                intersects = gi.intersect(mfgrid, pts[j]);
             else if (mf2dqtgrid != nullptr)
-                touched = gi.intersect(mf2dqtgrid, pts[j]);
-            if (!touched) noutside++;
+                intersects = gi.intersect(mf2dqtgrid, pts[j]);
+            if (!intersects) noutside++;
 
             //rotate back
             if (angle != 0) pts[j].rotate(cx, cy, angle);

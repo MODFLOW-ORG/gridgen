@@ -14,7 +14,7 @@ void warn(const std::string & message);
 
 /// warn that some features of a shapefile intersect no cell, and say what
 /// that means for the grid
-void warn_features_outside(int count, int total, const std::string & shapefile,
+void warn_features_outside(int noutside, int nfeatures, const std::string & shapefile,
                            const std::string & block, int layer, const std::string & effect);
 
 /// the warnings recorded since the last clear_warnings()
