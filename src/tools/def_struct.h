@@ -436,7 +436,7 @@ public:
         feature_type = "polygon";
         one_based_node_numbering = true;
         without_inactive = true;
-        concide = true;
+        close_polygons = true;
     }
 
     bool parse() override;
@@ -452,8 +452,8 @@ public:
     //actual data...
     Grid * grid;
 
-    //first and last vertex concide
-    bool concide;
+    //repeat the first vertex of each cell polygon at its end
+    bool close_polygons;
 };
 
 //----------------------------------------------------------------------------

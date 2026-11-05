@@ -99,13 +99,13 @@ static int run(const string & action, const string & dfn_file)
         if (qtree_grid != nullptr)
         {
             writeQuadtree2Shp(qtree_grid, grid2shp->shapefile, grid2shp->feature_type,
-                              grid2shp->concide);
+                              grid2shp->close_polygons);
         }
         else if (modflow_grid != nullptr)
         {
             writeModflowGrid2Shp(modflow_grid, grid2shp->shapefile, grid2shp->feature_type,
                                  grid2shp->without_inactive, grid2shp->one_based_node_numbering,
-                                 grid2shp->concide);
+                                 grid2shp->close_polygons);
         }
         else
         {

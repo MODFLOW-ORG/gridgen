@@ -1313,11 +1313,15 @@ bool gridtoshape_raw_data::parse()
         if (tolower(value.front()) == "false") without_inactive = false;
     }
 
+    //CONCIDE is the misspelled name of CLOSE_POLYGONS
     value = name_value_map["concide"];
     if (!value.empty())
     {
-        if (tolower(value.front()) == "false") concide = false;
+        warn("CONCIDE (GRID_TO_SHAPEFILE " + name + ") is deprecated; use CLOSE_POLYGONS.");
+        close_polygons = tolower(value.front()) != "false";
     }
+    value = name_value_map["close_polygons"];
+    if (!value.empty()) close_polygons = tolower(value.front()) != "false";
 
     value = name_value_map["feature_type"];
     if (!value.empty())

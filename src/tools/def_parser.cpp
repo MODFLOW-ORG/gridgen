@@ -43,9 +43,9 @@ static const map<string, set<string>> & block_records()
                                           "refinement_level_by_attribute",
                                           nullptr};
     const char * active_domain[] = {"shapefile", "feature_type", "include_boundary", nullptr};
-    const char * grid_to_shapefile[] = {"grid",           "shapefile",        "feature_type",
-                                        "node_numbering", "without_inactive", "concide",
-                                        nullptr};
+    const char * grid_to_shapefile[] = {
+        "grid",           "shapefile", "feature_type", "node_numbering", "without_inactive",
+        "close_polygons", "concide",   nullptr};
     const char * grid_to_usgdata[] = {"grid", "usg_data_prefix", "vertical_pass_through", nullptr};
     const char * grid_to_vtkfile[] = {"grid",           "vtkfile",          "share_vertex",
                                       "node_numbering", "without_inactive", nullptr};
