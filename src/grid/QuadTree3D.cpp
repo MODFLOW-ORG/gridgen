@@ -53,8 +53,8 @@ QuadTree3D::QuadTree3D(ModflowGrid * mfgrid) : nodeid_array(nullptr), nodelay_ar
     getnodenumber_array();
 
     //how z values of top and bot should be determined
-    m_bot_layer_z_operator = m_top_layer_z_operator = vector<LAYER_Z_VALUE_OPEARTOR>(
-        m_mfgrid->nlay, Z_VALUE_REPLICATE_OPEARTOR); //default is replicate
+    m_bot_layer_z_operator = m_top_layer_z_operator = vector<LAYER_Z_VALUE_OPERATOR>(
+        m_mfgrid->nlay, Z_VALUE_REPLICATE_OPERATOR); //default is replicate
 
     vertical_pass_through = false;
 }
@@ -127,8 +127,8 @@ bool QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
 //given the  intersection precondition provided by GridIntersection
 bool isReallyIntersect(Box * b, const LineSeg2d & line)
 {
-    const double * s = line.pt[0].get();
-    const double * e = line.pt[1].get();
+    const double * start = line.pt[0].get();
+    const double * end = line.pt[1].get();
     double p[2];
     //create each edge of b
     Point2d corners[4];
@@ -144,7 +144,7 @@ bool isReallyIntersect(Box * b, const LineSeg2d & line)
     {
         id1 = i;
         id2 = (i + 1) % 4;
-        char code = SegSegInt(corners[id1].get(), corners[id2].get(), s, e, p);
+        char code = SegSegInt(corners[id1].get(), corners[id2].get(), start, end, p);
         if (code == '0')
             continue;
         else if (code == '1')
@@ -155,8 +155,8 @@ bool isReallyIntersect(Box * b, const LineSeg2d & line)
         else if (code == 'v')
         {
             //what vertex is it
-            if (Between_strict(s, e, corners[id1].get()) ||
-                Between_strict(s, e, corners[id2].get()))
+            if (Between_strict(start, end, corners[id1].get()) ||
+                Between_strict(start, end, corners[id2].get()))
             {
                 b_intersect = true;
                 break;
@@ -165,10 +165,10 @@ bool isReallyIntersect(Box * b, const LineSeg2d & line)
         else if (code == 'e')
         {
             //if any strictly between/inside
-            if (Between_strict(s, e, corners[id1].get()) ||
-                Between_strict(s, e, corners[id2].get()) ||
-                Between_strict(corners[id1].get(), corners[id2].get(), s) ||
-                Between_strict(corners[id1].get(), corners[id2].get(), e))
+            if (Between_strict(start, end, corners[id1].get()) ||
+                Between_strict(start, end, corners[id2].get()) ||
+                Between_strict(corners[id1].get(), corners[id2].get(), start) ||
+                Between_strict(corners[id1].get(), corners[id2].get(), end))
             {
                 b_intersect = true;
                 break;
@@ -179,7 +179,7 @@ bool isReallyIntersect(Box * b, const LineSeg2d & line)
     if (b_intersect) return true;
 
     //last chance, both point are in box
-    if (b->in(s[0], s[1]) && b->in(e[0], e[1])) return true;
+    if (b->in(start[0], start[1]) && b->in(end[0], end[1])) return true;
 
     return false;
 }
@@ -197,17 +197,17 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
     gi.getIntersections().clear();
 
     //start from the ends of the clipped segment, since an end outside the grid is in no box
-    list<Box *> bl1, bl2;
-    getSpecialPointIntersection(qtree, clipped_line.pt[0], max_level, at_layer, bl1);
-    getSpecialPointIntersection(qtree, clipped_line.pt[1], max_level, at_layer, bl2);
+    list<Box *> start_boxes, end_boxes;
+    getSpecialPointIntersection(qtree, clipped_line.pt[0], max_level, at_layer, start_boxes);
+    getSpecialPointIntersection(qtree, clipped_line.pt[1], max_level, at_layer, end_boxes);
 
-    //now, visit b2 neighbors recursively until we reaches b1
-    set<Box *> bs; //, cur_res;
-    bs.insert(bl1.begin(), bl1.end());
-    bs.insert(bl2.begin(), bl2.end());
+    //the boxes at either end, then their neighbors the line crosses
+    set<Box *> endpoint_boxes;
+    endpoint_boxes.insert(start_boxes.begin(), start_boxes.end());
+    endpoint_boxes.insert(end_boxes.begin(), end_boxes.end());
 
     //a box holding an end point on its boundary may only touch the line
-    for (auto b : bs)
+    for (auto b : endpoint_boxes)
     {
         if (isReallyIntersect(b, line)) results.push_back(b);
     }
@@ -285,7 +285,7 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
 
         ply_vertex * ptr = arc.getHead();
 
-        bool r = false;
+        bool line_found = false;
         do
         {
             ply_vertex * next = ptr->getNext();
@@ -296,21 +296,21 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
                 if (gi.clip_line(this, line, clipped) && getSqLength(clipped) >= 1e-10)
                     intersects = true;
 
-                bool myr = specialLineIntersect(this, line, max_level, at_layer, results);
-                if (myr) r = true;
+                if (specialLineIntersect(this, line, max_level, at_layer, results))
+                    line_found = true;
             }
             ptr = next;
 
         } while (ptr != nullptr);
 
-        if (r)
+        if (line_found)
         {
             for (auto b : results)
             {
                 if (b->depth >= max_level) continue; //too deep
 
-                bool splitted = b->split(0);
-                if (splitted)
+                bool was_split = b->split(0);
+                if (was_split)
                 {
                     for (auto & c : b->pChildren)
                     {
@@ -449,8 +449,7 @@ bool QuadTree3D::smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq,
                     nodegroup.add(nei_kid);
 
                     //add to the priority queue
-                    pair<int, Box *> tmp(nei_kid->depth, nei_kid);
-                    box_pq.push_back(tmp);
+                    box_pq.push_back(make_pair(nei_kid->depth, nei_kid));
                     push_heap(box_pq.begin(), box_pq.end());
 
                     //flag to rebuild
@@ -485,16 +484,14 @@ void QuadTree3D::smooth_refinement(int level_tol_horizontal, int level_tol_verti
     vector<pair<int, Box *>> box_pq;
     for (auto box : leaves)
     {
-        pair<int, Box *> tmp(box->depth, box);
-        box_pq.push_back(tmp);
+        box_pq.push_back(make_pair(box->depth, box));
         push_heap(box_pq.begin(), box_pq.end());
     }
 
     //loop until the heap is empty
     while (box_pq.empty() == false)
     {
-        pair<int, Box *> tmp = box_pq.front();
-        Box * box = tmp.second;
+        Box * box = box_pq.front().second;
         pop_heap(box_pq.begin(), box_pq.end());
         box_pq.pop_back();
 
@@ -938,10 +935,10 @@ void QuadTree3D::sortconnectionbynodenumber(list<pair<int, int>> & connectionlis
     //sort by node numbers
     sort(sorted_connection_list.begin(), sorted_connection_list.end());
     //put the sorted connection back
-    list<pair<int, int>> tmp;
+    list<pair<int, int>> sorted;
     int size = sorted_connection_list.size();
-    for (int i = 0; i < size; i++) tmp.push_back(sorted_connection_list[i].second);
-    tmp.swap(connectionlist);
+    for (int i = 0; i < size; i++) sorted.push_back(sorted_connection_list[i].second);
+    sorted.swap(connectionlist);
 }
 
 void QuadTree3D::sortareabyconid(const list<pair<int, int>> & connectionlist, vector<double> & area)
@@ -957,10 +954,10 @@ void QuadTree3D::sortareabyconid(const list<pair<int, int>> & connectionlist, ve
     //sort by node numbers
     sort(sorted_area_list.begin(), sorted_area_list.end());
     //put the sorted connection back
-    vector<double> tmp;
+    vector<double> sorted;
     int size = sorted_area_list.size();
-    for (int i = 0; i < size; i++) tmp.push_back(sorted_area_list[i].second);
-    tmp.swap(area);
+    for (int i = 0; i < size; i++) sorted.push_back(sorted_area_list[i].second);
+    sorted.swap(area);
 }
 
 void QuadTree3D::_add_root_nodes()
@@ -991,12 +988,12 @@ double * QuadTree3D::get_top()
     {
         Box * b = get_nodeobj(nodenumber);
 
-        if (m_top_layer_z_operator[b->layer] == Z_VALUE_REPLICATE_OPEARTOR)
+        if (m_top_layer_z_operator[b->layer] == Z_VALUE_REPLICATE_OPERATOR)
         {
             Index2d i = m_mfgrid->getIndex(Point2d(b->x, b->y));
             z[nodenumber] = m_mfgrid->botm(b->layer, i[0], i[1]);
         }
-        else //if(m_top_layer_z_operator[b->layer]==Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR)
+        else //if(m_top_layer_z_operator[b->layer]==Z_VALUE_LINEAR_INTERPOLATION_OPERATOR)
         {
             if (m_top_layer_z_source.find(b->layer) ==
                 m_top_layer_z_source.end()) //no name defined, interpolate from the based grid
@@ -1032,12 +1029,12 @@ double * QuadTree3D::get_bot()
     {
         Box * b = get_nodeobj(nodenumber);
 
-        if (m_bot_layer_z_operator[b->layer] == Z_VALUE_REPLICATE_OPEARTOR)
+        if (m_bot_layer_z_operator[b->layer] == Z_VALUE_REPLICATE_OPERATOR)
         {
             Index2d i = m_mfgrid->getIndex(Point2d(b->x, b->y));
             z[nodenumber] = m_mfgrid->botm(b->layer + 1, i[0], i[1]);
         }
-        else //if(m_bot_layer_z_operator[b->layer]==Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR)
+        else //if(m_bot_layer_z_operator[b->layer]==Z_VALUE_LINEAR_INTERPOLATION_OPERATOR)
         {
             if (m_bot_layer_z_source.find(b->layer) ==
                 m_bot_layer_z_source.end()) //no name defined, interpolate from the based grid
@@ -1183,7 +1180,7 @@ void QuadTree3D::refresh()
 inline void DFSprint(ostream & out, Box * box, unsigned int & id, const string & extra,
                      string & location, bool one_based_numbering)
 {
-    char tmp[8];
+    char quadrant[8];
 
     if (box->isLeaf)
     {
@@ -1213,8 +1210,8 @@ inline void DFSprint(ostream & out, Box * box, unsigned int & id, const string &
                 case 3: i = 2; break;
             }
             //quadrants are numbered 1 to 4 whatever the node numbering
-            sprintf(tmp, "%d", x + 1);
-            string mylocation = location + tmp;
+            sprintf(quadrant, "%d", x + 1);
+            string mylocation = location + quadrant;
             DFSprint(out, box->pChildren[i], id, extra, mylocation, one_based_numbering);
         } //end for i
     }
@@ -1390,7 +1387,7 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
         dmaxy = min((int)(ag->getnrows() - 1), dmaxy);
 
         //nodata cells are left out of the average
-        double val = 0.0, totalArea = 0.0, nodataArea = 0.0;
+        double weighted_sum = 0.0, totalArea = 0.0, nodataArea = 0.0;
         for (int ix = dminx; ix <= dmaxx; ix++)
         {
             for (int iy = dminy; iy <= dmaxy; iy++)
@@ -1407,7 +1404,7 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
                     nodataArea += area;
                     continue;
                 }
-                val += area * value;
+                weighted_sum += area * value;
 
                 totalArea += area;
             }
@@ -1426,7 +1423,7 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
                                  arcinfo_filename);
         }
         else
-            return val = val / totalArea;
+            return weighted_sum / totalArea;
     }
     //#endif
 }

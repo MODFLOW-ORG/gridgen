@@ -91,13 +91,13 @@ public:
     ~BoxPlyClip(void);
 
     void destroy();
-    void destroy(VNode * vn);
+    void destroy(VNode * head);
     void resetStatus();
 
     //add a vertex, which this clip then owns
     void add(VNode * v);
     //insert a vertex
-    void insert(VNode * s, VNode * e, VNode * v);
+    void insert(VNode * before, VNode * after, VNode * v);
     //next
     VNode * next(VNode * v);
 
@@ -122,14 +122,15 @@ public:
     void collectOnePly(vector<VNode *> & interVs, int sIdx, int eIdx, bool isNextOrder,
                        list<BoxPlyClip *> & bpcResults, bool isX, bool isBigger);
 
-    void collectSecondPart(vector<VNode *> & interVs, int sIdx, int tevIdx, VNode * sv, VNode * tev,
-                           bool isNextOrder, int vsize, list<BoxPlyClip *> & bpcResults, bool isX,
-                           bool isBigger, vector<VNode *> & secondHalf);
+    void collectSecondPart(vector<VNode *> & interVs, int sIdx, int tevIdx, VNode * start_node,
+                           VNode * end_node, bool isNextOrder, int vsize,
+                           list<BoxPlyClip *> & bpcResults, bool isX, bool isBigger,
+                           vector<VNode *> & secondHalf);
 
     void constructClipPly(vector<VNode *> & firstHalf, vector<VNode *> & secondHalf,
                           list<BoxPlyClip *> & bpcResults);
 
-    VNode * collectAlongWay(vector<VNode *> & vs, VNode * tmpv, bool nextO);
+    VNode * collectAlongWay(vector<VNode *> & vs, VNode * start, bool forward);
     //unprocessed
     //bool unprocessed();
     VNode * copy(const VNode * v);

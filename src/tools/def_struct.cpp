@@ -33,19 +33,19 @@ static list<string> layer_record(map<string, list<string>> & name_value_map, con
 {
     char layername[64];
     sprintf(layername, "%s layer %d", name, i + 1);
-    map<string, list<string>>::iterator r = name_value_map.find(layername);
-    if (r == name_value_map.end()) return list<string>();
-    return r->second;
+    map<string, list<string>>::iterator found = name_value_map.find(layername);
+    if (found == name_value_map.end()) return list<string>();
+    return found->second;
 }
 
 //value of the record spelled as in the report, or else as in the code
 static list<string> record(map<string, list<string>> & name_value_map, const char * report_name,
                            const char * code_name)
 {
-    map<string, list<string>>::iterator r = name_value_map.find(report_name);
-    if (r != name_value_map.end() && !r->second.empty()) return r->second;
-    r = name_value_map.find(code_name);
-    if (r != name_value_map.end()) return r->second;
+    map<string, list<string>>::iterator found = name_value_map.find(report_name);
+    if (found != name_value_map.end() && !found->second.empty()) return found->second;
+    found = name_value_map.find(code_name);
+    if (found != name_value_map.end()) return found->second;
     return list<string>();
 }
 
@@ -112,16 +112,16 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
     const int size = 1024;
     const char * ignore = " \t[]()<>,!{}\r\n";
     vector<char> buffer(size);
-    char * tmp = buffer.data();
+    char * line = buffer.data();
 
     //
     while (!in.eof())
     {
-        in.getline(tmp, size);
+        in.getline(line, size);
 
-        if (strlen(tmp) == 0) continue;
+        if (strlen(line) == 0) continue;
 
-        pair<char *, char *> name_value = split(tmp);
+        pair<char *, char *> name_value = split(line);
 
         list<string> name = tokenize(name_value.first, ignore);
 
@@ -176,10 +176,10 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
 }
 
 //convert a string to a list of tokens
-list<string> BaseParser::tokenize(char * tmp, const char * ignore)
+list<string> BaseParser::tokenize(char * line, const char * ignore)
 {
     list<string> tokens;
-    char * tok = strtok(tmp, ignore);
+    char * tok = strtok(line, ignore);
     while (tok != nullptr)
     {
         tokens.push_back(tok);
@@ -189,16 +189,16 @@ list<string> BaseParser::tokenize(char * tmp, const char * ignore)
 }
 
 // split a string into name and value by "="
-pair<char *, char *> BaseParser::split(char * tmp)
+pair<char *, char *> BaseParser::split(char * line)
 {
-    char * pos = strchr(tmp, '=');
+    char * pos = strchr(line, '=');
     if (pos != nullptr)
     {
         *pos = '\0';
         pos++;
     }
 
-    return make_pair(tmp, pos);
+    return make_pair(line, pos);
 }
 
 string BaseParser::merge(const list<string> & name, string del)
@@ -449,10 +449,10 @@ bool quadtree_grid_raw_data::parse()
     set<int> layers = named_layers(name_value_map);
     for (int i : layers)
     {
-        list<string> v = layer_record(name_value_map, "top", i);
-        if (!v.empty()) top_str[i] = v;
-        v = layer_record(name_value_map, "bottom", i);
-        if (!v.empty()) bot_str[i] = v;
+        list<string> values = layer_record(name_value_map, "top", i);
+        if (!values.empty()) top_str[i] = values;
+        values = layer_record(name_value_map, "bottom", i);
+        if (!values.empty()) bot_str[i] = values;
     }
 
     return true;
@@ -581,8 +581,8 @@ void quadtree_grid_raw_data::fillQuadTree3D()
             {
                 if (tmpNodeBoxObj->isLeaf)
                 {
-                    bool r = tmpNodeBoxObj->split(0);
-                    assert(r);
+                    bool was_split = tmpNodeBoxObj->split(0);
+                    assert(was_split);
 
                     for (int c = 0; c < 4; c++)
                     {
@@ -708,21 +708,21 @@ bool quadtree_builder_raw_data::parse()
     set<int> layers = named_layers(name_value_map);
     for (int i : layers)
     {
-        list<string> v;
+        list<string> values;
 
-        v = layer_record(name_value_map, "active_domain", i);
-        if (!v.empty()) active_domain_str[i] = v;
+        values = layer_record(name_value_map, "active_domain", i);
+        if (!values.empty()) active_domain_str[i] = values;
 
         //refinement features, also allowed as refinement_features
-        v = layer_record(name_value_map, "refine_by_features", i);
-        if (v.empty()) v = layer_record(name_value_map, "refinement_features", i);
-        if (!v.empty()) refine_by_features_str[i] = v;
+        values = layer_record(name_value_map, "refine_by_features", i);
+        if (values.empty()) values = layer_record(name_value_map, "refinement_features", i);
+        if (!values.empty()) refine_by_features_str[i] = values;
 
         //surface arrays
-        v = layer_record(name_value_map, "top", i);
-        if (!v.empty()) top_str[i] = v;
-        v = layer_record(name_value_map, "bottom", i);
-        if (!v.empty()) bot_str[i] = v;
+        values = layer_record(name_value_map, "top", i);
+        if (!values.empty()) top_str[i] = values;
+        values = layer_record(name_value_map, "bottom", i);
+        if (!values.empty()) bot_str[i] = values;
     }
 
     return true;
@@ -1028,8 +1028,8 @@ bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & bloc
     }
 
     //initialize the grid if necessary
-    bool r = grid->initialize(blocks);
-    if (r == false)
+    bool initialized = grid->initialize(blocks);
+    if (initialized == false)
     {
         cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
@@ -1227,8 +1227,8 @@ bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks
     }
 
     //initialize the grid if necessary
-    bool r = grid->initialize(blocks);
-    if (r == false)
+    bool initialized = grid->initialize(blocks);
+    if (initialized == false)
     {
         cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
@@ -1351,8 +1351,8 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
     }
 
     //initialize the grid if necessary
-    bool r = grid->initialize(blocks);
-    if (r == false)
+    bool initialized = grid->initialize(blocks);
+    if (initialized == false)
     {
         cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
@@ -1470,8 +1470,8 @@ bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
     }
 
     //initialize the grid if necessary
-    bool r = grid->initialize(blocks);
-    if (r == false)
+    bool initialized = grid->initialize(blocks);
+    if (initialized == false)
     {
         cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;

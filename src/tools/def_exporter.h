@@ -49,11 +49,11 @@ public:
 
     //
     template <typename T>
-    bool save(const string & filename, const T & data, int size, int * formating)
+    bool save(const string & filename, const T & data, int size, int * line_ends)
     {
         ofstream fout(filename.c_str());
         if (fout.good() == false) throw GridgenError("cannot write file " + filename);
-        save(fout, data, size, formating);
+        save(fout, data, size, line_ends);
         fout.close();
         cout << "- Save data to file: " << filename << endl;
         return true;
@@ -114,7 +114,7 @@ protected:
     }
 
     //save an array of things with formatting info
-    template <typename T> void save(ostream & out, T * A, int size, int * formating)
+    template <typename T> void save(ostream & out, T * A, int size, int * line_ends)
     {
         int fid = 0;
         int last_newline_id = 0;
@@ -122,7 +122,7 @@ protected:
         {
 
             //check if a new formatting line is reached
-            if (i == formating[fid] - 1)
+            if (i == line_ends[fid] - 1)
             {
                 fid++;
                 if (i > 0 && i != size - 1)

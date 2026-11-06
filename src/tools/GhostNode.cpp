@@ -14,31 +14,31 @@ bool between(double a, double b, double c)
     else
         return false;
 }
-void computeGN(Box * m, Box * n, int dir, vector<GhostNode> & gns)
+void computeGN(Box * small_cell, Box * large_cell, int dir, vector<GhostNode> & gns)
 { //decide the node j first
 
     GhostNode gn;
-    gn.mNum = m->number;
-    gn.nNum = n->number;
+    gn.small_node = small_cell->number;
+    gn.large_node = large_cell->number;
 
     //if it is in north or south
     if (dir == 0 || dir == 2)
     {
         list<Box *> nl;
-        if (between(n->x - n->dx, n->x, m->x))
+        if (between(large_cell->x - large_cell->dx, large_cell->x, small_cell->x))
         { //search the 3 direction(west)
-            n->getNeighbors(nl, 3);
+            large_cell->getNeighbors(nl, 3);
         }
-        else if (between(n->x, n->x + n->dx, m->x))
+        else if (between(large_cell->x, large_cell->x + large_cell->dx, small_cell->x))
         { //search for the 1 direction
-            n->getNeighbors(nl, 1);
+            large_cell->getNeighbors(nl, 1);
         }
 
         if (nl.empty()) return;
 
         if (nl.size() > 2)
         {
-            throw GridgenError("the node " + to_string(n->id) + " has more than two (" +
+            throw GridgenError("the node " + to_string(large_cell->id) + " has more than two (" +
                                to_string(nl.size()) +
                                ") neighbor box nodes in dir=" + to_string(dir));
         }
@@ -46,8 +46,9 @@ void computeGN(Box * m, Box * n, int dir, vector<GhostNode> & gns)
         if (nl.size() == 1)
         {
             gn.j1 = gn.j2 = nl.front()->number;
-            gn.apha1 = ((n->x - m->x) / (n->x - nl.front()->x)) / 2; // fabs((n->x - m->x)/n->dx);
-            gn.apha2 = gn.apha1;
+            gn.alpha1 = ((large_cell->x - small_cell->x) / (large_cell->x - nl.front()->x)) /
+                        2; // fabs((large_cell->x - small_cell->x)/large_cell->dx);
+            gn.alpha2 = gn.alpha1;
         }
         else
         {
@@ -55,24 +56,24 @@ void computeGN(Box * m, Box * n, int dir, vector<GhostNode> & gns)
             gn.j1 = nl.front()->number;
             gn.j2 = nl.back()->number;
             //they have the same X coordinates
-            gn.apha1 =
-                ((n->x - m->x) / (n->x - nl.front()->x)) / 2; //fabs( ( (n->x - m->x)/n->dx ) / 2 );
-            gn.apha2 = gn.apha1;
+            gn.alpha1 = ((large_cell->x - small_cell->x) / (large_cell->x - nl.front()->x)) /
+                        2; //fabs( ( (large_cell->x - small_cell->x)/large_cell->dx ) / 2 );
+            gn.alpha2 = gn.alpha1;
         }
     }
     else if (dir == 1 || dir == 3)
     {
         list<Box *> nl;
-        if (between(n->y + n->dy, n->y, m->y))
-            n->getNeighbors(nl, 0);
-        else if (between(n->y, n->y - n->dy, m->y))
-            n->getNeighbors(nl, 2);
+        if (between(large_cell->y + large_cell->dy, large_cell->y, small_cell->y))
+            large_cell->getNeighbors(nl, 0);
+        else if (between(large_cell->y, large_cell->y - large_cell->dy, small_cell->y))
+            large_cell->getNeighbors(nl, 2);
 
         if (nl.empty()) return;
 
         if (nl.size() > 2)
         {
-            throw GridgenError("the node " + to_string(n->id) + " has more than two (" +
+            throw GridgenError("the node " + to_string(large_cell->id) + " has more than two (" +
                                to_string(nl.size()) +
                                ") neighbor box nodes in dir=" + to_string(dir));
         }
@@ -80,16 +81,18 @@ void computeGN(Box * m, Box * n, int dir, vector<GhostNode> & gns)
         if (nl.size() == 1)
         {
             gn.j1 = gn.j2 = nl.front()->number;
-            gn.apha1 = gn.apha2 =
-                ((n->y - m->y) / (n->y - nl.front()->y)) / 2; //fabs( (n->y - m->y) / n->dy);
+            gn.alpha1 = gn.alpha2 =
+                ((large_cell->y - small_cell->y) / (large_cell->y - nl.front()->y)) /
+                2; //fabs( (large_cell->y - small_cell->y) / large_cell->dy);
         }
         else
         {
             assert(nl.size() == 2);
             gn.j1 = nl.front()->number;
             gn.j2 = nl.back()->number;
-            gn.apha1 = gn.apha2 = ((n->y - m->y) / (n->y - nl.front()->y)) /
-                                  2; //fabs( ( (n->y - m->y) / n->dy) / 2 );
+            gn.alpha1 = gn.alpha2 =
+                ((large_cell->y - small_cell->y) / (large_cell->y - nl.front()->y)) /
+                2; //fabs( ( (large_cell->y - small_cell->y) / large_cell->dy) / 2 );
         }
     }
     else
@@ -99,17 +102,17 @@ void computeGN(Box * m, Box * n, int dir, vector<GhostNode> & gns)
 
     gns.push_back(gn);
 }
-void computeGNNeigh(Box * m, list<Box *> & nlist, int dir, vector<GhostNode> & gns)
+void computeGNNeigh(Box * small_cell, list<Box *> & nlist, int dir, vector<GhostNode> & gns)
 {
     //neighbors
     for (auto tb : nlist)
     {
         if (tb->number == -1) continue;
 
-        if (tb->depth >= m->depth) continue;
+        if (tb->depth >= small_cell->depth) continue;
 
         //the node should be considered
-        computeGN(m, tb, dir, gns);
+        computeGN(small_cell, tb, dir, gns);
     }
 }
 
@@ -139,9 +142,9 @@ void writeGhostNode(string filePath, vector<GhostNode> & gns, int offset = 1)
     ofile.open(filePath.c_str(), std::ofstream::out | std::ofstream::trunc);
     for (auto & ghn : gns)
     {
-        ofile << ghn.nNum + offset << "\t" << ghn.mNum + offset << "\t" << ghn.j1 + offset << "\t"
-              << ghn.j2 + offset << "\t" << round_trip(ghn.apha1) << "\t" << round_trip(ghn.apha2)
-              << endl;
+        ofile << ghn.large_node + offset << "\t" << ghn.small_node + offset << "\t"
+              << ghn.j1 + offset << "\t" << ghn.j2 + offset << "\t" << round_trip(ghn.alpha1)
+              << "\t" << round_trip(ghn.alpha2) << endl;
     }
     ofile.close();
 }

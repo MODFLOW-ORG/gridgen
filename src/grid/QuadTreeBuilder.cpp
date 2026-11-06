@@ -58,12 +58,12 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
         string operation_top = tolower(rawdata.top[i].first);
 
         if (operation_top == "replicate")
-            qtree->setTopOperators(i, QuadTree3D::Z_VALUE_REPLICATE_OPEARTOR);
+            qtree->setTopOperators(i, QuadTree3D::Z_VALUE_REPLICATE_OPERATOR);
         else if (operation_top == "interpolate")
-            qtree->setTopOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR);
+            qtree->setTopOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
         else if (operation_top == "asciigrid") //ASCII file
         {
-            qtree->setTopOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR);
+            qtree->setTopOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
             qtree->setTopSource(i, rawdata.top[i].second);
 
             if (rawdata.top_area_weighted.find(i) != rawdata.top_area_weighted.end())
@@ -79,12 +79,12 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
 
         string operation_bot = tolower(rawdata.bot[i].first);
         if (operation_bot == "replicate")
-            qtree->setBotOperators(i, QuadTree3D::Z_VALUE_REPLICATE_OPEARTOR);
+            qtree->setBotOperators(i, QuadTree3D::Z_VALUE_REPLICATE_OPERATOR);
         else if (operation_bot == "interpolate")
-            qtree->setBotOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR);
+            qtree->setBotOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
         else if (operation_bot == "asciigrid") //ASCII file
         {
-            qtree->setBotOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR);
+            qtree->setBotOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
             qtree->setBotSource(i, rawdata.bot[i].second);
 
             if (rawdata.bot_area_weighted.find(i) != rawdata.bot_area_weighted.end())

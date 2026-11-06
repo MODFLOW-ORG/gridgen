@@ -141,9 +141,9 @@ public:
     {
         Point2d p1(x1, y1);
         Point2d p2(x2, y2);
-        LineSeg2d s(p1, p2);
+        LineSeg2d segment(p1, p2);
 
-        return intersect(grid, s);
+        return intersect(grid, segment);
     }
 
     bool intersect(QuadTree3D * grid, vector<double> & ply_pts)
@@ -234,7 +234,7 @@ public:
                       list<Box *> & enclosed_intersection);
 
     //utility functions
-    int checkNeighbor(Box * b1, Box * b2);
+    int checkNeighbor(Box * box, Box * other);
     //check box edge collinearly intersect with line
     bool checkEdgeCollinear(Box * box, int dir, const LineSeg2d & line);
 
@@ -315,9 +315,9 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply) //, bool noBound)
 {
     list<Box *> bd_intersection;
     list<Box *> enclosed_intersection;
-    bool r = intersect(grid, ply, bd_intersection, enclosed_intersection);
+    bool found = intersect(grid, ply, bd_intersection, enclosed_intersection);
 
-    if (r)
+    if (found)
     {
         //add the newly discovered intersections
         if (m_b_include_poly_boundary)
@@ -328,7 +328,7 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply) //, bool noBound)
                               enclosed_intersection.end());
     }
 
-    return r;
+    return found;
 }
 
 //intersection a generic Grid with a polygon..
@@ -337,8 +337,8 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon) //, bool n
 {
     list<Box *> bd_intersection;
     list<Box *> enclosed_intersection;
-    bool r = intersect(grid, polygon, bd_intersection, enclosed_intersection);
-    if (r)
+    bool found = intersect(grid, polygon, bd_intersection, enclosed_intersection);
+    if (found)
     {
         //add the newly discovered intersections
         if (m_b_include_poly_boundary)
@@ -347,7 +347,7 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon) //, bool n
         m_intersection.insert(m_intersection.end(), enclosed_intersection.begin(),
                               enclosed_intersection.end());
     }
-    return r;
+    return found;
 }
 
 //intersection a Grid with a ply..
@@ -367,8 +367,8 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply, list<Box *> & bd_i
         ply_vertex * next = ptr->getNext();
 
         LineSeg2d line(ptr->getPos(), next->getPos());
-        bool r = intersect(grid, line);
-        assert(r);
+        bool found = intersect(grid, line);
+        assert(found);
 
         //record the relationship between the boxes and this segment
         if (m_b_save_intersection_info)
@@ -442,13 +442,13 @@ void GridIntersection::enclose_grid(T * grid, const P & polygon, set<Box *> & vi
     if (!intersect(center, polygon)) return;
 
     //flood the layer from the cell at the center
-    vector<Box *> found;
-    found.swap(m_intersection);
-    bool r = intersect(grid, center);
-    found.swap(m_intersection);
-    if (!r || found.empty()) return;
-    visited.insert(found.back());
-    floodGrid(found.back(), visited, enclosed_intersection);
+    vector<Box *> center_cells;
+    center_cells.swap(m_intersection);
+    bool found = intersect(grid, center);
+    center_cells.swap(m_intersection);
+    if (!found || center_cells.empty()) return;
+    visited.insert(center_cells.back());
+    floodGrid(center_cells.back(), visited, enclosed_intersection);
 }
 
 //intersection a Grid with a polygon..
@@ -472,9 +472,9 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
                 ptr->getNext(); //ptr is the current vertex and next is the next vertex in this ply
 
             LineSeg2d line(ptr->getPos(), next->getPos());
-            bool r = intersect(grid, line);
+            bool found = intersect(grid, line);
 
-            assert(r);
+            assert(found);
 
             //record the relationship between the boxes and this segment
             if (m_b_save_intersection_info)
@@ -547,13 +547,14 @@ template <typename T>
 bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBoud)
 {
     LineSeg2d clipped_line;
-    bool rclip = clip_line(grid, line, clipped_line);
-    if (rclip == false) return true; //line segment is entirely outside, so there is no intersection
+    bool clipped = clip_line(grid, line, clipped_line);
+    if (clipped == false)
+        return true; //line segment is entirely outside, so there is no intersection
     if (getSqLength(clipped_line) < 1e-10) return true;
 
     //get the first box that encloses one of the end pt
-    bool r = intersect(grid, clipped_line.pt[0]);
-    if (r == false)
+    bool found = intersect(grid, clipped_line.pt[0]);
+    if (found == false)
     {
         cerr
             << "! Error: GridIntersection::intersect(ModflowGrid2D * grid, const LineSeg2d& line) #1: Pt="
@@ -562,10 +563,10 @@ bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBo
     }
 
     //first box
-    Box * b1 = m_intersection.back();
+    Box * start_box = m_intersection.back();
 
-    r = intersect(grid, clipped_line.pt[1]);
-    if (r == false)
+    found = intersect(grid, clipped_line.pt[1]);
+    if (found == false)
     {
         cerr
             << "! Error: GridIntersection::intersect(ModflowGrid2D * grid, const LineSeg2d& line) #2: Pt="
@@ -574,35 +575,35 @@ bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBo
     }
 
     //last box
-    Box * b2 = m_intersection.back();
+    Box * end_box = m_intersection.back();
 
     //the line segment is short and contained in the same box
-    if (b1 == b2)
+    if (start_box == end_box)
     {
         m_intersection.pop_back();
         return true; //done
     }
 
-    //check if b1 and b2 share faces and the line is just colinear with that
-    int neiID = checkNeighbor(b1, b2);
+    //check if start_box and end_box share an edge that the line runs along
+    int neiID = checkNeighbor(start_box, end_box);
     if (neiID != -1)
     {
         //check if the box edge collinearly intersect with the line
-        if (checkEdgeCollinear(b1, neiID, line))
+        if (checkEdgeCollinear(start_box, neiID, line))
         {
             m_intersection.pop_back();
             return true; //done
         }
     }
 
-    //now, visit b2 neighbors recursively until we reaches b1
+    //visit the neighbors the line crosses, starting from both end boxes
     list<Box *> open;
-    open.push_back(b1);
-    open.push_back(b2);
+    open.push_back(start_box);
+    open.push_back(end_box);
 
     set<Box *> visited;
-    visited.insert(b1);
-    visited.insert(b2);
+    visited.insert(start_box);
+    visited.insert(end_box);
 
     while (open.empty() == false) //not empty
     {
@@ -662,12 +663,12 @@ template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_P
     ////rotate
     ////rotate
 
-    vector<Box *> tmp;
-    m_intersection.swap(tmp);
-    bool r = intersect(grid, (const Point2d &)pt);
+    vector<Box *> previous;
+    m_intersection.swap(previous);
+    bool found = intersect(grid, (const Point2d &)pt);
 
     //process information
-    if (this->m_b_save_intersection_info && r)
+    if (this->m_b_save_intersection_info && found)
     {
         //store intersection info here...
         for (auto & i : m_intersection)
@@ -676,9 +677,9 @@ template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_P
         }
     }
 
-    tmp.insert(tmp.end(), m_intersection.begin(), m_intersection.end());
-    m_intersection.swap(tmp);
-    return r;
+    previous.insert(previous.end(), m_intersection.begin(), m_intersection.end());
+    m_intersection.swap(previous);
+    return found;
 }
 
 template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_LineSeg2d & line)
@@ -686,12 +687,12 @@ template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_L
     ////rotate
     ////rotate
 
-    vector<Box *> tmp;
-    m_intersection.swap(tmp);
-    bool r = intersect(grid, (const LineSeg2d &)line);
+    vector<Box *> previous;
+    m_intersection.swap(previous);
+    bool found = intersect(grid, (const LineSeg2d &)line);
 
     //process information
-    if (this->m_b_save_intersection_info && r)
+    if (this->m_b_save_intersection_info && found)
     {
         //store intersection info here...
         for (auto & i : m_intersection)
@@ -701,9 +702,9 @@ template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_L
 
     } //end if
 
-    tmp.insert(tmp.end(), m_intersection.begin(), m_intersection.end());
-    m_intersection.swap(tmp);
-    return r;
+    previous.insert(previous.end(), m_intersection.begin(), m_intersection.end());
+    m_intersection.swap(previous);
+    return found;
 }
 
 template <typename T>
@@ -712,9 +713,10 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
 
     list<Box *> bd_intersection;
     list<Box *> enclosed_intersection;
-    bool r = intersect(grid, (const c_ply &)ply.front(), bd_intersection, enclosed_intersection);
+    bool found =
+        intersect(grid, (const c_ply &)ply.front(), bd_intersection, enclosed_intersection);
 
-    if (r)
+    if (found)
     {
         //handle the enclosed boxes
         m_intersection.insert(m_intersection.end(), enclosed_intersection.begin(),
@@ -756,7 +758,7 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
         } //end if(m_b_include_poly_boundary)
     }
 
-    return r;
+    return found;
 }
 
 } //end of namespace

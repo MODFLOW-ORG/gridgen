@@ -64,14 +64,14 @@ namespace cusg
  *
  * Box neighbor iterator constructor. Runs through QuadTree
  * nodes in the specified direction.
- * \param[in] bb     The starting node
+ * \param[in] start  The starting node
  * \param[in] direc  The direction to travel:
  *                   - 0: North
  *                   - 1: East
  *                   - 2: South
  *                   - 3: West
  */
-BoxIter::BoxIter(const Box * bb, int direc) : b(bb), direction(direc), neighbor(nullptr)
+BoxIter::BoxIter(const Box * start, int direc) : b(start), direction(direc), neighbor(nullptr)
 {
     prev = (direc + 3) % 4;
     next = (direc + 1) % 4;

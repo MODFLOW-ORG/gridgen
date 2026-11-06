@@ -10,15 +10,15 @@ Point2d getCenter(VNode * head)
 {
     double x = 0, y = 0;
     int size = 0;
-    VNode * tmv = head;
+    VNode * node = head;
     do
     {
-        x += tmv->x;
-        y += tmv->y;
+        x += node->x;
+        y += node->y;
         size++;
 
-        tmv = tmv->next;
-    } while (tmv != head);
+        node = node->next;
+    } while (node != head);
 
     return Point2d(x / size, y / size);
 }
@@ -62,14 +62,14 @@ void InsertionSortV(vector<VNode *> & vs, bool isX)
 
     for (int i = 1; i < vsize; i++)
     {
-        VNode * tv = vs[i];
+        VNode * key = vs[i];
         int j = i - 1;
-        while (j >= 0 && sortsAfter(vs[j], tv, isX))
+        while (j >= 0 && sortsAfter(vs[j], key, isX))
         {
             vs[j + 1] = vs[j];
             j--;
         }
-        vs[j + 1] = tv;
+        vs[j + 1] = key;
     }
 }
 
@@ -86,47 +86,47 @@ void getXYBound(VNode * first, double & xmin, double & xmax, double & ymin, doub
 {
     xmin = ymin = FLT_MAX;
     xmax = ymax = FLT_MIN;
-    VNode * vn = first;
+    VNode * node = first;
     do
     {
-        if (vn->x < xmin) xmin = vn->x;
-        if (vn->y < ymin) ymin = vn->y;
-        if (vn->x > xmax) xmax = vn->x;
-        if (vn->y > ymax) ymax = vn->y;
-        vn = vn->next;
-    } while (vn != first);
+        if (node->x < xmin) xmin = node->x;
+        if (node->y < ymin) ymin = node->y;
+        if (node->x > xmax) xmax = node->x;
+        if (node->y > ymax) ymax = node->y;
+        node = node->next;
+    } while (node != first);
 }
 
 VNode * copyOnePly(VNode * head, bool bSetVisited)
 {
     if (head == nullptr) return nullptr;
 
-    VNode * nh = new VNode(head->x, head->y);
+    VNode * new_head = new VNode(head->x, head->y);
     if (bSetVisited) head->isVisited = true;
-    nh->next = nh->prev = nh;
-    VNode * cv = head->next;
-    while (cv != head)
+    new_head->next = new_head->prev = new_head;
+    VNode * node = head->next;
+    while (node != head)
     {
-        VNode * t = new VNode(cv->x, cv->y);
-        nh->prev->next = t;
-        t->prev = nh->prev;
-        t->next = nh;
-        nh->prev = t;
+        VNode * node_copy = new VNode(node->x, node->y);
+        new_head->prev->next = node_copy;
+        node_copy->prev = new_head->prev;
+        node_copy->next = new_head;
+        new_head->prev = node_copy;
 
-        if (bSetVisited) cv->isVisited = true;
+        if (bSetVisited) node->isVisited = true;
 
-        cv = cv->next;
+        node = node->next;
     }
 
-    return nh;
+    return new_head;
 }
 BoxPlyClip * copyBoxPlyClip(BoxPlyClip * bpc, bool bSetVisited = false)
 {
-    BoxPlyClip * nbcp = new BoxPlyClip();
+    BoxPlyClip * clip_copy = new BoxPlyClip();
 
-    VNode * nh = copyOnePly(bpc->first, bSetVisited);
-    nbcp->first = nh;
-    nbcp->plys.push_back(nh);
+    VNode * new_head = copyOnePly(bpc->first, bSetVisited);
+    clip_copy->first = new_head;
+    clip_copy->plys.push_back(new_head);
 
     if (bpc->plys.size() > 1)
     {
@@ -134,30 +134,30 @@ BoxPlyClip * copyBoxPlyClip(BoxPlyClip * bpc, bool bSetVisited = false)
         ++vit;
         for (; vit != bpc->plys.end(); ++vit)
         {
-            VNode * nvv = copyOnePly(*vit, bSetVisited);
-            nbcp->plys.push_back(nvv);
+            VNode * ply_copy = copyOnePly(*vit, bSetVisited);
+            clip_copy->plys.push_back(ply_copy);
         }
     }
-    return nbcp;
+    return clip_copy;
 }
 void BoxPlyClip::resetStatus()
 {
     //delete the new added
-    for (auto vn : newAdds)
+    for (auto added : newAdds)
     {
-        VNode * pre1 = vn->prev;
-        VNode * next1 = vn->next;
+        VNode * pre1 = added->prev;
+        VNode * next1 = added->next;
         pre1->next = next1;
         next1->prev = pre1;
-        vn->prev = vn->next = nullptr;
-        delete vn;
+        added->prev = added->next = nullptr;
+        delete added;
     }
     newAdds.clear();
 
     //loop over the influenced vertices
-    for (auto vn : influVs)
+    for (auto vertex : influVs)
     {
-        vn->resetStatus();
+        vertex->resetStatus();
     }
     influVs.clear();
 }
@@ -167,9 +167,9 @@ double getRotAngle(Vector2d & v1, Vector2d & v2)
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
     //have bug here
     double angle = 0;
-    Vector2d vc1 = v1.normalize();
-    Vector2d vc2 = v2.normalize();
-    double dotpro = (vc1[0] * vc2[0]) + (vc1[1] * vc2[1]);
+    Vector2d dir1 = v1.normalize();
+    Vector2d dir2 = v2.normalize();
+    double dotpro = (dir1[0] * dir2[0]) + (dir1[1] * dir2[1]);
     if (fabs(dotpro - 1.0) <= EPSION)
         return 0;
     else if (fabs(dotpro + 1.0) <= EPSION)
@@ -178,7 +178,7 @@ double getRotAngle(Vector2d & v1, Vector2d & v2)
     {
         double cross = 0;
         angle = acos(dotpro);
-        cross = (vc1[0] * vc2[1]) - (vc2[0] * vc1[1]);
+        cross = (dir1[0] * dir2[1]) - (dir2[0] * dir1[1]);
         if (cross < 0) angle = 2 * PI - angle;
 
         return angle;
@@ -191,27 +191,28 @@ bool ClipPlyEnclose(VNode * head, const Point2d & p2d)
     //count the edges crossing a ray from the point; summing the angles they turn through
     //loses the small ones
     bool inside = false;
-    VNode * cv = head;
+    VNode * node = head;
     do
     {
-        double a[2] = {cv->x, cv->y};
-        double b[2] = {cv->next->x, cv->next->y};
+        double a[2] = {node->x, node->y};
+        double b[2] = {node->next->x, node->next->y};
         if (CrossesRay(a, b, p2d.get())) inside = !inside;
-        cv = cv->next;
-    } while (cv != head);
+        node = node->next;
+    } while (node != head);
 
     return inside;
 }
 
-void getFeasiblePreNext(VNode * tv, VNode *& vn1, VNode *& vn2, VNode *& vnprev1, VNode *& vnprev2)
+void getFeasiblePreNext(VNode * vertex, VNode *& vn1, VNode *& vn2, VNode *& vnprev1,
+                        VNode *& vnprev2)
 {
-    vn1 = tv->prev;
-    vn2 = tv->next;
-    while (AlmostEqual(vn1, tv))
+    vn1 = vertex->prev;
+    vn2 = vertex->next;
+    while (AlmostEqual(vn1, vertex))
     {
         vn1 = vn1->prev;
     }
-    while (AlmostEqual(vn2, tv))
+    while (AlmostEqual(vn2, vertex))
     {
         vn2 = vn2->next;
     }
@@ -229,18 +230,18 @@ void getFeasiblePreNext(VNode * tv, VNode *& vn1, VNode *& vn2, VNode *& vnprev1
         vn2 = vn2->next;
     }
 }
-bool decideNextOrderForOut(VNode * tv, bool isX, bool isBigger)
+bool decideNextOrderForOut(VNode * vertex, bool isX, bool isBigger)
 {
-    assert(tv->isInDirect);
-    assert(tv->next->isInDirect || tv->prev->isInDirect);
+    assert(vertex->isInDirect);
+    assert(vertex->next->isInDirect || vertex->prev->isInDirect);
 
-    if (!(tv->prev->isInDirect && tv->next->isInDirect))
-        return tv->next->isInDirect;
+    if (!(vertex->prev->isInDirect && vertex->next->isInDirect))
+        return vertex->next->isInDirect;
     else
     {
         //1:pre; 2:next
         VNode *vn1 = nullptr, *vn2 = nullptr, *vnpre1 = nullptr, *vnpre2 = nullptr;
-        getFeasiblePreNext(tv, vn1, vn2, vnpre1, vnpre2);
+        getFeasiblePreNext(vertex, vn1, vn2, vnpre1, vnpre2);
         assert(!(vnpre1->isVisited && vnpre2->isVisited));
         //if one of them is not in indirection
         if (!(vn1->isInDirect && vn2->isInDirect))
@@ -260,9 +261,9 @@ bool decideNextOrderForOut(VNode * tv, bool isX, bool isBigger)
         }
         if (!(vnpre1->isScanPnt && vnpre2->isScanPnt))
         {
-            Vector2d vc1(vnpre1->x - tv->x, vnpre1->y - tv->y);
-            Vector2d vc2(vnpre2->x - tv->x, vnpre2->y - tv->y);
-            double angle = getRotAngle(vc1, vc2);
+            Vector2d to_prev(vnpre1->x - vertex->x, vnpre1->y - vertex->y);
+            Vector2d to_next(vnpre2->x - vertex->x, vnpre2->y - vertex->y);
+            double angle = getRotAngle(to_prev, to_next);
             if ((!isX && isBigger) || (isX && !isBigger))
                 return (angle <= PI);
             else
@@ -270,9 +271,9 @@ bool decideNextOrderForOut(VNode * tv, bool isX, bool isBigger)
         }
         else
         {
-            Vector2d vc1(vnpre1->x - tv->x, vnpre1->y - tv->y);
-            Vector2d vc2(vn2->x - tv->x, vn2->y - tv->y);
-            double angle = getRotAngle(vc1, vc2);
+            Vector2d to_prev(vnpre1->x - vertex->x, vnpre1->y - vertex->y);
+            Vector2d to_next(vn2->x - vertex->x, vn2->y - vertex->y);
+            double angle = getRotAngle(to_prev, to_next);
             if ((!isX && isBigger) || (isX && !isBigger))
                 return (angle <= PI);
             else
@@ -280,18 +281,18 @@ bool decideNextOrderForOut(VNode * tv, bool isX, bool isBigger)
         }
     }
 }
-bool decideNextOrderForHole(VNode * tv, bool isX, bool isBigger)
+bool decideNextOrderForHole(VNode * vertex, bool isX, bool isBigger)
 {
-    assert(tv->isInDirect);
-    assert(tv->next->isInDirect || tv->prev->isInDirect);
+    assert(vertex->isInDirect);
+    assert(vertex->next->isInDirect || vertex->prev->isInDirect);
 
-    if (!(tv->prev->isInDirect && tv->next->isInDirect))
-        return tv->next->isInDirect;
+    if (!(vertex->prev->isInDirect && vertex->next->isInDirect))
+        return vertex->next->isInDirect;
     else
     {
         //1:pre; 2:next
         VNode *vn1 = nullptr, *vn2 = nullptr, *vnpre1 = nullptr, *vnpre2 = nullptr;
-        getFeasiblePreNext(tv, vn1, vn2, vnpre1, vnpre2);
+        getFeasiblePreNext(vertex, vn1, vn2, vnpre1, vnpre2);
         assert(!(vnpre1->isVisited && vnpre2->isVisited));
         if (!(vn1->isInDirect && vn2->isInDirect))
         {
@@ -310,10 +311,10 @@ bool decideNextOrderForHole(VNode * tv, bool isX, bool isBigger)
         }
     }
 
-    Vector2d vc1(tv->prev->x - tv->x, tv->prev->y - tv->y);
-    Vector2d vc2(tv->next->x - tv->x, tv->next->y - tv->y);
+    Vector2d to_prev(vertex->prev->x - vertex->x, vertex->prev->y - vertex->y);
+    Vector2d to_next(vertex->next->x - vertex->x, vertex->next->y - vertex->y);
 
-    double angle = getRotAngle(vc1, vc2);
+    double angle = getRotAngle(to_prev, to_next);
     if (((!isX) && isBigger) || (isX && (!isBigger)))
         return (angle >= PI);
     else
@@ -350,18 +351,18 @@ void BoxPlyClip::destroy()
     plys.clear();
     first = nullptr;
 }
-void BoxPlyClip::destroy(VNode * vn)
+void BoxPlyClip::destroy(VNode * head)
 {
-    if (vn == nullptr) return;
-    VNode * tmp = vn->next;
-    while (tmp != vn)
+    if (head == nullptr) return;
+    VNode * node = head->next;
+    while (node != head)
     {
-        VNode * tf = tmp;
-        tmp = tmp->next;
-        if (tf != nullptr) delete tf;
+        VNode * doomed = node;
+        node = node->next;
+        if (doomed != nullptr) delete doomed;
     }
-    delete vn;
-    vn = nullptr;
+    delete head;
+    head = nullptr;
 }
 
 void BoxPlyClip::add(VNode * v)
@@ -396,33 +397,33 @@ void BoxPlyClip::add(VNode * v)
         prev->next = v;
     }
 }
-void BoxPlyClip::insert(VNode * s, VNode * e, VNode * v)
+void BoxPlyClip::insert(VNode * before, VNode * after, VNode * v)
 {
 
-    s->next = v;
-    v->prev = s;
-    v->next = e;
-    e->prev = v;
+    before->next = v;
+    v->prev = before;
+    v->next = after;
+    after->prev = v;
 }
-VNode * BoxPlyClip::collectAlongWay(vector<VNode *> & vs, VNode * tmpv, bool nextO)
+VNode * BoxPlyClip::collectAlongWay(vector<VNode *> & vs, VNode * start, bool forward)
 {
-    assert(tmpv->isInDirect && tmpv->isScanPnt);
-    VNode * ptv = tmpv;
-    vs.push_back(ptv);
-    VNode * cv = nextO ? tmpv->next : tmpv->prev;
+    assert(start->isInDirect && start->isScanPnt);
+    VNode * previous = start;
+    vs.push_back(previous);
+    VNode * node = forward ? start->next : start->prev;
 
-    while (AlmostEqual(ptv, cv) && cv->isInDirect)
+    while (AlmostEqual(previous, node) && node->isInDirect)
     {
-        vs.push_back(cv);
-        ptv = cv;
-        cv = nextO ? cv->next : cv->prev;
+        vs.push_back(node);
+        previous = node;
+        node = forward ? node->next : node->prev;
     }
     ///{
-    while (cv->isInDirect)
+    while (node->isInDirect)
     {
-        vs.push_back(cv);
-        if (cv->isScanPnt) break;
-        cv = nextO ? cv->next : cv->prev;
+        vs.push_back(node);
+        if (node->isScanPnt) break;
+        node = forward ? node->next : node->prev;
     }
 
     return vs.back();
@@ -573,59 +574,60 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
     vector<VNode *> uselessNodes;
     vector<VNode *> notOnline;
     vector<VNode *> touching;
-    for (auto vn : interCand)
+    for (auto vertex : interCand)
     {
-        bool pureInDir1 = (vn->next->isInDirect && (!vn->next->isOnline));
-        bool pureInDir2 = (vn->prev->isInDirect && (!vn->prev->isOnline));
-        if (vn->isOnline && (!(pureInDir1 && pureInDir2)))
+        bool pureInDir1 = (vertex->next->isInDirect && (!vertex->next->isOnline));
+        bool pureInDir2 = (vertex->prev->isInDirect && (!vertex->prev->isOnline));
+        if (vertex->isOnline && (!(pureInDir1 && pureInDir2)))
         {
-            notOnline.push_back(vn);
+            notOnline.push_back(vertex);
         }
 
         //a vertex that touches the line from the kept side does not cross it, unless the
         //ring also crosses the line at the same place
-        if (touchesKeptSide(vn))
+        if (touchesKeptSide(vertex))
         {
             bool alone = true;
             for (auto & mit : shouldRecord)
             {
-                if (mit.first != vn && AlmostEqual(mit.first, vn) && !touchesKeptSide(mit.first))
+                if (mit.first != vertex && AlmostEqual(mit.first, vertex) &&
+                    !touchesKeptSide(mit.first))
                     alone = false;
             }
             if (alone)
             {
-                touching.push_back(vn);
-                shouldRecord[vn] = false;
+                touching.push_back(vertex);
+                shouldRecord[vertex] = false;
                 continue;
             }
         }
 
         if (pureInDir1 || pureInDir2)
-            shouldRecord[vn] = true;
+            shouldRecord[vertex] = true;
         else
-            shouldRecord[vn] = false;
+            shouldRecord[vertex] = false;
 
         if (!(pureInDir1 || pureInDir2))
         {
-            uselessNodes.push_back(vn);
+            uselessNodes.push_back(vertex);
         }
     }
     //not online
-    for (auto vn : notOnline)
+    for (auto vertex : notOnline)
     {
-        vn->isOnline = false;
+        vertex->isOnline = false;
     }
     //useless nodes
-    for (auto vn : uselessNodes)
+    for (auto vertex : uselessNodes)
     {
-        vn->isOnline = false;
-        vn->isInDirect = false; // vn->isScanPnt = false;
+        vertex->isOnline = false;
+        vertex->isInDirect = false; // vertex->isScanPnt = false;
     }
     //touching nodes are kept as ordinary vertices
-    for (auto vn : touching)
+    for (auto vertex : touching)
     {
-        vn->isOnline = false;
-        vn->isScanPnt = false;
+        vertex->isOnline = false;
+        vertex->isScanPnt = false;
     }
 
     //decide the final intersection vertices, in ring order rather than by address so that
@@ -646,24 +648,24 @@ int BoxPlyClip::setIntesection(VNode * startV, double fval, bool isX, bool isBig
     return onNum;
 }
 
-void BoxPlyClip::collectSecondPart(vector<VNode *> & interVs, int sIdx, int eIdx, VNode * sv,
-                                   VNode * ev, bool isNextOrder, int vsize,
-                                   list<BoxPlyClip *> & bpcResults, bool isX, bool isBigger,
-                                   vector<VNode *> & secondHalf)
+void BoxPlyClip::collectSecondPart(vector<VNode *> & interVs, int sIdx, int eIdx,
+                                   VNode * start_node, VNode * end_node, bool isNextOrder,
+                                   int vsize, list<BoxPlyClip *> & bpcResults, bool isX,
+                                   bool isBigger, vector<VNode *> & secondHalf)
 {
     int startId = sIdx;
-    bool nextO = isNextOrder;
+    bool forward = isNextOrder;
 
     //collect these vertices
     vector<VNode *> tmpVec;
-    VNode * tsvTM = collectAlongWay(tmpVec, interVs[startId], nextO);
+    VNode * tsvTM = collectAlongWay(tmpVec, interVs[startId], forward);
 
-    for (auto vn : tmpVec)
+    for (auto vertex : tmpVec)
     {
-        if (!vn->isVisited)
+        if (!vertex->isVisited)
         {
-            secondHalf.push_back(vn);
-            vn->isVisited = true;
+            secondHalf.push_back(vertex);
+            vertex->isVisited = true;
         }
     }
 
@@ -674,23 +676,23 @@ void BoxPlyClip::collectSecondPart(vector<VNode *> & interVs, int sIdx, int eIdx
     //deal with the first part
     int fsIdx = startId + 1;
     bool fnextO = false; //decideNextOrderForOut(interVs[fsIdx], isX, isBigger);
-    VNode * vsn1 = nextO ? interVs[startId]->prev : interVs[startId]->next;
-    if (interVs[startId]->isOnline && vsn1->isInDirect && (!vsn1->isVisited))
+    VNode * start_neighbor = forward ? interVs[startId]->prev : interVs[startId]->next;
+    if (interVs[startId]->isOnline && start_neighbor->isInDirect && (!start_neighbor->isVisited))
     {
         fsIdx = startId;
-        fnextO = !nextO;
+        fnextO = !forward;
     }
     if (fsIdx != startId && fsIdx < tsvEndIdx)
         fnextO = decideNextOrderForOut(interVs[fsIdx], isX, isBigger);
 
     int feIdx = tsvEndIdx - 1;
-    VNode * ven2 = nextO ? interVs[tsvEndIdx]->next : interVs[tsvEndIdx]->prev;
-    if (interVs[tsvEndIdx]->isOnline && ven2->isInDirect && (!ven2->isVisited))
+    VNode * end_neighbor = forward ? interVs[tsvEndIdx]->next : interVs[tsvEndIdx]->prev;
+    if (interVs[tsvEndIdx]->isOnline && end_neighbor->isInDirect && (!end_neighbor->isVisited))
     {
-        bool eo = decideNextOrderForHole(
+        bool end_forward = decideNextOrderForHole(
             interVs[tsvEndIdx], isX,
             isBigger); // !(decideNextOrderForOut(interVs[tsvEndIdx], isX, isBigger));
-        VNode * enext = eo ? interVs[tsvEndIdx]->next : interVs[tsvEndIdx]->prev;
+        VNode * enext = end_forward ? interVs[tsvEndIdx]->next : interVs[tsvEndIdx]->prev;
         if (enext->isVisited)
         {
             feIdx = tsvEndIdx;
@@ -709,17 +711,17 @@ void BoxPlyClip::collectSecondPart(vector<VNode *> & interVs, int sIdx, int eIdx
     //deal with the second part
     int ssIdx = tsvEndIdx + 1;
     bool sorder = false; //decideNextOrderForOut(interVs[ssIdx], isX, isBigger);
-    VNode * vn1 = nextO ? interVs[tsvEndIdx]->next : interVs[tsvEndIdx]->prev;
+    VNode * vn1 = forward ? interVs[tsvEndIdx]->next : interVs[tsvEndIdx]->prev;
     if (interVs[tsvEndIdx]->isOnline && vn1->isInDirect && (!vn1->isVisited))
     {
-        bool eo = decideNextOrderForHole(
+        bool end_forward = decideNextOrderForHole(
             interVs[tsvEndIdx], isX,
             isBigger); //!(decideNextOrderForOut(interVs[tsvEndIdx], isX, isBigger));
-        VNode * snext = eo ? interVs[tsvEndIdx]->next : interVs[tsvEndIdx]->prev;
+        VNode * snext = end_forward ? interVs[tsvEndIdx]->next : interVs[tsvEndIdx]->prev;
         if (!snext->isVisited)
         {
             ssIdx = tsvEndIdx;
-            sorder = nextO;
+            sorder = forward;
         }
     }
 
@@ -730,8 +732,8 @@ void BoxPlyClip::collectSecondPart(vector<VNode *> & interVs, int sIdx, int eIdx
 
     if (ssIdx < eIdx)
     {
-        collectSecondPart(interVs, ssIdx, eIdx, interVs[ssIdx], ev, sorder, vsize, bpcResults, isX,
-                          isBigger, secondHalf);
+        collectSecondPart(interVs, ssIdx, eIdx, interVs[ssIdx], end_node, sorder, vsize, bpcResults,
+                          isX, isBigger, secondHalf);
     }
     //end of second part
     /*********************************************************************************************/
@@ -779,44 +781,44 @@ void BoxPlyClip::collectOnePly(vector<VNode *> & interVs, int sIdx, int eIdx, bo
     vector<VNode *> secondHalf;
 
     //collect first half: out boundary
-    VNode * sv = interVs[sIdx];
-    VNode * ev = interVs[eIdx];
-    VNode * tv = sv;
-    firstHalf.push_back(sv);
-    sv->isVisited = true;
+    VNode * start_node = interVs[sIdx];
+    VNode * end_node = interVs[eIdx];
+    VNode * node = start_node;
+    firstHalf.push_back(start_node);
+    start_node->isVisited = true;
     do
     {
         if (isNextOrder)
-            tv = tv->next;
+            node = node->next;
         else
-            tv = tv->prev;
+            node = node->prev;
 
-        tv->isVisited = true;
-        firstHalf.push_back(tv);
-    } while (tv != ev);
+        node->isVisited = true;
+        firstHalf.push_back(node);
+    } while (node != end_node);
 
     //filter the starting vertex
     int startId = sIdx + 1;
     int endId = eIdx - 1;
-    bool nextO = !isNextOrder;
+    bool forward = !isNextOrder;
     VNode * vno = !isNextOrder ? interVs[sIdx]->next : interVs[sIdx]->prev;
     if (interVs[sIdx]->isOnline && (!vno->isVisited))
     {
         assert(vno->isInDirect);
-        nextO = !isNextOrder;
+        forward = !isNextOrder;
         startId = sIdx;
     }
     else
     {
         startId = sIdx + 1;
-        if (startId < endId) nextO = decideNextOrderForOut(interVs[startId], isX, isBigger);
+        if (startId < endId) forward = decideNextOrderForOut(interVs[startId], isX, isBigger);
     }
 
     //if(interVs[eIdx]->isOnline
 
     if (startId < endId)
     {
-        collectSecondPart(interVs, startId, endId, interVs[startId], interVs[endId], nextO, vsize,
+        collectSecondPart(interVs, startId, endId, interVs[startId], interVs[endId], forward, vsize,
                           bpcResults, isX, isBigger, secondHalf);
     }
 
@@ -833,12 +835,12 @@ void BoxPlyClip::collectPolygonsInInterval(bool isX, bool isBigger, vector<VNode
     int startId = from;
     while (startId < to)
     {
-        VNode * sv = interVs[startId];
-        assert(sv->next->isInDirect || sv->prev->isInDirect);
+        VNode * start_node = interVs[startId];
+        assert(start_node->next->isInDirect || start_node->prev->isInDirect);
 
         vector<VNode *> tvec;
-        VNode * ev = collectAlongWay(tvec, sv, isNextO);
-        int endId = locateVInVector(interVs, ev, startId, size);
+        VNode * end_node = collectAlongWay(tvec, start_node, isNextO);
+        int endId = locateVInVector(interVs, end_node, startId, size);
 
         assert(endId != -1);
 
@@ -892,9 +894,9 @@ void BoxPlyClip::clip(double fval, bool isX, bool isBigger, list<BoxPlyClip *> &
     vector<int> onlineNums;
     vector<VNode *> interVs;
     //set intersections for holes
-    for (auto sv : plys)
+    for (auto ply : plys)
     {
-        int vo = setIntesection(sv, fval, isX, isBigger, interVs);
+        int vo = setIntesection(ply, fval, isX, isBigger, interVs);
         onlineNums.push_back(vo);
     }
 
@@ -983,28 +985,28 @@ VNode * BoxPlyClip::copy(const VNode * v)
 VNode * convertPlyToVN(const c_ply & tply)
 {
     ply_vertex * head = tply.getHead();
-    VNode * nh = new VNode(head->getPos()[0], head->getPos()[1]);
-    nh->next = nh->prev = nh;
-    ply_vertex * cv = head->getNext();
-    while (cv != head)
+    VNode * new_head = new VNode(head->getPos()[0], head->getPos()[1]);
+    new_head->next = new_head->prev = new_head;
+    ply_vertex * vertex = head->getNext();
+    while (vertex != head)
     {
-        VNode * t = new VNode(cv->getPos()[0], cv->getPos()[1]);
+        VNode * node_copy = new VNode(vertex->getPos()[0], vertex->getPos()[1]);
         //leave out a repeated vertex, such as the closing vertex of a shapefile ring
-        if (AlmostEqual(t, nh->prev) || AlmostEqual(t, nh))
+        if (AlmostEqual(node_copy, new_head->prev) || AlmostEqual(node_copy, new_head))
         {
-            delete t;
-            cv = cv->getNext();
+            delete node_copy;
+            vertex = vertex->getNext();
             continue;
         }
-        nh->prev->next = t;
-        t->prev = nh->prev;
-        t->next = nh;
-        nh->prev = t;
+        new_head->prev->next = node_copy;
+        node_copy->prev = new_head->prev;
+        node_copy->next = new_head;
+        new_head->prev = node_copy;
 
-        cv = cv->getNext();
+        vertex = vertex->getNext();
     }
 
-    return nh;
+    return new_head;
 }
 
 //convert the ply to BoxPlyClip
@@ -1012,14 +1014,14 @@ BoxPlyClip * convertPlyToClip(const c_ply & tply)
 {
     BoxPlyClip * bpc = new BoxPlyClip();
     ply_vertex * thead = tply.getHead();
-    ply_vertex * tv = thead;
+    ply_vertex * vertex = thead;
     do
     {
-        VNode * tnode = new VNode(tv->getPos()[0], tv->getPos()[1]);
+        VNode * tnode = new VNode(vertex->getPos()[0], vertex->getPos()[1]);
         bpc->add(tnode);
 
-        tv = tv->getNext();
-    } while (tv != thead);
+        vertex = vertex->getNext();
+    } while (vertex != thead);
     return bpc;
 }
 
@@ -1113,18 +1115,18 @@ VNode * convertBoxToClip(Point2d ld, Point2d rd, Point2d ru, Point2d lu)
     tn[2] = new VNode(ru[0], ru[1]);
     tn[3] = new VNode(lu[0], lu[1]);
 
-    VNode * nh = tn[0];
-    nh->next = nh->prev = tn[0];
+    VNode * head = tn[0];
+    head->next = head->prev = tn[0];
 
     for (int i = 1; i <= 3; i++)
     {
-        nh->prev->next = tn[i];
-        tn[i]->prev = nh->prev;
-        tn[i]->next = nh;
-        nh->prev = tn[i];
+        head->prev->next = tn[i];
+        tn[i]->prev = head->prev;
+        tn[i]->next = head;
+        head->prev = tn[i];
     }
 
-    return nh;
+    return head;
 }
 
 double getOutBdArea(BoxPlyClip * bpc)
@@ -1145,9 +1147,9 @@ double intersectTwoBox(Point2d ld, Point2d rd, Point2d ru, Point2d lu, double xm
 
     //build a BoxClip
     BoxPlyClip bpc;
-    VNode * nh = convertBoxToClip(ld, rd, ru, lu);
-    bpc.first = nh;
-    bpc.plys.push_back(nh);
+    VNode * head = convertBoxToClip(ld, rd, ru, lu);
+    bpc.first = head;
+    bpc.plys.push_back(head);
 
     list<BoxPlyClip *> cres;
     bpc.clip(xmin2, xmax2, ymin2, ymax2, cres);

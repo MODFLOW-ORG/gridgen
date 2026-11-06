@@ -1,0 +1,3 @@
+section = "internal"
+subsection = ""
+description = "Variables, parameters, and members in the C++ source whose names did not say what they hold, or were misspelled, are renamed. The program and its output are unchanged."

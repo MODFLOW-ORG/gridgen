@@ -73,6 +73,6 @@ void writeDataArray(ofstream & ofile, string type, string name, const vector<Dty
 void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intvals,
                 vector<double> * dbvals, BoxVtx * boxVts);
 //fit a plane using 3 points
-double fitZ(double ** vv, double x, double y);
+double fitZ(double ** points, double x, double y);
 
 #endif

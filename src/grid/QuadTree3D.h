@@ -216,15 +216,15 @@ protected:
     vector<GhostNode> m_gns; //store the ghost nodes
 
 public:
-    enum LAYER_Z_VALUE_OPEARTOR
+    enum LAYER_Z_VALUE_OPERATOR
     {
-        Z_VALUE_REPLICATE_OPEARTOR,
-        Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR
+        Z_VALUE_REPLICATE_OPERATOR,
+        Z_VALUE_LINEAR_INTERPOLATION_OPERATOR
     };
-    void setTopOperators(int i, LAYER_Z_VALUE_OPEARTOR op) { m_top_layer_z_operator[i] = op; }
-    void setBotOperators(int i, LAYER_Z_VALUE_OPEARTOR op) { m_bot_layer_z_operator[i] = op; }
-    LAYER_Z_VALUE_OPEARTOR getTopOperators(int i) { return m_top_layer_z_operator[i]; }
-    LAYER_Z_VALUE_OPEARTOR getBotOperators(int i) { return m_bot_layer_z_operator[i]; }
+    void setTopOperators(int i, LAYER_Z_VALUE_OPERATOR op) { m_top_layer_z_operator[i] = op; }
+    void setBotOperators(int i, LAYER_Z_VALUE_OPERATOR op) { m_bot_layer_z_operator[i] = op; }
+    LAYER_Z_VALUE_OPERATOR getTopOperators(int i) { return m_top_layer_z_operator[i]; }
+    LAYER_Z_VALUE_OPERATOR getBotOperators(int i) { return m_bot_layer_z_operator[i]; }
 
     void setTopSource(int i, const string & source) { m_top_layer_z_source[i] = source; }
     void setBotSource(int i, const string & source) { m_bot_layer_z_source[i] = source; }
@@ -251,9 +251,9 @@ public:
     }
 
 protected:
-    vector<LAYER_Z_VALUE_OPEARTOR>
-        m_top_layer_z_operator; //default is replicate (Z_VALUE_REPLICATE_OPEARTOR)
-    vector<LAYER_Z_VALUE_OPEARTOR> m_bot_layer_z_operator;
+    vector<LAYER_Z_VALUE_OPERATOR>
+        m_top_layer_z_operator; //default is replicate (Z_VALUE_REPLICATE_OPERATOR)
+    vector<LAYER_Z_VALUE_OPERATOR> m_bot_layer_z_operator;
 
     //source name for each layer
     map<int, string> m_top_layer_z_source;

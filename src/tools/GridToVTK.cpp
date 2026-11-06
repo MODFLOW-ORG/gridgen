@@ -202,8 +202,8 @@ void writeModflowGrid2VTK(ModflowGrid * modflow, string vtkName, bool without_in
     ofile.close();
 }
 
-void DFSWriteQDT2VTK(QuadTree3D * qtree, ofstream & ofile, int & pntNum, Box * b, int l, int r,
-                     int c, bool one_based_numbering, const GridVertices & gv,
+void DFSWriteQDT2VTK(QuadTree3D * qtree, ofstream & ofile, int & pntNum, Box * b, int layer,
+                     int row, int col, bool one_based_numbering, const GridVertices & gv,
                      vector<int> * intvals, vector<double> * dbvals)
 {
     //if(b->isLeaf)
@@ -233,17 +233,17 @@ void DFSWriteQDT2VTK(QuadTree3D * qtree, ofstream & ofile, int & pntNum, Box * b
         {
             intvals[0].push_back(b->id);
             intvals[1].push_back(b->number);
-            intvals[2].push_back(l);
-            intvals[3].push_back(r);
-            intvals[4].push_back(c);
+            intvals[2].push_back(layer);
+            intvals[3].push_back(row);
+            intvals[4].push_back(col);
         }
         else
         {
             intvals[0].push_back(b->id + 1);
             intvals[1].push_back(b->number + 1);
-            intvals[2].push_back(l + 1);
-            intvals[3].push_back(r + 1);
-            intvals[4].push_back(c + 1);
+            intvals[2].push_back(layer + 1);
+            intvals[3].push_back(row + 1);
+            intvals[4].push_back(col + 1);
         }
 
         dbvals[0].push_back(top);
@@ -257,8 +257,8 @@ void DFSWriteQDT2VTK(QuadTree3D * qtree, ofstream & ofile, int & pntNum, Box * b
     {
         for (auto & i : b->pChildren)
         {
-            DFSWriteQDT2VTK(qtree, ofile, pntNum, i, l, r, c, one_based_numbering, gv, intvals,
-                            dbvals);
+            DFSWriteQDT2VTK(qtree, ofile, pntNum, i, layer, row, col, one_based_numbering, gv,
+                            intvals, dbvals);
         }
     } //end b->isLeaf
 }
@@ -400,7 +400,7 @@ void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intval
 *******************************************************************************************************************/
 void buildSharingVertices_mfgrid(ModflowGrid * mfgrid, vector<Vertex *> & vdata, BoxVtx * boxVts)
 {
-    double val;
+    double z;
     GridVertices gv(mfgrid);
 
     int mfgrid_csize = (mfgrid->nrow) * (mfgrid->ncol);
@@ -421,7 +421,7 @@ void buildSharingVertices_mfgrid(ModflowGrid * mfgrid, vector<Vertex *> & vdata,
             for (int c = 0; c <= mfgrid->ncol; c++)
             {
                 Point2d pos(Xe[c], Ye[r]);
-                val = QuadTree3D::bilinear_interpolation(pos, &ag);
+                z = QuadTree3D::bilinear_interpolation(pos, &ag);
 
                 //the corner of the cell to the southeast, or of the last row or column
                 Box * box = mfgrid->nodegroup[mfgrid->get_nodeid(0, min(r, mfgrid->nrow - 1),
@@ -430,7 +430,7 @@ void buildSharingVertices_mfgrid(ModflowGrid * mfgrid, vector<Vertex *> & vdata,
                                                 : ((c < mfgrid->ncol) ? 3 : 2);
                 const Point2d & xy = gv.vertices()[gv.corners(box)[corner]];
 
-                Vertex * nv = new Vertex(xy[0], xy[1], val, vid++);
+                Vertex * nv = new Vertex(xy[0], xy[1], z, vid++);
                 vdata.push_back(nv);
             }
         }
@@ -612,7 +612,7 @@ void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool with
 * write VTK file with sharing vertices for quadtree
 ******************************************************************************************************************/
 //void DFSCollectInfo(Box* b, int l, int r, int c, int& boxNum,
-void DFScollectCell_share(Box * b, int k, int r, int c, QuadTree3D * qtree,
+void DFScollectCell_share(Box * b, int layer, int row, int col, QuadTree3D * qtree,
                           vector<Box *> & allBoxes, int & boxNum, vector<int> * intvals,
                           vector<double> * dbvals, bool one_based_numbering)
 {
@@ -625,17 +625,17 @@ void DFScollectCell_share(Box * b, int k, int r, int c, QuadTree3D * qtree,
         {
             intvals[0].push_back(b->id + 1);
             intvals[1].push_back(b->number + 1);
-            intvals[2].push_back(k + 1);
-            intvals[3].push_back(r + 1);
-            intvals[4].push_back(c + 1);
+            intvals[2].push_back(layer + 1);
+            intvals[3].push_back(row + 1);
+            intvals[4].push_back(col + 1);
         }
         else
         {
             intvals[0].push_back(b->id);
             intvals[1].push_back(b->number);
-            intvals[2].push_back(k);
-            intvals[3].push_back(r);
-            intvals[4].push_back(c);
+            intvals[2].push_back(layer);
+            intvals[3].push_back(row);
+            intvals[4].push_back(col);
         }
 
         double top = qtree->top[b->number];
@@ -652,7 +652,7 @@ void DFScollectCell_share(Box * b, int k, int r, int c, QuadTree3D * qtree,
     {
         for (auto & i : b->pChildren)
         {
-            DFScollectCell_share(i, k, r, c, qtree, allBoxes, boxNum, intvals, dbvals,
+            DFScollectCell_share(i, layer, row, col, qtree, allBoxes, boxNum, intvals, dbvals,
                                  one_based_numbering);
         }
     }
@@ -688,15 +688,15 @@ void rotateOnePnt(double x, double y, double cx, double cy, double rotation, dou
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //fit a plane using 3 points
-double fitZ(double ** vv, double x, double y)
+double fitZ(double ** points, double x, double y)
 {
-    double a = (vv[1][1] - vv[0][1]) * (vv[2][2] - vv[0][2]) -
-               (vv[2][1] - vv[0][1]) * (vv[1][2] - vv[0][2]);
-    double b = (vv[1][2] - vv[0][2]) * (vv[2][0] - vv[0][0]) -
-               (vv[2][2] - vv[0][2]) * (vv[1][0] - vv[0][0]);
-    double c = (vv[1][0] - vv[0][0]) * (vv[2][1] - vv[0][1]) -
-               (vv[2][0] - vv[0][0]) * (vv[1][1] - vv[0][1]);
-    double d = -(a * vv[0][0] + b * vv[0][1] + c * vv[0][2]);
+    double a = (points[1][1] - points[0][1]) * (points[2][2] - points[0][2]) -
+               (points[2][1] - points[0][1]) * (points[1][2] - points[0][2]);
+    double b = (points[1][2] - points[0][2]) * (points[2][0] - points[0][0]) -
+               (points[2][2] - points[0][2]) * (points[1][0] - points[0][0]);
+    double c = (points[1][0] - points[0][0]) * (points[2][1] - points[0][1]) -
+               (points[2][0] - points[0][0]) * (points[1][1] - points[0][1]);
+    double d = -(a * points[0][0] + b * points[0][1] + c * points[0][2]);
 
     assert(fabs(c) >= 1e-10);
     double z = -(a * x + b * y + d) / c;
@@ -889,19 +889,19 @@ void DFSbuildBox(Box * box, vector<VTK_V *> & vdata, vector<VTK_E *> & edata, VT
     {
         for (int t = 0; t < 4; t++)
         {
-            VTK_E * te = boxdata[box->id].e[k * 4 + t];
-            if (te->child_v == nullptr)
+            VTK_E * edge = boxdata[box->id].e[k * 4 + t];
+            if (edge->child_v == nullptr)
             {
                 VTK_V * nv = new VTK_V();
-                nv->pos[0] = (te->v[0]->pos[0] + te->v[1]->pos[0]) / 2;
-                nv->pos[1] = (te->v[0]->pos[1] + te->v[1]->pos[1]) / 2;
+                nv->pos[0] = (edge->v[0]->pos[0] + edge->v[1]->pos[0]) / 2;
+                nv->pos[1] = (edge->v[0]->pos[1] + edge->v[1]->pos[1]) / 2;
                 vdata.push_back(nv);
-                te->child_v = nv;
+                edge->child_v = nv;
 
-                VTK_E * e1 = new VTK_E(te->v[0], nv);
-                VTK_E * e2 = new VTK_E(nv, te->v[1]);
-                te->child_e[0] = e1;
-                te->child_e[1] = e2;
+                VTK_E * e1 = new VTK_E(edge->v[0], nv);
+                VTK_E * e2 = new VTK_E(nv, edge->v[1]);
+                edge->child_e[0] = e1;
+                edge->child_e[1] = e2;
                 edata.push_back(e1);
                 edata.push_back(e2);
             }
@@ -1134,7 +1134,7 @@ void number_share_vtk_v(QuadTree3D * qtree, vector<VTK_V *> & vdata, VTK_Box * b
 }
 
 //assume at most 1 depth difference
-double smooth_interpolate(vector<double> & dvals, vector<int> & depth, vector<Box *> & bs,
+double smooth_interpolate(vector<double> & dvals, vector<int> & depth, vector<Box *> & boxes,
                           double px, double py)
 {
     set<int> dset;
@@ -1173,18 +1173,18 @@ double smooth_interpolate(vector<double> & dvals, vector<int> & depth, vector<Bo
     if (dsize == 3)
     {
         double rows[3][3] = {};
-        double * vv[3] = {rows[0], rows[1], rows[2]};
+        double * points[3] = {rows[0], rows[1], rows[2]};
 
         for (int i = 0; i < 3; i++)
         {
-            vv[i][0] = bs[i]->x;
-            vv[i][1] = bs[i]->y;
-            vv[i][2] = dvals[i];
+            points[i][0] = boxes[i]->x;
+            points[i][1] = boxes[i]->y;
+            points[i][2] = dvals[i];
         }
 
-        double val = fitZ(vv, px, py);
+        double z = fitZ(points, px, py);
 
-        return val;
+        return z;
     }
 
     if (dsize == 2)

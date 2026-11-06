@@ -49,7 +49,7 @@ class Box; //defined later in this file
 class BoxIter
 {
 public:
-    BoxIter(const Box * bb, int direc);
+    BoxIter(const Box * start, int direc);
 
     Box * First();
 
@@ -294,7 +294,6 @@ public:
     //
     //-------------------------------------------------------------------------
 
-    string info;
     friend class BoxIter;
 
     /// depth of the box in the tree

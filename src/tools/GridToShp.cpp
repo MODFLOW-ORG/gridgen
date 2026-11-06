@@ -124,13 +124,13 @@ void writeFeatEntity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<i
 
 ////write feature info
 
-void DFSCollect(Grid * grid, Box * b, int l, int r, int c, string & location,
+void DFSCollect(Grid * grid, Box * b, int layer, int row, int col, string & location,
                 bool one_based_numbering, vector<Box *> & b_vec, vector<int> & number_vec,
                 vector<int> & l_vec, vector<int> & r_vec, vector<int> & c_vec,
                 vector<string> & loc_vec, bool without_inactive)
 {
 
-    char tmp[8] = {'\0'};
+    char quadrant[8] = {'\0'};
     if (b->isLeaf)
     {
         if (without_inactive && (!b->active)) return;
@@ -138,9 +138,9 @@ void DFSCollect(Grid * grid, Box * b, int l, int r, int c, string & location,
         b_vec.push_back(b);
         number_vec.push_back(b->number == -1 ? b->number
                                              : (one_based_numbering ? b->number + 1 : b->number));
-        l_vec.push_back(one_based_numbering ? (l + 1) : l);
-        r_vec.push_back(one_based_numbering ? (r + 1) : r);
-        c_vec.push_back(one_based_numbering ? (c + 1) : c);
+        l_vec.push_back(one_based_numbering ? (layer + 1) : layer);
+        r_vec.push_back(one_based_numbering ? (row + 1) : row);
+        c_vec.push_back(one_based_numbering ? (col + 1) : col);
         loc_vec.push_back(location);
     }
     else if (b->isLeaf == false) //b is not a leaf, call this function recursively
@@ -151,13 +151,13 @@ void DFSCollect(Grid * grid, Box * b, int l, int r, int c, string & location,
             if (i == 2) qid = 3;
             if (i == 3) qid = 2;
 
-            sprintf(tmp, "%d", qid + 1);
+            sprintf(quadrant, "%d", qid + 1);
 
             string mylocation = location;
-            mylocation += tmp;
+            mylocation += quadrant;
 
-            DFSCollect(grid, b->pChildren[i], l, r, c, mylocation, one_based_numbering, b_vec,
-                       number_vec, l_vec, r_vec, c_vec, loc_vec, without_inactive);
+            DFSCollect(grid, b->pChildren[i], layer, row, col, mylocation, one_based_numbering,
+                       b_vec, number_vec, l_vec, r_vec, c_vec, loc_vec, without_inactive);
         }
     }
 }

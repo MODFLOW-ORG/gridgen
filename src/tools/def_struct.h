@@ -43,10 +43,10 @@ protected:
     virtual bool readBlock(istream & in, block_raw_data & block);
 
     //convert a string to a list of tokens
-    virtual list<string> tokenize(char * tmp, const char * ignore);
+    virtual list<string> tokenize(char * line, const char * ignore);
 
     // split a string into name and value by "="
-    pair<char *, char *> split(char * tmp);
+    pair<char *, char *> split(char * line);
 
     //merge a list of strings in to a single string connected by del
     string merge(const list<string> & name, string del);

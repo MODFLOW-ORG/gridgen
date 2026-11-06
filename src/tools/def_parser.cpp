@@ -160,9 +160,9 @@ bool DefinitionParser::parse(string filename)
     ifstream fin(filename.c_str());
     if (!fin.good()) throw GridgenError("cannot open definition file " + filename);
 
-    bool r = parse(fin);
+    bool parsed = parse(fin);
     fin.close();
-    return r;
+    return parsed;
 }
 
 //parsing the ws file
@@ -224,8 +224,8 @@ bool DefinitionParser::parse(istream & in, string folder)
             unique_ptr<block_raw_data> ptr_block(m_block_type_map[block.type](block));
             if (ptr_block != nullptr)
             {
-                bool r = ptr_block->parse();
-                if (r)
+                bool parsed = ptr_block->parse();
+                if (parsed)
                     m_blocks[block.name] = ptr_block.release();
                 else
                     throw GridgenError("block " + block.name + " cannot be read");

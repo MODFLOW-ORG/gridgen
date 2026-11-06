@@ -322,11 +322,11 @@ bool GridIntersection::clip_line(ModflowGrid2D * grid, const LineSeg2d & line,
 
     Box box(cx, cy, grid->width, grid->height);
 
-    bool r = intersect(&box, line);
-    if (r == false) return false; //there is no intersection...
+    bool found = intersect(&box, line);
+    if (found == false) return false; //there is no intersection...
 
-    r = getIntersection(&box, line, clipped_line);
-    if (r == false) return false; //there is no intersection...
+    found = getIntersection(&box, line, clipped_line);
+    if (found == false) return false; //there is no intersection...
 
     if (box.in(clipped_line.pt[0][0], clipped_line.pt[0][1]) == false)
     {
@@ -460,33 +460,33 @@ bool GridIntersection::intersect(Box * b, const LineSeg2d & line)
     const Point2d lr(b->x + b->dx / 2, b->y - b->dy / 2); //lower right corner
     const Point2d ll(b->x - b->dx / 2, b->y - b->dy / 2); //lower left corner
 
-    const double * s = line.pt[0].get();
-    const double * t = line.pt[1].get();
+    const double * start = line.pt[0].get();
+    const double * end = line.pt[1].get();
 
     //now, check intersections between the line segment and the edges
-    if (SegSegInt(ul.get(), ur.get(), s, t)) return true;
-    if (SegSegInt(ur.get(), lr.get(), s, t)) return true;
-    if (SegSegInt(lr.get(), ll.get(), s, t)) return true;
-    if (SegSegInt(ll.get(), ul.get(), s, t)) return true;
+    if (SegSegInt(ul.get(), ur.get(), start, end)) return true;
+    if (SegSegInt(ur.get(), lr.get(), start, end)) return true;
+    if (SegSegInt(lr.get(), ll.get(), start, end)) return true;
+    if (SegSegInt(ll.get(), ul.get(), start, end)) return true;
 
     //JML: I am not sure if the code below is really necessary.
-    if (AreaSign(ul.get(), ur.get(), s) == 0)
-        if (Between(ul.get(), ur.get(), s)) return true;
-    if (AreaSign(ur.get(), lr.get(), s) == 0)
-        if (Between(ur.get(), lr.get(), s)) return true;
-    if (AreaSign(lr.get(), ll.get(), s) == 0)
-        if (Between(lr.get(), ll.get(), s)) return true;
-    if (AreaSign(ll.get(), ul.get(), s) == 0)
-        if (Between(ll.get(), ul.get(), s)) return true;
+    if (AreaSign(ul.get(), ur.get(), start) == 0)
+        if (Between(ul.get(), ur.get(), start)) return true;
+    if (AreaSign(ur.get(), lr.get(), start) == 0)
+        if (Between(ur.get(), lr.get(), start)) return true;
+    if (AreaSign(lr.get(), ll.get(), start) == 0)
+        if (Between(lr.get(), ll.get(), start)) return true;
+    if (AreaSign(ll.get(), ul.get(), start) == 0)
+        if (Between(ll.get(), ul.get(), start)) return true;
 
-    if (AreaSign(ul.get(), ur.get(), t) == 0)
-        if (Between(ul.get(), ur.get(), t)) return true;
-    if (AreaSign(ur.get(), lr.get(), t) == 0)
-        if (Between(ur.get(), lr.get(), t)) return true;
-    if (AreaSign(lr.get(), ll.get(), t) == 0)
-        if (Between(lr.get(), ll.get(), t)) return true;
-    if (AreaSign(ll.get(), ul.get(), t) == 0)
-        if (Between(ll.get(), ul.get(), t)) return true;
+    if (AreaSign(ul.get(), ur.get(), end) == 0)
+        if (Between(ul.get(), ur.get(), end)) return true;
+    if (AreaSign(ur.get(), lr.get(), end) == 0)
+        if (Between(ur.get(), lr.get(), end)) return true;
+    if (AreaSign(lr.get(), ll.get(), end) == 0)
+        if (Between(lr.get(), ll.get(), end)) return true;
+    if (AreaSign(ll.get(), ul.get(), end) == 0)
+        if (Between(ll.get(), ul.get(), end)) return true;
 
     //otherwise
     return false;
@@ -519,9 +519,9 @@ SegmentCellIntersectionInfo GridIntersection::buildIntersectionInfo(Box * box,
     info.m_curveID = line.m_curve_id;
 
     LineSeg2d intseg;
-    bool r = getIntersection(box, (LineSeg2d)line, intseg);
+    bool found = getIntersection(box, (LineSeg2d)line, intseg);
 
-    if (r == false)
+    if (found == false)
     {
         cerr
             << "! Warning: GridIntersection::buildIntersectionInfo(Box,const GIS_LineSeg2d): Cannot find intersection information"
@@ -578,24 +578,24 @@ bool GridIntersection::getIntersection(Box * b, const LineSeg2d & line, LineSeg2
     Point2d ll(b->x - b->dx / 2, b->y - b->dy / 2); //lower left corner
 
     //now, check intersections between the line segment and the edges
-    char r[4];
+    char edge_code[4];
     Point2d p[4];
 
-    r[0] = SegSegInt(ul.get(), ur.get(), line.pt[0].get(), line.pt[1].get(), p[0].get());
-    r[1] = SegSegInt(ur.get(), lr.get(), line.pt[0].get(), line.pt[1].get(), p[1].get());
-    r[2] = SegSegInt(lr.get(), ll.get(), line.pt[0].get(), line.pt[1].get(), p[2].get());
-    r[3] = SegSegInt(ll.get(), ul.get(), line.pt[0].get(), line.pt[1].get(), p[3].get());
+    edge_code[0] = SegSegInt(ul.get(), ur.get(), line.pt[0].get(), line.pt[1].get(), p[0].get());
+    edge_code[1] = SegSegInt(ur.get(), lr.get(), line.pt[0].get(), line.pt[1].get(), p[1].get());
+    edge_code[2] = SegSegInt(lr.get(), ll.get(), line.pt[0].get(), line.pt[1].get(), p[2].get());
+    edge_code[3] = SegSegInt(ll.get(), ul.get(), line.pt[0].get(), line.pt[1].get(), p[3].get());
 
     //no intersection....
-    if ((r[0] || r[1] || r[2] || r[3]) == false) return false;
+    if ((edge_code[0] || edge_code[1] || edge_code[2] || edge_code[3]) == false) return false;
 
     if (vinbox[0] || vinbox[1])
     {
         float max_len = 0;
         for (int i = 0; i < 4; i++)
         {
-            if (r[i] == '0') continue;
-            if (r[i] == 'e')
+            if (edge_code[i] == '0') continue;
+            if (edge_code[i] == 'e')
             {
                 //compute the union between the edge of box and the line
                 Point2d seg[2];
@@ -621,14 +621,15 @@ bool GridIntersection::getIntersection(Box * b, const LineSeg2d & line, LineSeg2
                         break;
                 }
 
-                bool r = Union(seg[0].get(), seg[1].get(), line.pt[0].get(), line.pt[1].get(), u);
-                if (r)
+                bool overlaps =
+                    Union(seg[0].get(), seg[1].get(), line.pt[0].get(), line.pt[1].get(), u);
+                if (overlaps)
                 {
                     intseg.pt[0].set(u[0][0], u[0][1]);
                     intseg.pt[1].set(u[1][0], u[1][1]);
                 }
 
-                return r;
+                return overlaps;
             }
             //found the intersection...
             const Point2d & pt1 = p[i];
@@ -651,14 +652,15 @@ bool GridIntersection::getIntersection(Box * b, const LineSeg2d & line, LineSeg2
     float max_len = 0;
     for (int i = 0; i < 4; i++)
     {
-        if (r[i] == '0') continue;
+        if (edge_code[i] == '0') continue;
 
-        if (r[i] == 'e') continue; //this can't happen, it should be handled in the previous loop
+        if (edge_code[i] == 'e')
+            continue; //this can't happen, it should be handled in the previous loop
 
         for (int j = i; j < 4; j++)
         {
-            if (r[j] == '0') continue;
-            if (r[j] == 'e') continue;
+            if (edge_code[j] == '0') continue;
+            if (edge_code[j] == 'e') continue;
 
             //found the intersection...
             double len = (p[i] - p[j]).normsqr();
@@ -678,8 +680,8 @@ double GridIntersection::intersect_len(Box * b, const LineSeg2d & line)
 {
     //check if the end points are in
     LineSeg2d intseg;
-    bool r = getIntersection(b, line, intseg);
-    if (r) return (intseg.pt[0] - intseg.pt[1]).norm();
+    bool found = getIntersection(b, line, intseg);
+    if (found) return (intseg.pt[0] - intseg.pt[1]).norm();
     return 0; //no intersection...
 }
 
@@ -693,7 +695,7 @@ bool GridIntersection::intersect(const Point2d & pt, const c_ply & ply)
     int max_trial = 200;
 
     Vector2d offset(ply.getHead()->getPos().get());
-    float d = ply.getRadius() * 4;
+    float ray_length = ply.getRadius() * 4;
     Point2d near = pt - offset;
     Point2d far = near;
 
@@ -703,7 +705,7 @@ bool GridIntersection::intersect(const Point2d & pt, const c_ply & ply)
         Vector2d vec(drand48(), drand48());
         if (drand48() < 0.5) vec[0] = -vec[0];
         if (drand48() < 0.5) vec[1] = -vec[1];
-        far = pt - offset + vec.normalize() * d;
+        far = pt - offset + vec.normalize() * ray_length;
 
         //
         ply_vertex * ptr = ply.getHead();
@@ -714,14 +716,14 @@ bool GridIntersection::intersect(const Point2d & pt, const c_ply & ply)
         {
             ply_vertex * next = ptr->getNext();
             double x[2];
-            Point2d c = ptr->getPos() - offset;
-            Point2d d = next->getPos() - offset;
+            Point2d edge_start = ptr->getPos() - offset;
+            Point2d edge_end = next->getPos() - offset;
 
-            char r = SegSegInt(near.get(), far.get(), c.get(), d.get(), x);
+            char code = SegSegInt(near.get(), far.get(), edge_start.get(), edge_end.get(), x);
 
-            if (r == '1')
+            if (code == '1')
                 int_count++;
-            else if (r != '0')
+            else if (code != '0')
             {
                 degenerate = true;
                 break;
@@ -752,7 +754,7 @@ bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
 
     Vector2d offset(pgon.front().getHead()->getPos().get());
     const double * pgon_box = pgon.getBBox();
-    float d = max(pgon_box[1] - pgon_box[0], pgon_box[3] - pgon_box[2]) * 4;
+    float ray_length = max(pgon_box[1] - pgon_box[0], pgon_box[3] - pgon_box[2]) * 4;
 
     Point2d near = pt - offset;
     Point2d far = near;
@@ -763,7 +765,7 @@ bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
         Vector2d vec(drand48(), drand48());
         if (drand48() < 0.5) vec[0] = -vec[0];
         if (drand48() < 0.5) vec[1] = -vec[1];
-        far = pt - offset + vec.normalize() * d;
+        far = pt - offset + vec.normalize() * ray_length;
 
         //count the number of intersection
         bool degenerate = false; //flag raised if degenerate intersection is found.
@@ -778,14 +780,14 @@ bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
             {
                 ply_vertex * next = ptr->getNext();
                 double x[2];
-                Point2d c = ptr->getPos() - offset;
-                Point2d d = next->getPos() - offset;
+                Point2d edge_start = ptr->getPos() - offset;
+                Point2d edge_end = next->getPos() - offset;
 
-                char r = SegSegInt(near.get(), far.get(), c.get(), d.get(), x);
+                char code = SegSegInt(near.get(), far.get(), edge_start.get(), edge_end.get(), x);
 
-                if (r == '1')
+                if (code == '1')
                     int_count++;
-                else if (r != '0')
+                else if (code != '0')
                 {
                     degenerate = true;
                     break;
@@ -853,14 +855,14 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & plygon,
     }
 }
 
-//check if b1 and b2 are neighbors that sharing a same edge/face, return -1 if nor neighbors
-int GridIntersection::checkNeighbor(Box * b1, Box * b2)
+//the side of box that other shares an edge with, or -1 if they are not neighbors
+int GridIntersection::checkNeighbor(Box * box, Box * other)
 {
     for (int i = 0; i < 4; i++)
     {
-        list<Box *> bl;
-        b1->getNeighbors(bl, i);
-        if (std::find(bl.begin(), bl.end(), b2) != bl.end()) return i;
+        list<Box *> neighbors;
+        box->getNeighbors(neighbors, i);
+        if (std::find(neighbors.begin(), neighbors.end(), other) != neighbors.end()) return i;
     }
 
     return -1;
@@ -869,41 +871,41 @@ int GridIntersection::checkNeighbor(Box * b1, Box * b2)
 //check box edge collinearly intersect with line
 bool GridIntersection::checkEdgeCollinear(Box * box, int dir, const LineSeg2d & line)
 {
-    double a[2], b[2];
-    double c[2] = {line.pt[0][0], line.pt[0][1]};
-    double d[2] = {line.pt[1][0], line.pt[1][1]};
+    double edge_start[2], edge_end[2];
+    double line_start[2] = {line.pt[0][0], line.pt[0][1]};
+    double line_end[2] = {line.pt[1][0], line.pt[1][1]};
     double p[2];
     if (dir == 0)
     {
-        a[0] = box->x - box->dx / 2;
-        b[0] = box->x + box->dx / 2;
-        a[1] = box->y + box->dy / 2;
-        b[1] = box->y + box->dy / 2;
+        edge_start[0] = box->x - box->dx / 2;
+        edge_end[0] = box->x + box->dx / 2;
+        edge_start[1] = box->y + box->dy / 2;
+        edge_end[1] = box->y + box->dy / 2;
     }
     else if (dir == 1)
     {
-        a[0] = box->x + box->dx / 2;
-        b[0] = box->x + box->dx / 2;
-        a[1] = box->y + box->dy / 2;
-        b[1] = box->y - box->dy / 2;
+        edge_start[0] = box->x + box->dx / 2;
+        edge_end[0] = box->x + box->dx / 2;
+        edge_start[1] = box->y + box->dy / 2;
+        edge_end[1] = box->y - box->dy / 2;
     }
     else if (dir == 2)
     {
-        a[0] = box->x + box->dx / 2;
-        b[0] = box->x - box->dx / 2;
-        a[1] = box->y - box->dy / 2;
-        b[1] = box->y - box->dy / 2;
+        edge_start[0] = box->x + box->dx / 2;
+        edge_end[0] = box->x - box->dx / 2;
+        edge_start[1] = box->y - box->dy / 2;
+        edge_end[1] = box->y - box->dy / 2;
     }
     else
     {
         assert(dir == 3);
-        a[0] = box->x - box->dx / 2;
-        b[0] = box->x - box->dx / 2;
-        a[1] = box->y + box->dy / 2;
-        b[1] = box->y - box->dy / 2;
+        edge_start[0] = box->x - box->dx / 2;
+        edge_end[0] = box->x - box->dx / 2;
+        edge_start[1] = box->y + box->dy / 2;
+        edge_end[1] = box->y - box->dy / 2;
     }
     //check collinear
-    if (SegSegInt(a, b, c, d, p) == 'e') return true;
+    if (SegSegInt(edge_start, edge_end, line_start, line_end, p) == 'e') return true;
 
     return false;
 }

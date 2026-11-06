@@ -57,7 +57,7 @@ public:
     unsigned int getnrows() { return nrows; }
 
     //check if the given value is valid or not
-    bool isvalid(double v) { return v != nodata_value; }
+    bool isvalid(double value) { return value != nodata_value; }
 
     //given a 2d point (x,y) returns the index of the point
     virtual Index2d getIndex(double x, double y) = 0;
@@ -86,11 +86,11 @@ protected:
 class mf_ascii_grid : public ascii_grid
 {
 public:
-    mf_ascii_grid(ModflowGrid * mfg, double * v, unsigned int col, unsigned int row,
+    mf_ascii_grid(ModflowGrid * mfg, double * grid_values, unsigned int col, unsigned int row,
                   double nodata = -9999)
         : ascii_grid()
     {
-        values = v;
+        values = grid_values;
         ncols = col;
         nrows = row;
         nodata_value = nodata;
@@ -150,11 +150,11 @@ public:
 
         cout << "    * Read surface elevation from file: " << filename << endl;
 
-        bool r = build(fin);
+        bool built = build(fin);
 
         fin.close();
 
-        return r;
+        return built;
     }
 
     bool build(istream & out);

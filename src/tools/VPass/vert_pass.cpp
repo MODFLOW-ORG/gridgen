@@ -4,15 +4,15 @@
 void determineArea(VPassBox & vpb)
 {
     double area = (double)(FLT_MAX);
-    double r = fabs(vpb.bSrc->dx * vpb.bSrc->dy);
-    if (r < area) area = r;
+    double cell_area = fabs(vpb.bSrc->dx * vpb.bSrc->dy);
+    if (cell_area < area) area = cell_area;
 
-    r = fabs(vpb.bDst->dx * vpb.bDst->dy);
-    if (r < area) area = r;
+    cell_area = fabs(vpb.bDst->dx * vpb.bDst->dy);
+    if (cell_area < area) area = cell_area;
     for (auto tb : vpb.bPssList)
     {
-        r = fabs(tb->dx * tb->dy);
-        if (r < area) area = r;
+        cell_area = fabs(tb->dx * tb->dy);
+        if (cell_area < area) area = cell_area;
     }
     vpb.area = area;
 }
@@ -82,14 +82,14 @@ void getVPT(Box * b, vector<VPTPair> & vpts, bool topToDown)
     boxVPConnection(b, vpbs, topToDown);
     for (vector<VPassBox>::iterator vit = vpbs.begin(); vit != vpbs.end(); ++vit)
     {
-        Box * b1 = vit->bSrc;
-        Box * b2 = vit->bDst;
+        Box * source = vit->bSrc;
+        Box * destination = vit->bDst;
 
         vector<VPassBox>::iterator jit = vit;
         ++jit;
         for (; jit != vpbs.end();)
         {
-            if (b1 == jit->bSrc && b2 == jit->bDst)
+            if (source == jit->bSrc && destination == jit->bDst)
             {
                 vit->area += jit->area;
                 jit = vpbs.erase(jit);

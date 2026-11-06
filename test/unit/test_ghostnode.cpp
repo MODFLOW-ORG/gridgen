@@ -36,15 +36,15 @@ TEST(GhostNode, RefinedCenterCell)
     for (const GhostNode & gn : gns)
     {
         // n is the coarse cell, m the connected fine cell
-        EXPECT_EQ(csr.area[gn.nNum], 10000.0);
-        EXPECT_EQ(csr.area[gn.mNum], 2500.0);
-        EXPECT_TRUE(connected.count(std::make_pair((int)gn.nNum, (int)gn.mNum)));
-        EXPECT_TRUE(connected.count(std::make_pair((int)gn.nNum, (int)gn.j1)));
-        EXPECT_TRUE(connected.count(std::make_pair((int)gn.nNum, (int)gn.j2)));
+        EXPECT_EQ(csr.area[gn.large_node], 10000.0);
+        EXPECT_EQ(csr.area[gn.small_node], 2500.0);
+        EXPECT_TRUE(connected.count(std::make_pair((int)gn.large_node, (int)gn.small_node)));
+        EXPECT_TRUE(connected.count(std::make_pair((int)gn.large_node, (int)gn.j1)));
+        EXPECT_TRUE(connected.count(std::make_pair((int)gn.large_node, (int)gn.j2)));
 
         // characterizes the current weights (half the offset of m from n over
         // the n-j distance), which #42 reviews
-        EXPECT_DOUBLE_EQ(gn.apha1, 0.125);
-        EXPECT_DOUBLE_EQ(gn.apha2, 0.125);
+        EXPECT_DOUBLE_EQ(gn.alpha1, 0.125);
+        EXPECT_DOUBLE_EQ(gn.alpha2, 0.125);
     }
 }
