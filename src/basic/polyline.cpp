@@ -30,7 +30,7 @@ void c_plyline::beginPoly()
     all.clear();
 }
 
-// Add a vertex to the polygonal chian
+// Add a vertex to the polygonal chain
 void c_plyline::addVertex(double x, double y, bool remove_duplicate)
 {
     Point2d pt(x, y);

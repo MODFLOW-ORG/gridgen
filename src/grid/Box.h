@@ -24,7 +24,7 @@
 
 using namespace std;
 
-#define INEPSION 1e-10
+#define INEPSILON 1e-10
 
 #include <Point.h>
 #include <Vector.h>
@@ -189,22 +189,22 @@ public:
     /// Check if a given point (qx,qy) is contained in this box
     bool in(double qx, double qy)
     {
-        if (dx > 0 && (qx < x - dx / 2 - INEPSION || qx > x + dx / 2 + INEPSION)) return false;
-        if (dx < 0 && (qx < x + dx / 2 - INEPSION || qx > x - dx / 2 + INEPSION)) return false;
-        if (dy > 0 && (qy < y - dy / 2 - INEPSION || qy > y + dy / 2 + INEPSION)) return false;
-        if (dy < 0 && (qy < y + dy / 2 - INEPSION || qy > y - dy / 2 + INEPSION)) return false;
+        if (dx > 0 && (qx < x - dx / 2 - INEPSILON || qx > x + dx / 2 + INEPSILON)) return false;
+        if (dx < 0 && (qx < x + dx / 2 - INEPSILON || qx > x - dx / 2 + INEPSILON)) return false;
+        if (dy > 0 && (qy < y - dy / 2 - INEPSILON || qy > y + dy / 2 + INEPSILON)) return false;
+        if (dy < 0 && (qy < y + dy / 2 - INEPSILON || qy > y - dy / 2 + INEPSILON)) return false;
         return true;
     }
 
     //Given the point is in box, test whether the point is on the boundaries of the box
     bool onBound(double qx, double qy)
     {
-        if (fabs(qx - (x - dx / 2)) < INEPSION) return true;
-        if (fabs(qx - (x + dx / 2)) < INEPSION) return true;
-        if (fabs(qy - (y + dy / 2)) < INEPSION) return true;
-        if (fabs(qy - (y - dy / 2)) < INEPSION) return true;
+        if (fabs(qx - (x - dx / 2)) < INEPSILON) return true;
+        if (fabs(qx - (x + dx / 2)) < INEPSILON) return true;
+        if (fabs(qy - (y + dy / 2)) < INEPSILON) return true;
+        if (fabs(qy - (y - dy / 2)) < INEPSILON) return true;
         return false;
-        //if((fabs(qx - dx/2) < INEPSION) || (fabs(qx)
+        //if((fabs(qx - dx/2) < INEPSILON) || (fabs(qx)
     }
 
     /// find a leaf box containing a given point (qx,qy)

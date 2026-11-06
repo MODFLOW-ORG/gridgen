@@ -170,9 +170,9 @@ double getRotAngle(Vector2d & v1, Vector2d & v2)
     Vector2d dir1 = v1.normalize();
     Vector2d dir2 = v2.normalize();
     double dot = (dir1[0] * dir2[0]) + (dir1[1] * dir2[1]);
-    if (fabs(dot - 1.0) <= EPSION)
+    if (fabs(dot - 1.0) <= EPSILON)
         return 0;
-    else if (fabs(dot + 1.0) <= EPSION)
+    else if (fabs(dot + 1.0) <= EPSILON)
         return PI;
     else
     {
@@ -439,8 +439,8 @@ bool touchesKeptSide(VNode * v)
 }
 
 //set intersection
-int BoxPlyClip::setIntesection(VNode * start_vertex, double line_coordinate, bool isX,
-                               bool isBigger, vector<VNode *> & line_vertices)
+int BoxPlyClip::setIntersection(VNode * start_vertex, double line_coordinate, bool isX,
+                                bool isBigger, vector<VNode *> & line_vertices)
 {
     double xmin = 0, ymin = 0, xmax = 0, ymax = 0;
     getXYBound(start_vertex, xmin, xmax, ymin, ymax);
@@ -913,7 +913,7 @@ void BoxPlyClip::clip(double line_coordinate, bool isX, bool isBigger, list<BoxP
     //set intersections for holes
     for (auto ply : plys)
     {
-        int line_vertex_count = setIntesection(ply, line_coordinate, isX, isBigger, line_vertices);
+        int line_vertex_count = setIntersection(ply, line_coordinate, isX, isBigger, line_vertices);
         line_vertex_counts.push_back(line_vertex_count);
     }
 
@@ -933,19 +933,20 @@ void BoxPlyClip::clip(double line_coordinate, bool isX, bool isBigger, list<BoxP
         {
             if ((*pit)->isScanPoint)
             {
-                VNode *vn1 = nullptr, *vn2 = nullptr, *vnprev1 = nullptr, *vnprev2 = nullptr;
-                getFeasiblePreNext(*pit, vn1, vn2, vnprev1, vnprev2);
-                if (!vnprev1->isInDirect || !vnprev2->isInDirect) continue;
+                VNode *prev_vertex = nullptr, *next_vertex = nullptr, *prev_adjacent = nullptr,
+                      *next_adjacent = nullptr;
+                getFeasiblePreNext(*pit, prev_vertex, next_vertex, prev_adjacent, next_adjacent);
+                if (!prev_adjacent->isInDirect || !next_adjacent->isInDirect) continue;
             }
 
             bool haveAdded = false;
             VNode * new_vertex = *pit;
             c_ply nply(c_ply::PIN);
             convertClipToPly(new_vertex, nply);
-            const Point2d & ctr = nply.getCenter();
+            const Point2d & center = nply.getCenter();
             for (auto & clip_part : clips)
             {
-                if (ClipPlyEnclose(clip_part->first, ctr))
+                if (ClipPlyEnclose(clip_part->first, center))
                 {
                     clip_part->plys.push_back(copyOnePly(new_vertex));
                     haveAdded = true;

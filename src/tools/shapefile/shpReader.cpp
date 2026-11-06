@@ -209,7 +209,7 @@ bool ShapeReader::read(const string & filename)
         warn(to_string(nunsupported) + " of the " + to_string(nEntities) + " shapes in shapefile " +
              filename + " have no geometry or a type that is not supported, and are ignored.");
 
-    //done readh shp file
+    //done reading the shp file
 
     //
     //reading from database now.
@@ -235,18 +235,18 @@ static bool onSegment(const Point2d & p, const Point2d & a, const Point2d & b)
 //or edge midpoint of a that is not on b decides, since a may touch b
 static bool ringInRing(const vector<Point2d> & a, const vector<Point2d> & b)
 {
-    size_t na = a.size(), nb = b.size();
-    for (size_t j = 0; j < 2 * na; j++)
+    size_t size_a = a.size(), size_b = b.size();
+    for (size_t j = 0; j < 2 * size_a; j++)
     {
         const Point2d & v = a[j / 2];
         Point2d p = (j % 2 == 0) ? v
-                                 : Point2d((v[0] + a[(j / 2 + 1) % na][0]) / 2,
-                                           (v[1] + a[(j / 2 + 1) % na][1]) / 2);
+                                 : Point2d((v[0] + a[(j / 2 + 1) % size_a][0]) / 2,
+                                           (v[1] + a[(j / 2 + 1) % size_a][1]) / 2);
         bool on_b = false, inside = false;
-        for (size_t k = 0; k < nb && !on_b; k++)
+        for (size_t k = 0; k < size_b && !on_b; k++)
         {
             const Point2d & b0 = b[k];
-            const Point2d & b1 = b[(k + 1) % nb];
+            const Point2d & b1 = b[(k + 1) % size_b];
             on_b = onSegment(p, b0, b1);
             if (CrossesRay(b0.get(), b1.get(), p.get())) inside = !inside;
         }

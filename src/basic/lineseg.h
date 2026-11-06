@@ -6,8 +6,8 @@
 */
 
 #pragma once
-#ifndef _CUSG_LIENSEG_H_
-#define _CUSG_LIENSEG_H_
+#ifndef _CUSG_LINESEG_H_
+#define _CUSG_LINESEG_H_
 
 #include "Point.h"
 
@@ -81,4 +81,4 @@ public:
 
 } //namespace cusg
 
-#endif //_CUSG_LIENSEG_H_
+#endif //_CUSG_LINESEG_H_

@@ -73,7 +73,7 @@ inline int round(REAL v)
 #if defined(_WIN32) || defined(_WIN64)
 
 ////////////////////////////////////////////////////////////////////////////////////////
-// Following functions define M_PI and drand48, which are not starndard c library and
+// Following functions define M_PI and drand48, which are not standard c library and
 // definitions. In addition, rint used to round off float points to int is also here.
 /////////////////////////////////////////////////////////////////////////////////////////
 

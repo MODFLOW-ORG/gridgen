@@ -826,17 +826,17 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & polygon,
         ply_clip = convertCPolygonToClip(polygon);
     }
 
-    list<BoxPlyClip *> cres;
-    ply_clip->clip(xmin, xmax, ymin, ymax, cres);
+    list<BoxPlyClip *> clips;
+    ply_clip->clip(xmin, xmax, ymin, ymax, clips);
 
-    for (auto & cre : cres)
+    for (auto & clip_part : clips)
     {
         GIS_polygon * npolygons = new GIS_polygon();
-        convertClipToPolygon(cre, npolygons);
+        convertClipToPolygon(clip_part, npolygons);
         result_polygons.push_back(npolygons);
 
-        cre->destroy();
-        delete cre;
+        clip_part->destroy();
+        delete clip_part;
     }
 
     ply_clip->resetStatus();

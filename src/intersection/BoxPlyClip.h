@@ -6,7 +6,7 @@
 
 using namespace std;
 
-#define EPSION 0.0001
+#define EPSILON 0.0001
 #define SMALLCOORDINATE 1e-8
 #define SMALLAREA 1e-7
 
@@ -107,8 +107,8 @@ public:
     void clip(double xmin, double xmax, double ymin, double ymax, list<BoxPlyClip *> & clips);
 
     //set intersection based on the scanning line
-    int setIntesection(VNode * start_vertex, double line_coordinate, bool isX, bool isBigger,
-                       vector<VNode *> & line_vertices);
+    int setIntersection(VNode * start_vertex, double line_coordinate, bool isX, bool isBigger,
+                        vector<VNode *> & line_vertices);
 
     //collect
     void collectPolygonsInInterval(bool isX, bool isBigger, vector<VNode *> & line_vertices,

@@ -409,7 +409,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             }
 
             //part number
-            int startPartIDAcumulate = 0;
+            int part_start = 0;
             vector<int> parts(partSize, 0);
             int * nParts = parts.data();
             int k = 0, vid = 0;
@@ -417,8 +417,8 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                  lit != orderedPItrs.end(); ++lit, k++)
             {
                 c_polygon::iterator & plyit = *lit;
-                nParts[k] = startPartIDAcumulate;
-                startPartIDAcumulate += plyit->getSize() + 1;
+                nParts[k] = part_start;
+                part_start += plyit->getSize() + 1;
 
                 // the shapefile specification orders the outer ring clockwise
                 // and holes counterclockwise

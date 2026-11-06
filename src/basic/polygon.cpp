@@ -92,7 +92,7 @@ void c_ply::beginPoly()
     all.clear();
 }
 
-// Add a vertex to the polygonal chian
+// Add a vertex to the polygonal chain
 void c_ply::addVertex(double x, double y, bool remove_duplicate)
 {
     Point2d pt(x, y);
@@ -382,13 +382,13 @@ istream & operator>>(istream & is, c_plylist & p)
     //remove header comments
     do
     {
-        char tmp[1024];
+        char line[1024];
         char c = is.peek();
         if (isspace(c))
             is.get(c); //eat it
         else if (c == '#')
         {
-            is.getline(tmp, 1024);
+            is.getline(line, 1024);
         }
         else
             break;

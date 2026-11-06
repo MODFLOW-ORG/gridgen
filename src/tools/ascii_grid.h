@@ -23,7 +23,7 @@ struct ascii_grid_cell
     double x, y, dx, dy;
 };
 
-///bare bone of ascci grid
+///bare bones of an ASCII grid
 class ascii_grid
 {
 public:

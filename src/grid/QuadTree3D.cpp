@@ -331,25 +331,25 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
 //	do
 //	{
 
-bool isReallyIntersect(BoxPlyClip * bpc, Box * b)
+bool isReallyIntersect(BoxPlyClip * ply_clip, Box * b)
 {
     double xmin = min(b->x - b->dx / 2, b->x + b->dx / 2);
     double xmax = max(b->x - b->dx / 2, b->x + b->dx / 2);
     double ymin = min(b->y - b->dy / 2, b->y + b->dy / 2);
     double ymax = max(b->y - b->dy / 2, b->y + b->dy / 2);
 
-    list<BoxPlyClip *> cres;
-    bpc->clip(xmin, xmax, ymin, ymax, cres);
+    list<BoxPlyClip *> clips;
+    ply_clip->clip(xmin, xmax, ymin, ymax, clips);
 
     double area(0.0);
-    for (auto & cre : cres)
+    for (auto & clip_part : clips)
     {
-        GIS_polygon nplygon;
-        convertClipToPolygon(cre, &nplygon);
-        area += nplygon.getArea();
+        GIS_polygon clipped_polygon;
+        convertClipToPolygon(clip_part, &clipped_polygon);
+        area += clipped_polygon.getArea();
 
-        nplygon.destroy();
-        delete cre;
+        clipped_polygon.destroy();
+        delete clip_part;
     }
 
     if (area >= 1e-7)
@@ -360,13 +360,13 @@ bool isReallyIntersect(BoxPlyClip * bpc, Box * b)
 
 bool isReallyIntersect(c_polygon & pgon, Box * b)
 {
-    BoxPlyClip * bpc = convertSimplePolygonToClip(pgon);
+    BoxPlyClip * ply_clip = convertSimplePolygonToClip(pgon);
 
-    bool r = isReallyIntersect(bpc, b);
+    bool intersects = isReallyIntersect(ply_clip, b);
 
-    bpc->destroy();
-    delete bpc;
-    return r;
+    ply_clip->destroy();
+    delete ply_clip;
+    return intersects;
 }
 
 //refine cells enclosed by pgon
@@ -1280,9 +1280,9 @@ void QuadTree3D::saveGhostNode(string filePath)
     if (m_gns.size() == 0)
     {
         //computed in full before it is kept, so an error leaves no partial list
-        vector<GhostNode> gns;
-        computeGNC(this, gns);
-        m_gns.swap(gns);
+        vector<GhostNode> ghost_nodes;
+        computeGNC(this, ghost_nodes);
+        m_gns.swap(ghost_nodes);
     }
 
     writeGhostNode(filePath, m_gns, ((this->one_based_node_numbering) ? 1 : 0));

@@ -89,14 +89,14 @@ protected:
                 }
             }
 
-            char tmp[1024];
+            char line[1024];
             ifstream fin(filePath.c_str());
             if (!fin.good()) throw GridgenError("cannot open array file " + filePath);
 
             T * A = new T[size];
             if (fin.peek() == '#')
             {
-                fin.getline(tmp, 1024);
+                fin.getline(line, 1024);
             }
             for (int i = 0; i < size; i++) fin >> A[i];
             if (fin.fail())

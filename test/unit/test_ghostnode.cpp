@@ -29,22 +29,25 @@ TEST(GhostNode, RefinedCenterCell)
         }
     }
 
-    std::vector<GhostNode> gns;
-    computeGNC(qtree.get(), gns);
-    ASSERT_EQ(gns.size(), 8u);
+    std::vector<GhostNode> ghost_nodes;
+    computeGNC(qtree.get(), ghost_nodes);
+    ASSERT_EQ(ghost_nodes.size(), 8u);
 
-    for (const GhostNode & gn : gns)
+    for (const GhostNode & ghost_node : ghost_nodes)
     {
         // n is the coarse cell, m the connected fine cell
-        EXPECT_EQ(csr.area[gn.large_node], 10000.0);
-        EXPECT_EQ(csr.area[gn.small_node], 2500.0);
-        EXPECT_TRUE(connected.count(std::make_pair((int)gn.large_node, (int)gn.small_node)));
-        EXPECT_TRUE(connected.count(std::make_pair((int)gn.large_node, (int)gn.j1)));
-        EXPECT_TRUE(connected.count(std::make_pair((int)gn.large_node, (int)gn.j2)));
+        EXPECT_EQ(csr.area[ghost_node.large_node], 10000.0);
+        EXPECT_EQ(csr.area[ghost_node.small_node], 2500.0);
+        EXPECT_TRUE(connected.count(
+            std::make_pair((int)ghost_node.large_node, (int)ghost_node.small_node)));
+        EXPECT_TRUE(
+            connected.count(std::make_pair((int)ghost_node.large_node, (int)ghost_node.j1)));
+        EXPECT_TRUE(
+            connected.count(std::make_pair((int)ghost_node.large_node, (int)ghost_node.j2)));
 
         // characterizes the current weights (half the offset of m from n over
         // the n-j distance), which #42 reviews
-        EXPECT_DOUBLE_EQ(gn.alpha1, 0.125);
-        EXPECT_DOUBLE_EQ(gn.alpha2, 0.125);
+        EXPECT_DOUBLE_EQ(ghost_node.alpha1, 0.125);
+        EXPECT_DOUBLE_EQ(ghost_node.alpha2, 0.125);
     }
 }

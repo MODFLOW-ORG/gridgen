@@ -25,7 +25,7 @@ public:
     void build(QuadTree3D * qtree, quadtree_builder_raw_data & rawdata);
 
 protected:
-    ///analyze the thinkness of the top and bottom elevations
+    ///analyze the thickness of the top and bottom elevations
     void analyze_elevation(QuadTree3D * qtree, double * top_elev, double * bot_elev);
 };
 

@@ -103,7 +103,7 @@ public:
 protected:
     vector<unique_ptr<Box>> owned_boxes; //the boxes added to this group
 
-    int total_leaf_number;  //number of leaves store in this group (totoal number of leaves)
+    int total_leaf_number;  //number of leaves store in this group (total number of leaves)
     int active_leaf_number; //number of leaves store in this group (active nodes only)
 
     /*!

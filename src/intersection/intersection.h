@@ -644,7 +644,7 @@ template <class real>
 char SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2], real p[2])
 {
     real s, t;                // The two parameters of the parametric eqns.
-    real num_s, num_t, denom; // Numerator and denoninator of equations.
+    real num_s, num_t, denom; // Numerator and denominator of equations.
     char code = '?';          // Return char characterizing intersection.
 
     const real small_number = SMALLNUMBER;

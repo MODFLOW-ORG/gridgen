@@ -12,7 +12,7 @@
 #include "ModflowGrid2D.h"
 #include "GridgenError.h"
 #include <climits>
-#define IndexEPSION 1e-10
+#define IndexEPSILON 1e-10
 
 namespace cusg
 {
@@ -221,7 +221,7 @@ Index2d ModflowGrid2D::get_indices(int nodeid)
     return Index2d(i, j);
 }
 
-/// return a box containtain the given id
+/// return the box containing the given id
 Box * ModflowGrid2D::find_nodeobj(int i, int j)
 {
     //get the box
@@ -376,35 +376,35 @@ Index2d ModflowGrid2D::getIndex(const Point2d & pt)
     bool xAsc = delr[0] > 0;
     bool yAsc = delc[0] > 0;
 
-    if (xAsc && (pt[0] < Xe[0] - IndexEPSION || pt[0] > Xe[ncol] + IndexEPSION))
+    if (xAsc && (pt[0] < Xe[0] - IndexEPSILON || pt[0] > Xe[ncol] + IndexEPSILON))
     {
-        if (pt[0] < Xe[0] - IndexEPSION)
+        if (pt[0] < Xe[0] - IndexEPSILON)
             i_x = INT_MIN;
-        else if (pt[0] > Xe[ncol] + IndexEPSION)
+        else if (pt[0] > Xe[ncol] + IndexEPSILON)
             i_x = INT_MAX;
         bContain = false;
     }
-    if ((!xAsc) && (pt[0] < Xe[ncol] - IndexEPSION || pt[0] > Xe[0] + IndexEPSION))
+    if ((!xAsc) && (pt[0] < Xe[ncol] - IndexEPSILON || pt[0] > Xe[0] + IndexEPSILON))
     {
-        if (pt[0] > Xe[0] + IndexEPSION)
+        if (pt[0] > Xe[0] + IndexEPSILON)
             i_x = INT_MIN;
-        else if (pt[0] < Xe[ncol] - IndexEPSION)
+        else if (pt[0] < Xe[ncol] - IndexEPSILON)
             i_x = INT_MAX;
         bContain = false;
     }
-    if (yAsc && (pt[1] > Ye[0] + IndexEPSION || pt[1] < Ye[nrow] - IndexEPSION))
+    if (yAsc && (pt[1] > Ye[0] + IndexEPSILON || pt[1] < Ye[nrow] - IndexEPSILON))
     {
-        if (pt[1] > Ye[0] + IndexEPSION)
+        if (pt[1] > Ye[0] + IndexEPSILON)
             i_y = INT_MIN;
-        else if (pt[1] < Ye[nrow] - IndexEPSION)
+        else if (pt[1] < Ye[nrow] - IndexEPSILON)
             i_y = INT_MAX;
         bContain = false;
     }
-    if ((!yAsc) && (pt[1] < Ye[0] - IndexEPSION || pt[1] > Ye[nrow] + IndexEPSION))
+    if ((!yAsc) && (pt[1] < Ye[0] - IndexEPSILON || pt[1] > Ye[nrow] + IndexEPSILON))
     {
-        if (pt[1] < Ye[0] - IndexEPSION)
+        if (pt[1] < Ye[0] - IndexEPSILON)
             i_y = INT_MIN;
-        else if (pt[1] > Ye[nrow] + IndexEPSION)
+        else if (pt[1] > Ye[nrow] + IndexEPSILON)
             i_y = INT_MAX;
         bContain = false;
     }
