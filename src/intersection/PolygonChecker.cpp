@@ -48,10 +48,10 @@ bool checkHole(GIS_polygon & polygon, vector<GIS_polygon *> & polygons)
     vector<PlyAreaPair> rings_by_area;
     for (auto & ply : polygon)
     {
-        PlyAreaPair pap;
-        pap.ply = &ply;
-        pap.area = fabs(ply.getArea());
-        rings_by_area.push_back(pap);
+        PlyAreaPair entry;
+        entry.ply = &ply;
+        entry.area = fabs(ply.getArea());
+        rings_by_area.push_back(entry);
     }
     //sort the ply based on the area descendingly
     sort(rings_by_area.begin(), rings_by_area.end(), compPlyAreaGreater);
@@ -65,29 +65,29 @@ bool checkHole(GIS_polygon & polygon, vector<GIS_polygon *> & polygons)
 
     polygons.push_back(outer_polygon);
 
-    vector<PlyAreaPair>::iterator pit = rings_by_area.begin();
-    ++pit;
-    for (; pit != rings_by_area.end(); ++pit)
+    vector<PlyAreaPair>::iterator entry_it = rings_by_area.begin();
+    ++entry_it;
+    for (; entry_it != rings_by_area.end(); ++entry_it)
     {
-        PlyAreaPair & pap = *pit;
-        const Point2d & point = pap.ply->getCenter();
+        PlyAreaPair & entry = *entry_it;
+        const Point2d & point = entry.ply->getCenter();
         if (CPlyEnclose(*(rings_by_area.front().ply), point))
         {
-            pap.ply->set(c_ply::PIN, pap.ply->getHead());
-            outer_polygon->push_back(*(pap.ply));
+            entry.ply->set(c_ply::PIN, entry.ply->getHead());
+            outer_polygon->push_back(*(entry.ply));
         }
         else
         {
             all_in_first = false;
             bool enclosed = false;
-            const Point2d & center = pap.ply->getCenter();
+            const Point2d & center = entry.ply->getCenter();
             for (auto & outer : polygons)
             {
                 c_ply & outer_ring = getOutBound(*outer);
                 if (CPlyEnclose(outer_ring, center))
                 {
-                    pap.ply->set(c_ply::PIN, pap.ply->getHead());
-                    outer->push_back(*(pap.ply));
+                    entry.ply->set(c_ply::PIN, entry.ply->getHead());
+                    outer->push_back(*(entry.ply));
                     enclosed = true;
                     break;
                 }
@@ -96,8 +96,8 @@ bool checkHole(GIS_polygon & polygon, vector<GIS_polygon *> & polygons)
             {
                 GIS_polygon * new_polygon = new GIS_polygon();
                 new_polygon->m_id = polygon.m_id;
-                pap.ply->set(c_ply::POUT, pap.ply->getHead());
-                new_polygon->push_back(*(pap.ply));
+                entry.ply->set(c_ply::POUT, entry.ply->getHead());
+                new_polygon->push_back(*(entry.ply));
 
                 polygons.push_back(new_polygon);
             }

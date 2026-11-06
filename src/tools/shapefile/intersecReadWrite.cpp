@@ -84,8 +84,8 @@ void checkShpAttrContain(GridIntersection * grid_intersection, vector<bool> & bI
 }
 void addShpAttrVal(int iShape, GridIntersection * grid_intersection, vector<bool> & bIntFld,
                    vector<bool> & bDBFld, vector<bool> & bStrFld, vector<bool> & bLogFld,
-                   vector<int> & ivals, vector<double> & dvals, vector<string> & svals,
-                   vector<string> & lvals)
+                   vector<int> & int_values, vector<double> & double_values,
+                   vector<string> & string_values, vector<string> & logical_values)
 {
     vector<ShapeIntField> & m_intFlds = grid_intersection->m_shp_reader.getIntFields();
     vector<ShapeDoubleField> & m_dbFlds = grid_intersection->m_shp_reader.getDBFields();
@@ -95,25 +95,25 @@ void addShpAttrVal(int iShape, GridIntersection * grid_intersection, vector<bool
     for (vector<ShapeIntField>::iterator sit = m_intFlds.begin(); sit != m_intFlds.end();
          ++sit, ++ibit)
     {
-        if (*ibit) ivals.push_back(sit->vals[iShape]);
+        if (*ibit) int_values.push_back(sit->values[iShape]);
     }
     vector<bool>::iterator idit = bDBFld.begin();
     for (vector<ShapeDoubleField>::iterator sit = m_dbFlds.begin(); sit != m_dbFlds.end();
          ++sit, ++idit)
     {
-        if (*idit) dvals.push_back(sit->vals[iShape]);
+        if (*idit) double_values.push_back(sit->values[iShape]);
     }
     vector<bool>::iterator sbit = bStrFld.begin();
     for (vector<ShapeStringField>::iterator sit = m_strFlds.begin(); sit != m_strFlds.end();
          ++sit, ++sbit)
     {
-        if (*sbit) svals.push_back(sit->vals[iShape]);
+        if (*sbit) string_values.push_back(sit->values[iShape]);
     }
     vector<bool>::iterator lbit = bLogFld.begin();
     for (vector<ShapeLogField>::iterator sit = m_logFlds.begin(); sit != m_logFlds.end();
          ++sit, ++lbit)
     {
-        if (*lbit) lvals.push_back(sit->vals[iShape]);
+        if (*lbit) logical_values.push_back(sit->values[iShape]);
     }
 }
 
@@ -341,13 +341,13 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             ply_vertex * pv = lineInfo.m_plyline->getHead();
             x[0] = pv->getPos()[0];
             y[0] = pv->getPos()[1];
-            int idx = 0;
+            int vertex_index = 0;
             do
             {
                 pv = pv->getNext();
-                idx++;
-                x[idx] = pv->getPos()[0];
-                y[idx] = pv->getPos()[1];
+                vertex_index++;
+                x[vertex_index] = pv->getPos()[0];
+                y[vertex_index] = pv->getPos()[1];
             } while (pv != lineInfo.m_plyline->getTail());
 
             SHPObject * shpObj = nullptr;

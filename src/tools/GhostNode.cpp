@@ -40,7 +40,7 @@ void computeGN(Box * small_cell, Box * large_cell, int direction, vector<GhostNo
         {
             throw GridgenError("the node " + to_string(large_cell->id) + " has more than two (" +
                                to_string(neighbors.size()) +
-                               ") neighbor box nodes in direction=" + to_string(direction));
+                               ") neighbor box nodes in dir=" + to_string(direction));
         }
 
         if (neighbors.size() == 1)
@@ -77,7 +77,7 @@ void computeGN(Box * small_cell, Box * large_cell, int direction, vector<GhostNo
         {
             throw GridgenError("the node " + to_string(large_cell->id) + " has more than two (" +
                                to_string(neighbors.size()) +
-                               ") neighbor box nodes in direction=" + to_string(direction));
+                               ") neighbor box nodes in dir=" + to_string(direction));
         }
 
         if (neighbors.size() == 1)

@@ -142,7 +142,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
                     //rotate
                     if (angle != 0) arcs[j].rotate(cx, cy, -angle);
 
-                    int level = (bByAttribute) ? int_fields[field_index].vals[arcs[j].m_id]
+                    int level = (bByAttribute) ? int_fields[field_index].values[arcs[j].m_id]
                                                : refinement->refinement_level;
                     if (!qtree->refine((c_plyline &)arcs[j], level, i)) noutside++;
 
@@ -164,7 +164,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
                     //rotate
                     if (angle != 0) polygons[j].rotate(cx, cy, -angle);
 
-                    int level = (bByAttribute) ? int_fields[field_index].vals[polygons[j].m_id]
+                    int level = (bByAttribute) ? int_fields[field_index].values[polygons[j].m_id]
                                                : refinement->refinement_level;
                     if (!qtree->refine(polygons[j], level, i)) noutside++; //i is the layer
 
@@ -182,7 +182,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
                     //rotate
                     if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
-                    int level = (bByAttribute) ? int_fields[field_index].vals[pts[j].m_id]
+                    int level = (bByAttribute) ? int_fields[field_index].values[pts[j].m_id]
                                                : refinement->refinement_level;
                     if (!qtree->refine(pts[j], level, i)) noutside++;
 

@@ -70,8 +70,8 @@ void writeFeatEntity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<i
     double corner_x[5] = {0}, corner_y[5] = {0}, center_x[1] = {0}, center_y[1] = {0};
     GridVertices gv(grid);
 
-    int n = sort_idx.size(), id;
-    for (int i = 0; i < n; i++)
+    int count = sort_idx.size(), id;
+    for (int i = 0; i < count; i++)
     {
         id = sort_idx[i];
 

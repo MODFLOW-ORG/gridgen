@@ -125,7 +125,7 @@ public:
                        bool isBigger);
 
     void collectSecondPart(vector<VNode *> & line_vertices, int start_index, int end_index,
-                           VNode * start_node, VNode * end_node, bool isNextOrder, int vsize,
+                           VNode * start_node, VNode * end_node, bool forward, int vertex_count,
                            list<BoxPlyClip *> & clip_results, bool isX, bool isBigger,
                            vector<VNode *> & secondHalf);
 

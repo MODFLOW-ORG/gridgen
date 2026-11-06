@@ -652,16 +652,14 @@ int BoxPlyClip::setIntersection(VNode * start_vertex, double line_coordinate, bo
 }
 
 void BoxPlyClip::collectSecondPart(vector<VNode *> & line_vertices, int start_index, int end_index,
-                                   VNode * start_node, VNode * end_node, bool isNextOrder,
-                                   int vsize, list<BoxPlyClip *> & clip_results, bool isX,
+                                   VNode * start_node, VNode * end_node, bool forward,
+                                   int vertex_count, list<BoxPlyClip *> & clip_results, bool isX,
                                    bool isBigger, vector<VNode *> & secondHalf)
 {
-    int startId = start_index;
-    bool forward = isNextOrder;
 
     //collect these vertices
     vector<VNode *> along_vertices;
-    VNode * along_end = collectAlongWay(along_vertices, line_vertices[startId], forward);
+    VNode * along_end = collectAlongWay(along_vertices, line_vertices[start_index], forward);
 
     for (auto vertex : along_vertices)
     {
@@ -672,35 +670,36 @@ void BoxPlyClip::collectSecondPart(vector<VNode *> & line_vertices, int start_in
         }
     }
 
-    int along_end_index = locateVInVector(line_vertices, along_end, startId, vsize);
+    int along_end_index = locateVInVector(line_vertices, along_end, start_index, vertex_count);
     assert(along_end_index != -1);
 
     /**************************************************************/
     //deal with the first part
-    int first_start = startId + 1;
+    int first_start = start_index + 1;
     bool first_forward = false; //decideNextOrderForOut(line_vertices[first_start], isX, isBigger);
-    VNode * start_neighbor = forward ? line_vertices[startId]->prev : line_vertices[startId]->next;
-    if (line_vertices[startId]->isOnline && start_neighbor->isInDirect &&
+    VNode * start_neighbor =
+        forward ? line_vertices[start_index]->prev : line_vertices[start_index]->next;
+    if (line_vertices[start_index]->isOnline && start_neighbor->isInDirect &&
         (!start_neighbor->isVisited))
     {
-        first_start = startId;
+        first_start = start_index;
         first_forward = !forward;
     }
-    if (first_start != startId && first_start < along_end_index)
+    if (first_start != start_index && first_start < along_end_index)
         first_forward = decideNextOrderForOut(line_vertices[first_start], isX, isBigger);
 
     int first_end = along_end_index - 1;
-    VNode * end_neighbor =
+    VNode * after_end_first =
         forward ? line_vertices[along_end_index]->next : line_vertices[along_end_index]->prev;
-    if (line_vertices[along_end_index]->isOnline && end_neighbor->isInDirect &&
-        (!end_neighbor->isVisited))
+    if (line_vertices[along_end_index]->isOnline && after_end_first->isInDirect &&
+        (!after_end_first->isVisited))
     {
         bool end_forward = decideNextOrderForHole(
             line_vertices[along_end_index], isX,
             isBigger); // !(decideNextOrderForOut(line_vertices[along_end_index], isX, isBigger));
-        VNode * enext = end_forward ? line_vertices[along_end_index]->next
-                                    : line_vertices[along_end_index]->prev;
-        if (enext->isVisited)
+        VNode * hole_next = end_forward ? line_vertices[along_end_index]->next
+                                        : line_vertices[along_end_index]->prev;
+        if (hole_next->isVisited)
         {
             first_end = along_end_index;
         }
@@ -720,17 +719,17 @@ void BoxPlyClip::collectSecondPart(vector<VNode *> & line_vertices, int start_in
     int second_start = along_end_index + 1;
     bool second_forward =
         false; //decideNextOrderForOut(line_vertices[second_start], isX, isBigger);
-    VNode * end_onward =
+    VNode * after_end_second =
         forward ? line_vertices[along_end_index]->next : line_vertices[along_end_index]->prev;
-    if (line_vertices[along_end_index]->isOnline && end_onward->isInDirect &&
-        (!end_onward->isVisited))
+    if (line_vertices[along_end_index]->isOnline && after_end_second->isInDirect &&
+        (!after_end_second->isVisited))
     {
         bool end_forward = decideNextOrderForHole(
             line_vertices[along_end_index], isX,
             isBigger); //!(decideNextOrderForOut(line_vertices[along_end_index], isX, isBigger));
-        VNode * snext = end_forward ? line_vertices[along_end_index]->next
-                                    : line_vertices[along_end_index]->prev;
-        if (!snext->isVisited)
+        VNode * hole_next = end_forward ? line_vertices[along_end_index]->next
+                                        : line_vertices[along_end_index]->prev;
+        if (!hole_next->isVisited)
         {
             second_start = along_end_index;
             second_forward = forward;
@@ -745,7 +744,8 @@ void BoxPlyClip::collectSecondPart(vector<VNode *> & line_vertices, int start_in
     if (second_start < end_index)
     {
         collectSecondPart(line_vertices, second_start, end_index, line_vertices[second_start],
-                          end_node, second_forward, vsize, clip_results, isX, isBigger, secondHalf);
+                          end_node, second_forward, vertex_count, clip_results, isX, isBigger,
+                          secondHalf);
     }
     //end of second part
     /*********************************************************************************************/

@@ -723,13 +723,13 @@ struct VTK_V
 {
     VTK_V()
     {
-        num = -1;
+        number = -1;
         for (auto & i : box) i = nullptr;
     }
 
     Point3d pos;
     Box * box[8];
-    int num;
+    int number;
 };
 
 /*		3
@@ -1108,7 +1108,7 @@ void determineVtoBox(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *
 void number_share_vtk_v(QuadTree3D * qtree, vector<VTK_V *> & vdata, VTK_Box * boxdata,
                         vector<VTK_V *> & vtk_vertices)
 {
-    int num = 0;
+    int next_number = 0;
     int bsize = qtree->nodegroup.size();
 
     for (int i = 0; i < bsize; i++)
@@ -1118,24 +1118,24 @@ void number_share_vtk_v(QuadTree3D * qtree, vector<VTK_V *> & vdata, VTK_Box * b
         VTK_Box & vtk_box = boxdata[b->id];
         for (int k = 0; k < 2; k++)
         {
-            if (vtk_box.e[0 + 4 * k]->v[0]->num == -1)
+            if (vtk_box.e[0 + 4 * k]->v[0]->number == -1)
             {
-                vtk_box.e[0 + 4 * k]->v[0]->num = num++;
+                vtk_box.e[0 + 4 * k]->v[0]->number = next_number++;
                 vtk_vertices.push_back(vtk_box.e[0 + 4 * k]->v[0]);
             }
-            if (vtk_box.e[0 + 4 * k]->v[1]->num == -1)
+            if (vtk_box.e[0 + 4 * k]->v[1]->number == -1)
             {
-                vtk_box.e[0 + 4 * k]->v[1]->num = num++;
+                vtk_box.e[0 + 4 * k]->v[1]->number = next_number++;
                 vtk_vertices.push_back(vtk_box.e[0 + 4 * k]->v[1]);
             }
-            if (vtk_box.e[2 + 4 * k]->v[0]->num == -1)
+            if (vtk_box.e[2 + 4 * k]->v[0]->number == -1)
             {
-                vtk_box.e[2 + 4 * k]->v[0]->num = num++;
+                vtk_box.e[2 + 4 * k]->v[0]->number = next_number++;
                 vtk_vertices.push_back(vtk_box.e[2 + 4 * k]->v[0]);
             }
-            if (vtk_box.e[2 + 4 * k]->v[1]->num == -1)
+            if (vtk_box.e[2 + 4 * k]->v[1]->number == -1)
             {
-                vtk_box.e[2 + 4 * k]->v[1]->num = num++;
+                vtk_box.e[2 + 4 * k]->v[1]->number = next_number++;
                 vtk_vertices.push_back(vtk_box.e[2 + 4 * k]->v[1]);
             }
         }
@@ -1292,9 +1292,9 @@ void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * int_va
         vids[6] = vtk_box.e[5]->v[1];
         vids[7] = vtk_box.e[6]->v[0];
 
-        ofile << vids[0]->num << "\t" << vids[1]->num << "\t" << vids[3]->num << "\t"
-              << vids[2]->num << "\t" << vids[4]->num << "\t" << vids[5]->num << "\t"
-              << vids[7]->num << "\t" << vids[6]->num << "\n";
+        ofile << vids[0]->number << "\t" << vids[1]->number << "\t" << vids[3]->number << "\t"
+              << vids[2]->number << "\t" << vids[4]->number << "\t" << vids[5]->number << "\t"
+              << vids[7]->number << "\t" << vids[6]->number << "\n";
 
         rid++;
         if (rid % 5000 == 0) ofile.flush();

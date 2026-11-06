@@ -35,20 +35,21 @@ bool ShapeReader::readAttributes(DBFHandle & dbfHandle, int iShape)
 {
     for (auto & field : m_intFlds)
     {
-        field.vals.insert(make_pair(iShape, DBFReadIntegerAttribute(dbfHandle, iShape, field.id)));
+        field.values.insert(
+            make_pair(iShape, DBFReadIntegerAttribute(dbfHandle, iShape, field.id)));
     }
     for (auto & field : m_dbFlds)
     {
-        field.vals.insert(make_pair(iShape, DBFReadDoubleAttribute(dbfHandle, iShape, field.id)));
+        field.values.insert(make_pair(iShape, DBFReadDoubleAttribute(dbfHandle, iShape, field.id)));
     }
     for (auto & field : m_strFlds)
     {
-        field.vals.insert(
+        field.values.insert(
             make_pair(iShape, string(DBFReadStringAttribute(dbfHandle, iShape, field.id))));
     }
     for (auto & field : m_logFlds)
     {
-        field.vals.insert(
+        field.values.insert(
             make_pair(iShape, string(DBFReadLogicalAttribute(dbfHandle, iShape, field.id))));
     }
     return true;

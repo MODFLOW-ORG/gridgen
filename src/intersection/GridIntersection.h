@@ -417,8 +417,8 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply, list<Box *> & bd_i
                 Box * neighbor = *n;
 
                 if (visited.find(neighbor) != visited.end()) continue; //visited
-                Point2d b_o(neighbor->x, neighbor->y);                 //center of the box
-                if (intersect(b_o, ply)) //if the center of the box is inside...
+                Point2d box_center(neighbor->x, neighbor->y);          //center of the box
+                if (intersect(box_center, ply)) //if the center of the box is inside...
                 {
                     open.push_back(neighbor);
                     visited.insert(neighbor);
@@ -524,8 +524,8 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
                 Box * neighbor = *n;
 
                 if (visited.find(neighbor) != visited.end()) continue; //visited
-                Point2d b_o(neighbor->x, neighbor->y);                 //center of the box
-                if (intersect(b_o, polygon)) //if the center of the box is inside...
+                Point2d box_center(neighbor->x, neighbor->y);          //center of the box
+                if (intersect(box_center, polygon)) //if the center of the box is inside...
                 {
                     open.push_back(neighbor);
                     visited.insert(neighbor);
