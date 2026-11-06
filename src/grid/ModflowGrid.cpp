@@ -35,9 +35,9 @@ ModflowGrid::ModflowGrid(const modflow_grid_raw_data & rawdata)
     init(rawdata.nlay, rawdata.nrow, rawdata.ncol, rawdata.bot);
 }
 
-ModflowGrid::ModflowGrid(int lay, int row, int col, double dr, double dc, vector<double *> & bot,
-                         double xoffset, double yoffset, double angle)
-    : ModflowGrid2D(row, col, dr, dc, xoffset, yoffset, angle)
+ModflowGrid::ModflowGrid(int lay, int row, int col, double delr, double delc,
+                         vector<double *> & bot, double xoffset, double yoffset, double angle)
+    : ModflowGrid2D(row, col, delr, delc, xoffset, yoffset, angle)
 {
     init(lay, row, col, bot);
 }

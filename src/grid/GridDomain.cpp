@@ -54,9 +54,8 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
     {
         vector<GIS_plyline> & arcs = shp_reader.getArcList();
         //subdivide the qtree using the features
-        int arcssize = arcs.size();
-        nfeatures = arcssize;
-        for (int j = 0; j < arcssize; j++)
+        nfeatures = arcs.size();
+        for (int j = 0; j < nfeatures; j++)
         {
             if (angle != 0) arcs[j].rotate(cx, cy, -angle);
 
@@ -87,10 +86,9 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
     {
         gi.set_include_poly_boundary_flag(data->include_boundary);
         vector<GIS_polygon> & polygons = shp_reader.getPolyList();
-        int pgonsize = polygons.size();
-        nfeatures = pgonsize;
+        nfeatures = polygons.size();
 
-        for (int j = 0; j < pgonsize; j++)
+        for (int j = 0; j < nfeatures; j++)
         {
             //rotate
             if (angle != 0)
@@ -123,9 +121,8 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
         vector<GIS_Point2d> & pts = shp_reader.getPointList();
 
         //subdivide the qtree using the features
-        int psize = pts.size();
-        nfeatures = psize;
-        for (int j = 0; j < psize; j++)
+        nfeatures = pts.size();
+        for (int j = 0; j < nfeatures; j++)
         {
             //rotate
             if (angle != 0) pts[j].rotate(cx, cy, -angle);

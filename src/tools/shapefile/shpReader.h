@@ -55,7 +55,7 @@ public:
     ~ShapeReader() { destroy(); }
 
     //read field attributes
-    bool readAttributes(DBFHandle & dbfHanld, int iShape);
+    bool readAttributes(DBFHandle & dbfHandle, int iShape);
 
     //read from file
     bool read(const string & filename);

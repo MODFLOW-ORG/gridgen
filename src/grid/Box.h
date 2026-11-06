@@ -49,7 +49,7 @@ class Box; //defined later in this file
 class BoxIter
 {
 public:
-    BoxIter(const Box * start, int direc);
+    BoxIter(const Box * starting_node, int direction);
 
     Box * First();
 
@@ -407,7 +407,7 @@ public:
     //ModflowGrid * childmfgrid;
 
     ///the coordinates of the center after rotation
-    void rotateCtr(double cx, double cy, double rotation, double & resx, double & resy);
+    void rotateCtr(double cx, double cy, double rotation, double & rotated_x, double & rotated_y);
 };
 //end of class Box
 

@@ -95,14 +95,14 @@ void getSpecialPointIntersection(QuadTree3D * qtree, const Point2d & pt, int max
 
 bool QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
 {
-    list<Box *> bl;
-    getSpecialPointIntersection(this, pt, max_level, at_layer, bl);
-    bool intersects = !bl.empty();
+    list<Box *> boxes;
+    getSpecialPointIntersection(this, pt, max_level, at_layer, boxes);
+    bool intersects = !boxes.empty();
 
-    while (!bl.empty())
+    while (!boxes.empty())
     {
-        Box * b = bl.front();
-        bl.pop_front();
+        Box * b = boxes.front();
+        boxes.pop_front();
 
         if (b->depth >= max_level) continue; //too deep
         bool r = b->split(0);
@@ -111,7 +111,7 @@ bool QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
         for (auto & c : b->pChildren)
         {
             nodegroup.add(c);
-            if (c->in(pt[0], pt[1])) bl.push_back(c);
+            if (c->in(pt[0], pt[1])) boxes.push_back(c);
         }
 
         this->rebuild_nodeid_array = true;
@@ -190,8 +190,9 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
 {
     GridIntersection gi(max_level, at_layer);
     LineSeg2d clipped_line;
-    bool rclip = gi.clip_line(qtree, line, clipped_line);
-    if (rclip == false) return true; //line segment is entirely outside, so there is no intersection
+    bool clipped = gi.clip_line(qtree, line, clipped_line);
+    if (clipped == false)
+        return true; //line segment is entirely outside, so there is no intersection
     if (getSqLength(clipped_line) < 1e-10) return true;
 
     gi.getIntersections().clear();
@@ -229,24 +230,24 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
         }
 
         //process neighbors
-        for (auto & neighbor : neighbors)
+        for (auto & side : neighbors)
         {
-            for (list<Box *>::iterator n = neighbor.begin(); n != neighbor.end(); n++)
+            for (list<Box *>::iterator n = side.begin(); n != side.end(); n++)
             {
-                Box * nb = *n;
+                Box * neighbor = *n;
 
-                if (visited.find(nb) != visited.end()) continue; //visited
+                if (visited.find(neighbor) != visited.end()) continue; //visited
 
-                if (gi.intersect(nb, line))
+                if (gi.intersect(neighbor, line))
                 {
-                    if (isReallyIntersect(nb, line))
+                    if (isReallyIntersect(neighbor, line))
                     {
-                        results.push_back(nb);
-                        open.push_back(nb);
+                        results.push_back(neighbor);
+                        open.push_back(neighbor);
                     }
                 }
                 //visited before
-                visited.insert(nb);
+                visited.insert(neighbor);
             }
         }
 
@@ -415,10 +416,10 @@ bool QuadTree3D::smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq,
 
     //check the neighbors
     // go through each connection
-    for (auto & ic : connectionlist)
+    for (auto & connection : connectionlist)
     {
-        int tonodeid = ic.first;
-        int dir = ic.second;
+        int tonodeid = connection.first;
+        int dir = connection.second;
         Box * nei = nodegroup[tonodeid];
 
         if (nei == nullptr) continue;
@@ -732,12 +733,12 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
         for (int i = 0; i < csize; i++) area->push_back(-1.0f);
     }
     //up direction
-    vector<VPTPair> vpb1;
-    getVPT(box, vpb1, false);
-    for (vector<VPTPair>::iterator vpit = vpb1.begin(); vpit != vpb1.end(); ++vpit)
+    vector<VPTPair> passes_up;
+    getVPT(box, passes_up, false);
+    for (vector<VPTPair>::iterator vpit = passes_up.begin(); vpit != passes_up.end(); ++vpit)
     {
-        assert(vpit->bSrc == box);
-        connections.push_back(make_pair(vpit->bDst->id, 3));
+        assert(vpit->source == box);
+        connections.push_back(make_pair(vpit->destination->id, 3));
         if (area != nullptr) area->push_back(vpit->area);
     }
 
@@ -750,12 +751,12 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
         for (int i = 0; i < addSize; i++) area->push_back(-1.0f);
     }
     //add the down vertical pass
-    vector<VPTPair> vpb2;
-    getVPT(box, vpb2, true);
-    for (vector<VPTPair>::iterator vpit = vpb2.begin(); vpit != vpb2.end(); ++vpit)
+    vector<VPTPair> passes_down;
+    getVPT(box, passes_down, true);
+    for (vector<VPTPair>::iterator vpit = passes_down.begin(); vpit != passes_down.end(); ++vpit)
     {
-        assert(vpit->bSrc == box);
-        connections.push_back(make_pair(vpit->bDst->id, -3));
+        assert(vpit->source == box);
+        connections.push_back(make_pair(vpit->destination->id, -3));
         if (area != nullptr) area->push_back(vpit->area);
     }
 
@@ -817,7 +818,7 @@ CSRData QuadTree3D::get_usg_csr_data()
     vector<int> iac(box_size); // number of connection +1 for each cell, array of size  nodes
 
     //Go through each connection and fill the arrays.
-    int japos = 0;
+    int ja_index = 0;
     int id_offset = (one_based_node_numbering) ? 1 : 0;
     for (int nid = 0; nid < box_size; nid++)
     {
@@ -833,13 +834,13 @@ CSRData QuadTree3D::get_usg_csr_data()
         }
 
         //diagonal position
-        ia[nid] = japos + id_offset;
-        ja[japos] = nid + id_offset;
-        cl1[japos] = 0.0;
-        cl2[japos] = 0.0;
-        fahl[japos] = 0.0;
-        fldr[japos] = 0;
-        japos++;
+        ia[nid] = ja_index + id_offset;
+        ja[ja_index] = nid + id_offset;
+        cl1[ja_index] = 0.0;
+        cl2[ja_index] = 0.0;
+        fahl[ja_index] = 0.0;
+        fldr[ja_index] = 0;
+        ja_index++;
 
         vector<double> conAreas;
         list<pair<int, int>> connectionlist;
@@ -859,22 +860,22 @@ CSRData QuadTree3D::get_usg_csr_data()
 
         // go through each connection
         vector<double>::const_iterator fit = conAreas.begin();
-        for (auto & ic : connectionlist)
+        for (auto & connection : connectionlist)
         {
-            int tonodeid = ic.first;
-            int fldir = ic.second;
+            int tonodeid = connection.first;
+            int fldir = connection.second;
 
             Box * tonodeobj = nodegroup[tonodeid];
 
-            int tonid = get_nodenumber(tonodeid); ///messed up here....
+            int to_node = get_nodenumber(tonodeid); ///messed up here....
 
             double tonodedxdydz[3] = {tonodeobj->dx, tonodeobj->dy, tonodeobj->dz};
 
-            ja[japos] = tonid + id_offset;
-            fldr[japos] = fldir;
-            int drpos = abs(fldir) - 1;
-            cl1[japos] = dxdydzn[drpos] / 2.0;
-            cl2[japos] = tonodedxdydz[drpos] / 2.0;
+            ja[ja_index] = to_node + id_offset;
+            fldr[ja_index] = fldir;
+            int axis = abs(fldir) - 1;
+            cl1[ja_index] = dxdydzn[axis] / 2.0;
+            cl2[ja_index] = tonodedxdydz[axis] / 2.0;
             double dz = 1.0;
 
             if (is3d)
@@ -883,41 +884,42 @@ CSRData QuadTree3D::get_usg_csr_data()
                 if (top != nullptr && bot != nullptr)
                 {
                     double dz1 = top[nid] - bot[nid];
-                    double dz2 = top[tonid] - bot[tonid];
+                    double dz2 = top[to_node] - bot[to_node];
                     dz = 0.5 * (dz1 + dz2);
                 }
             }
 
             if ((!vertical_pass_through) || (*fit) < 0)
             {
-                if (drpos == 0) //x
+                if (axis == 0) //x
                 {
-                    fahl[japos] = min(dxdydzn[1], tonodedxdydz[1]) * dz;
+                    fahl[ja_index] = min(dxdydzn[1], tonodedxdydz[1]) * dz;
                 }
-                else if (drpos == 1) //y
+                else if (axis == 1) //y
                 {
-                    fahl[japos] = min(dxdydzn[0], tonodedxdydz[0]) * dz;
+                    fahl[ja_index] = min(dxdydzn[0], tonodedxdydz[0]) * dz;
                 }
-                else if (drpos == 2) //z
+                else if (axis == 2) //z
                 {
-                    fahl[japos] = min(dxdydzn[0] * dxdydzn[1], tonodedxdydz[0] * tonodedxdydz[1]);
+                    fahl[ja_index] =
+                        min(dxdydzn[0] * dxdydzn[1], tonodedxdydz[0] * tonodedxdydz[1]);
                 }
             }
             else
             {
                 assert(fldir == 3 || fldir == -3);
-                fahl[japos] = *fit;
+                fahl[ja_index] = *fit;
             }
 
-            japos++;
+            ja_index++;
 
             if (vertical_pass_through) ++fit;
 
-        } //end for ic
+        } //end for connection
 
     } //end for nid
 
-    ia[box_size] = japos + id_offset;
+    ia[box_size] = ja_index + id_offset;
 
     return CSRData(box_size, nja, std::move(area), std::move(ia), std::move(ja), std::move(cl1),
                    std::move(cl2), std::move(fahl), std::move(fldr), std::move(iac));
@@ -927,10 +929,10 @@ void QuadTree3D::sortconnectionbynodenumber(list<pair<int, int>> & connectionlis
 {
     //get node numbers
     vector<pair<int, pair<int, int>>> sorted_connection_list;
-    for (auto & ic : connectionlist)
+    for (auto & connection : connectionlist)
     {
-        int tonid = get_nodenumber(ic.first);
-        sorted_connection_list.push_back(make_pair(tonid, ic));
+        int to_node = get_nodenumber(connection.first);
+        sorted_connection_list.push_back(make_pair(to_node, connection));
     }
     //sort by node numbers
     sort(sorted_connection_list.begin(), sorted_connection_list.end());
@@ -946,10 +948,11 @@ void QuadTree3D::sortareabyconid(const list<pair<int, int>> & connectionlist, ve
     using CIT = list<pair<int, int>>::const_iterator;
     vector<pair<int, double>> sorted_area_list;
     vector<double>::iterator fit = area.begin();
-    for (CIT ic = connectionlist.begin(); ic != connectionlist.end(); ++ic, ++fit)
+    for (CIT connection = connectionlist.begin(); connection != connectionlist.end();
+         ++connection, ++fit)
     {
-        int tonid = get_nodenumber(ic->first);
-        sorted_area_list.push_back(make_pair(tonid, *fit));
+        int to_node = get_nodenumber(connection->first);
+        sorted_area_list.push_back(make_pair(to_node, *fit));
     }
     //sort by node numbers
     sort(sorted_area_list.begin(), sorted_area_list.end());
@@ -1000,13 +1003,13 @@ double * QuadTree3D::get_top()
                 z[nodenumber] = bilinear_interpolation(b, &m_mfgrid->bot[mfgrid_csize * b->layer]);
             else //read from ascii file
             {
-                bool area_weigthed = true;
+                bool area_weighted = true;
                 if (m_top_area_weighted_interpolate.find(b->layer) !=
                     m_top_area_weighted_interpolate.end())
-                    area_weigthed = m_top_area_weighted_interpolate[b->layer];
+                    area_weighted = m_top_area_weighted_interpolate[b->layer];
 
                 z[nodenumber] =
-                    bilinear_interpolation(b, m_top_layer_z_source[b->layer], area_weigthed);
+                    bilinear_interpolation(b, m_top_layer_z_source[b->layer], area_weighted);
             }
         }
     }
@@ -1042,14 +1045,14 @@ double * QuadTree3D::get_bot()
                     bilinear_interpolation(b, &m_mfgrid->bot[mfgrid_csize * (b->layer + 1)]);
             else
             {
-                bool area_weigthed = true;
+                bool area_weighted = true;
                 if (m_bot_area_weighted_interpolate.find(b->layer) !=
                     m_bot_area_weighted_interpolate.end())
-                    area_weigthed = m_bot_area_weighted_interpolate[b->layer];
+                    area_weighted = m_bot_area_weighted_interpolate[b->layer];
 
                 //read from ascii file
                 z[nodenumber] =
-                    bilinear_interpolation(b, m_bot_layer_z_source[b->layer], area_weigthed);
+                    bilinear_interpolation(b, m_bot_layer_z_source[b->layer], area_weighted);
             }
         }
     }
@@ -1211,8 +1214,8 @@ inline void DFSprint(ostream & out, Box * box, unsigned int & id, const string &
             }
             //quadrants are numbered 1 to 4 whatever the node numbering
             sprintf(quadrant, "%d", x + 1);
-            string mylocation = location + quadrant;
-            DFSprint(out, box->pChildren[i], id, extra, mylocation, one_based_numbering);
+            string child_location = location + quadrant;
+            DFSprint(out, box->pChildren[i], id, extra, child_location, one_based_numbering);
         } //end for i
     }
 }

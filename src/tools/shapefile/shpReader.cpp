@@ -33,23 +33,23 @@ void ShapeReader::destroy()
 //read field attributes from DBF file according to id
 bool ShapeReader::readAttributes(DBFHandle & dbfHandle, int iShape)
 {
-    for (auto & sifld : m_intFlds)
+    for (auto & field : m_intFlds)
     {
-        sifld.vals.insert(make_pair(iShape, DBFReadIntegerAttribute(dbfHandle, iShape, sifld.id)));
+        field.vals.insert(make_pair(iShape, DBFReadIntegerAttribute(dbfHandle, iShape, field.id)));
     }
-    for (auto & sifld : m_dbFlds)
+    for (auto & field : m_dbFlds)
     {
-        sifld.vals.insert(make_pair(iShape, DBFReadDoubleAttribute(dbfHandle, iShape, sifld.id)));
+        field.vals.insert(make_pair(iShape, DBFReadDoubleAttribute(dbfHandle, iShape, field.id)));
     }
-    for (auto & sifld : m_strFlds)
+    for (auto & field : m_strFlds)
     {
-        sifld.vals.insert(
-            make_pair(iShape, string(DBFReadStringAttribute(dbfHandle, iShape, sifld.id))));
+        field.vals.insert(
+            make_pair(iShape, string(DBFReadStringAttribute(dbfHandle, iShape, field.id))));
     }
-    for (auto & sifld : m_logFlds)
+    for (auto & field : m_logFlds)
     {
-        sifld.vals.insert(
-            make_pair(iShape, string(DBFReadLogicalAttribute(dbfHandle, iShape, sifld.id))));
+        field.vals.insert(
+            make_pair(iShape, string(DBFReadLogicalAttribute(dbfHandle, iShape, field.id))));
     }
     return true;
 }
@@ -96,31 +96,31 @@ bool ShapeReader::read(const string & filename)
         //collect the field name and type info
         if (eType == FTInteger)
         {
-            ShapeIntField sintfld;
-            sintfld.id = i;
-            sintfld.name = szTitle;
-            m_intFlds.push_back(sintfld);
+            ShapeIntField field;
+            field.id = i;
+            field.name = szTitle;
+            m_intFlds.push_back(field);
         }
         else if (eType == FTDouble)
         {
-            ShapeDoubleField sdbfld;
-            sdbfld.id = i;
-            sdbfld.name = szTitle;
-            m_dbFlds.push_back(sdbfld);
+            ShapeDoubleField field;
+            field.id = i;
+            field.name = szTitle;
+            m_dbFlds.push_back(field);
         }
         else if (eType == FTString)
         {
-            ShapeStringField sstrfld;
-            sstrfld.id = i;
-            sstrfld.name = szTitle;
-            m_strFlds.push_back(sstrfld);
+            ShapeStringField field;
+            field.id = i;
+            field.name = szTitle;
+            m_strFlds.push_back(field);
         }
         else if (eType == FTLogical)
         {
-            ShapeLogField slogfld;
-            slogfld.id = i;
-            slogfld.name = szTitle;
-            m_logFlds.push_back(slogfld);
+            ShapeLogField field;
+            field.id = i;
+            field.name = szTitle;
+            m_logFlds.push_back(field);
         }
     }
 

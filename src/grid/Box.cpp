@@ -38,7 +38,7 @@ namespace cusg
        |            |
        |------------|
 
-       when direc=0 (north)
+       when direction=0 (north)
        then, 1st (returned by First() is the cell, on the far right
        and end is the cell on the far left and is also the cell stored in pChildren[0]
 
@@ -64,18 +64,19 @@ namespace cusg
  *
  * Box neighbor iterator constructor. Runs through QuadTree
  * nodes in the specified direction.
- * \param[in] start  The starting node
- * \param[in] direc  The direction to travel:
- *                   - 0: North
- *                   - 1: East
- *                   - 2: South
- *                   - 3: West
+ * \param[in] starting_node  The starting node
+ * \param[in] direction      The direction to travel:
+ *                           - 0: North
+ *                           - 1: East
+ *                           - 2: South
+ *                           - 3: West
  */
-BoxIter::BoxIter(const Box * start, int direc) : b(start), direction(direc), neighbor(nullptr)
+BoxIter::BoxIter(const Box * starting_node, int direction)
+    : b(starting_node), direction(direction), neighbor(nullptr)
 {
-    prev = (direc + 3) % 4;
-    next = (direc + 1) % 4;
-    cross = (direc + 2) % 4;
+    prev = (direction + 3) % 4;
+    next = (direction + 1) % 4;
+    cross = (direction + 2) % 4;
 }
 
 /*! \brief Returns the first box in the node walk.
@@ -479,10 +480,10 @@ Box * Box::find(double qx, double qy)
     return nullptr;
 }
 
-void Box::rotateCtr(double cx, double cy, double rotation, double & resx, double & resy)
+void Box::rotateCtr(double cx, double cy, double rotation, double & rotated_x, double & rotated_y)
 {
-    resx = cx + (x - cx) * cos(rotation) - (y - cy) * sin(rotation);
-    resy = cy + (y - cy) * cos(rotation) + (x - cx) * sin(rotation);
+    rotated_x = cx + (x - cx) * cos(rotation) - (y - cy) * sin(rotation);
+    rotated_y = cy + (y - cy) * cos(rotation) + (x - cx) * sin(rotation);
 }
 
 } //end namespace cusg

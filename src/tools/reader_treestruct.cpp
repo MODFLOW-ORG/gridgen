@@ -31,31 +31,31 @@ void parseNodeStr(string & nodeStr, TreeStructNode & node)
 {
     trim(nodeStr);
 
-    int comIdx1 = nodeStr.find_first_of(',');
-    string numStr = nodeStr.substr(0, comIdx1);
+    int number_end = nodeStr.find_first_of(',');
+    string number_text = nodeStr.substr(0, number_end);
 
-    int comIdx2 = nodeStr.find_first_of('(');
-    int comIdx3 = nodeStr.find_first_of(',', comIdx2);
-    string layerstr = nodeStr.substr(comIdx2 + 1, comIdx3 - comIdx2 - 1);
+    int open_paren = nodeStr.find_first_of('(');
+    int layer_end = nodeStr.find_first_of(',', open_paren);
+    string layer_text = nodeStr.substr(open_paren + 1, layer_end - open_paren - 1);
 
-    int comIdx4 = nodeStr.find_first_of(',', comIdx3 + 1);
-    string rowstr = nodeStr.substr(comIdx3 + 1, comIdx4 - comIdx3 - 1);
-    int comIdx5 = nodeStr.find_first_of(')', comIdx4 + 1);
-    string colstr = nodeStr.substr(comIdx4 + 1, comIdx5 - comIdx4 - 1);
+    int row_end = nodeStr.find_first_of(',', layer_end + 1);
+    string row_text = nodeStr.substr(layer_end + 1, row_end - layer_end - 1);
+    int close_paren = nodeStr.find_first_of(')', row_end + 1);
+    string col_text = nodeStr.substr(row_end + 1, close_paren - row_end - 1);
 
-    if ((unsigned)(comIdx5 + 1) < nodeStr.size())
+    if ((unsigned)(close_paren + 1) < nodeStr.size())
     {
-        string tmpCandStr = nodeStr.substr(comIdx5 + 1, nodeStr.size() - comIdx5 - 1);
-        for (char t : tmpCandStr)
+        string location_text = nodeStr.substr(close_paren + 1, nodeStr.size() - close_paren - 1);
+        for (char t : location_text)
         {
             if (t >= '1' && t <= '4') node.code.push_back(t);
         }
     }
 
-    node.number = atoi(numStr.c_str());
-    node.layer = atoi(layerstr.c_str());
-    node.row = atoi(rowstr.c_str());
-    node.col = atoi(colstr.c_str());
+    node.number = atoi(number_text.c_str());
+    node.layer = atoi(layer_text.c_str());
+    node.row = atoi(row_text.c_str());
+    node.col = atoi(col_text.c_str());
 }
 
 void parseTreeStructFile(string fileName, vector<TreeStructNode> & tree, string folderPath)

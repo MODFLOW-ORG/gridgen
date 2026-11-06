@@ -68,9 +68,9 @@ public:
     double getNoDATA_value() const { return nodata_value; }
 
     // get X and get Y
-    virtual double getX(unsigned int xid) = 0;
+    virtual double getX(unsigned int col) = 0;
 
-    virtual double getY(unsigned int yid) = 0;
+    virtual double getY(unsigned int row) = 0;
 
 protected:
     //The origin of the grid is the upper left and terminus at the lower right.
@@ -86,7 +86,7 @@ protected:
 class mf_ascii_grid : public ascii_grid
 {
 public:
-    mf_ascii_grid(ModflowGrid * mfg, double * grid_values, unsigned int col, unsigned int row,
+    mf_ascii_grid(ModflowGrid * mfgrid, double * grid_values, unsigned int col, unsigned int row,
                   double nodata = -9999)
         : ascii_grid()
     {
@@ -94,16 +94,16 @@ public:
         ncols = col;
         nrows = row;
         nodata_value = nodata;
-        m_mfg = mfg;
+        m_mfgrid = mfgrid;
     }
 
     //get the index of the given point
-    Index2d getIndex(double x, double y) override { return m_mfg->getIndex(Point2d(x, y)); }
+    Index2d getIndex(double x, double y) override { return m_mfgrid->getIndex(Point2d(x, y)); }
 
     //create a cell and return it
     ascii_grid_cell getCell(unsigned int i, unsigned int j) override
     {
-        Box * box = m_mfg->find_nodeobj(i, j);
+        Box * box = m_mfgrid->find_nodeobj(i, j);
         ascii_grid_cell cell;
         cell.dx = box->dx;
         cell.dy = box->dy;
@@ -113,19 +113,19 @@ public:
         return cell;
     }
 
-    double getX(unsigned int xid) override
+    double getX(unsigned int col) override
     {
-        Box * box = m_mfg->find_nodeobj(xid, 0);
+        Box * box = m_mfgrid->find_nodeobj(col, 0);
         return box->x;
     }
-    double getY(unsigned int yid) override
+    double getY(unsigned int row) override
     {
-        Box * box = m_mfg->find_nodeobj(0, yid);
+        Box * box = m_mfgrid->find_nodeobj(0, row);
         return box->x;
     }
 
 private:
-    ModflowGrid * m_mfg;
+    ModflowGrid * m_mfgrid;
 };
 
 class arcinfo_ascii_grid : public ascii_grid

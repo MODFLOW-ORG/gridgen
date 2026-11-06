@@ -1,98 +1,100 @@
 
 #include "vert_pass.h"
 
-void determineArea(VPassBox & vpb)
+void determineArea(VPassBox & vertical_pass)
 {
     double area = (double)(FLT_MAX);
-    double cell_area = fabs(vpb.bSrc->dx * vpb.bSrc->dy);
+    double cell_area = fabs(vertical_pass.source->dx * vertical_pass.source->dy);
     if (cell_area < area) area = cell_area;
 
-    cell_area = fabs(vpb.bDst->dx * vpb.bDst->dy);
+    cell_area = fabs(vertical_pass.destination->dx * vertical_pass.destination->dy);
     if (cell_area < area) area = cell_area;
-    for (auto tb : vpb.bPssList)
+    for (auto box : vertical_pass.pass_through)
     {
-        cell_area = fabs(tb->dx * tb->dy);
+        cell_area = fabs(box->dx * box->dy);
         if (cell_area < area) area = cell_area;
     }
-    vpb.area = area;
+    vertical_pass.area = area;
 }
-void genOneVP(list<Box *> & bl, vector<VPassBox> & vpbl)
+void genOneVP(list<Box *> & column, vector<VPassBox> & passes)
 {
-    if (bl.size() >= 3)
+    if (column.size() >= 3)
     {
-        VPassBox vpb;
-        vpb.bSrc = bl.front();
-        bl.pop_front();
+        VPassBox vertical_pass;
+        vertical_pass.source = column.front();
+        column.pop_front();
 
-        vpb.bDst = bl.back();
-        bl.pop_back();
+        vertical_pass.destination = column.back();
+        column.pop_back();
 
-        vpb.bPssList.insert(vpb.bPssList.end(), bl.begin(), bl.end());
-        determineArea(vpb);
+        vertical_pass.pass_through.insert(vertical_pass.pass_through.end(), column.begin(),
+                                          column.end());
+        determineArea(vertical_pass);
 
-        vpbl.push_back(vpb);
+        passes.push_back(vertical_pass);
     }
 }
 //exploration in two vertical directions
-void verticalExplore(Box * tb, list<Box *> & bl, vector<VPassBox> & vpbl, bool topToDown = true)
+void verticalExplore(Box * box, list<Box *> & column, vector<VPassBox> & passes,
+                     bool topToDown = true)
 {
-    list<Box *> nei;
+    list<Box *> adjacent_boxes;
 
-    if (topToDown && tb->pDown != nullptr)
-        tb->pDown->getLeaves(nei);
-    else if ((!topToDown) && (tb->pUp != nullptr))
-        tb->pUp->getLeaves(nei);
+    if (topToDown && box->pDown != nullptr)
+        box->pDown->getLeaves(adjacent_boxes);
+    else if ((!topToDown) && (box->pUp != nullptr))
+        box->pUp->getLeaves(adjacent_boxes);
 
-    for (auto pb : nei)
+    for (auto adjacent : adjacent_boxes)
     {
-        assert(pb != tb);
-        if (pb == nullptr || !(pb->isLeaf)) continue;
-        if (pb->active)
+        assert(adjacent != box);
+        if (adjacent == nullptr || !(adjacent->isLeaf)) continue;
+        if (adjacent->active)
         {
-            if (bl.size() >= 2)
+            if (column.size() >= 2)
             {
-                list<Box *> tlist(bl.begin(), bl.end());
-                tlist.push_back(pb);
-                genOneVP(tlist, vpbl);
+                list<Box *> column_with_adjacent(column.begin(), column.end());
+                column_with_adjacent.push_back(adjacent);
+                genOneVP(column_with_adjacent, passes);
             }
         }
         else
         {
-            list<Box *> tlist(bl.begin(), bl.end());
-            tlist.push_back(pb);
-            verticalExplore(pb, tlist, vpbl, topToDown);
+            list<Box *> column_with_adjacent(column.begin(), column.end());
+            column_with_adjacent.push_back(adjacent);
+            verticalExplore(adjacent, column_with_adjacent, passes, topToDown);
         }
     }
 }
 
-void boxVPConnection(Box * b, vector<VPassBox> & vpbl, bool topToDown)
+void boxVPConnection(Box * b, vector<VPassBox> & passes, bool topToDown)
 {
     if (b == nullptr || (!(b->isLeaf)) || (b->active == false)) return;
 
-    list<Box *> bl;
-    bl.push_back(b);
-    verticalExplore(b, bl, vpbl, topToDown);
+    list<Box *> column;
+    column.push_back(b);
+    verticalExplore(b, column, passes, topToDown);
 }
 
-void getVPT(Box * b, vector<VPTPair> & vpts, bool topToDown)
+void getVPT(Box * b, vector<VPTPair> & pairs, bool topToDown)
 {
     if (b == nullptr || (!(b->isLeaf)) || (b->active == false)) return;
 
-    vector<VPassBox> vpbs;
-    boxVPConnection(b, vpbs, topToDown);
-    for (vector<VPassBox>::iterator vit = vpbs.begin(); vit != vpbs.end(); ++vit)
+    vector<VPassBox> passes;
+    boxVPConnection(b, passes, topToDown);
+    for (vector<VPassBox>::iterator vit = passes.begin(); vit != passes.end(); ++vit)
     {
-        Box * source = vit->bSrc;
-        Box * destination = vit->bDst;
+        Box * source = vit->source;
+        Box * destination = vit->destination;
 
         vector<VPassBox>::iterator jit = vit;
         ++jit;
-        for (; jit != vpbs.end();)
+        for (; jit != passes.end();)
         {
-            if (source == jit->bSrc && destination == jit->bDst)
+            if (source == jit->source && destination == jit->destination)
             {
                 vit->area += jit->area;
-                jit = vpbs.erase(jit);
+                jit = passes.erase(jit);
             }
             else
             {
@@ -101,11 +103,11 @@ void getVPT(Box * b, vector<VPTPair> & vpts, bool topToDown)
         }
     }
 
-    //coy the final results
-    for (auto & vpb : vpbs)
+    //copy the final results
+    for (auto & vertical_pass : passes)
     {
-        VPTPair vpt(vpb.bSrc, vpb.bDst, vpb.area);
-        vpts.push_back(vpt);
+        VPTPair merged(vertical_pass.source, vertical_pass.destination, vertical_pass.area);
+        pairs.push_back(merged);
     }
 
     ////////////////////////////////////////////

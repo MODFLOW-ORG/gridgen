@@ -32,14 +32,14 @@ inline string tolower(const string & s)
     return lower;
 }
 
-inline int getField(string fname, ShapeReader & shpReader)
+inline int getField(string field_name, ShapeReader & shpReader)
 {
     int id = 0;
-    vector<ShapeIntField> & intFlds = shpReader.getIntFields();
-    for (vector<ShapeIntField>::iterator sit = intFlds.begin(); sit != intFlds.end(); ++sit, ++id)
+    vector<ShapeIntField> & int_fields = shpReader.getIntFields();
+    for (vector<ShapeIntField>::iterator sit = int_fields.begin(); sit != int_fields.end();
+         ++sit, ++id)
     {
-        string tstr = sit->name;
-        if (fname == tstr.c_str()) return id;
+        if (field_name == sit->name) return id;
     }
 
     return -1;
@@ -105,60 +105,58 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
     {
         cout << "  * Refine grid at layer " << i + 1 << endl;
 
-        list<refinement_raw_data *> & rF = rawdata.refine_by_features[i];
-        for (auto rf : rF)
+        list<refinement_raw_data *> & refinements = rawdata.refine_by_features[i];
+        for (auto refinement : refinements)
         {
-            string block = "REFINEMENT_FEATURES " + rf->name;
-            ShapeReader & shp_reader = shp_readers[rf->shapefile];
-            if (!shp_reader.read(rf->shapefile))
-                throw GridgenError("cannot open shapefile " + rf->shapefile + " (" + block +
+            string block = "REFINEMENT_FEATURES " + refinement->name;
+            ShapeReader & shp_reader = shp_readers[refinement->shapefile];
+            if (!shp_reader.read(refinement->shapefile))
+                throw GridgenError("cannot open shapefile " + refinement->shapefile + " (" + block +
                                    "); its .shp or .dbf file is missing or cannot be read");
 
-            //prepare for attribute based refinement and store the specified using fid
-            int fid = -1; //index of refinement_level
-            bool bByAttribute = (rf->refinement_level_by_attribute.empty() == false);
-            vector<ShapeIntField> & intFlds = shp_reader.getIntFields();
+            //prepare for attribute based refinement and store the specified using field_index
+            int field_index = -1; //index of refinement_level
+            bool bByAttribute = (refinement->refinement_level_by_attribute.empty() == false);
+            vector<ShapeIntField> & int_fields = shp_reader.getIntFields();
 
             if (bByAttribute)
             {
-                fid = getField(rf->refinement_level_by_attribute, shp_reader);
-                if (fid == -1)
-                    throw GridgenError("shapefile " + rf->shapefile + " (" + block +
+                field_index = getField(refinement->refinement_level_by_attribute, shp_reader);
+                if (field_index == -1)
+                    throw GridgenError("shapefile " + refinement->shapefile + " (" + block +
                                        ") has no integer field named " +
-                                       rf->refinement_level_by_attribute +
+                                       refinement->refinement_level_by_attribute +
                                        " for REFINEMENT_LEVEL_BY_ATTRIBUTE");
             }
 
-            // refine using the given feature (rf)
-            string rftype = tolower(rf->featuretype);
+            // refine using the given feature (refinement)
+            string feature_type = tolower(refinement->featuretype);
             int nfeatures = 0, noutside = 0;
-            if (rftype == "line")
+            if (feature_type == "line")
             {
                 vector<GIS_plyline> & arcs = shp_reader.getArcList();
                 //subdivide the qtree using the features
-                int arcssize = arcs.size();
-                nfeatures = arcssize;
-                for (int j = 0; j < arcssize; j++)
+                nfeatures = arcs.size();
+                for (int j = 0; j < nfeatures; j++)
                 {
                     //rotate
                     if (angle != 0) arcs[j].rotate(cx, cy, -angle);
 
-                    int rf_level =
-                        (bByAttribute) ? intFlds[fid].vals[arcs[j].m_id] : rf->refinement_level;
-                    if (!qtree->refine((c_plyline &)arcs[j], rf_level, i)) noutside++;
+                    int level = (bByAttribute) ? int_fields[field_index].vals[arcs[j].m_id]
+                                               : refinement->refinement_level;
+                    if (!qtree->refine((c_plyline &)arcs[j], level, i)) noutside++;
 
                     //rotate back
                     if (angle != 0) arcs[j].rotate(cx, cy, angle);
                 }
             } //end if
-            else if (rftype == "polygon")
+            else if (feature_type == "polygon")
             {
                 vector<GIS_polygon> & polygons = shp_reader.getPolyList();
                 //subdivide the qtree using the features
-                int psize = polygons.size();
-                nfeatures = psize;
+                nfeatures = polygons.size();
 
-                for (int j = 0; j < psize; j++)
+                for (int j = 0; j < nfeatures; j++)
                 {
                     //make sure that bounding box is computed
                     polygons[j].buildBoxAndCenter();
@@ -166,28 +164,27 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
                     //rotate
                     if (angle != 0) polygons[j].rotate(cx, cy, -angle);
 
-                    int rf_level =
-                        (bByAttribute) ? intFlds[fid].vals[polygons[j].m_id] : rf->refinement_level;
-                    if (!qtree->refine(polygons[j], rf_level, i)) noutside++; //i is the layer
+                    int level = (bByAttribute) ? int_fields[field_index].vals[polygons[j].m_id]
+                                               : refinement->refinement_level;
+                    if (!qtree->refine(polygons[j], level, i)) noutside++; //i is the layer
 
                     //rotate back
                     if (angle != 0) polygons[j].rotate(cx, cy, angle);
                 }
             }
-            else if (rftype == "point")
+            else if (feature_type == "point")
             {
                 vector<GIS_Point2d> & pts = shp_reader.getPointList();
                 //subdivide the qtree using the features
-                int psize = pts.size();
-                nfeatures = psize;
-                for (int j = 0; j < psize; j++)
+                nfeatures = pts.size();
+                for (int j = 0; j < nfeatures; j++)
                 {
                     //rotate
                     if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
-                    int rf_level =
-                        (bByAttribute) ? intFlds[fid].vals[pts[j].m_id] : rf->refinement_level;
-                    if (!qtree->refine(pts[j], rf_level, i)) noutside++;
+                    int level = (bByAttribute) ? int_fields[field_index].vals[pts[j].m_id]
+                                               : refinement->refinement_level;
+                    if (!qtree->refine(pts[j], level, i)) noutside++;
 
                     //rotate back
                     if (angle != 0) pts[j].rotate(cx, cy, angle);
@@ -195,14 +192,14 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
             }
             else
             {
-                throw GridgenError("FEATURE_TYPE " + rf->featuretype + " (" + block +
+                throw GridgenError("FEATURE_TYPE " + refinement->featuretype + " (" + block +
                                    ") is not line, polygon, or point");
             }
 
             if (nfeatures == 0)
-                warn("Shapefile " + rf->shapefile + " (" + block + ") has no " + rftype +
-                     " features; the grid is not refined for it.");
-            warn_features_outside(noutside, nfeatures, rf->shapefile, block, i,
+                warn("Shapefile " + refinement->shapefile + " (" + block + ") has no " +
+                     feature_type + " features; the grid is not refined for it.");
+            warn_features_outside(noutside, nfeatures, refinement->shapefile, block, i,
                                   "the grid is not refined for them");
         } //end for f
 
@@ -220,13 +217,13 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
     GridDomain gd;
     for (int i = 0; i < rawdata.modflow_data->nlay; i++)
     {
-        list<active_domain_raw_data *> & rF = rawdata.active_domain_data[i];
-        if (rF.empty()) continue;
+        list<active_domain_raw_data *> & refinements = rawdata.active_domain_data[i];
+        if (refinements.empty()) continue;
 
         cout << "  * Determine the active domain for layer " << i + 1 << endl;
 
         qtree->nodegroup.disable_nodes_in_layer(i);
-        for (auto & f : rF)
+        for (auto & f : refinements)
         {
             gd.build(qtree, i, f);
         }
@@ -262,9 +259,9 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
 void Quadtree_Builder::analyze_elevation(QuadTree3D * qtree, double * top_elev, double * bot_elev)
 {
     int nodesize = qtree->nodes();
-    int neg_thinkness_count = 0;
-    int max_neg_thinkness_node = -1;
-    double max_neg_thinkness = -FLT_MAX;
+    int negative_count = 0;
+    int max_negative_node = -1;
+    double max_negative_thickness = -FLT_MAX;
 
     //for each leaf node
     for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
@@ -274,21 +271,22 @@ void Quadtree_Builder::analyze_elevation(QuadTree3D * qtree, double * top_elev, 
         if (box->active == false) continue; //disabled...
 
         //check to top and bottom
-        if (top_elev[nodenumber] < bot_elev[nodenumber]) //negative thinkness..
+        if (top_elev[nodenumber] < bot_elev[nodenumber]) //negative thickness..
         {
-            double negz = bot_elev[nodenumber] - top_elev[nodenumber];
-            neg_thinkness_count++;
-            if (negz > max_neg_thinkness) max_neg_thinkness = negz;
-            max_neg_thinkness_node = nodenumber;
+            double negative_thickness = bot_elev[nodenumber] - top_elev[nodenumber];
+            negative_count++;
+            if (negative_thickness > max_negative_thickness)
+                max_negative_thickness = negative_thickness;
+            max_negative_node = nodenumber;
         }
     } //end for nodenumber
 
-    if (neg_thinkness_count > 0)
+    if (negative_count > 0)
     {
         stringstream msg;
-        msg << "There are " << neg_thinkness_count << " cells with negative thinkness. Node #"
-            << max_neg_thinkness_node
-            << " has the largest negative thinkness=" << -max_neg_thinkness;
+        msg << "There are " << negative_count << " cells with negative thickness. Node #"
+            << max_negative_node
+            << " has the largest negative thickness=" << -max_negative_thickness;
         warn(msg.str());
     }
     //

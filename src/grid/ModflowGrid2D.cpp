@@ -248,26 +248,26 @@ list<pair<int, int>> ModflowGrid2D::get_node_connections(int nodeid)
     //back
     if (i > 0)
     {
-        int nn = get_nodeid(i - 1, j);
-        connections.push_back(make_pair(nn, 2));
+        int neighbor = get_nodeid(i - 1, j);
+        connections.push_back(make_pair(neighbor, 2));
     }
     //left
     if (j > 0)
     {
-        int nn = get_nodeid(i, j - 1);
-        connections.push_back(make_pair(nn, -1));
+        int neighbor = get_nodeid(i, j - 1);
+        connections.push_back(make_pair(neighbor, -1));
     }
     //right
     if (j < ncol - 1)
     {
-        int nn = get_nodeid(i, j + 1);
-        connections.push_back(make_pair(nn, 1));
+        int neighbor = get_nodeid(i, j + 1);
+        connections.push_back(make_pair(neighbor, 1));
     }
     //front
     if (i < nrow - 1)
     {
-        int nn = get_nodeid(i + 1, j);
-        connections.push_back(make_pair(nn, -2));
+        int neighbor = get_nodeid(i + 1, j);
+        connections.push_back(make_pair(neighbor, -2));
     }
 
     return connections;
@@ -332,31 +332,31 @@ void ModflowGrid2D::add_connections()
             if (i < nrow - 1)
             {
                 //make connection to front
-                int tonode = get_nodeid(i + 1, j);
+                int to_node = get_nodeid(i + 1, j);
                 int fldir = -2;
-                nodeobj->addConnection(nodegroup[tonode], fldir);
+                nodeobj->addConnection(nodegroup[to_node], fldir);
             }
 
             if (i > 0)
             {
                 //make connection to back
-                int tonode = get_nodeid(i - 1, j);
+                int to_node = get_nodeid(i - 1, j);
                 int fldir = 2;
-                nodeobj->addConnection(nodegroup[tonode], fldir);
+                nodeobj->addConnection(nodegroup[to_node], fldir);
             }
             if (j < ncol - 1)
             {
                 //make connection to right
-                int tonode = get_nodeid(i, j + 1);
+                int to_node = get_nodeid(i, j + 1);
                 int fldir = 1;
-                nodeobj->addConnection(nodegroup[tonode], fldir);
+                nodeobj->addConnection(nodegroup[to_node], fldir);
             }
             if (j > 0)
             {
                 //make connection to left
-                int tonode = get_nodeid(i, j - 1);
+                int to_node = get_nodeid(i, j - 1);
                 int fldir = -1;
-                nodeobj->addConnection(nodegroup[tonode], fldir);
+                nodeobj->addConnection(nodegroup[to_node], fldir);
             }
         } //end j
     } //end i

@@ -28,18 +28,18 @@ enum FILETYPE
 };
 
 //check whether the array attributes contain the given attribute
-bool checkAttributesContain(const char * attriName, vector<string> & attributes);
+bool checkAttributesContain(const char * attribute_name, vector<string> & attributes);
 
 //write the grid and point intersection
-void writePntIntersect(GridIntersection * gridInter, string file, vector<string> & attributes,
-                       FILETYPE filetype);
+void writePntIntersect(GridIntersection * grid_intersection, string file,
+                       vector<string> & attributes, FILETYPE filetype);
 
 //write the line and grid intersection
-void writeLineIntersect(GridIntersection * gridInter, string file, vector<string> & attributes,
-                        FILETYPE filetype);
+void writeLineIntersect(GridIntersection * grid_intersection, string file,
+                        vector<string> & attributes, FILETYPE filetype);
 
 //writhe the polygon and grid intersection
-void writePolyIntersect(GridIntersection * griInter, string file, vector<string> & attributes,
-                        FILETYPE filetype);
+void writePolyIntersect(GridIntersection * grid_intersection, string file,
+                        vector<string> & attributes, FILETYPE filetype);
 
 #endif
