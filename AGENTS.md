@@ -140,11 +140,13 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   Windows stays tested. Commits that only reformat are listed in
   `.git-blame-ignore-revs` (`git config blame.ignoreRevsFile
   .git-blame-ignore-revs`).
-- **Names:** name a variable, parameter, or member for what it holds, in
-  whole words (`direction`, `start_index`, `neighbor`), not an abbreviation
-  or a placeholder such as `tmp` or `r`. Keep the conventional short names:
-  loop indices, coordinates (`x`, `dx`, `cx`), the MODFLOW and CSR names
-  (`nlay`, `delr`, `ia`, `ja`), and shapelib's own names.
+- **Names:** a reader should be able to tell from its name what a variable,
+  parameter, or member holds and what a function, method, or class does.
+  Use whole words (`direction`, `start_index`, `neighbor`), not an
+  abbreviation, a placeholder such as `tmp` or `r`, or a term the code uses
+  in a private sense (`ply` for a closed ring). Keep the conventional short
+  names: loop indices, coordinates (`x`, `dx`, `cx`), the MODFLOW and CSR
+  names (`nlay`, `delr`, `ia`, `ja`), and shapelib's own names.
 - **Comments and documentation:** keep code comments and docstrings short,
   stating what a function does; put the reason, when one is needed, in an
   inline comment. Write the release notes for groundwater modelers rather
