@@ -1109,9 +1109,9 @@ void number_share_vtk_v(QuadTree3D * qtree, vector<VTK_V *> & vdata, VTK_Box * b
                         vector<VTK_V *> & vtk_vertices)
 {
     int next_number = 0;
-    int bsize = qtree->nodegroup.size();
+    int box_count = qtree->nodegroup.size();
 
-    for (int i = 0; i < bsize; i++)
+    for (int i = 0; i < box_count; i++)
     {
         Box * b = qtree->nodegroup[i];
         if (!(b->isLeaf && b->active)) continue;
@@ -1143,35 +1143,35 @@ void number_share_vtk_v(QuadTree3D * qtree, vector<VTK_V *> & vdata, VTK_Box * b
 }
 
 //assume at most 1 depth difference
-double smooth_interpolate(vector<double> & dvals, vector<int> & depth, vector<Box *> & boxes,
+double smooth_interpolate(vector<double> & cell_z, vector<int> & depth, vector<Box *> & boxes,
                           double px, double py)
 {
-    set<int> dset;
-    int dsize = depth.size();
-    for (int i = 0; i < dsize; i++)
+    set<int> depths;
+    int cell_count = depth.size();
+    for (int i = 0; i < cell_count; i++)
     {
-        dset.insert(depth[i]);
+        depths.insert(depth[i]);
     }
     //average
-    if (dset.size() == 1 || dsize == 1)
+    if (depths.size() == 1 || cell_count == 1)
     {
-        double dsum(0);
-        for (int i = 0; i < dsize; i++) dsum += dvals[i];
-        return dsum / dsize;
+        double z_sum(0);
+        for (int i = 0; i < cell_count; i++) z_sum += cell_z[i];
+        return z_sum / cell_count;
     }
 
     //interpolation
-    if (dsize == 4)
+    if (cell_count == 4)
     {
         double d[2] = {0};
         for (int k = 0; k < 2; k++)
         {
             if (depth[k] == depth[k + 2])
-                d[k] = (dvals[k] + dvals[k + 2]) / 2;
+                d[k] = (cell_z[k] + cell_z[k + 2]) / 2;
             else if (depth[k] < depth[k + 2])
-                d[k] = (dvals[k] + dvals[k + 2] * 2) / 3;
+                d[k] = (cell_z[k] + cell_z[k + 2] * 2) / 3;
             else if (depth[k] > depth[k + 2])
-                d[k] = (dvals[k] * 2 + dvals[k + 2]) / 3;
+                d[k] = (cell_z[k] * 2 + cell_z[k + 2]) / 3;
             else
                 assert(false);
         }
@@ -1179,7 +1179,7 @@ double smooth_interpolate(vector<double> & dvals, vector<int> & depth, vector<Bo
     }
 
     //do a plane fitting
-    if (dsize == 3)
+    if (cell_count == 3)
     {
         double rows[3][3] = {};
         double * points[3] = {rows[0], rows[1], rows[2]};
@@ -1188,7 +1188,7 @@ double smooth_interpolate(vector<double> & dvals, vector<int> & depth, vector<Bo
         {
             points[i][0] = boxes[i]->x;
             points[i][1] = boxes[i]->y;
-            points[i][2] = dvals[i];
+            points[i][2] = cell_z[i];
         }
 
         double z = fitZ(points, px, py);
@@ -1196,11 +1196,11 @@ double smooth_interpolate(vector<double> & dvals, vector<int> & depth, vector<Bo
         return z;
     }
 
-    if (dsize == 2)
+    if (cell_count == 2)
     {
-        if (depth[0] == depth[1]) return (dvals[0] + dvals[1]) / 2;
-        if (depth[0] < depth[1]) return (dvals[0] + 2 * dvals[1]) / 3;
-        if (depth[0] > depth[1]) return (dvals[0] * 2 + dvals[1]) / 3;
+        if (depth[0] == depth[1]) return (cell_z[0] + cell_z[1]) / 2;
+        if (depth[0] < depth[1]) return (cell_z[0] + 2 * cell_z[1]) / 3;
+        if (depth[0] > depth[1]) return (cell_z[0] * 2 + cell_z[1]) / 3;
     }
     assert(false);
     return 0;

@@ -328,14 +328,14 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             vector<string> & strVals = *sit;
             vector<string> & logVals = *lit;
 
-            int vsize = lineInfo.m_plyline->getSize();
-            if (vsize == 1)
+            int vertex_count = lineInfo.m_plyline->getSize();
+            if (vertex_count == 1)
             {
                 cerr << "! Warning: bad polyline, ignored!" << endl;
                 continue;
             }
-            xs.assign(vsize, 0.0);
-            ys.assign(vsize, 0.0);
+            xs.assign(vertex_count, 0.0);
+            ys.assign(vertex_count, 0.0);
             x = xs.data();
             y = ys.data();
             ply_vertex * pv = lineInfo.m_plyline->getHead();
@@ -354,7 +354,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             int entity = -1;
             if (!isTxt)
             {
-                shpObj = SHPCreateSimpleObject(SHPT_ARC, vsize, x, y, nullptr);
+                shpObj = SHPCreateSimpleObject(SHPT_ARC, vertex_count, x, y, nullptr);
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
 
