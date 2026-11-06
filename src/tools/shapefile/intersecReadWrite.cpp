@@ -1,5 +1,6 @@
 #include "intersecReadWrite.h"
 #include "RoundTrip.h"
+#include "Warnings.h"
 #include <sstream>
 using namespace std;
 using namespace cusg;
@@ -331,7 +332,8 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             int vertex_count = lineInfo.m_plyline->getSize();
             if (vertex_count == 1)
             {
-                cerr << "! Warning: bad polyline, ignored!" << endl;
+                warn("The part of a line feature in node " + to_string(lineInfo.box->number + 1) +
+                     " is a single point and is not written to " + file + ".");
                 continue;
             }
             xs.assign(vertex_count, 0.0);
@@ -387,7 +389,9 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             int vsize = pgonInfo.m_interPolygon->getSize();
             if (vsize < 3)
             {
-                cerr << "! Warning: bad polygon, ignored!" << endl;
+                warn("The part of a polygon feature in node " +
+                     to_string(pgonInfo.box->number + 1) +
+                     " has fewer than three vertices and is not written to " + file + ".");
                 continue;
             }
             // each ring repeats its first vertex at the end

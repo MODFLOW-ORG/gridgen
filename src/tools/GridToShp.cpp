@@ -32,8 +32,7 @@ SHPHandle createShpHandle(string shpName, string feature_type, int & shptype)
     }
     else
     {
-        cerr << "! Error: only support exporting as polygon/point shape files!" << endl;
-        return nullptr;
+        throw GridgenError("FEATURE_TYPE " + feature_type + " is not line, polygon, or point");
     }
     return handler;
 }

@@ -29,17 +29,10 @@ static int run(const string & action, const string & dfn_file)
     block_raw_data * data = def_parser.getBlockData(action);
 
     if (data == nullptr)
-    {
-        cerr << "! Error: There is no block named: " << action << endl;
-        return 1;
-    }
+        throw GridgenError("definition file " + dfn_file + " has no block named " + action);
 
     bool initialized = data->initialize(def_parser.getBlockData());
-    if (initialized == false)
-    {
-        cerr << "! Error: Failed to initialize block: " << action << endl;
-        return 1;
-    }
+    if (initialized == false) throw GridgenError(data->label() + " cannot be read");
 
     Grid * grid = nullptr;
 
@@ -57,11 +50,7 @@ static int run(const string & action, const string & dfn_file)
     if (grid_data != nullptr)
     {
         grid = grid_data->build();
-        if (grid == nullptr)
-        {
-            cerr << "! Error: Failed to build block: " << action << endl;
-            return 1;
-        }
+        if (grid == nullptr) throw GridgenError(data->label() + " cannot be built");
     }
     else if (grid2shp != nullptr)
     {

@@ -226,6 +226,13 @@ string BaseParser::tolower(const string & s)
     return lower;
 }
 
+string BaseParser::toupper(const string & s)
+{
+    string upper;
+    for (char i : s) upper.push_back(::toupper(i));
+    return upper;
+}
+
 //-----------------------------------------------------------------------------
 //
 //
@@ -244,7 +251,7 @@ bool modflow_grid_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-            throw GridgenError("a record in block " + this->name + " has no name or no value");
+            throw GridgenError("a record in " + label() + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -258,7 +265,7 @@ bool modflow_grid_raw_data::parse()
     }
     else
     {
-        throw GridgenError("missing rotation_angle");
+        throw missingRecord("rotation_angle");
     }
 
     value = name_value_map["x_offset"];
@@ -266,7 +273,7 @@ bool modflow_grid_raw_data::parse()
         x_offset = atof(value.front().c_str());
     else
     {
-        throw GridgenError("missing x_offset");
+        throw missingRecord("x_offset");
     }
 
     value = name_value_map["y_offset"];
@@ -274,7 +281,7 @@ bool modflow_grid_raw_data::parse()
         y_offset = atof(value.front().c_str());
     else
     {
-        throw GridgenError("missing y_offset");
+        throw missingRecord("y_offset");
     }
 
     value = name_value_map["length_unit"];
@@ -289,7 +296,7 @@ bool modflow_grid_raw_data::parse()
         nlay = atoi(value.front().c_str());
     else
     {
-        throw GridgenError("missing nlay");
+        throw missingRecord("nlay");
     }
 
     value = name_value_map["nrow"];
@@ -297,7 +304,7 @@ bool modflow_grid_raw_data::parse()
         nrow = atoi(value.front().c_str());
     else
     {
-        throw GridgenError("missing nrow");
+        throw missingRecord("nrow");
     }
 
     value = name_value_map["ncol"];
@@ -305,7 +312,7 @@ bool modflow_grid_raw_data::parse()
         ncol = atoi(value.front().c_str());
     else
     {
-        throw GridgenError("missing ncol");
+        throw missingRecord("ncol");
     }
 
     value = name_value_map["delr"];
@@ -315,7 +322,7 @@ bool modflow_grid_raw_data::parse()
     }
     else
     {
-        throw GridgenError("missing delr");
+        throw missingRecord("delr");
     }
 
     value = name_value_map["delc"];
@@ -325,7 +332,7 @@ bool modflow_grid_raw_data::parse()
     }
     else
     {
-        throw GridgenError("missing delc");
+        throw missingRecord("delc");
     }
 
     value = name_value_map["top"];
@@ -335,7 +342,7 @@ bool modflow_grid_raw_data::parse()
     }
     else
     {
-        throw GridgenError("missing top layer");
+        throw missingRecord("top");
     }
 
     for (int i = 0; i < nlay; i++)
@@ -350,9 +357,7 @@ bool modflow_grid_raw_data::parse()
         }
         else
         {
-            stringstream msg;
-            msg << "missing bottom layer " << i + 1 << "(" << i << " for 0 based numbering)";
-            throw GridgenError(msg.str());
+            throw missingRecord(layername);
         }
     }
 
@@ -423,7 +428,7 @@ bool quadtree_grid_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-            throw GridgenError("a record in block " + this->name + " has no name or no value");
+            throw GridgenError("a record in " + label() + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -434,7 +439,7 @@ bool quadtree_grid_raw_data::parse()
         modflow_grid = value.front();
     else
     {
-        throw GridgenError("missing modflow_grid");
+        throw missingRecord("modflow_grid");
     }
 
     value = name_value_map["structure_file"];
@@ -442,7 +447,7 @@ bool quadtree_grid_raw_data::parse()
         tree_structure_file = value.back(); //value.front();
     else
     {
-        throw GridgenError("missing tree_structure_file");
+        throw missingRecord("structure_file");
     }
 
     //read the surfaces of each layer named, independently of the other layers
@@ -462,18 +467,7 @@ bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
     if (m_initialized) return true;
 
-    this->modflow_data = dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
-
-    if (modflow_data == nullptr)
-    {
-        cerr << "! Error: Cannot resolve referenced modflow_grid name: " << modflow_grid << endl;
-        return false;
-    }
-
-    if (modflow_data->isInitialized() == false)
-    {
-        if (modflow_data->initialize(blocks) == false) return false;
-    }
+    this->modflow_data = findModflowGrid(blocks, modflow_grid);
 
     //read/open this->tree_structure_file here
     parseTreeStructFile(tree_structure_file, allNodes, getFolderPath());
@@ -491,19 +485,12 @@ Grid * quadtree_grid_raw_data::build()
 {
     //
     if (this->modflow_data == nullptr)
-    {
-        cerr << "! Error: Cannot resolve referenced modflow_grid name: " << modflow_grid << endl;
-        return nullptr;
-    }
+        throw GridgenError(label() + " is built before the blocks it names are read");
 
     if (qtree_grid == nullptr) //if it's not already built
     {
         ModflowGrid * modflowGrid = dynamic_cast<ModflowGrid *>(modflow_data->build());
-        if (modflowGrid == nullptr)
-        {
-            cerr << "! Error: quadtree_grid_raw_data::build: Cannot retrieve ModflowGrid" << endl;
-            return nullptr;
-        }
+        assert(modflowGrid);
 
         qtree_grid = new QuadTree3D(modflowGrid);
         try
@@ -620,8 +607,9 @@ void quadtree_grid_raw_data::fillQuadTree3D()
                     }
                     default:
                     {
-                        cerr << "! Error: splitting box error!" << endl;
-                        break;
+                        throw GridgenError("structure file " + tree_structure_file +
+                                           " has the quadrant code " + tree_node.code +
+                                           ", which is not made of the digits 1 to 4");
                     }
                 }
                 depth_index++;
@@ -659,7 +647,7 @@ bool quadtree_builder_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-            throw GridgenError("a record in block " + this->name + " has no name or no value");
+            throw GridgenError("a record in " + label() + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -681,7 +669,7 @@ bool quadtree_builder_raw_data::parse()
         modflow_grid = value.front();
     else
     {
-        throw GridgenError("missing modflow_grid");
+        throw missingRecord("modflow_grid");
     }
 
     value = name_value_map["grid_definition_file"];
@@ -689,7 +677,7 @@ bool quadtree_builder_raw_data::parse()
         grid_definition_file = value.front();
     else
     {
-        throw GridgenError("missing grid_definition_file");
+        throw missingRecord("grid_definition_file");
     }
 
     value = name_value_map["smoothing"];
@@ -732,45 +720,21 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
 {
     if (m_initialized) return true;
 
-    //initialize modflow_data if it has not been initialized yet
-    this->modflow_data = dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
-    if (modflow_data == nullptr)
-    {
-        cerr << "! Error: InQuadtree Builder: Cannot resolve referenced modflow_grid name: "
-             << modflow_grid << endl;
-        return false;
-    }
-
-    if (modflow_data->isInitialized() == false)
-    {
-        if (modflow_data->initialize(blocks) == false) return false;
-    }
+    this->modflow_data = findModflowGrid(blocks, modflow_grid);
 
     active_domain_data.reserve(modflow_data->nlay);
     for (int i = 0; i < modflow_data->nlay; i++)
     {
         list<active_domain_raw_data *> domains;
         list<string> & domain_names = active_domain_str[i];
+        string rname = "active_domain layer " + to_string(i + 1);
         for (auto & domain_name : domain_names)
         {
-            active_domain_raw_data * domain =
-                dynamic_cast<active_domain_raw_data *>(blocks[domain_name]);
-            if (domain != nullptr)
-            {
-                if (domain->initialize(blocks) == false)
-                {
-                    return false;
-                }
-                else
-                    domains.push_back(domain);
-            }
-            else
-            {
-                stringstream msg;
-                msg << "Quadtree Builder: Block " << domain_name
-                    << " is referenced but not defined";
-                throw GridgenError(msg.str());
-            }
+            block_raw_data * block = findBlock(blocks, rname, domain_name);
+            auto * domain = dynamic_cast<active_domain_raw_data *>(block);
+            if (domain == nullptr) throw wrongBlockType(rname, block, "an ACTIVE_DOMAIN block");
+            domain->initialize(blocks);
+            domains.push_back(domain);
         } // end for domain_name
         active_domain_data.push_back(domains);
     }
@@ -801,18 +765,14 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
         //refine by features
         list<refinement_raw_data *> refinements;
         list<string> & refinement_names = refine_by_features_str[i];
+        string rname = "refinement_features layer " + to_string(i + 1);
         for (auto & refinement_name : refinement_names)
         {
-            refinement_raw_data * refinement =
-                dynamic_cast<refinement_raw_data *>(blocks[refinement_name]);
-            if (refinement != nullptr)
-                refinements.push_back(refinement);
-            else
-            {
-                stringstream msg;
-                msg << "Quadtree Builder: There is no refinement feature named " << refinement_name;
-                throw GridgenError(msg.str());
-            }
+            block_raw_data * block = findBlock(blocks, rname, refinement_name);
+            auto * refinement = dynamic_cast<refinement_raw_data *>(block);
+            if (refinement == nullptr)
+                throw wrongBlockType(rname, block, "a REFINEMENT_FEATURES block");
+            refinements.push_back(refinement);
         }
 
         refine_by_features.push_back(refinements);
@@ -853,11 +813,7 @@ Grid * quadtree_builder_raw_data::build()
 {
     //
     if (this->modflow_data == nullptr)
-    {
-        cerr << "! Error: Quadtree Builder: Cannot resolve referenced modflow_grid name: "
-             << modflow_grid << endl;
-        return nullptr;
-    }
+        throw GridgenError(label() + " is built before the blocks it names are read");
 
     if (qtree_grid == nullptr) //if it's not already built
     {
@@ -916,7 +872,7 @@ bool grid_intersection_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-            throw GridgenError("a record in block " + this->name + " has no name or no value");
+            throw GridgenError("a record in " + label() + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -927,7 +883,7 @@ bool grid_intersection_raw_data::parse()
         grid_name = value.front();
     else
     {
-        throw GridgenError("missing grid");
+        throw missingRecord("grid");
     }
 
     value = name_value_map["shapefile"];
@@ -947,7 +903,7 @@ bool grid_intersection_raw_data::parse()
     }
     else
     {
-        throw GridgenError("missing shapefile");
+        throw missingRecord("shapefile");
     }
 
     value = name_value_map["feature_type"];
@@ -955,7 +911,7 @@ bool grid_intersection_raw_data::parse()
         feature_type = tolower(value.front());
     else
     {
-        throw GridgenError("missing feature_type");
+        throw missingRecord("feature_type");
     }
     if (feature_type != "line" && feature_type != "polygon" && feature_type != "point")
         throw GridgenError("FEATURE_TYPE " + value.front() + " (GRID_INTERSECTION " + name +
@@ -977,7 +933,7 @@ bool grid_intersection_raw_data::parse()
     }
     else
     {
-        throw GridgenError("missing output_file");
+        throw missingRecord("output_file");
     }
 
     value = name_value_map["output_shapefile"];
@@ -1000,7 +956,7 @@ bool grid_intersection_raw_data::parse()
         layer = atoi(value.front().c_str()) - 1;
     else
     {
-        throw GridgenError("missing layer");
+        throw missingRecord("layer");
     }
 
     value = name_value_map["attributes"];
@@ -1020,34 +976,7 @@ bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & bloc
 {
     if (m_initialized) return true;
 
-    //get the grid
-    block_raw_data * block = blocks[grid_name];
-
-    grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
-    if (grid == nullptr)
-    {
-        cerr << "! Error: " << grid_name << " is not a grid" << endl;
-        return false;
-    }
-
-    //initialize the grid if necessary
-    bool initialized = grid->initialize(blocks);
-    if (initialized == false)
-    {
-        cerr << "! Error: initialize " << grid_name << " failed" << endl;
-        return false;
-    }
-
-    //should we check if the grid is built...
-    //it's safe to built a grid multiple times anyway...
-    this->grid = grid->build();
-
-    //check again
-    if (this->grid == nullptr)
-    {
-        cerr << "! Error: build " << grid_name << " failed" << endl;
-        return false;
-    }
+    this->grid = buildReferencedGrid(blocks, "grid", grid_name);
 
     m_initialized = true;
 
@@ -1072,7 +1001,7 @@ bool active_domain_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-            throw GridgenError("a record in block " + this->name + " has no name or no value");
+            throw GridgenError("a record in " + label() + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -1082,7 +1011,7 @@ bool active_domain_raw_data::parse()
         shapefile = value.front();
     else
     {
-        throw GridgenError("missing shapefile");
+        throw missingRecord("shapefile");
     }
 
     value = name_value_map["feature_type"];
@@ -1090,7 +1019,7 @@ bool active_domain_raw_data::parse()
         feature_type = tolower(value.front());
     else
     {
-        throw GridgenError("missing feature_type");
+        throw missingRecord("feature_type");
     }
     if (feature_type != "line" && feature_type != "polygon" && feature_type != "point")
         throw GridgenError("FEATURE_TYPE " + value.front() + " (ACTIVE_DOMAIN " + name +
@@ -1129,7 +1058,7 @@ bool refinement_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-            throw GridgenError("a record in block " + this->name + " has no name or no value");
+            throw GridgenError("a record in " + label() + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -1140,7 +1069,7 @@ bool refinement_raw_data::parse()
         shapefile = value.front();
     else
     {
-        throw GridgenError("missing shapefile");
+        throw missingRecord("shapefile");
     }
 
     value = name_value_map["feature_type"];
@@ -1148,7 +1077,7 @@ bool refinement_raw_data::parse()
         featuretype = value.front();
     else
     {
-        throw GridgenError("missing feature_type");
+        throw missingRecord("feature_type");
     }
 
     //a level from a shapefile attribute overrides refinement_level
@@ -1159,7 +1088,8 @@ bool refinement_raw_data::parse()
     if (!attribute.empty()) refinement_level_by_attribute = attribute.front();
     if (value.empty() && attribute.empty())
     {
-        throw GridgenError("missing refinement_level or refine_level_by_attribute");
+        throw GridgenError(label() + " has neither a REFINEMENT_LEVEL nor a "
+                                     "REFINEMENT_LEVEL_BY_ATTRIBUTE record");
     }
 
     return true;
@@ -1183,7 +1113,7 @@ bool grid_to_usgdata_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-            throw GridgenError("a record in block " + this->name + " has no name or no value");
+            throw GridgenError("a record in " + label() + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -1194,7 +1124,7 @@ bool grid_to_usgdata_raw_data::parse()
         grid_name = value.front();
     else
     {
-        throw GridgenError("missing grid");
+        throw missingRecord("grid");
     }
 
     value = name_value_map["usg_data_prefix"];
@@ -1202,7 +1132,7 @@ bool grid_to_usgdata_raw_data::parse()
         usg_data_prefix = value.front();
     else
     {
-        throw GridgenError("missing usg_data_prefix");
+        throw missingRecord("usg_data_prefix");
     }
 
     value = name_value_map["vertical_pass_through"];
@@ -1219,34 +1149,7 @@ bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks
 {
     if (m_initialized) return true;
 
-    //get the grid
-    block_raw_data * block = blocks[grid_name];
-
-    grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
-    if (grid == nullptr)
-    {
-        cerr << "! Error: " << grid_name << " is not a grid" << endl;
-        return false;
-    }
-
-    //initialize the grid if necessary
-    bool initialized = grid->initialize(blocks);
-    if (initialized == false)
-    {
-        cerr << "! Error: initialize " << grid_name << " failed" << endl;
-        return false;
-    }
-
-    //should we check if the grid is built...
-    //it's safe to built a grid multiple times anyway...
-    this->grid = grid->build();
-
-    //check again
-    if (this->grid == nullptr)
-    {
-        cerr << "! Error: build " << grid_name << " failed" << endl;
-        return false;
-    }
+    this->grid = buildReferencedGrid(blocks, "grid", grid_name);
 
     m_initialized = true;
 
@@ -1271,7 +1174,7 @@ bool gridtoshape_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-            throw GridgenError("a record in block " + this->name + " has no name or no value");
+            throw GridgenError("a record in " + label() + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -1282,7 +1185,7 @@ bool gridtoshape_raw_data::parse()
         grid_name = value.front();
     else
     {
-        throw GridgenError("missing grid");
+        throw missingRecord("grid");
     }
 
     value = name_value_map["shapefile"];
@@ -1301,7 +1204,7 @@ bool gridtoshape_raw_data::parse()
     }
     else
     {
-        throw GridgenError("missing shapefile");
+        throw missingRecord("shapefile");
     }
 
     value = name_value_map["node_numbering"];
@@ -1331,7 +1234,7 @@ bool gridtoshape_raw_data::parse()
         feature_type = tolower(value.front());
     else
     {
-        throw GridgenError("missing feature_type");
+        throw missingRecord("feature_type");
     }
     if (feature_type != "line" && feature_type != "polygon" && feature_type != "point")
         throw GridgenError("FEATURE_TYPE " + value.front() + " (GRID_TO_SHAPEFILE " + name +
@@ -1343,39 +1246,43 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
     if (m_initialized) return true;
 
-    //get the grid
-    block_raw_data * block = blocks[grid_name];
-
-    grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
-    if (grid == nullptr)
-    {
-        cerr << "! Error: " << grid_name << " is not a grid" << endl;
-        return false;
-    }
-
-    //initialize the grid if necessary
-    bool initialized = grid->initialize(blocks);
-    if (initialized == false)
-    {
-        cerr << "! Error: initialize " << grid_name << " failed" << endl;
-        return false;
-    }
-
-    //should we check if the grid is built...
-    //it's safe to built a grid multiple times anyway...
-    this->grid = grid->build();
-
-    //check again
-    if (this->grid == nullptr)
-    {
-        cerr << "! Error: build " << grid_name << " failed" << endl;
-        return false;
-    }
+    this->grid = buildReferencedGrid(blocks, "grid", grid_name);
 
     warnQuadtreeExportRecords(this->grid);
 
     m_initialized = true;
     return true;
+}
+
+block_raw_data * block_raw_data::findBlock(map<string, block_raw_data *> & blocks,
+                                           const string & rname, const string & block_name)
+{
+    auto found = blocks.find(block_name);
+    if (found == blocks.end() || found->second == nullptr) throw undefinedBlock(rname, block_name);
+    return found->second;
+}
+
+modflow_grid_raw_data * block_raw_data::findModflowGrid(map<string, block_raw_data *> & blocks,
+                                                        const string & grid_name)
+{
+    block_raw_data * block = findBlock(blocks, "modflow_grid", grid_name);
+    auto * modflow_data = dynamic_cast<modflow_grid_raw_data *>(block);
+    if (modflow_data == nullptr)
+        throw wrongBlockType("modflow_grid", block, "a MODFLOW_GRID block");
+    modflow_data->initialize(blocks);
+    return modflow_data;
+}
+
+Grid * block_raw_data::buildReferencedGrid(map<string, block_raw_data *> & blocks,
+                                           const string & rname, const string & grid_name)
+{
+    block_raw_data * block = findBlock(blocks, rname, grid_name);
+    grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
+    if (grid == nullptr)
+        throw wrongBlockType(rname, block, "a MODFLOW_GRID, QUADTREE, or QUADTREE_BUILDER block");
+
+    grid->initialize(blocks);
+    return grid->build();
 }
 
 //records that do not change any output of a quadtree grid
@@ -1408,7 +1315,7 @@ bool gridtovtk_raw_data::parse()
         list<string> & value = i.value;
 
         if (name.empty() || value.empty())
-            throw GridgenError("a record in block " + this->name + " has no name or no value");
+            throw GridgenError("a record in " + label() + " has no name or no value");
 
         name_value_map[name] = value;
     }
@@ -1419,7 +1326,7 @@ bool gridtovtk_raw_data::parse()
         grid_name = value.front();
     else
     {
-        throw GridgenError("missing grid");
+        throw missingRecord("grid");
     }
 
     value = name_value_map["vtkfile"];
@@ -1438,7 +1345,7 @@ bool gridtovtk_raw_data::parse()
     }
     else
     {
-        throw GridgenError("missing vtkfile");
+        throw missingRecord("vtkfile");
     }
 
     value = name_value_map["without_inactive"];
@@ -1462,34 +1369,7 @@ bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
     if (m_initialized) return true;
 
-    //get the grid
-    block_raw_data * block = blocks[grid_name];
-
-    grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
-    if (grid == nullptr)
-    {
-        cerr << "! Error: " << grid_name << " is not a grid" << endl;
-        return false;
-    }
-
-    //initialize the grid if necessary
-    bool initialized = grid->initialize(blocks);
-    if (initialized == false)
-    {
-        cerr << "! Error: initialize " << grid_name << " failed" << endl;
-        return false;
-    }
-
-    //should we check if the grid is built...
-    //it's safe to built a grid multiple times anyway...
-    this->grid = grid->build();
-
-    //check again
-    if (this->grid == nullptr)
-    {
-        cerr << "! Error: build " << grid_name << " failed" << endl;
-        return false;
-    }
+    this->grid = buildReferencedGrid(blocks, "grid", grid_name);
 
     warnQuadtreeExportRecords(this->grid);
 

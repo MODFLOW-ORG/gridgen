@@ -75,7 +75,7 @@ void parseTreeStructFile(string fileName, vector<TreeStructNode> & tree, string 
     ifstream fin(filePath.c_str());
     if (!fin.good())
     {
-        throw cusg::GridgenError("Cannot open tree structure file:" + filePath);
+        throw cusg::GridgenError("cannot open structure file " + filePath);
     } //end good
 
     /************************************************************************/

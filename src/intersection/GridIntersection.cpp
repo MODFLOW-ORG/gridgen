@@ -45,9 +45,8 @@ void GridIntersection::build(grid_intersection_raw_data & data)
         if (qtgrid != nullptr) rmfgrid = qtgrid->getModflowGrid();
     }
     if (rmfgrid == nullptr)
-    {
-        cerr << "error: abnormal grid !" << endl;
-    }
+        throw GridgenError("the grid of " + data.label() +
+                           " is neither a MODFLOW grid nor a quadtree grid");
     double cx, cy, angle;
     rmfgrid->getRotatePara(cx, cy, angle);
 
@@ -282,7 +281,7 @@ bool GridIntersection::save(string & filename, vector<string> & attributes)
     }
     else
     {
-        cerr << "output_file is not defined!" << endl;
+        throw GridgenError("no OUTPUT_FILE is given for the grid intersection");
     }
 
     return true;
@@ -365,11 +364,6 @@ Point2d GridIntersection::grid_center(QuadTree3D * grid)
 void GridIntersection::bracket_to_box_boundary(Box & box, Point2d & out, Point2d & in) const
 {
     //make sure that in point is in and out point is out of box
-    if (box.in(in[0], in[1]) == false)
-    {
-        cout << "holy" << endl;
-    }
-
     assert(box.in(in[0], in[1]));
     assert(box.in(out[0], out[1]) == false);
     //
@@ -520,9 +514,8 @@ SegmentCellIntersectionInfo GridIntersection::buildIntersectionInfo(Box * box,
 
     if (found == false)
     {
-        cerr
-            << "! Warning: GridIntersection::buildIntersectionInfo(Box,const GIS_LineSeg2d): Cannot find intersection information"
-            << endl;
+        warn("The part of a line segment inside a cell it crosses cannot be found, so it is "
+             "written with zero length.");
         return info;
     }
 
