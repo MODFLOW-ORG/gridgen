@@ -20,6 +20,7 @@
 #include "shpReader.h"
 #include "BoxPlyClip.h"
 #include "PolygonChecker.h"
+#include "Warnings.h"
 #include <map>
 using namespace std;
 
@@ -557,9 +558,8 @@ bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBo
     bool found = intersect(grid, clipped_line.pt[0]);
     if (found == false)
     {
-        cerr
-            << "! Error: GridIntersection::intersect(ModflowGrid2D * grid, const LineSeg2d& line) #1: Pt="
-            << line.pt[0] << endl;
+        warn("A line segment has an end inside the grid that is in no cell, so the segment is "
+             "not intersected with the grid.");
         return false;
     }
 
@@ -569,9 +569,8 @@ bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBo
     found = intersect(grid, clipped_line.pt[1]);
     if (found == false)
     {
-        cerr
-            << "! Error: GridIntersection::intersect(ModflowGrid2D * grid, const LineSeg2d& line) #2: Pt="
-            << line.pt[1] << endl;
+        warn("A line segment has an end inside the grid that is in no cell, so the segment is "
+             "not intersected with the grid.");
         return false;
     }
 
@@ -633,11 +632,8 @@ bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBo
                     //////////////////////////////////////////////////////////////////////////
                     //add by Guilin
                     //if collinear intersection
-                    if (checkEdgeCollinear(b, i, line))
-                    {
-                        cout << "warning: edge collinear with the line\n";
-                        continue;
-                    }
+                    //a line along the shared edge is assigned to the cell b
+                    if (checkEdgeCollinear(b, i, line)) continue;
 
                     double epsilon = min(neighbor->dx, neighbor->dy) / 1000;
                     if (intersect_len(neighbor, line) > epsilon) //long enough...

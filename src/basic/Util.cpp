@@ -29,7 +29,7 @@ double * clone_array(double * a, int n)
         }
         else
         {
-            throw logic_error("!Error: clone_array: n > 0, but 'a' points to nothing");
+            throw logic_error("internal error: an array of values to copy has no data");
         }
     }
 

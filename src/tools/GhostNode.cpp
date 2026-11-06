@@ -38,9 +38,10 @@ void computeGN(Box * small_cell, Box * large_cell, int direction, vector<GhostNo
 
         if (neighbors.size() > 2)
         {
-            throw GridgenError("the node " + to_string(large_cell->id) + " has more than two (" +
-                               to_string(neighbors.size()) +
-                               ") neighbor box nodes in dir=" + to_string(direction));
+            throw GridgenError("a cell in layer " + to_string(large_cell->layer + 1) +
+                               " has more than two neighbors on one side, so its ghost nodes "
+                               "cannot be computed; smooth the grid so that neighboring cells "
+                               "differ by at most one level of refinement");
         }
 
         if (neighbors.size() == 1)
@@ -75,9 +76,10 @@ void computeGN(Box * small_cell, Box * large_cell, int direction, vector<GhostNo
 
         if (neighbors.size() > 2)
         {
-            throw GridgenError("the node " + to_string(large_cell->id) + " has more than two (" +
-                               to_string(neighbors.size()) +
-                               ") neighbor box nodes in dir=" + to_string(direction));
+            throw GridgenError("a cell in layer " + to_string(large_cell->layer + 1) +
+                               " has more than two neighbors on one side, so its ghost nodes "
+                               "cannot be computed; smooth the grid so that neighboring cells "
+                               "differ by at most one level of refinement");
         }
 
         if (neighbors.size() == 1)

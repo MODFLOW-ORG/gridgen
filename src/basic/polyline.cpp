@@ -1,6 +1,7 @@
 
 
 #include "polyline.h"
+#include "GridgenError.h"
 
 #include <vector>
 
@@ -91,9 +92,7 @@ GIS_LineSeg2d GIS_plyline::getLineSegment(int i)
     int vsize = getSize();
     if (i >= vsize)
     {
-        cerr << "! Error: GIS_plyline::getLineSegment index out of bound i=" << i
-             << " polyline seg size=" << vsize - 1 << endl;
-        assert(false);
+        throw GridgenError("internal error: a line has no segment " + to_string(i + 1));
     }
 
     if (geodesic_dist.empty()) computeGeodesicDist();

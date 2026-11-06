@@ -32,8 +32,7 @@ SHPHandle createShpHandle(string shpName, string feature_type, int & shptype)
     }
     else
     {
-        cerr << "! Error: only support exporting as polygon/point shape files!" << endl;
-        return nullptr;
+        throw GridgenError("FEATURE_TYPE " + feature_type + " is not line, polygon, or point");
     }
     return handler;
 }
@@ -264,7 +263,7 @@ void writeModflowGrid2Shp(ModflowGrid * modflow, string gridShpName, string feat
     //create a shape file
     int shptype = 0; //polygon : true ; point : false
     SHPHandle handler = createShpHandle(gridShpName, feature_type, shptype);
-    if (handler == nullptr) return;
+    if (handler == nullptr) throw GridgenError("cannot write shapefile " + gridShpName);
 
     //create a .dbf file
     string dbfName = gridShpName; /*

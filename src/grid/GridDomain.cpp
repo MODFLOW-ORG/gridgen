@@ -34,9 +34,8 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
         if (qtgrid != nullptr) rmfgrid = qtgrid->getModflowGrid();
     }
     if (rmfgrid == nullptr)
-    {
-        cerr << "error: abnormal grid !" << endl;
-    }
+        throw GridgenError("the grid of " + data->label() +
+                           " is neither a MODFLOW grid nor a quadtree grid");
     double cx, cy, angle;
     rmfgrid->getRotatePara(cx, cy, angle);
 

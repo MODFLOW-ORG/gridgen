@@ -73,8 +73,9 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
         }
         else
         {
-            throw GridgenError("Unknown top " + to_string(i) +
-                               " elevation operator: " + rawdata.top[i].first);
+            throw GridgenError("TOP LAYER " + to_string(i + 1) + " in " + rawdata.label() + " is " +
+                               rawdata.top[i].first +
+                               ", which is not REPLICATE, INTERPOLATE, or ASCIIGRID");
         }
 
         string operation_bot = tolower(rawdata.bot[i].first);
@@ -94,8 +95,9 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
         }
         else
         {
-            throw GridgenError("Unknown bottom " + to_string(i) + " elevation operator: (" +
-                               rawdata.bot[i].first + ")");
+            throw GridgenError("BOTTOM LAYER " + to_string(i + 1) + " in " + rawdata.label() +
+                               " is " + rawdata.bot[i].first +
+                               ", which is not REPLICATE, INTERPOLATE, or ASCIIGRID");
         }
     }
 

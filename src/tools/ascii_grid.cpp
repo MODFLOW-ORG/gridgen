@@ -42,21 +42,7 @@ bool arcinfo_ascii_grid::build(istream & ins)
         if (keyword == "nodata_value") ins >> nodata_value;
     }
 
-    if (cellsize <= 0)
-    {
-        cerr << "! Error: cellsize<=0" << endl;
-        return false;
-    }
-    if (ncols <= 0)
-    {
-        cerr << "! Error: ncols<=0" << endl;
-        return false;
-    }
-    if (nrows <= 0)
-    {
-        cerr << "! Error: nrows<=0" << endl;
-        return false;
-    }
+    if (cellsize <= 0 || ncols <= 0 || nrows <= 0) return false;
 
     //allocate mem
     unsigned int size = nrows * ncols;

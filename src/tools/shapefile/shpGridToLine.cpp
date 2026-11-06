@@ -1,5 +1,6 @@
 #include "shpGridToLine.h"
 #include "GridVertices.h"
+#include "GridgenError.h"
 using namespace cusg;
 
 //coordinates of a corner of a box, numbered clockwise from the upper left
@@ -13,11 +14,7 @@ void prepareWriteLine(string gridShpName, SHPHandle * shp_handle, DBFHandle * db
                       int * layer_field)
 {
     *shp_handle = SHPCreate(gridShpName.c_str(), SHPT_ARC);
-    if ((*shp_handle) == nullptr)
-    {
-        cerr << "can't create shape file: " << gridShpName.c_str() << endl;
-        return;
-    }
+    if ((*shp_handle) == nullptr) throw GridgenError("cannot write shapefile " + gridShpName);
 
     //create a .dbf file
     string dbfName = gridShpName; /*

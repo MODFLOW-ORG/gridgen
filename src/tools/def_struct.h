@@ -24,6 +24,7 @@ namespace cusg
 //-----------------------------------------------------------------------------
 class block_raw_data;         //defined later
 class active_domain_raw_data; //defined later in this file
+class modflow_grid_raw_data;  //defined later in this file
 class Grid;                   //defined in Grid.h
 class ModflowGrid;            //defined in ModflowGrid.h
 class QuadTree3D;             //defined in QuadTree3D.h
@@ -53,6 +54,9 @@ protected:
 
     //convert s to lower case string
     string tolower(const string & s);
+
+    //convert s to upper case string
+    string toupper(const string & s);
 
     template <class T> T * copyArray(T * from, int size)
     {
@@ -183,18 +187,50 @@ public:
     //warnings reported when the block was initialized
     const list<string> & getWarnings() const { return m_warnings; }
 
+    //the block as it is written in the definition file, e.g. "MODFLOW_GRID block mfgrid"
+    string label() { return toupper(type) + " block " + name; }
+
 protected:
     //report that a record given in this block is ignored, and why
     void warnIgnored(const string & rname, const string & reason)
     {
-        string upper_name = rname, upper_type = type;
-        for (char & i : upper_name) i = toupper(i);
-        for (char & i : upper_type) i = toupper(i);
-        string w = "record " + upper_name + " in " + upper_type + " block " + name +
-                   " is ignored; " + reason;
+        string w = "record " + toupper(rname) + " in " + label() + " is ignored; " + reason;
         cerr << "! Warning: " << w << endl;
         m_warnings.push_back(w);
     }
+
+    //the error for a record the block requires but does not have
+    GridgenError missingRecord(const string & rname)
+    {
+        return GridgenError(label() + " has no " + toupper(rname) + " record");
+    }
+
+    //the error for a record that names a block that is not defined
+    GridgenError undefinedBlock(const string & rname, const string & block_name)
+    {
+        return GridgenError("record " + toupper(rname) + " in " + label() + " names block " +
+                            block_name + ", which is not defined");
+    }
+
+    //the block named by record rname of this block
+    block_raw_data * findBlock(map<string, block_raw_data *> & blocks, const string & rname,
+                               const string & block_name);
+
+    //the error for a record that names a block of the wrong type
+    GridgenError wrongBlockType(const string & rname, block_raw_data * block,
+                                const string & expected)
+    {
+        return GridgenError("record " + toupper(rname) + " in " + label() + " names " +
+                            block->label() + ", which is not " + expected);
+    }
+
+    //the MODFLOW_GRID block named by record MODFLOW_GRID of this block, initialized
+    modflow_grid_raw_data * findModflowGrid(map<string, block_raw_data *> & blocks,
+                                            const string & grid_name);
+
+    //the grid named by record rname of this block, initialized and built
+    Grid * buildReferencedGrid(map<string, block_raw_data *> & blocks, const string & rname,
+                               const string & grid_name);
 
     //report NODE_NUMBERING and WITHOUT_INACTIVE as ignored for a quadtree grid
     void warnQuadtreeExportRecords(Grid * grid);

@@ -12,6 +12,7 @@
 
 #include "Box.h"
 #include "ModflowGrid.h"
+#include "GridgenError.h"
 #include <assert.h>
 
 namespace cusg
@@ -232,7 +233,6 @@ void Box::getNeighbors(list<Box *> & neighbors, int dir)
  * \return \b true, unless:
  *     - the width or height of the box is smaller than `epsilon`
  *     - this box is an internal node, so it has already been split
- *     - insufficient memory
  */
 bool Box::split(double epsilon)
 {
@@ -259,12 +259,6 @@ bool Box::split(double epsilon)
     //initialize the new nodes
     for (int i = 0; i < 4; ++i)
     {
-        if (children[i] == nullptr)
-        {
-            cerr << "! Error: Box::split: Not enough memory" << endl;
-            return false;
-        }
-
         children[i]->depth = this->depth + 1;
         children[i]->dz = this->dz;
         children[i]->z = this->z;
@@ -437,16 +431,14 @@ bool Box::refine_pUpDown(Box ** ppbox)
 
     if ((*ppbox)->in(x, y) == false)
     {
-        cout << "! Error: (*ppbox) refine_pUpDown error: box[" << id << "] with depth=" << depth
-             << " has (*ppbox)=box[" << (*ppbox)->id << "] with depth=" << (*ppbox)->depth << endl;
-        assert(false);
+        throw GridgenError("internal error: the cell below or above cell " + to_string(id) +
+                           " does not contain its center");
     }
 
     if ((*ppbox)->depth > this->depth)
     {
-        cout << "! Error: (*ppbox) depth error: box[" << id << "] with depth=" << depth
-             << " has (*ppbox)=box[" << (*ppbox)->id << "] with depth=" << (*ppbox)->depth << endl;
-        assert(false);
+        throw GridgenError("internal error: the cell below or above cell " + to_string(id) +
+                           " is smaller than it");
     }
     if ((*ppbox)->depth == this->depth) return true; //nothing to do
     //(*ppbox)->depth<this->depth
@@ -476,8 +468,8 @@ Box * Box::find(double qx, double qy)
         if (i->in(qx, qy)) return i->find(qx, qy);
     }
 
-    cerr << "! Error: Box::find: Locate a box error!" << endl;
-    return nullptr;
+    throw GridgenError("internal error: no cell contains the point (" + to_string(qx) + ", " +
+                       to_string(qy) + ")");
 }
 
 void Box::rotateCtr(double cx, double cy, double rotation, double & rotated_x, double & rotated_y)

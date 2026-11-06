@@ -230,24 +230,6 @@ public:
         for (auto & i : pChildren) i->getLeaves(leaves);
     }
 
-    /*!
-        Recursive method for finding any node that has at least one child node
-        that is a leafnode. The leafnodeparent list should be None when first 
-        called.  This method is useful for node coarsening and drawing grids,
-        for example.
-        
-        If exclusive is true, then all child nodes must be leafnodes.
-        
-        This function is not implemented yet. see node.py for detail.
-    */
-
-    void getleafParents(list<Box *> & parents, bool exclusive = false)
-    {
-        //not implemented yet
-        cerr << "! Error: getleafParents is not implemented" << endl;
-        //see node.py
-    }
-
     /*! \brief Connects this box to another box.
      *
      * Connects this box to the box pointed to by `nei`. The

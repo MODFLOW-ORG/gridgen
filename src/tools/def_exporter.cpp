@@ -4,6 +4,7 @@
 #include "QuadTree3D.h"
 #include "QuadTreeBuilder.h"
 #include "GridVertices.h"
+#include "Warnings.h"
 #include <sstream>
 #include <algorithm>
 #include <vector>
@@ -167,9 +168,8 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
         if (quadGrid != nullptr)
             quadGrid->vertical_pass_through = true;
         else
-            cerr
-                << "! Warning: VERTICAL_PASS_THROUGH applies only to a QUADTREE grid and is ignored"
-                << endl;
+            warn("Record VERTICAL_PASS_THROUGH in " + data.label() +
+                 " is ignored; it applies only to a QUADTREE grid.");
     }
 
     //save the rest

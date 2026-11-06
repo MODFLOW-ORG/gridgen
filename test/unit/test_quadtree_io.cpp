@@ -8,6 +8,7 @@
 
 #include "csr_checks.h"
 #include "def_parser.h"
+#include "GridgenError.h"
 #include "def_struct.h"
 #include "grid_helpers.h"
 
@@ -27,14 +28,15 @@ std::unique_ptr<QuadTree3D> make_refined(double angle = 0.0)
                       {{150.0, 150.0, 2, 0}}, true);
 }
 
-// write qtree to a tree structure file, read it back through a QUADTREE
-// block, and return the rebuilt quadtree, which parser owns
-QuadTree3D * round_trip(DefinitionParser & parser, QuadTree3D * qtree, const std::string & name)
+// write structure to a tree structure file, read it through a QUADTREE block,
+// and return the quadtree, which parser owns
+QuadTree3D * read_structure(DefinitionParser & parser, const std::string & structure,
+                            const std::string & name)
 {
     std::string tsf = testing::TempDir() + name;
     {
         std::ofstream out(tsf.c_str());
-        out << *qtree;
+        out << structure;
     }
 
     std::ostringstream dfn;
@@ -58,17 +60,34 @@ QuadTree3D * round_trip(DefinitionParser & parser, QuadTree3D * qtree, const std
 
     std::istringstream in(dfn.str());
     QuadTree3D * rebuilt = nullptr;
-    if (parser.parse(in))
+    try
     {
-        quadtree_grid_raw_data * data =
-            dynamic_cast<quadtree_grid_raw_data *>(parser.getBlockData("qtg"));
-        if (data != nullptr && data->initialize(parser.getBlockData()))
+        if (parser.parse(in))
         {
-            rebuilt = dynamic_cast<QuadTree3D *>(data->build());
+            quadtree_grid_raw_data * data =
+                dynamic_cast<quadtree_grid_raw_data *>(parser.getBlockData("qtg"));
+            if (data != nullptr && data->initialize(parser.getBlockData()))
+            {
+                rebuilt = dynamic_cast<QuadTree3D *>(data->build());
+            }
         }
+    }
+    catch (...)
+    {
+        std::remove(tsf.c_str());
+        throw;
     }
     std::remove(tsf.c_str());
     return rebuilt;
+}
+
+// write qtree to a tree structure file, read it back through a QUADTREE
+// block, and return the rebuilt quadtree, which parser owns
+QuadTree3D * round_trip(DefinitionParser & parser, QuadTree3D * qtree, const std::string & name)
+{
+    std::ostringstream structure;
+    structure << *qtree;
+    return read_structure(parser, structure.str(), name);
 }
 
 } // namespace
@@ -188,4 +207,28 @@ TEST(QuadTreeIO, TreeStructureFileIdentifiersAreOneBased)
         }
     }
     EXPECT_EQ(first_active, 0);
+}
+
+TEST(QuadTreeIO, QuadrantCodeOtherThan1To4IsAnError)
+{
+    std::ostringstream text;
+    text << *make_refined();
+    std::string structure = text.str();
+
+    // the first digit of the first quadrant code, after "(layer,row,col) "
+    size_t code = structure.find(") 1");
+    ASSERT_NE(code, std::string::npos);
+    structure[code + 2] = '5';
+
+    DefinitionParser parser;
+    std::string message;
+    try
+    {
+        read_structure(parser, structure, "gridgen_unit_bad_code.tsf");
+    }
+    catch (const GridgenError & e)
+    {
+        message = e.what();
+    }
+    EXPECT_NE(message.find("has the quadrant code 5"), std::string::npos) << message;
 }

@@ -14,6 +14,7 @@ Usually the file extension is .asc, but recent versions of ESRI software also re
 using namespace std;
 
 #include "ModflowGrid.h"
+#include "GridgenError.h"
 
 namespace cusg
 {
@@ -141,12 +142,7 @@ public:
     bool build(const string & filename)
     {
         ifstream fin(filename.c_str());
-        if (fin.good() == false)
-        {
-            cerr << "! Error: arcinfo_ascii_grid::build cannot open file: (" << filename << ")"
-                 << endl;
-            return false;
-        }
+        if (fin.good() == false) throw GridgenError("cannot open ASCII grid file " + filename);
 
         cout << "    * Read surface elevation from file: " << filename << endl;
 
@@ -168,11 +164,8 @@ public:
     //get the x coordinate of the CENTER of a cell
     double getX(unsigned int i) override
     {
-        if (i >= ncols)
-        {
-            cerr << " ! Error: arcinfo_ascii_grid::getX index out of bound" << endl;
-            i = ncols - 1;
-        }
+        //an index past the last column is taken as the last
+        if (i >= ncols) i = ncols - 1;
 
         return xllcorner + cellsize * (i + 0.5f);
     }
@@ -180,11 +173,8 @@ public:
     //get the y coordinate of the CENTER of a cell
     double getY(unsigned int i) override
     {
-        if (i >= nrows)
-        {
-            cerr << " ! Error: arcinfo_ascii_grid:: getY index out of bound" << endl;
-            i = nrows - 1;
-        }
+        //an index past the last row is taken as the last
+        if (i >= nrows) i = nrows - 1;
 
         return yllcorner + cellsize * ((nrows - i - 1) + 0.5f);
     }

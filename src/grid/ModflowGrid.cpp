@@ -9,6 +9,7 @@
 */
 
 #include "ModflowGrid.h"
+#include "GridgenError.h"
 
 namespace cusg
 {
@@ -77,10 +78,9 @@ int ModflowGrid::getFirstNLayer()
 Index3d ModflowGrid::get_indices(int nodeid)
 {
 
-    if (nodeid > (nlay * nrow * ncol))
+    if (nodeid >= (nlay * nrow * ncol))
     {
-        cerr << "Nodeid = " << nodeid << " is not valid..." << endl;
-        assert(false);
+        throw GridgenError("internal error: cell " + to_string(nodeid) + " is not in the grid");
     }
 
     int k = int(nodeid / nrow / ncol);
@@ -163,7 +163,7 @@ list<pair<int, int>> ModflowGrid::get_node_connections(int nodeid)
      */
 CSRData ModflowGrid::get_usg_csr_data()
 {
-    cout << "- Creating the UsgCsrData object." << endl;
+    cout << "- Compute the cell connections" << endl;
 
     int box_size = nodegroup.size();
 
@@ -322,9 +322,6 @@ void ModflowGrid::number_nodes()
 
 void ModflowGrid::init(int nlay, int nrow, int ncol, const vector<double *> & botm)
 {
-    //log the creation
-    cout << "- A ModflowGrid object was instantiated." << endl;
-
     //assign the arguments to the object.
     this->nlay = nlay;
     this->nodes = nlay * nrow * ncol;

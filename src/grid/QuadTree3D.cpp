@@ -31,8 +31,6 @@ namespace cusg
 
 QuadTree3D::QuadTree3D(ModflowGrid * mfgrid) : nodeid_array(nullptr), nodelay_array(nullptr)
 {
-    cout << "- A QuadTree object was instantiated." << endl;
-
     // Store the modflowgrid, too
     m_mfgrid = mfgrid;
 
@@ -459,7 +457,7 @@ bool QuadTree3D::smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq,
             }
             else
             {
-                cerr << "! Warning: QuadTree3D::smooth_refinement: split failed" << endl;
+                throw GridgenError("internal error: a cell cannot be split to smooth the grid");
             }
         }
     } //end for i
@@ -623,9 +621,7 @@ int QuadTree3D::get_nodenumber(int nodeid)
     int nodenumber = nodenumber_array[nodeid];
     if (nodenumber == -1)
     {
-        cerr << "! ERROR: This nodeid " << nodeid << " does not presently have a nodenumber."
-             << endl;
-        assert(false);
+        throw GridgenError("internal error: cell " + to_string(nodeid) + " has no node number");
     }
 
     return nodenumber;
@@ -774,7 +770,7 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
 	*/
 CSRData QuadTree3D::get_usg_csr_data()
 {
-    cout << "- Creating the UsgCsrData object" << endl;
+    cout << "- Compute the cell connections" << endl;
 
     if (this->rebuild_nodeid_array)
     {
@@ -827,11 +823,6 @@ CSRData QuadTree3D::get_usg_csr_data()
 
         Box * nodeobj = get_nodeobj(nid);
         double dxdydzn[3] = {nodeobj->dx, nodeobj->dy, nodeobj->dz};
-
-        if (nodeobj->dx < 0 || nodeobj->dy < 0 || nodeobj->dz < 0)
-        {
-            cout << "(" << nodeobj->dx << "," << nodeobj->dy << "," << nodeobj->dz << ")" << endl;
-        }
 
         //diagonal position
         ia[nid] = ja_index + id_offset;
@@ -1068,9 +1059,7 @@ bool QuadTree3D::recompute_z_of_cells()
     //check if bot and top are created
     if (bot == nullptr || top == nullptr)
     {
-        cerr << "! Error: QuadTree3D::recompute_z_of_cells: Either top or bot are not initialized"
-             << endl;
-        return false;
+        throw GridgenError("internal error: the cell elevations are used before they are set");
     }
 
     int nodesize = nodes();
@@ -1090,8 +1079,7 @@ bool QuadTree3D::align_elev()
     //check if bot and top are created
     if (bot == nullptr || top == nullptr)
     {
-        cerr << "! Error: QuadTree3D::align_elev: Either top or bot are not initialized" << endl;
-        return false;
+        throw GridgenError("internal error: the cell elevations are used before they are set");
     }
 
     int nodesize = nodes();
@@ -1190,11 +1178,9 @@ inline void DFSprint(ostream & out, Box * box, unsigned int & id, const string &
         if (box->active)
         {
             if (id != box->number + ((one_based_numbering) ? 1 : 0))
-            {
-                cerr << "! Error: box number=" << box->number + ((one_based_numbering) ? 1 : 0)
-                     << " differs from " << id << endl;
-            }
-            assert(id == box->number + ((one_based_numbering) ? 1 : 0));
+                throw GridgenError("internal error: node " +
+                                   to_string(box->number + ((one_based_numbering) ? 1 : 0)) +
+                                   " is written as node " + to_string(id));
             out << id++ << ", " << extra << " " << location << "\n";
         }
         else
@@ -1327,8 +1313,8 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
         bool br = aag->build(arcinfo_filename);
         if (br == false)
         {
-            throw GridgenError("failed to build arcinfo_ascii_grid from file: (" +
-                               arcinfo_filename + ")");
+            throw GridgenError("ASCII grid file " + arcinfo_filename +
+                               " does not give a positive NCOLS, NROWS, and CELLSIZE");
         }
 
         ag = aag.get();

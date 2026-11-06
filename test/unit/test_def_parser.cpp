@@ -1,5 +1,6 @@
 // Definition file parsing
 #include <cmath>
+#include <functional>
 #include <list>
 #include <sstream>
 #include <string>
@@ -38,6 +39,31 @@ std::string mfg_block_with(const std::string & from, const std::string & to)
     return block;
 }
 
+// the message of the GridgenError that action throws, or "" if it throws none
+std::string error_message(const std::function<void()> & action)
+{
+    try
+    {
+        action();
+    }
+    catch (const GridgenError & e)
+    {
+        return e.what();
+    }
+    return "";
+}
+
+// the message of the error from initializing block name of the definition file
+std::string initialize_error(const std::string & definition, const std::string & name)
+{
+    std::istringstream dfn(definition);
+    DefinitionParser parser;
+    parser.parse(dfn);
+    block_raw_data * data = parser.getBlockData(name);
+    if (data == nullptr) return "no block " + name;
+    return error_message([&] { data->initialize(parser.getBlockData()); });
+}
+
 } // namespace
 
 TEST(DefinitionParser, ModflowGridBlock)
@@ -73,7 +99,68 @@ TEST(DefinitionParser, MissingRequiredRecordIsAnError)
 {
     std::istringstream dfn(mfg_block_with("  NROW = 3\n", ""));
     DefinitionParser parser;
-    EXPECT_THROW(parser.parse(dfn), GridgenError);
+    EXPECT_EQ(error_message([&] { parser.parse(dfn); }),
+              "MODFLOW_GRID block mfg has no NROW record");
+
+    std::istringstream bottom(mfg_block_with("  BOTTOM LAYER 2 = CONSTANT -10.\n", ""));
+    EXPECT_EQ(error_message([&] { DefinitionParser().parse(bottom); }),
+              "MODFLOW_GRID block mfg has no BOTTOM LAYER 2 record");
+}
+
+TEST(DefinitionParser, ReferenceToAnUndefinedBlockIsAnError)
+{
+    EXPECT_EQ(initialize_error("BEGIN GRID_TO_SHAPEFILE shp\n"
+                               "  GRID = nogrid\n"
+                               "  SHAPEFILE = out\n"
+                               "  FEATURE_TYPE = polygon\n"
+                               "END GRID_TO_SHAPEFILE\n",
+                               "shp"),
+              "record GRID in GRID_TO_SHAPEFILE block shp names block nogrid, which is not "
+              "defined");
+
+    EXPECT_EQ(initialize_error("BEGIN QUADTREE_BUILDER qtb\n"
+                               "  MODFLOW_GRID = nogrid\n"
+                               "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                               "END QUADTREE_BUILDER\n",
+                               "qtb"),
+              "record MODFLOW_GRID in QUADTREE_BUILDER block qtb names block nogrid, which is "
+              "not defined");
+
+    EXPECT_EQ(initialize_error(std::string(MFG_BLOCK) + "BEGIN QUADTREE_BUILDER qtb\n"
+                                                        "  MODFLOW_GRID = mfg\n"
+                                                        "  REFINEMENT_FEATURES LAYER 2 = typo\n"
+                                                        "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                                                        "END QUADTREE_BUILDER\n",
+                               "qtb"),
+              "record REFINEMENT_FEATURES LAYER 2 in QUADTREE_BUILDER block qtb names block "
+              "typo, which is not defined");
+}
+
+TEST(DefinitionParser, ReferenceToABlockOfTheWrongTypeIsAnError)
+{
+    const std::string domain = "BEGIN ACTIVE_DOMAIN domain\n"
+                               "  SHAPEFILE = domain\n"
+                               "  FEATURE_TYPE = polygon\n"
+                               "END ACTIVE_DOMAIN\n";
+
+    EXPECT_EQ(initialize_error(domain + "BEGIN GRID_TO_SHAPEFILE shp\n"
+                                        "  GRID = domain\n"
+                                        "  SHAPEFILE = out\n"
+                                        "  FEATURE_TYPE = polygon\n"
+                                        "END GRID_TO_SHAPEFILE\n",
+                               "shp"),
+              "record GRID in GRID_TO_SHAPEFILE block shp names ACTIVE_DOMAIN block domain, "
+              "which is not a MODFLOW_GRID, QUADTREE, or QUADTREE_BUILDER block");
+
+    EXPECT_EQ(initialize_error(std::string(MFG_BLOCK) + domain +
+                                   "BEGIN QUADTREE_BUILDER qtb\n"
+                                   "  MODFLOW_GRID = mfg\n"
+                                   "  REFINEMENT_FEATURES LAYER 1 = domain\n"
+                                   "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                                   "END QUADTREE_BUILDER\n",
+                               "qtb"),
+              "record REFINEMENT_FEATURES LAYER 1 in QUADTREE_BUILDER block qtb names "
+              "ACTIVE_DOMAIN block domain, which is not a REFINEMENT_FEATURES block");
 }
 
 TEST(DefinitionParser, ArrayErrors)

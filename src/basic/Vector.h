@@ -113,11 +113,8 @@ template <class T, int D> Vector<T, D> Vector<T, D>::normalize() const // normal
     for (i = 0; i < D; i++)
     {
         newv.v[i] = v[i] / magnitude;
-        if (fabs(v[i]) > magnitude * HUGENUMBER)
-        {
-            cerr << "! taking the norm of a zero " << D << " vector" << endl;
-            break;
-        }
+        //a zero vector has no direction
+        if (fabs(v[i]) > magnitude * HUGENUMBER) break;
     }
     for (; i < D; i++)
     {

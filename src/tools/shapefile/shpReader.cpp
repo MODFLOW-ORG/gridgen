@@ -153,10 +153,15 @@ bool ShapeReader::read(const string & filename)
                                " cannot be read");
         }
 
-        //some format check..
+        //the format requires the first part to start at the first vertex
         if (psShape->nParts > 0 && psShape->panPartStart[0] != 0)
         {
-            cerr << "panPartStart[0] = " << psShape->panPartStart[0] << ", not zero as expected.\n";
+            SHPDestroyObject(psShape);
+            SHPClose(hSHP);
+            DBFClose(hDBF);
+            throw GridgenError("shape " + to_string(i + 1) + " in shapefile " + filename +
+                               " cannot be read; its first part does not start at its first "
+                               "vertex");
         }
 
         switch (psShape->nSHPType)

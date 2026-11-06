@@ -4,6 +4,7 @@
 #include <fstream>
 #include <algorithm>
 #include <cassert>
+#include <cctype>
 #include <limits.h>
 using namespace std;
 
@@ -46,9 +47,10 @@ void parseNodeStr(string & nodeStr, TreeStructNode & node)
     if ((unsigned)(close_paren + 1) < nodeStr.size())
     {
         string location_text = nodeStr.substr(close_paren + 1, nodeStr.size() - close_paren - 1);
+        //any character but a space is kept, so a code that is not 1 to 4 is reported
         for (char t : location_text)
         {
-            if (t >= '1' && t <= '4') node.code.push_back(t);
+            if (!isspace((unsigned char)t)) node.code.push_back(t);
         }
     }
 
@@ -75,7 +77,7 @@ void parseTreeStructFile(string fileName, vector<TreeStructNode> & tree, string 
     ifstream fin(filePath.c_str());
     if (!fin.good())
     {
-        throw cusg::GridgenError("Cannot open tree structure file:" + filePath);
+        throw cusg::GridgenError("cannot open structure file " + filePath);
     } //end good
 
     /************************************************************************/

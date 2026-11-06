@@ -41,9 +41,6 @@ namespace cusg
 ModflowGrid2D::ModflowGrid2D(int nrow, int ncol, double delr, double delc, double xoffset,
                              double yoffset, double rotation)
 {
-    //log the creation
-    cout << "- A ModflowGrid2D object was instantiated." << endl;
-
     //assign the arguments to the object.
     this->nlay = 1;
     this->nrow = nrow;
@@ -87,9 +84,6 @@ ModflowGrid2D::ModflowGrid2D(int nrow, int ncol, double delr, double delc, doubl
 ModflowGrid2D::ModflowGrid2D(int nrow, int ncol, double * delr, double * delc, double xoffset,
                              double yoffset, double rotation)
 {
-    //log the creation
-    cout << "- A ModflowGrid2D object was instantiated." << endl;
-
     //assign the arguments to the object.
     this->nlay = 1;
     this->nrow = nrow;
@@ -174,9 +168,6 @@ vector<double> ModflowGrid2D::get_local_Ye_array()
 /// Return a numpy array of size (nodes) that contains the area for all cells.
 vector<double> ModflowGrid2D::get_cell_areas()
 {
-    //log the creation
-    cout << "Getting cell areas." << endl;
-
     vector<double> area(nrow * ncol);
 
     for (int r = 0; r < nrow; r++)
@@ -210,10 +201,9 @@ int ModflowGrid2D::get_nodeid(int i, int j)
 Index2d ModflowGrid2D::get_indices(int nodeid)
 {
 
-    if (nodeid > nrow * ncol)
+    if (nodeid >= nrow * ncol)
     {
-        cerr << "Nodeid (" << nodeid << " is not valid..." << endl;
-        assert(false);
+        throw GridgenError("internal error: cell " + to_string(nodeid) + " is not in the grid");
     }
 
     int i = int(nodeid / this->ncol);
@@ -229,7 +219,8 @@ Box * ModflowGrid2D::find_nodeobj(int i, int j)
 
     if (nodegroup.empty() || id < 0 || ((unsigned)id) >= nodegroup.size())
     {
-        throw GridgenError("ModflowGrid2D::find_nodeobj index out of bound");
+        throw GridgenError("internal error: row " + to_string(i + 1) + ", column " +
+                           to_string(j + 1) + " is not in the grid");
     }
 
     return nodegroup[id];
@@ -449,9 +440,9 @@ int ModflowGrid2D::getXIndexByBinarySearch(const Point2d & pt, double * Xe, int 
     }
     else // if(Xe[mid] <pt[0])
     {
+        //neither less, equal, nor greater, so the coordinate is not a number
         if (!(Xe[mid] < pt[0]))
-            cerr
-                << "! Error: ModflowGrid2D::getXIndexByBinarySearch may suffer precision problem!\n";
+            throw GridgenError("a feature has a coordinate that is not a number");
         if (ascending)
             return getXIndexByBinarySearch(pt, Xe, mid, right, ascending);
         else
@@ -477,8 +468,9 @@ int ModflowGrid2D::getYIndexByBinarySearch(const Point2d & pt, double * Ye, int 
     }
     else //if(Ye[mid] <pt[1])
     {
+        //neither less, equal, nor greater, so the coordinate is not a number
         if (!(Ye[mid] < pt[1]))
-            cerr << "Error: ModflowGrid2D::getYIndexByBinarySearch may have precision problem!\n";
+            throw GridgenError("a feature has a coordinate that is not a number");
         if (ascending)
             return getYIndexByBinarySearch(pt, Ye, left, mid, ascending);
         else
