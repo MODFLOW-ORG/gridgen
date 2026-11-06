@@ -78,7 +78,7 @@ int ModflowGrid::getFirstNLayer()
 Index3d ModflowGrid::get_indices(int nodeid)
 {
 
-    if (nodeid > (nlay * nrow * ncol))
+    if (nodeid >= (nlay * nrow * ncol))
     {
         throw GridgenError("internal error: cell " + to_string(nodeid) + " is not in the grid");
     }

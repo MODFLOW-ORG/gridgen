@@ -201,7 +201,7 @@ int ModflowGrid2D::get_nodeid(int i, int j)
 Index2d ModflowGrid2D::get_indices(int nodeid)
 {
 
-    if (nodeid > nrow * ncol)
+    if (nodeid >= nrow * ncol)
     {
         throw GridgenError("internal error: cell " + to_string(nodeid) + " is not in the grid");
     }

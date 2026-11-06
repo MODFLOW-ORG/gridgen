@@ -155,8 +155,8 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
             name.pop_front();
             string end_type = tolower(name.front());
             if (block.type != end_type)
-                throw GridgenError("block " + block.name + " begins as " + block.type +
-                                   " but ends as " + end_type);
+                throw GridgenError("block " + block.name + " begins as " + toupper(block.type) +
+                                   " but ends as " + toupper(end_type));
 
             break; //we are done for this block
         }

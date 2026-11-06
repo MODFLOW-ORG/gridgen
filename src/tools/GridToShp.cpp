@@ -263,7 +263,7 @@ void writeModflowGrid2Shp(ModflowGrid * modflow, string gridShpName, string feat
     //create a shape file
     int shptype = 0; //polygon : true ; point : false
     SHPHandle handler = createShpHandle(gridShpName, feature_type, shptype);
-    if (handler == nullptr) return;
+    if (handler == nullptr) throw GridgenError("cannot write shapefile " + gridShpName);
 
     //create a .dbf file
     string dbfName = gridShpName; /*
