@@ -276,17 +276,22 @@ void Quadtree_Builder::analyze_elevation(QuadTree3D * qtree, double * top_elev, 
             double negative_thickness = bot_elev[nodenumber] - top_elev[nodenumber];
             negative_count++;
             if (negative_thickness > max_negative_thickness)
+            {
                 max_negative_thickness = negative_thickness;
-            max_negative_node = nodenumber;
+                max_negative_node = nodenumber;
+            }
         }
     } //end for nodenumber
 
     if (negative_count > 0)
     {
+        //the node as numbered in the output, with its layer
+        Box * box = qtree->get_nodeobj(max_negative_node);
+        int offset = qtree->get_one_based_node_numbering() ? 1 : 0;
         stringstream msg;
-        msg << "There are " << negative_count << " cells with negative thickness. Node #"
-            << max_negative_node
-            << " has the largest negative thickness=" << -max_negative_thickness;
+        msg << "There are " << negative_count << " cells with negative thickness. Node "
+            << max_negative_node + offset << " in layer " << box->layer + 1
+            << " has the largest negative thickness, " << -max_negative_thickness << ".";
         warn(msg.str());
     }
     //
