@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "gridding"
+description = "The warning about cells with negative thickness named the last such cell, counted from zero, as the one with the largest negative thickness. It now names the cell with the largest negative thickness, by its node number in the output files, with its layer."

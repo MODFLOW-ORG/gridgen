@@ -340,3 +340,37 @@ TEST(DefinitionParser, ShortArrayFileIsAnError)
     ASSERT_NE(data, nullptr);
     EXPECT_THROW(data->initialize(parser.getBlockData()), GridgenError);
 }
+
+// the cell with the largest negative thickness comes before a thinner one
+TEST(QuadTreeBuilder, NegativeThicknessNamesTheThickestCell)
+{
+    std::string path = testing::TempDir() + "gridgen_unit_negative_bottom.dat";
+    FILE * f = std::fopen(path.c_str(), "w");
+    ASSERT_NE(f, nullptr);
+    std::fputs("15. 0. 0.\n0. 12. 0.\n0. 0. 0.\n", f);
+    std::fclose(f);
+
+    std::string dfn = "BEGIN MODFLOW_GRID mfg\n"
+                      "  ROTATION_ANGLE = 0\n"
+                      "  X_OFFSET = 0\n"
+                      "  Y_OFFSET = 0\n"
+                      "  NLAY = 1\n"
+                      "  NROW = 3\n"
+                      "  NCOL = 3\n"
+                      "  DELR = CONSTANT 100.\n"
+                      "  DELC = CONSTANT 100.\n"
+                      "  TOP = CONSTANT 10.\n"
+                      "  BOTTOM LAYER 1 = OPEN/CLOSE " +
+                      path +
+                      "\n"
+                      "END MODFLOW_GRID\n"
+                      "BEGIN QUADTREE_BUILDER qtb\n"
+                      "  MODFLOW_GRID = mfg\n"
+                      "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                      "END QUADTREE_BUILDER\n";
+    clear_warnings();
+    build_qtree(dfn);
+    ASSERT_EQ(get_warnings().size(), 1u);
+    EXPECT_EQ(get_warnings()[0], "There are 2 cells with negative thickness. Node 1 in layer 1 "
+                                 "has the largest negative thickness, -5.");
+}
