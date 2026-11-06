@@ -130,18 +130,18 @@ public:
     block_raw_data()
     {
         folderPath = "";
-        m_initizlied = false;
+        m_initialized = false;
     }
 
     block_raw_data(string fpath)
     {
         folderPath = fpath;
-        m_initizlied = false;
+        m_initialized = false;
     }
 
     block_raw_data(block_raw_data & other) : BaseParser(), list<entry_raw_data>()
     {
-        m_initizlied = false;
+        m_initialized = false;
         assign(other.begin(), other.end());
         name = other.name;
         type = other.type;
@@ -156,7 +156,7 @@ public:
         return true;
     } //do nothing by default
 
-    bool isInitialized() const { return m_initizlied; }
+    bool isInitialized() const { return m_initialized; }
     string getFolderPath()
     {
         if (folderPath.empty() || folderPath == "")
@@ -199,7 +199,7 @@ protected:
     //report NODE_NUMBERING and WITHOUT_INACTIVE as ignored for a quadtree grid
     void warnQuadtreeExportRecords(Grid * grid);
 
-    bool m_initizlied;
+    bool m_initialized;
     list<string> m_warnings;
 };
 

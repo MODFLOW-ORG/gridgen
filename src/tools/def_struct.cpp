@@ -370,7 +370,7 @@ modflow_grid_raw_data::~modflow_grid_raw_data()
 
 bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //kept only when every array is read, so an error leaves none
     unique_ptr<REAL[]> r(createArray<REAL>(delr_str, ncol, getFolderPath()));
@@ -388,7 +388,7 @@ bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
     for (auto & a : b) bot.push_back(a.release());
     top = bot[0];
 
-    m_initizlied = true;
+    m_initialized = true;
 
     return true;
 }
@@ -460,7 +460,7 @@ bool quadtree_grid_raw_data::parse()
 
 bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     this->modflow_data = dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
 
@@ -478,7 +478,7 @@ bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
     //read/open this->tree_structure_file here
     parseTreeStructFile(tree_structure_file, allNodes, getFolderPath());
 
-    m_initizlied = true;
+    m_initialized = true;
     return true;
 }
 
@@ -730,7 +730,7 @@ bool quadtree_builder_raw_data::parse()
 
 bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //initialize modflow_data if it has not been initialized yet
     this->modflow_data = dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
@@ -837,7 +837,7 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
         }
     }
 
-    m_initizlied = true;
+    m_initialized = true;
     return true;
 }
 
@@ -1015,7 +1015,7 @@ bool grid_intersection_raw_data::parse()
 
 bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //get the grid
     block_raw_data * block = blocks[grid_name];
@@ -1046,7 +1046,7 @@ bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & bloc
         return false;
     }
 
-    m_initizlied = true;
+    m_initialized = true;
 
     return true;
 }
@@ -1101,9 +1101,9 @@ bool active_domain_raw_data::parse()
 
 bool active_domain_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
-    m_initizlied = true;
+    m_initialized = true;
 
     return true;
 }
@@ -1214,7 +1214,7 @@ bool grid_to_usgdata_raw_data::parse()
 
 bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //get the grid
     block_raw_data * block = blocks[grid_name];
@@ -1245,7 +1245,7 @@ bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks
         return false;
     }
 
-    m_initizlied = true;
+    m_initialized = true;
 
     return true;
 }
@@ -1338,7 +1338,7 @@ bool gridtoshape_raw_data::parse()
 }
 bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //get the grid
     block_raw_data * block = blocks[grid_name];
@@ -1371,7 +1371,7 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
 
     warnQuadtreeExportRecords(this->grid);
 
-    m_initizlied = true;
+    m_initialized = true;
     return true;
 }
 
@@ -1457,7 +1457,7 @@ bool gridtovtk_raw_data::parse()
 }
 bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //get the grid
     block_raw_data * block = blocks[grid_name];
@@ -1490,7 +1490,7 @@ bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
 
     warnQuadtreeExportRecords(this->grid);
 
-    m_initizlied = true;
+    m_initialized = true;
     return true;
 }
 
