@@ -2,7 +2,11 @@
 #include "shpReader.h"
 #include "GridgenError.h"
 #include "Warnings.h"
+#include "intersection.h"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <cassert>
 using namespace std;
 
@@ -215,38 +219,62 @@ bool ShapeReader::read(const string & filename)
     return true;
 }
 
+//whether p is on segment ab, within a small fraction of its length
+static bool onSegment(const Point2d & p, const Point2d & a, const Point2d & b)
+{
+    double dx = b[0] - a[0], dy = b[1] - a[1];
+    double len2 = dx * dx + dy * dy;
+    if (len2 == 0) return p[0] == a[0] && p[1] == a[1]; //the closing vertex repeats the first
+    double cross = dx * (p[1] - a[1]) - dy * (p[0] - a[0]);
+    double dot = dx * (p[0] - a[0]) + dy * (p[1] - a[1]);
+    double tol = 1e-9 * len2;
+    return fabs(cross) <= tol && dot >= -tol && dot <= len2 + tol;
+}
+
+//whether ring a is inside ring b, which it does not cross; the first vertex
+//or edge midpoint of a that is not on b decides, since a may touch b
+static bool ringInRing(const vector<Point2d> & a, const vector<Point2d> & b)
+{
+    size_t na = a.size(), nb = b.size();
+    for (size_t j = 0; j < 2 * na; j++)
+    {
+        const Point2d & v = a[j / 2];
+        Point2d p = (j % 2 == 0) ? v
+                                 : Point2d((v[0] + a[(j / 2 + 1) % na][0]) / 2,
+                                           (v[1] + a[(j / 2 + 1) % na][1]) / 2);
+        bool on_b = false, inside = false;
+        for (size_t k = 0; k < nb && !on_b; k++)
+        {
+            const Point2d & b0 = b[k];
+            const Point2d & b1 = b[(k + 1) % nb];
+            on_b = onSegment(p, b0, b1);
+            if (CrossesRay(b0.get(), b1.get(), p.get())) inside = !inside;
+        }
+        if (!on_b) return inside;
+    }
+    return false; //a lies on b
+}
+
 void ShapeReader::readPly(SHPObject * psShape, int iShape)
 {
-    //read each part
-    int iPart = 1;
-
-    //
-    c_ply ply(c_ply::POUT);
-    ply.beginPoly();
-
+    //the vertices of each part
+    vector<vector<Point2d>> rings;
+    int iPart = 0;
     for (int j = 0; j < psShape->nVertices; j++)
     {
-        string pszPartType;
-
-        if (j == 0 && psShape->nParts > 0) pszPartType = SHPPartTypeName(psShape->panPartType[0]);
-
-        //this defines a new loop...
-        if (iPart < psShape->nParts && psShape->panPartStart[iPart] == j)
+        //a part with no vertices starts at the same vertex as the next part
+        bool start = rings.empty();
+        while (iPart < psShape->nParts && psShape->panPartStart[iPart] <= j)
         {
-            pszPartType = SHPPartTypeName(psShape->panPartType[iPart]);
+            start = start || psShape->panPartStart[iPart] == j;
             iPart++;
-            ply.endPoly();
-            add_ply(ply, iShape);
-
-            //create a new ply
-            ply = c_ply(c_ply::PIN);
-            ply.beginPoly();
         }
+        if (start) rings.emplace_back();
 
         //Points may duplicate....
         double & x = psShape->padfX[j];
         double & y = psShape->padfY[j];
-        ply.addVertex(x, y);
+        rings.back().emplace_back(x, y);
 
         if (x < bbox[0]) bbox[0] = x;
         if (x > bbox[1]) bbox[1] = x;
@@ -254,14 +282,66 @@ void ShapeReader::readPly(SHPObject * psShape, int iShape)
         if (y > bbox[3]) bbox[3] = y;
     }
 
-    ply.endPoly();
+    //a ring inside an odd number of the others is a hole of the smallest ring
+    //containing it, and any other ring is an outer boundary, whatever the
+    //order and orientation of the rings
+    size_t nrings = rings.size();
+    vector<int> depth(nrings, 0), parent(nrings, -1);
+    vector<array<double, 4>> box(nrings); //xmin, xmax, ymin, ymax
+    for (size_t i = 0; i < nrings; i++)
+    {
+        box[i] = {rings[i][0][0], rings[i][0][0], rings[i][0][1], rings[i][0][1]};
+        for (const Point2d & p : rings[i])
+        {
+            box[i][0] = min(box[i][0], p[0]);
+            box[i][1] = max(box[i][1], p[0]);
+            box[i][2] = min(box[i][2], p[1]);
+            box[i][3] = max(box[i][3], p[1]);
+        }
+    }
+    auto extent = [&](size_t i) { return (box[i][1] - box[i][0]) * (box[i][3] - box[i][2]); };
+    for (size_t i = 0; i < nrings; i++)
+    {
+        for (size_t k = 0; k < nrings; k++)
+        {
+            //ring k can contain ring i only if its box holds the box of ring i
+            if (k == i || box[i][0] < box[k][0] || box[i][1] > box[k][1] || box[i][2] < box[k][2] ||
+                box[i][3] > box[k][3])
+                continue;
+            if (!ringInRing(rings[i], rings[k])) continue;
+            depth[i]++;
+            if (parent[i] < 0 || extent(k) < extent(parent[i])) parent[i] = static_cast<int>(k);
+        }
+    }
 
-    add_ply(ply, iShape);
+    //outer rings first, so each hole finds the polygon of its ring; a hole
+    //whose ring is not an outer ring, which happens only when rings cross, is
+    //an outer ring
+    vector<int> polygon_of(nrings, -1);
+    for (int hole = 0; hole <= 1; hole++)
+    {
+        for (size_t i = 0; i < nrings; i++)
+        {
+            if (depth[i] % 2 != hole) continue;
+            int owner = hole && parent[i] >= 0 ? polygon_of[parent[i]] : -1;
+            c_ply ply(owner >= 0 ? c_ply::PIN : c_ply::POUT);
+            ply.beginPoly();
+            for (const Point2d & p : rings[i]) ply.addVertex(p[0], p[1]);
+            ply.endPoly();
+            if (owner >= 0)
+                m_ply_list[owner].push_back(ply);
+            else
+            {
+                polygon_of[i] = static_cast<int>(m_ply_list.size());
+                add_ply(ply, iShape);
+            }
+        }
+    }
 }
 void ShapeReader::readMultiPatch(SHPObject * psShape, int iShape)
 {
     //outer and first rings start a polygon, and inner rings are its holes; a
-    //plain ring is a hole after another ring, as in a polygon shapefile
+    //plain ring is a hole after another ring
     bool started = false;
     for (int i = 0; i < psShape->nParts; i++)
     {

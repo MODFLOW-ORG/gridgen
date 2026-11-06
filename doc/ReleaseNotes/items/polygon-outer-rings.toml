@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "input"
+description = "A polygon shape with more than one outer ring was read as one polygon whose later rings were holes, so a REFINEMENT_FEATURES block refined only part of it. Each ring is now an outer boundary or a hole according to whether it lies inside another ring of the shape, whatever the order and orientation of the rings, and each hole belongs to the ring that contains it. Shapes with one outer ring and its holes are read as before."

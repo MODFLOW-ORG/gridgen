@@ -1,4 +1,5 @@
 // Quadtree refinement, smoothing, and connectivity
+#include <algorithm>
 #include <cstdlib>
 #include <set>
 #include <string>
@@ -305,14 +306,72 @@ TEST(QuadTreeBuilder, NullShapeDoesNotShiftLevels)
               attribute_refined_cells("gridgen_unit_level_null1", SHPT_ARC, "line", {{{a}, 1}}));
 }
 
-// a polygon shape with two outer rings is read as one polygon with a hole, and
-// only the second ring is refined (issue #142)
-TEST(QuadTreeBuilder, DISABLED_PolygonWithTwoOuterRingsRefinesBoth)
+// each outer ring of a polygon shape is a polygon, and each hole belongs to
+// the ring it is inside, whatever the order and orientation of the rings
+TEST(QuadTreeBuilder, PolygonWithTwoOuterRingsRefinesBoth)
 {
     gridgen_test::Ring a = gridgen_test::square(20.0, 220.0, 40.0),
                        b = gridgen_test::square(220.0, 220.0, 40.0);
-    EXPECT_EQ(
-        attribute_refined_cells("gridgen_unit_two_rings", SHPT_POLYGON, "polygon", {{{a, b}, 1}}),
-        attribute_refined_cells("gridgen_unit_two_rings1", SHPT_POLYGON, "polygon",
-                                {{{a}, 1}, {{b}, 1}}));
+    auto cells =
+        attribute_refined_cells("gridgen_unit_two_rings", SHPT_POLYGON, "polygon", {{{a, b}, 2}});
+    EXPECT_EQ(cells.size(), 9u + 2 * 15);
+    EXPECT_EQ(cells, attribute_refined_cells("gridgen_unit_two_rings1", SHPT_POLYGON, "polygon",
+                                             {{{a}, 2}, {{b}, 2}}));
+}
+
+TEST(QuadTreeBuilder, PolygonHoleIsNotRefined)
+{
+    // the hole holds the center cell, so the cells around it are refined
+    gridgen_test::Ring outer = gridgen_test::square(10.0, 10.0, 280.0),
+                       hole = gridgen_test::square(90.0, 90.0, 120.0);
+    auto cells =
+        attribute_refined_cells("gridgen_unit_hole", SHPT_POLYGON, "polygon", {{{outer, hole}, 1}});
+    EXPECT_EQ(cells.size(), 1u + 8 * 4);
+    EXPECT_EQ(cells, attribute_refined_cells("gridgen_unit_hole1", SHPT_POLYGON, "polygon",
+                                             {{{hole, outer}, 1}}));
+}
+
+TEST(QuadTreeBuilder, PolygonWithTwoOuterRingsAndHoles)
+{
+    gridgen_test::Ring a = gridgen_test::square(10.0, 210.0, 80.0),
+                       ahole = gridgen_test::square(30.0, 230.0, 40.0),
+                       b = gridgen_test::square(210.0, 10.0, 80.0),
+                       bhole = gridgen_test::square(230.0, 30.0, 40.0);
+    auto separate = attribute_refined_cells("gridgen_unit_holes1", SHPT_POLYGON, "polygon",
+                                            {{{a, ahole}, 1}, {{b, bhole}, 1}});
+    EXPECT_EQ(separate.size(), 9u + 2 * 3);
+    EXPECT_EQ(attribute_refined_cells("gridgen_unit_holes", SHPT_POLYGON, "polygon",
+                                      {{{a, ahole, b, bhole}, 1}}),
+              separate);
+    EXPECT_EQ(attribute_refined_cells("gridgen_unit_holes2", SHPT_POLYGON, "polygon",
+                                      {{{a, b, bhole, ahole}, 1}}),
+              separate);
+}
+
+TEST(QuadTreeBuilder, PolygonHoleTouchingOuterRingIsAHole)
+{
+    // the hole meets the outer ring along x = 290 and holds the middle right
+    // cell, which is not refined whichever vertex the hole starts at
+    gridgen_test::Ring outer = gridgen_test::square(10.0, 10.0, 280.0);
+    gridgen_test::Ring hole = {
+        {190.0, 90.0}, {190.0, 210.0}, {290.0, 210.0}, {290.0, 90.0}, {190.0, 90.0}};
+    gridgen_test::Ring hole_from_edge = {
+        {290.0, 210.0}, {290.0, 90.0}, {190.0, 90.0}, {190.0, 210.0}, {290.0, 210.0}};
+    auto cells = attribute_refined_cells("gridgen_unit_touching_hole", SHPT_POLYGON, "polygon",
+                                         {{{outer, hole}, 1}});
+    EXPECT_EQ(cells.size(), 1u + 8 * 4);
+    EXPECT_NE(std::find(cells.begin(), cells.end(), std::make_tuple(0, 250.0, 150.0)), cells.end());
+    EXPECT_EQ(cells, attribute_refined_cells("gridgen_unit_touching_hole1", SHPT_POLYGON, "polygon",
+                                             {{{outer, hole_from_edge}, 1}}));
+}
+
+TEST(QuadTreeBuilder, PolygonIslandInHoleIsAPolygon)
+{
+    gridgen_test::Ring outer = gridgen_test::square(10.0, 10.0, 280.0),
+                       hole = gridgen_test::square(60.0, 60.0, 180.0),
+                       island = gridgen_test::square(140.0, 140.0, 20.0);
+    EXPECT_EQ(attribute_refined_cells("gridgen_unit_island", SHPT_POLYGON, "polygon",
+                                      {{{island, outer, hole}, 1}}),
+              attribute_refined_cells("gridgen_unit_island1", SHPT_POLYGON, "polygon",
+                                      {{{outer, hole}, 1}, {{island}, 1}}));
 }
