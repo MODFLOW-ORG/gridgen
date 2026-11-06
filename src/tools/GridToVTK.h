@@ -49,30 +49,30 @@ void writeQuadtreeGrid2VTK(QuadTree3D * qtree, string vtkName);
 void writeQuadtreeGrid2VTK_shareV(QuadTree3D * qtree, string vtkName);
 
 //build sharing vertices data here
-void buildSharingVertices(QuadTree3D * qtree, vector<Vertex *> & vdata, BoxVtx * boxVts);
+void buildSharingVertices(QuadTree3D * qtree, vector<Vertex *> & vdata, BoxVtx * box_vertices);
 
-void rotateOnePnt(double x, double y, double cx, double cy, double rotation, double & resx,
-                  double & resy);
+void rotateOnePnt(double x, double y, double cx, double cy, double rotation, double & rotated_x,
+                  double & rotated_y);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //util
 
 //collect share
-int collectCell_share(QuadTree3D * qtree, vector<Box *> & allBoxes, vector<int> * intvals,
-                      vector<double> * dbvals, bool one_based_numbering);
+int collectCell_share(QuadTree3D * qtree, vector<Box *> & allBoxes, vector<int> * int_values,
+                      vector<double> * double_values, bool one_based_numbering);
 
 void writeVTKHeader(ofstream & ofile);
 
 void writeVTKTail(ofstream & ofile);
 
-void writeVTKCell(ofstream & ofile, int boxNum);
+void writeVTKCell(ofstream & ofile, int nboxes);
 
 template <typename Dtype>
 void writeDataArray(ofstream & ofile, string type, string name, const vector<Dtype> & data);
 
-void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * intvals,
-                vector<double> * dbvals, BoxVtx * boxVts);
+void writeCells(ofstream & ofile, vector<Box *> & allBoxes, vector<int> * int_values,
+                vector<double> * double_values, BoxVtx * box_vertices);
 //fit a plane using 3 points
-double fitZ(double ** vv, double x, double y);
+double fitZ(double ** points, double x, double y);
 
 #endif

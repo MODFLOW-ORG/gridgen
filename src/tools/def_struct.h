@@ -43,10 +43,10 @@ protected:
     virtual bool readBlock(istream & in, block_raw_data & block);
 
     //convert a string to a list of tokens
-    virtual list<string> tokenize(char * tmp, const char * ignore);
+    virtual list<string> tokenize(char * line, const char * ignore);
 
     // split a string into name and value by "="
-    pair<char *, char *> split(char * tmp);
+    pair<char *, char *> split(char * line);
 
     //merge a list of strings in to a single string connected by del
     string merge(const list<string> & name, string del);
@@ -89,14 +89,14 @@ protected:
                 }
             }
 
-            char tmp[1024];
+            char line[1024];
             ifstream fin(filePath.c_str());
             if (!fin.good()) throw GridgenError("cannot open array file " + filePath);
 
             T * A = new T[size];
             if (fin.peek() == '#')
             {
-                fin.getline(tmp, 1024);
+                fin.getline(line, 1024);
             }
             for (int i = 0; i < size; i++) fin >> A[i];
             if (fin.fail())
@@ -130,18 +130,18 @@ public:
     block_raw_data()
     {
         folderPath = "";
-        m_initizlied = false;
+        m_initialized = false;
     }
 
     block_raw_data(string fpath)
     {
         folderPath = fpath;
-        m_initizlied = false;
+        m_initialized = false;
     }
 
     block_raw_data(block_raw_data & other) : BaseParser(), list<entry_raw_data>()
     {
-        m_initizlied = false;
+        m_initialized = false;
         assign(other.begin(), other.end());
         name = other.name;
         type = other.type;
@@ -156,7 +156,7 @@ public:
         return true;
     } //do nothing by default
 
-    bool isInitialized() const { return m_initizlied; }
+    bool isInitialized() const { return m_initialized; }
     string getFolderPath()
     {
         if (folderPath.empty() || folderPath == "")
@@ -199,7 +199,7 @@ protected:
     //report NODE_NUMBERING and WITHOUT_INACTIVE as ignored for a quadtree grid
     void warnQuadtreeExportRecords(Grid * grid);
 
-    bool m_initizlied;
+    bool m_initialized;
     list<string> m_warnings;
 };
 

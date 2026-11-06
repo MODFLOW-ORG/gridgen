@@ -55,7 +55,7 @@ public:
 
 protected:
     ///////////////////////////////////////////////////////////////////////////
-    void doInit(); /*return # of vertice in this poly*/
+    void doInit(); /*return # of vertices in this poly*/
 
     //build elements in vector<ply_vertex*> all
     void build_all();

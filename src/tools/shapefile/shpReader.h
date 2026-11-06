@@ -15,25 +15,25 @@ struct ShapeIntField
 {
     int id;
     string name;
-    map<int, int> vals;
+    map<int, int> values;
 };
 struct ShapeDoubleField
 {
     int id;
     string name;
-    map<int, double> vals;
+    map<int, double> values;
 };
 struct ShapeStringField
 {
     int id;
     string name;
-    map<int, string> vals;
+    map<int, string> values;
 };
 struct ShapeLogField
 {
     int id;
     string name;
-    map<int, string> vals;
+    map<int, string> values;
 };
 
 // this reader reads shapefile format and convert
@@ -55,7 +55,7 @@ public:
     ~ShapeReader() { destroy(); }
 
     //read field attributes
-    bool readAttributes(DBFHandle & dbfHanld, int iShape);
+    bool readAttributes(DBFHandle & dbfHandle, int iShape);
 
     //read from file
     bool read(const string & filename);

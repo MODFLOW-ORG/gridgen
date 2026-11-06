@@ -33,23 +33,24 @@ void ShapeReader::destroy()
 //read field attributes from DBF file according to id
 bool ShapeReader::readAttributes(DBFHandle & dbfHandle, int iShape)
 {
-    for (auto & sifld : m_intFlds)
+    for (auto & field : m_intFlds)
     {
-        sifld.vals.insert(make_pair(iShape, DBFReadIntegerAttribute(dbfHandle, iShape, sifld.id)));
+        field.values.insert(
+            make_pair(iShape, DBFReadIntegerAttribute(dbfHandle, iShape, field.id)));
     }
-    for (auto & sifld : m_dbFlds)
+    for (auto & field : m_dbFlds)
     {
-        sifld.vals.insert(make_pair(iShape, DBFReadDoubleAttribute(dbfHandle, iShape, sifld.id)));
+        field.values.insert(make_pair(iShape, DBFReadDoubleAttribute(dbfHandle, iShape, field.id)));
     }
-    for (auto & sifld : m_strFlds)
+    for (auto & field : m_strFlds)
     {
-        sifld.vals.insert(
-            make_pair(iShape, string(DBFReadStringAttribute(dbfHandle, iShape, sifld.id))));
+        field.values.insert(
+            make_pair(iShape, string(DBFReadStringAttribute(dbfHandle, iShape, field.id))));
     }
-    for (auto & sifld : m_logFlds)
+    for (auto & field : m_logFlds)
     {
-        sifld.vals.insert(
-            make_pair(iShape, string(DBFReadLogicalAttribute(dbfHandle, iShape, sifld.id))));
+        field.values.insert(
+            make_pair(iShape, string(DBFReadLogicalAttribute(dbfHandle, iShape, field.id))));
     }
     return true;
 }
@@ -96,31 +97,31 @@ bool ShapeReader::read(const string & filename)
         //collect the field name and type info
         if (eType == FTInteger)
         {
-            ShapeIntField sintfld;
-            sintfld.id = i;
-            sintfld.name = szTitle;
-            m_intFlds.push_back(sintfld);
+            ShapeIntField field;
+            field.id = i;
+            field.name = szTitle;
+            m_intFlds.push_back(field);
         }
         else if (eType == FTDouble)
         {
-            ShapeDoubleField sdbfld;
-            sdbfld.id = i;
-            sdbfld.name = szTitle;
-            m_dbFlds.push_back(sdbfld);
+            ShapeDoubleField field;
+            field.id = i;
+            field.name = szTitle;
+            m_dbFlds.push_back(field);
         }
         else if (eType == FTString)
         {
-            ShapeStringField sstrfld;
-            sstrfld.id = i;
-            sstrfld.name = szTitle;
-            m_strFlds.push_back(sstrfld);
+            ShapeStringField field;
+            field.id = i;
+            field.name = szTitle;
+            m_strFlds.push_back(field);
         }
         else if (eType == FTLogical)
         {
-            ShapeLogField slogfld;
-            slogfld.id = i;
-            slogfld.name = szTitle;
-            m_logFlds.push_back(slogfld);
+            ShapeLogField field;
+            field.id = i;
+            field.name = szTitle;
+            m_logFlds.push_back(field);
         }
     }
 
@@ -209,7 +210,7 @@ bool ShapeReader::read(const string & filename)
         warn(to_string(nunsupported) + " of the " + to_string(nEntities) + " shapes in shapefile " +
              filename + " have no geometry or a type that is not supported, and are ignored.");
 
-    //done readh shp file
+    //done reading the shp file
 
     //
     //reading from database now.
@@ -235,18 +236,18 @@ static bool onSegment(const Point2d & p, const Point2d & a, const Point2d & b)
 //or edge midpoint of a that is not on b decides, since a may touch b
 static bool ringInRing(const vector<Point2d> & a, const vector<Point2d> & b)
 {
-    size_t na = a.size(), nb = b.size();
-    for (size_t j = 0; j < 2 * na; j++)
+    size_t size_a = a.size(), size_b = b.size();
+    for (size_t j = 0; j < 2 * size_a; j++)
     {
         const Point2d & v = a[j / 2];
         Point2d p = (j % 2 == 0) ? v
-                                 : Point2d((v[0] + a[(j / 2 + 1) % na][0]) / 2,
-                                           (v[1] + a[(j / 2 + 1) % na][1]) / 2);
+                                 : Point2d((v[0] + a[(j / 2 + 1) % size_a][0]) / 2,
+                                           (v[1] + a[(j / 2 + 1) % size_a][1]) / 2);
         bool on_b = false, inside = false;
-        for (size_t k = 0; k < nb && !on_b; k++)
+        for (size_t k = 0; k < size_b && !on_b; k++)
         {
             const Point2d & b0 = b[k];
-            const Point2d & b1 = b[(k + 1) % nb];
+            const Point2d & b1 = b[(k + 1) % size_b];
             on_b = onSegment(p, b0, b1);
             if (CrossesRay(b0.get(), b1.get(), p.get())) inside = !inside;
         }

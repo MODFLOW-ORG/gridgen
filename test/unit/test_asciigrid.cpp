@@ -39,7 +39,7 @@ std::string write_asc(const std::string & name, int r0, int r1, int c0, int c1)
 std::unique_ptr<QuadTree3D> qtree_over(const std::string & path)
 {
     std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 4, 4, 15.0, 15.0), {});
-    qtree->setBotOperators(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR);
+    qtree->setBotOperators(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
     qtree->setBotSource(0, path);
     return qtree;
 }
@@ -161,7 +161,7 @@ TEST(AsciiGrid, AverageCoversCellThatIsNotSquare)
         SCOPED_TRACE("delr " + std::to_string(s.delr) + ", delc " + std::to_string(s.delc));
         std::unique_ptr<QuadTree3D> qtree =
             make_qtree(make_mfgrid(1, s.nrow, s.ncol, s.delr, s.delc), {});
-        qtree->setBotOperators(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPEARTOR);
+        qtree->setBotOperators(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
         qtree->setBotSource(0, path);
         double * bot = qtree->get_bot();
         for (int n = 0; n < qtree->nodes(); n++)

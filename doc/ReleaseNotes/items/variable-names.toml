@@ -1,0 +1,3 @@
+section = "internal"
+subsection = ""
+description = "Variables, parameters, and members in the C++ source are named for what they hold, in whole words, rather than with abbreviations, placeholders, or misspellings. The program and its output are unchanged, except that the warning about cells with negative thickness now spells thickness correctly."

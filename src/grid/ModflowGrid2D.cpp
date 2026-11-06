@@ -12,7 +12,7 @@
 #include "ModflowGrid2D.h"
 #include "GridgenError.h"
 #include <climits>
-#define IndexEPSION 1e-10
+#define IndexEPSILON 1e-10
 
 namespace cusg
 {
@@ -221,7 +221,7 @@ Index2d ModflowGrid2D::get_indices(int nodeid)
     return Index2d(i, j);
 }
 
-/// return a box containtain the given id
+/// return the box containing the given id
 Box * ModflowGrid2D::find_nodeobj(int i, int j)
 {
     //get the box
@@ -248,26 +248,26 @@ list<pair<int, int>> ModflowGrid2D::get_node_connections(int nodeid)
     //back
     if (i > 0)
     {
-        int nn = get_nodeid(i - 1, j);
-        connections.push_back(make_pair(nn, 2));
+        int neighbor = get_nodeid(i - 1, j);
+        connections.push_back(make_pair(neighbor, 2));
     }
     //left
     if (j > 0)
     {
-        int nn = get_nodeid(i, j - 1);
-        connections.push_back(make_pair(nn, -1));
+        int neighbor = get_nodeid(i, j - 1);
+        connections.push_back(make_pair(neighbor, -1));
     }
     //right
     if (j < ncol - 1)
     {
-        int nn = get_nodeid(i, j + 1);
-        connections.push_back(make_pair(nn, 1));
+        int neighbor = get_nodeid(i, j + 1);
+        connections.push_back(make_pair(neighbor, 1));
     }
     //front
     if (i < nrow - 1)
     {
-        int nn = get_nodeid(i + 1, j);
-        connections.push_back(make_pair(nn, -2));
+        int neighbor = get_nodeid(i + 1, j);
+        connections.push_back(make_pair(neighbor, -2));
     }
 
     return connections;
@@ -332,31 +332,31 @@ void ModflowGrid2D::add_connections()
             if (i < nrow - 1)
             {
                 //make connection to front
-                int tonode = get_nodeid(i + 1, j);
+                int to_node = get_nodeid(i + 1, j);
                 int fldir = -2;
-                nodeobj->addConnection(nodegroup[tonode], fldir);
+                nodeobj->addConnection(nodegroup[to_node], fldir);
             }
 
             if (i > 0)
             {
                 //make connection to back
-                int tonode = get_nodeid(i - 1, j);
+                int to_node = get_nodeid(i - 1, j);
                 int fldir = 2;
-                nodeobj->addConnection(nodegroup[tonode], fldir);
+                nodeobj->addConnection(nodegroup[to_node], fldir);
             }
             if (j < ncol - 1)
             {
                 //make connection to right
-                int tonode = get_nodeid(i, j + 1);
+                int to_node = get_nodeid(i, j + 1);
                 int fldir = 1;
-                nodeobj->addConnection(nodegroup[tonode], fldir);
+                nodeobj->addConnection(nodegroup[to_node], fldir);
             }
             if (j > 0)
             {
                 //make connection to left
-                int tonode = get_nodeid(i, j - 1);
+                int to_node = get_nodeid(i, j - 1);
                 int fldir = -1;
-                nodeobj->addConnection(nodegroup[tonode], fldir);
+                nodeobj->addConnection(nodegroup[to_node], fldir);
             }
         } //end j
     } //end i
@@ -376,35 +376,35 @@ Index2d ModflowGrid2D::getIndex(const Point2d & pt)
     bool xAsc = delr[0] > 0;
     bool yAsc = delc[0] > 0;
 
-    if (xAsc && (pt[0] < Xe[0] - IndexEPSION || pt[0] > Xe[ncol] + IndexEPSION))
+    if (xAsc && (pt[0] < Xe[0] - IndexEPSILON || pt[0] > Xe[ncol] + IndexEPSILON))
     {
-        if (pt[0] < Xe[0] - IndexEPSION)
+        if (pt[0] < Xe[0] - IndexEPSILON)
             i_x = INT_MIN;
-        else if (pt[0] > Xe[ncol] + IndexEPSION)
+        else if (pt[0] > Xe[ncol] + IndexEPSILON)
             i_x = INT_MAX;
         bContain = false;
     }
-    if ((!xAsc) && (pt[0] < Xe[ncol] - IndexEPSION || pt[0] > Xe[0] + IndexEPSION))
+    if ((!xAsc) && (pt[0] < Xe[ncol] - IndexEPSILON || pt[0] > Xe[0] + IndexEPSILON))
     {
-        if (pt[0] > Xe[0] + IndexEPSION)
+        if (pt[0] > Xe[0] + IndexEPSILON)
             i_x = INT_MIN;
-        else if (pt[0] < Xe[ncol] - IndexEPSION)
+        else if (pt[0] < Xe[ncol] - IndexEPSILON)
             i_x = INT_MAX;
         bContain = false;
     }
-    if (yAsc && (pt[1] > Ye[0] + IndexEPSION || pt[1] < Ye[nrow] - IndexEPSION))
+    if (yAsc && (pt[1] > Ye[0] + IndexEPSILON || pt[1] < Ye[nrow] - IndexEPSILON))
     {
-        if (pt[1] > Ye[0] + IndexEPSION)
+        if (pt[1] > Ye[0] + IndexEPSILON)
             i_y = INT_MIN;
-        else if (pt[1] < Ye[nrow] - IndexEPSION)
+        else if (pt[1] < Ye[nrow] - IndexEPSILON)
             i_y = INT_MAX;
         bContain = false;
     }
-    if ((!yAsc) && (pt[1] < Ye[0] - IndexEPSION || pt[1] > Ye[nrow] + IndexEPSION))
+    if ((!yAsc) && (pt[1] < Ye[0] - IndexEPSILON || pt[1] > Ye[nrow] + IndexEPSILON))
     {
-        if (pt[1] < Ye[0] - IndexEPSION)
+        if (pt[1] < Ye[0] - IndexEPSILON)
             i_y = INT_MIN;
-        else if (pt[1] > Ye[nrow] + IndexEPSION)
+        else if (pt[1] > Ye[nrow] + IndexEPSILON)
             i_y = INT_MAX;
         bContain = false;
     }

@@ -24,7 +24,7 @@
 
 using namespace std;
 
-#define INEPSION 1e-10
+#define INEPSILON 1e-10
 
 #include <Point.h>
 #include <Vector.h>
@@ -49,7 +49,7 @@ class Box; //defined later in this file
 class BoxIter
 {
 public:
-    BoxIter(const Box * bb, int direc);
+    BoxIter(const Box * starting_node, int direction);
 
     Box * First();
 
@@ -189,22 +189,22 @@ public:
     /// Check if a given point (qx,qy) is contained in this box
     bool in(double qx, double qy)
     {
-        if (dx > 0 && (qx < x - dx / 2 - INEPSION || qx > x + dx / 2 + INEPSION)) return false;
-        if (dx < 0 && (qx < x + dx / 2 - INEPSION || qx > x - dx / 2 + INEPSION)) return false;
-        if (dy > 0 && (qy < y - dy / 2 - INEPSION || qy > y + dy / 2 + INEPSION)) return false;
-        if (dy < 0 && (qy < y + dy / 2 - INEPSION || qy > y - dy / 2 + INEPSION)) return false;
+        if (dx > 0 && (qx < x - dx / 2 - INEPSILON || qx > x + dx / 2 + INEPSILON)) return false;
+        if (dx < 0 && (qx < x + dx / 2 - INEPSILON || qx > x - dx / 2 + INEPSILON)) return false;
+        if (dy > 0 && (qy < y - dy / 2 - INEPSILON || qy > y + dy / 2 + INEPSILON)) return false;
+        if (dy < 0 && (qy < y + dy / 2 - INEPSILON || qy > y - dy / 2 + INEPSILON)) return false;
         return true;
     }
 
     //Given the point is in box, test whether the point is on the boundaries of the box
     bool onBound(double qx, double qy)
     {
-        if (fabs(qx - (x - dx / 2)) < INEPSION) return true;
-        if (fabs(qx - (x + dx / 2)) < INEPSION) return true;
-        if (fabs(qy - (y + dy / 2)) < INEPSION) return true;
-        if (fabs(qy - (y - dy / 2)) < INEPSION) return true;
+        if (fabs(qx - (x - dx / 2)) < INEPSILON) return true;
+        if (fabs(qx - (x + dx / 2)) < INEPSILON) return true;
+        if (fabs(qy - (y + dy / 2)) < INEPSILON) return true;
+        if (fabs(qy - (y - dy / 2)) < INEPSILON) return true;
         return false;
-        //if((fabs(qx - dx/2) < INEPSION) || (fabs(qx)
+        //if((fabs(qx - dx/2) < INEPSILON) || (fabs(qx)
     }
 
     /// find a leaf box containing a given point (qx,qy)
@@ -294,7 +294,6 @@ public:
     //
     //-------------------------------------------------------------------------
 
-    string info;
     friend class BoxIter;
 
     /// depth of the box in the tree
@@ -408,7 +407,7 @@ public:
     //ModflowGrid * childmfgrid;
 
     ///the coordinates of the center after rotation
-    void rotateCtr(double cx, double cy, double rotation, double & resx, double & resy);
+    void rotateCtr(double cx, double cy, double rotation, double & rotated_x, double & rotated_y);
 };
 //end of class Box
 

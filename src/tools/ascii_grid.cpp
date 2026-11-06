@@ -25,21 +25,21 @@ etc...
 bool arcinfo_ascii_grid::build(istream & ins)
 {
     //read header
-    string tmp;
+    string keyword;
     for (int i = 0; i < 6; i++) //loop 6 times at most
     {
         if (isdigit(ins.peek())) break;
 
-        ins >> tmp;
+        ins >> keyword;
 
-        tmp = tolower(tmp);
+        keyword = tolower(keyword);
 
-        if (tmp == "ncols") ins >> ncols;
-        if (tmp == "nrows") ins >> nrows;
-        if (tmp == "xllcorner") ins >> xllcorner;
-        if (tmp == "yllcorner") ins >> yllcorner;
-        if (tmp == "cellsize") ins >> cellsize;
-        if (tmp == "nodata_value") ins >> nodata_value;
+        if (keyword == "ncols") ins >> ncols;
+        if (keyword == "nrows") ins >> nrows;
+        if (keyword == "xllcorner") ins >> xllcorner;
+        if (keyword == "yllcorner") ins >> yllcorner;
+        if (keyword == "cellsize") ins >> cellsize;
+        if (keyword == "nodata_value") ins >> nodata_value;
     }
 
     if (cellsize <= 0)

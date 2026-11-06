@@ -76,7 +76,7 @@ public:
     virtual void number_nodes() = 0;
 
     //
-    virtual void deactive_nodes(vector<Box *> & boxes)
+    virtual void deactivate_nodes(vector<Box *> & boxes)
     {
         for (auto & box : boxes)
         {

@@ -33,19 +33,19 @@ static list<string> layer_record(map<string, list<string>> & name_value_map, con
 {
     char layername[64];
     sprintf(layername, "%s layer %d", name, i + 1);
-    map<string, list<string>>::iterator r = name_value_map.find(layername);
-    if (r == name_value_map.end()) return list<string>();
-    return r->second;
+    map<string, list<string>>::iterator found = name_value_map.find(layername);
+    if (found == name_value_map.end()) return list<string>();
+    return found->second;
 }
 
 //value of the record spelled as in the report, or else as in the code
 static list<string> record(map<string, list<string>> & name_value_map, const char * report_name,
                            const char * code_name)
 {
-    map<string, list<string>>::iterator r = name_value_map.find(report_name);
-    if (r != name_value_map.end() && !r->second.empty()) return r->second;
-    r = name_value_map.find(code_name);
-    if (r != name_value_map.end()) return r->second;
+    map<string, list<string>>::iterator found = name_value_map.find(report_name);
+    if (found != name_value_map.end() && !found->second.empty()) return found->second;
+    found = name_value_map.find(code_name);
+    if (found != name_value_map.end()) return found->second;
     return list<string>();
 }
 
@@ -112,16 +112,16 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
     const int size = 1024;
     const char * ignore = " \t[]()<>,!{}\r\n";
     vector<char> buffer(size);
-    char * tmp = buffer.data();
+    char * line = buffer.data();
 
     //
     while (!in.eof())
     {
-        in.getline(tmp, size);
+        in.getline(line, size);
 
-        if (strlen(tmp) == 0) continue;
+        if (strlen(line) == 0) continue;
 
-        pair<char *, char *> name_value = split(tmp);
+        pair<char *, char *> name_value = split(line);
 
         list<string> name = tokenize(name_value.first, ignore);
 
@@ -176,29 +176,29 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
 }
 
 //convert a string to a list of tokens
-list<string> BaseParser::tokenize(char * tmp, const char * ignore)
+list<string> BaseParser::tokenize(char * line, const char * ignore)
 {
     list<string> tokens;
-    char * tok = strtok(tmp, ignore);
-    while (tok != nullptr)
+    char * token = strtok(line, ignore);
+    while (token != nullptr)
     {
-        tokens.push_back(tok);
-        tok = strtok(nullptr, ignore);
+        tokens.push_back(token);
+        token = strtok(nullptr, ignore);
     }
     return tokens;
 }
 
 // split a string into name and value by "="
-pair<char *, char *> BaseParser::split(char * tmp)
+pair<char *, char *> BaseParser::split(char * line)
 {
-    char * pos = strchr(tmp, '=');
+    char * pos = strchr(line, '=');
     if (pos != nullptr)
     {
         *pos = '\0';
         pos++;
     }
 
-    return make_pair(tmp, pos);
+    return make_pair(line, pos);
 }
 
 string BaseParser::merge(const list<string> & name, string del)
@@ -370,7 +370,7 @@ modflow_grid_raw_data::~modflow_grid_raw_data()
 
 bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //kept only when every array is read, so an error leaves none
     unique_ptr<REAL[]> r(createArray<REAL>(delr_str, ncol, getFolderPath()));
@@ -388,7 +388,7 @@ bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
     for (auto & a : b) bot.push_back(a.release());
     top = bot[0];
 
-    m_initizlied = true;
+    m_initialized = true;
 
     return true;
 }
@@ -449,10 +449,10 @@ bool quadtree_grid_raw_data::parse()
     set<int> layers = named_layers(name_value_map);
     for (int i : layers)
     {
-        list<string> v = layer_record(name_value_map, "top", i);
-        if (!v.empty()) top_str[i] = v;
-        v = layer_record(name_value_map, "bottom", i);
-        if (!v.empty()) bot_str[i] = v;
+        list<string> values = layer_record(name_value_map, "top", i);
+        if (!values.empty()) top_str[i] = values;
+        values = layer_record(name_value_map, "bottom", i);
+        if (!values.empty()) bot_str[i] = values;
     }
 
     return true;
@@ -460,7 +460,7 @@ bool quadtree_grid_raw_data::parse()
 
 bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     this->modflow_data = dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
 
@@ -478,7 +478,7 @@ bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
     //read/open this->tree_structure_file here
     parseTreeStructFile(tree_structure_file, allNodes, getFolderPath());
 
-    m_initizlied = true;
+    m_initialized = true;
     return true;
 }
 
@@ -556,66 +556,66 @@ void quadtree_grid_raw_data::fillQuadTree3D()
          ++nite, count++)
     {
 
-        TreeStructNode & tmpNode = *nite;
+        TreeStructNode & tree_node = *nite;
         //an active cell numbered 0 means the grid was built with zero-based numbering
-        if (tmpNode.number == 0) zero_based = true;
-        int layerNum = tmpNode.layer - 1;
-        int row = tmpNode.row - 1;
-        int col = tmpNode.col - 1;
+        if (tree_node.number == 0) zero_based = true;
+        int layerNum = tree_node.layer - 1;
+        int row = tree_node.row - 1;
+        int col = tree_node.col - 1;
 
         int nodeid = qtree_grid->getModflowGrid()->get_nodeid(layerNum, row, col);
         Box * nodeobj = qtree_grid->nodegroup[nodeid];
 
-        if ((strcmp(tmpNode.code.c_str(), "") == 0) || tmpNode.code.empty())
+        if ((strcmp(tree_node.code.c_str(), "") == 0) || tree_node.code.empty())
         {
-            nodeobj->number = tmpNode.number;
+            nodeobj->number = tree_node.number;
             nodeobj->isLeaf = true;
             if (nodeobj->number == -1) nodeobj->active = false;
         }
         else
         {
-            Box * tmpNodeBoxObj = nodeobj;
-            int codeDepth = tmpNode.code.size();
-            int depthIdx = 0;
-            while (depthIdx < codeDepth)
+            Box * node_box = nodeobj;
+            int code_depth = tree_node.code.size();
+            int depth_index = 0;
+            while (depth_index < code_depth)
             {
-                if (tmpNodeBoxObj->isLeaf)
+                if (node_box->isLeaf)
                 {
-                    bool r = tmpNodeBoxObj->split(0);
-                    assert(r);
+                    bool was_split = node_box->split(0);
+                    assert(was_split);
 
                     for (int c = 0; c < 4; c++)
                     {
                         int id = c;
                         if (c == 3) id = 2;
                         if (c == 2) id = 3;
-                        tmpNodeBoxObj->pChildren[id]->isLeaf = true;
-                        tmpNodeBoxObj->pChildren[id]->updateStatus();
-                        qtree_grid->nodegroup.add(tmpNodeBoxObj->pChildren[id]);
+                        node_box->pChildren[id]->isLeaf = true;
+                        node_box->pChildren[id]->updateStatus();
+                        qtree_grid->nodegroup.add(node_box->pChildren[id]);
                     }
-                    tmpNodeBoxObj->isLeaf = false;
+                    node_box->isLeaf = false;
                 }
-                char t = tmpNode.code[depthIdx];
+                char t = tree_node.code[depth_index];
                 switch (t)
                 {
                     case '1':
                     {
-                        tmpNodeBoxObj = tmpNodeBoxObj->pChildren[0];
+                        node_box = node_box->pChildren[0];
                         break;
                     }
                     case '2':
                     {
-                        tmpNodeBoxObj = tmpNodeBoxObj->pChildren[1];
+                        node_box = node_box->pChildren[1];
                         break;
                     }
                     case '3':
                     {
-                        tmpNodeBoxObj = tmpNodeBoxObj->pChildren[3];
+                        node_box = node_box->pChildren[3];
                         break;
                     }
                     case '4':
                     {
-                        tmpNodeBoxObj = tmpNodeBoxObj->pChildren[2];
+                        node_box = node_box->pChildren[2];
                         break;
                     }
                     default:
@@ -624,12 +624,12 @@ void quadtree_grid_raw_data::fillQuadTree3D()
                         break;
                     }
                 }
-                depthIdx++;
+                depth_index++;
             }
 
-            tmpNodeBoxObj->number = tmpNode.number;
-            tmpNodeBoxObj->isLeaf = true;
-            if (tmpNodeBoxObj->number == -1) tmpNodeBoxObj->active = false;
+            node_box->number = tree_node.number;
+            node_box->isLeaf = true;
+            if (node_box->number == -1) node_box->active = false;
         }
     }
 
@@ -708,21 +708,21 @@ bool quadtree_builder_raw_data::parse()
     set<int> layers = named_layers(name_value_map);
     for (int i : layers)
     {
-        list<string> v;
+        list<string> values;
 
-        v = layer_record(name_value_map, "active_domain", i);
-        if (!v.empty()) active_domain_str[i] = v;
+        values = layer_record(name_value_map, "active_domain", i);
+        if (!values.empty()) active_domain_str[i] = values;
 
         //refinement features, also allowed as refinement_features
-        v = layer_record(name_value_map, "refine_by_features", i);
-        if (v.empty()) v = layer_record(name_value_map, "refinement_features", i);
-        if (!v.empty()) refine_by_features_str[i] = v;
+        values = layer_record(name_value_map, "refine_by_features", i);
+        if (values.empty()) values = layer_record(name_value_map, "refinement_features", i);
+        if (!values.empty()) refine_by_features_str[i] = values;
 
         //surface arrays
-        v = layer_record(name_value_map, "top", i);
-        if (!v.empty()) top_str[i] = v;
-        v = layer_record(name_value_map, "bottom", i);
-        if (!v.empty()) bot_str[i] = v;
+        values = layer_record(name_value_map, "top", i);
+        if (!values.empty()) top_str[i] = values;
+        values = layer_record(name_value_map, "bottom", i);
+        if (!values.empty()) bot_str[i] = values;
     }
 
     return true;
@@ -730,7 +730,7 @@ bool quadtree_builder_raw_data::parse()
 
 bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //initialize modflow_data if it has not been initialized yet
     this->modflow_data = dynamic_cast<modflow_grid_raw_data *>(blocks[modflow_grid]);
@@ -749,28 +749,30 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
     active_domain_data.reserve(modflow_data->nlay);
     for (int i = 0; i < modflow_data->nlay; i++)
     {
-        list<active_domain_raw_data *> aF;
-        list<string> & aF_str = active_domain_str[i];
-        for (auto & s : aF_str)
+        list<active_domain_raw_data *> domains;
+        list<string> & domain_names = active_domain_str[i];
+        for (auto & domain_name : domain_names)
         {
-            active_domain_raw_data * af = dynamic_cast<active_domain_raw_data *>(blocks[s]);
-            if (af != nullptr)
+            active_domain_raw_data * domain =
+                dynamic_cast<active_domain_raw_data *>(blocks[domain_name]);
+            if (domain != nullptr)
             {
-                if (af->initialize(blocks) == false)
+                if (domain->initialize(blocks) == false)
                 {
                     return false;
                 }
                 else
-                    aF.push_back(af);
+                    domains.push_back(domain);
             }
             else
             {
                 stringstream msg;
-                msg << "Quadtree Builder: Block " << s << " is referenced but not defined";
+                msg << "Quadtree Builder: Block " << domain_name
+                    << " is referenced but not defined";
                 throw GridgenError(msg.str());
             }
-        } // end for s
-        active_domain_data.push_back(aF);
+        } // end for domain_name
+        active_domain_data.push_back(domains);
     }
 
     // initialize refinement features
@@ -797,22 +799,23 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
     for (int i = 0; i < modflow_data->nlay; i++)
     {
         //refine by features
-        list<refinement_raw_data *> rF;
-        list<string> & rF_str = refine_by_features_str[i];
-        for (auto & s : rF_str)
+        list<refinement_raw_data *> refinements;
+        list<string> & refinement_names = refine_by_features_str[i];
+        for (auto & refinement_name : refinement_names)
         {
-            refinement_raw_data * rf = dynamic_cast<refinement_raw_data *>(blocks[s]);
-            if (rf != nullptr)
-                rF.push_back(rf);
+            refinement_raw_data * refinement =
+                dynamic_cast<refinement_raw_data *>(blocks[refinement_name]);
+            if (refinement != nullptr)
+                refinements.push_back(refinement);
             else
             {
                 stringstream msg;
-                msg << "Quadtree Builder: There is no refinement feature named " << s;
+                msg << "Quadtree Builder: There is no refinement feature named " << refinement_name;
                 throw GridgenError(msg.str());
             }
         }
 
-        refine_by_features.push_back(rF);
+        refine_by_features.push_back(refinements);
 
         //surface data
         top.push_back(make_pair(tolower(top_str[i].front()), top_str[i].back()));
@@ -821,23 +824,23 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
         //interpolation mode
         if (top_str[i].size() == 3)
         {
-            vector<string> vs(top_str[i].begin(), top_str[i].end());
-            if (tolower(vs[1]) == "area_weighted")
+            vector<string> surface(top_str[i].begin(), top_str[i].end());
+            if (tolower(surface[1]) == "area_weighted")
                 top_area_weighted.insert(make_pair(i, true));
-            else if (tolower(vs[1]) == "no_area_weighted")
+            else if (tolower(surface[1]) == "no_area_weighted")
                 top_area_weighted.insert(make_pair(i, false));
         }
         if (bot_str[i].size() == 3)
         {
-            vector<string> vs(bot_str[i].begin(), bot_str[i].end());
-            if (tolower(vs[1]) == "area_weighted")
+            vector<string> surface(bot_str[i].begin(), bot_str[i].end());
+            if (tolower(surface[1]) == "area_weighted")
                 bot_area_weighted.insert(make_pair(i, true));
-            else if (tolower(vs[1]) == "no_area_weighted")
+            else if (tolower(surface[1]) == "no_area_weighted")
                 bot_area_weighted.insert(make_pair(i, false));
         }
     }
 
-    m_initizlied = true;
+    m_initialized = true;
     return true;
 }
 
@@ -1015,7 +1018,7 @@ bool grid_intersection_raw_data::parse()
 
 bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //get the grid
     block_raw_data * block = blocks[grid_name];
@@ -1028,8 +1031,8 @@ bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & bloc
     }
 
     //initialize the grid if necessary
-    bool r = grid->initialize(blocks);
-    if (r == false)
+    bool initialized = grid->initialize(blocks);
+    if (initialized == false)
     {
         cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
@@ -1046,7 +1049,7 @@ bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & bloc
         return false;
     }
 
-    m_initizlied = true;
+    m_initialized = true;
 
     return true;
 }
@@ -1101,9 +1104,9 @@ bool active_domain_raw_data::parse()
 
 bool active_domain_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
-    m_initizlied = true;
+    m_initialized = true;
 
     return true;
 }
@@ -1214,7 +1217,7 @@ bool grid_to_usgdata_raw_data::parse()
 
 bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //get the grid
     block_raw_data * block = blocks[grid_name];
@@ -1227,8 +1230,8 @@ bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks
     }
 
     //initialize the grid if necessary
-    bool r = grid->initialize(blocks);
-    if (r == false)
+    bool initialized = grid->initialize(blocks);
+    if (initialized == false)
     {
         cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
@@ -1245,7 +1248,7 @@ bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks
         return false;
     }
 
-    m_initizlied = true;
+    m_initialized = true;
 
     return true;
 }
@@ -1338,7 +1341,7 @@ bool gridtoshape_raw_data::parse()
 }
 bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //get the grid
     block_raw_data * block = blocks[grid_name];
@@ -1351,8 +1354,8 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
     }
 
     //initialize the grid if necessary
-    bool r = grid->initialize(blocks);
-    if (r == false)
+    bool initialized = grid->initialize(blocks);
+    if (initialized == false)
     {
         cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
@@ -1371,7 +1374,7 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
 
     warnQuadtreeExportRecords(this->grid);
 
-    m_initizlied = true;
+    m_initialized = true;
     return true;
 }
 
@@ -1457,7 +1460,7 @@ bool gridtovtk_raw_data::parse()
 }
 bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
 {
-    if (m_initizlied) return true;
+    if (m_initialized) return true;
 
     //get the grid
     block_raw_data * block = blocks[grid_name];
@@ -1470,8 +1473,8 @@ bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
     }
 
     //initialize the grid if necessary
-    bool r = grid->initialize(blocks);
-    if (r == false)
+    bool initialized = grid->initialize(blocks);
+    if (initialized == false)
     {
         cerr << "! Error: initialize " << grid_name << " failed" << endl;
         return false;
@@ -1490,7 +1493,7 @@ bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
 
     warnQuadtreeExportRecords(this->grid);
 
-    m_initizlied = true;
+    m_initialized = true;
     return true;
 }
 

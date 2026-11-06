@@ -73,7 +73,12 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   `enhancement`, `refactor`, `ci`, or `documentation`) and a version milestone.
   A bug issue lists the tests to add with the fix.
 - **Pull requests:** one issue per pull request; fill in the pull request
-  template and close the issue from its checklist.
+  template and close the issue from its checklist. Put what a reviewer
+  needs beyond the description (edge cases, numbers, what is left out) in a
+  comment headed `## Reviewer Summary`. Before each commit to an open pull
+  request, check whether the commit makes the description, the Reviewer
+  Summary, or the release note item untrue or incomplete, and edit them to
+  match the branch.
 - **Release notes:** a pull request that changes gridgen adds a TOML item in
   `doc/ReleaseNotes/items/` (see the README there).
 - **Pull request review:** after the first green CI run, have an agent on a
@@ -140,6 +145,13 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   Windows stays tested. Commits that only reformat are listed in
   `.git-blame-ignore-revs` (`git config blame.ignoreRevsFile
   .git-blame-ignore-revs`).
+- **Names:** a reader should be able to tell from its name what a variable,
+  parameter, or member holds and what a function, method, or class does.
+  Use whole words (`direction`, `start_index`, `neighbor`), not an
+  abbreviation, a placeholder such as `tmp` or `r`, or a term the code uses
+  in a private sense (`ply` for a closed ring). Keep the conventional short
+  names: loop indices, coordinates (`x`, `dx`, `cx`), the MODFLOW and CSR
+  names (`nlay`, `delr`, `ia`, `ja`), and shapelib's own names.
 - **Comments and documentation:** keep code comments and docstrings short,
   stating what a function does; put the reason, when one is needed, in an
   inline comment. Write the release notes for groundwater modelers rather

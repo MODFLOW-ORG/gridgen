@@ -37,7 +37,7 @@ class ModflowGrid : public ModflowGrid2D
 public:
     ModflowGrid(const modflow_grid_raw_data & rawdata);
 
-    ModflowGrid(int lay, int row, int col, double dr, double dc, vector<double *> & bot,
+    ModflowGrid(int lay, int row, int col, double delr, double delc, vector<double *> & bot,
                 double xoffset, double yoffset, double angle);
 
     ~ModflowGrid() override {}

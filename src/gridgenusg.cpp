@@ -34,8 +34,8 @@ static int run(const string & action, const string & dfn_file)
         return 1;
     }
 
-    bool rinit = data->initialize(def_parser.getBlockData());
-    if (rinit == false)
+    bool initialized = data->initialize(def_parser.getBlockData());
+    if (initialized == false)
     {
         cerr << "! Error: Failed to initialize block: " << action << endl;
         return 1;

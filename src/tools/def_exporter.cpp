@@ -51,7 +51,7 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
     //filenames...
     const string & name = grid->name;
 
-    string ghostnode_name = name + ".gnc.dat"; //ghnost nodes are saved in get_usg_csr_data()
+    string ghostnode_name = name + ".gnc.dat"; //ghost nodes are saved in get_usg_csr_data()
 
     string tree_structure_file = name + ".tsf";
     string nodesperlay_data_name = name + ".nodesperlay.dat";
@@ -151,7 +151,7 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
     {
         nperlay = quadGrid->get_nodelay();
     }
-    else //get number of nodes per lay onfly
+    else //get number of nodes per layer on the fly
     {
         ModflowGrid * mflowgrid = dynamic_cast<ModflowGrid *>(data.grid);
         if (mflowgrid != nullptr)
@@ -248,10 +248,10 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
     for (auto & entry : sorted_boxes)
     {
         Box * box = entry.second;
-        const Point2d & ctr = gv.center(box);
-        fout << entry.first << " " << box->layer + id_offset << " " << round_trip(ctr[0]) << " "
-             << round_trip(ctr[1]) << " " << round_trip(box->z) << " " << round_trip(box->dx) << " "
-             << round_trip(box->dy) << " " << round_trip(box->dz) << "\n";
+        const Point2d & center = gv.center(box);
+        fout << entry.first << " " << box->layer + id_offset << " " << round_trip(center[0]) << " "
+             << round_trip(center[1]) << " " << round_trip(box->z) << " " << round_trip(box->dx)
+             << " " << round_trip(box->dy) << " " << round_trip(box->dz) << "\n";
     }
 
     fout.close();

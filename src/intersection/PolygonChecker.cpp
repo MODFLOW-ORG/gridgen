@@ -9,102 +9,102 @@ using namespace cusg;
 //use the ply and area pair to record
 struct PlyAreaPair
 {
-    c_ply * cply;
+    c_ply * ply;
     double area;
 };
 bool compPlyAreaGreater(const PlyAreaPair & pa1, const PlyAreaPair & pa2)
 {
     return pa1.area > pa2.area;
 }
-c_ply & getOutBound(GIS_polygon & gp)
+c_ply & getOutBound(GIS_polygon & polygon)
 {
-    for (auto & git : gp)
+    for (auto & git : polygon)
     {
         if (git.getType() == c_ply::POUT) return git;
     }
-    return gp.front();
+    return polygon.front();
 }
 
-bool CPlyEnclose(const c_ply & cply, const Point2d & p2d)
+bool CPlyEnclose(const c_ply & ply, const Point2d & point)
 {
     //count the edges crossing a ray from the point; summing the angles they turn through
     //loses the small ones
     bool inside = false;
-    ply_vertex * tpv = cply.getHead();
+    ply_vertex * vertex = ply.getHead();
     do
     {
-        if (CrossesRay(tpv->getPos().get(), tpv->getNext()->getPos().get(), p2d.get()))
+        if (CrossesRay(vertex->getPos().get(), vertex->getNext()->getPos().get(), point.get()))
             inside = !inside;
-        tpv = tpv->getNext();
-    } while (tpv != cply.getHead());
+        vertex = vertex->getNext();
+    } while (vertex != ply.getHead());
 
     return inside;
 }
 
 //here we use the center of c_ply to decide the containing relationship
-bool checkHole(GIS_polygon & plygon, vector<GIS_polygon *> & plygons)
+bool checkHole(GIS_polygon & polygon, vector<GIS_polygon *> & polygons)
 {
 
-    vector<PlyAreaPair> plyareas;
-    for (auto & ply : plygon)
+    vector<PlyAreaPair> rings_by_area;
+    for (auto & ply : polygon)
     {
-        PlyAreaPair pap;
-        pap.cply = &ply;
-        pap.area = fabs(ply.getArea());
-        plyareas.push_back(pap);
+        PlyAreaPair entry;
+        entry.ply = &ply;
+        entry.area = fabs(ply.getArea());
+        rings_by_area.push_back(entry);
     }
     //sort the ply based on the area descendingly
-    sort(plyareas.begin(), plyareas.end(), compPlyAreaGreater);
+    sort(rings_by_area.begin(), rings_by_area.end(), compPlyAreaGreater);
 
     //set the c_ply having largest area
-    bool allInPlygon = true;
-    plyareas.front().cply->set(c_ply::POUT, plyareas.front().cply->getHead());
-    GIS_polygon * ogp = new GIS_polygon();
-    ogp->m_id = plygon.m_id;
-    ogp->push_back(*(plyareas.front().cply));
+    bool all_in_first = true;
+    rings_by_area.front().ply->set(c_ply::POUT, rings_by_area.front().ply->getHead());
+    GIS_polygon * outer_polygon = new GIS_polygon();
+    outer_polygon->m_id = polygon.m_id;
+    outer_polygon->push_back(*(rings_by_area.front().ply));
 
-    plygons.push_back(ogp);
+    polygons.push_back(outer_polygon);
 
-    vector<PlyAreaPair>::iterator pit = plyareas.begin();
-    ++pit;
-    for (; pit != plyareas.end(); ++pit)
+    vector<PlyAreaPair>::iterator entry_it = rings_by_area.begin();
+    ++entry_it;
+    for (; entry_it != rings_by_area.end(); ++entry_it)
     {
-        PlyAreaPair & pap = *pit;
-        const Point2d & p2d = pap.cply->getCenter();
-        if (CPlyEnclose(*(plyareas.front().cply), p2d))
+        PlyAreaPair & entry = *entry_it;
+        const Point2d & point = entry.ply->getCenter();
+        if (CPlyEnclose(*(rings_by_area.front().ply), point))
         {
-            pap.cply->set(c_ply::PIN, pap.cply->getHead());
-            ogp->push_back(*(pap.cply));
+            entry.ply->set(c_ply::PIN, entry.ply->getHead());
+            outer_polygon->push_back(*(entry.ply));
         }
         else
         {
-            allInPlygon = false;
-            bool b = false;
-            const Point2d & pad = pap.cply->getCenter();
-            for (auto & outer : plygons)
+            all_in_first = false;
+            bool enclosed = false;
+            const Point2d & center = entry.ply->getCenter();
+            for (auto & outer : polygons)
             {
-                c_ply & outp = getOutBound(*outer);
-                if (CPlyEnclose(outp, pad))
+                c_ply & outer_ring = getOutBound(*outer);
+                if (CPlyEnclose(outer_ring, center))
                 {
-                    pap.cply->set(c_ply::PIN, pap.cply->getHead());
-                    outer->push_back(*(pap.cply));
-                    b = true;
+                    entry.ply->set(c_ply::PIN, entry.ply->getHead());
+                    outer->push_back(*(entry.ply));
+                    enclosed = true;
                     break;
                 }
             }
-            if (!b)
+            if (!enclosed)
             {
-                GIS_polygon * gp = new GIS_polygon();
-                gp->m_id = plygon.m_id;
-                pap.cply->set(c_ply::POUT, pap.cply->getHead());
-                gp->push_back(*(pap.cply));
+                GIS_polygon * new_polygon = new GIS_polygon();
+                new_polygon->m_id = polygon.m_id;
+                entry.ply->set(c_ply::POUT, entry.ply->getHead());
+                new_polygon->push_back(*(entry.ply));
 
-                plygons.push_back(gp);
+                polygons.push_back(new_polygon);
             }
         }
     }
 
-    return allInPlygon;
+    return all_in_first;
 }
 //
-////return true if only one polygon is in plygon
+////return true if only one polygon is in polygon
