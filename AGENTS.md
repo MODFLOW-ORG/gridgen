@@ -73,7 +73,12 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   `enhancement`, `refactor`, `ci`, or `documentation`) and a version milestone.
   A bug issue lists the tests to add with the fix.
 - **Pull requests:** one issue per pull request; fill in the pull request
-  template and close the issue from its checklist.
+  template and close the issue from its checklist. Put what a reviewer
+  needs beyond the description (edge cases, numbers, what is left out) in a
+  comment headed `## Reviewer Summary`. Before each commit to an open pull
+  request, check whether the commit makes the description, the Reviewer
+  Summary, or the release note item untrue or incomplete, and edit them to
+  match the branch.
 - **Release notes:** a pull request that changes gridgen adds a TOML item in
   `doc/ReleaseNotes/items/` (see the README there).
 - **Pull request review:** after the first green CI run, have an agent on a
