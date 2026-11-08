@@ -197,6 +197,35 @@ TEST(QuadTree, VerticalPassThroughInactiveCell)
     EXPECT_EQ(nlong, 2);
 }
 
+TEST(QuadTree, BoxWithNoCellNumberThrows)
+{
+    // 3 x 3 cells of 100; the center cell is split and a corner cell inactive
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 3, 3, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{150.0, 150.0, 1, 0}});
+    Box * corner = qtree->get_cell_box(0);
+    corner->active = false;
+    qtree->number_nodes();
+    qtree->refresh();
+    qtree->get_cell_array();
+    ASSERT_EQ(qtree->nodes(), 11);
+
+    EXPECT_THROW(qtree->get_cell(corner->id), GridgenError);
+
+    int split = -1;
+    for (int box_index = 0; box_index < (int)qtree->node_group.size(); box_index++)
+    {
+        if (!qtree->node_group[box_index]->is_leaf) split = box_index;
+    }
+    ASSERT_NE(split, -1);
+    EXPECT_THROW(qtree->get_cell(split), GridgenError);
+
+    // every active cell maps back to itself
+    for (int cell = 0; cell < qtree->nodes(); cell++)
+    {
+        EXPECT_EQ(qtree->get_cell(qtree->get_cell_box(cell)->id), cell);
+    }
+}
+
 TEST(QuadTree, LineRefinesCellsItCrosses)
 {
     EXPECT_EQ(line_refined_cells({{50.0, 150.0}, {250.0, 150.0}}), (std::set<int>{3, 4, 5}));

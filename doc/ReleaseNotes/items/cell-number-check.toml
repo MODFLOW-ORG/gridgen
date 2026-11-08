@@ -1,0 +1,3 @@
+section = "internal"
+subsection = ""
+description = "The check that stops gridgen with an internal error when a connection of the quadtree grid reaches a cell that is inactive or has been divided never fired, so such a connection would have been written with a cell number of 16,843,009. The check now works. No input is known to reach it, and output is unchanged."
