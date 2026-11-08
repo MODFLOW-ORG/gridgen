@@ -10,6 +10,6 @@ using namespace std;
 //return false: if
 bool ring_encloses(const Ring & ring, const Point2d & point);
 
-bool checkHole(GIS_polygon & polygon, vector<GIS_polygon *> & polygons);
+bool check_hole(GisPolygon & polygon, vector<GisPolygon *> & polygons);
 
 ////return true if only one polygon is in polygon

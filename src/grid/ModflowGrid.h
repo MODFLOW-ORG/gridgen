@@ -78,15 +78,15 @@ public:
     ////rotate all the boxes
     void get_rotation(double & cx, double & cy, double & angle)
     {
-        cx = this->X[0] - 0.5 * delr[0];
-        cy = this->Y[nrow - 1] - 0.5 * delc[nrow - 1];
+        cx = this->x_centers[0] - 0.5 * delr[0];
+        cy = this->y_centers[nrow - 1] - 0.5 * delc[nrow - 1];
         angle = rotation;
     }
 
 protected:
     void init(int nlay, int nrow, int ncol, const vector<double *> & botm);
 
-    ///create nodes and add them to nodegroup
+    ///create nodes and add them to node_group
     void create_nodes();
 
     ///add connection between boxes

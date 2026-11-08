@@ -24,5 +24,21 @@ jobs:
         with:
           pixi-version: v0.82.1
 
+      # clang-tidy reads the compile commands of a build that includes the unit
+      # tests, so GoogleTest is downloaded as in ci.yml
+      - name: Cache subproject downloads
+        uses: actions/cache@v6
+        with:
+          path: subprojects/packagecache
+          key: subprojects-${{ runner.os }}-${{ hashFiles('subprojects/*.wrap') }}
+
+      - name: Download subprojects
+        run: |
+          for attempt in 1 2 3; do
+            pixi run -- meson subprojects download && exit 0
+            [ $attempt -lt 3 ] && sleep 60
+          done
+          exit 1
+
       - name: Check format, lint, and spelling
         run: pixi run check-format

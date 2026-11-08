@@ -41,7 +41,7 @@ protected:
     virtual ~BaseParser() {}
 
     //read a block
-    virtual bool readBlock(istream & in, DefinitionBlock & block);
+    virtual bool read_block(istream & in, DefinitionBlock & block);
 
     //convert a string to a list of tokens
     virtual list<string> tokenize(char * line, const char * ignore);
@@ -58,60 +58,60 @@ protected:
     //convert s to upper case string
     string toupper(const string & s);
 
-    template <class T> T * copyArray(T * from, int size)
+    template <class T> T * copy_array(T * from, int size)
     {
-        T * A = new T[size];
-        assert(A);
-        for (int i = 0; i < size; i++) A[i] = from[i];
-        return A;
+        T * a = new T[size];
+        assert(a);
+        for (int i = 0; i < size; i++) a[i] = from[i];
+        return a;
     }
 
     //
-    template <class T> T * createArray(list<string> & spec, int size, string folderPath = "")
+    template <class T> T * create_array(list<string> & spec, int size, string folder_path = "")
     {
         if (spec.empty()) return nullptr;
 
         if (tolower(spec.front()) == "constant")
         {
-            T * A = new T[size];
-            assert(A);
+            T * a = new T[size];
+            assert(a);
             T value = (T)atof(spec.back().c_str());
-            for (int i = 0; i < size; i++) A[i] = value;
-            return A;
+            for (int i = 0; i < size; i++) a[i] = value;
+            return a;
         }
         else if (tolower(spec.front()) == "open/close")
         {
-            string filePath = folderPath;
-            filePath += spec.back().c_str();
+            string file_path = folder_path;
+            file_path += spec.back().c_str();
             //replace the '\' with '/'
-            int pathsize = filePath.size();
+            int pathsize = file_path.size();
             for (int i = 0; i < pathsize; i++)
             {
-                if (filePath[i] == '\\')
+                if (file_path[i] == '\\')
                 {
-                    filePath[i] = '/';
+                    file_path[i] = '/';
                 }
             }
 
             char line[1024];
-            ifstream fin(filePath.c_str());
-            if (!fin.good()) throw GridgenError("cannot open array file " + filePath);
+            ifstream fin(file_path.c_str());
+            if (!fin.good()) throw GridgenError("cannot open array file " + file_path);
 
-            T * A = new T[size];
+            T * a = new T[size];
             if (fin.peek() == '#')
             {
                 fin.getline(line, 1024);
             }
-            for (int i = 0; i < size; i++) fin >> A[i];
+            for (int i = 0; i < size; i++) fin >> a[i];
             if (fin.fail())
             {
-                delete[] A;
-                throw GridgenError("file " + filePath + " has fewer than " + to_string(size) +
+                delete[] a;
+                throw GridgenError("file " + file_path + " has fewer than " + to_string(size) +
                                    " numbers, or a value that is not a number");
             }
 
             fin.close();
-            return A;
+            return a;
         }
         else
         {
@@ -133,13 +133,13 @@ class DefinitionBlock : public list<BlockRecord>, public BaseParser
 public:
     DefinitionBlock()
     {
-        folderPath = "";
+        folder_path = "";
         m_initialized = false;
     }
 
     DefinitionBlock(string fpath)
     {
-        folderPath = fpath;
+        folder_path = fpath;
         m_initialized = false;
     }
 
@@ -149,7 +149,7 @@ public:
         assign(other.begin(), other.end());
         name = other.name;
         type = other.type;
-        folderPath = other.folderPath;
+        folder_path = other.folder_path;
     }
 
     ~DefinitionBlock() override {}
@@ -160,13 +160,13 @@ public:
         return true;
     } //do nothing by default
 
-    bool isInitialized() const { return m_initialized; }
-    string getFolderPath()
+    bool is_initialized() const { return m_initialized; }
+    string get_folder_path()
     {
-        if (folderPath.empty() || folderPath == "")
+        if (folder_path.empty() || folder_path == "")
             return "";
         else
-            return folderPath + "/";
+            return folder_path + "/";
     }
 
     //data
@@ -174,10 +174,10 @@ public:
     string type;
 
     //related folder path
-    string folderPath;
+    string folder_path;
 
     //whether the block has a record of this name
-    bool hasRecord(const string & rname) const
+    bool has_record(const string & rname) const
     {
         for (const auto & e : *this)
             if (e.name == rname) return true;
@@ -185,20 +185,20 @@ public:
     }
 
     //warnings reported when the block was initialized
-    const list<string> & getWarnings() const { return m_warnings; }
+    const list<string> & get_warnings() const { return m_warnings; }
 
     //the block as it is written in the definition file, e.g. "MODFLOW_GRID block mfgrid"
     string label() { return toupper(type) + " block " + name; }
 
     //whether running the block writes output, as an action block does
-    virtual bool isAction() const { return false; }
+    virtual bool is_action() const { return false; }
 
     //warn that running the block writes nothing, unless it is an action
-    void warnIfNotAction();
+    void warn_if_not_action();
 
 protected:
     //report that a record given in this block is ignored, and why
-    void warnIgnored(const string & rname, const string & reason)
+    void warn_ignored(const string & rname, const string & reason)
     {
         string w = "record " + toupper(rname) + " in " + label() + " is ignored; " + reason;
         cerr << "! Warning: " << w << endl;
@@ -206,40 +206,40 @@ protected:
     }
 
     //the error for a record the block requires but does not have
-    GridgenError missingRecord(const string & rname)
+    GridgenError missing_record(const string & rname)
     {
         return GridgenError(label() + " has no " + toupper(rname) + " record");
     }
 
     //the error for a record that names a block that is not defined
-    GridgenError undefinedBlock(const string & rname, const string & block_name)
+    GridgenError undefined_block(const string & rname, const string & block_name)
     {
         return GridgenError("record " + toupper(rname) + " in " + label() + " names block " +
                             block_name + ", which is not defined");
     }
 
     //the block named by record rname of this block
-    DefinitionBlock * findBlock(map<string, DefinitionBlock *> & blocks, const string & rname,
-                                const string & block_name);
+    DefinitionBlock * find_block(map<string, DefinitionBlock *> & blocks, const string & rname,
+                                 const string & block_name);
 
     //the error for a record that names a block of the wrong type
-    GridgenError wrongBlockType(const string & rname, DefinitionBlock * block,
-                                const string & expected)
+    GridgenError wrong_block_type(const string & rname, DefinitionBlock * block,
+                                  const string & expected)
     {
         return GridgenError("record " + toupper(rname) + " in " + label() + " names " +
                             block->label() + ", which is not " + expected);
     }
 
     //the MODFLOW_GRID block named by record MODFLOW_GRID of this block, initialized
-    ModflowGridBlock * findModflowGrid(map<string, DefinitionBlock *> & blocks,
-                                       const string & grid_name);
+    ModflowGridBlock * find_modflow_grid(map<string, DefinitionBlock *> & blocks,
+                                         const string & grid_name);
 
     //the grid named by record rname of this block, initialized and built
-    Grid * buildReferencedGrid(map<string, DefinitionBlock *> & blocks, const string & rname,
-                               const string & grid_name);
+    Grid * build_referenced_grid(map<string, DefinitionBlock *> & blocks, const string & rname,
+                                 const string & grid_name);
 
     //report NODE_NUMBERING and WITHOUT_INACTIVE as ignored for a quadtree grid
-    void warnQuadtreeExportRecords(Grid * grid);
+    void warn_quadtree_export_records(Grid * grid);
 
     bool m_initialized;
     list<string> m_warnings;
@@ -330,8 +330,8 @@ public:
     QuadTree3D * qtree_grid; //the quadtree built by this raw data
 
     //add by Guilin
-    vector<TreeStructNode> allNodes;
-    //use the allNodes to fill the QuadTree qtree_grid
+    vector<TreeStructNode> all_nodes;
+    //use the all_nodes to fill the QuadTree qtree_grid
     void build_from_structure();
 };
 
@@ -340,7 +340,7 @@ class RefinementFeaturesBlock; //defined below
 class QuadtreeBuilderBlock : public GridBlock
 {
 public:
-    bool isAction() const override { return true; }
+    bool is_action() const override { return true; }
 
     QuadtreeBuilderBlock(DefinitionBlock & block) : GridBlock(block)
     {
@@ -407,7 +407,7 @@ public:
     bool parse() override;
 
     string shapefile;
-    string featuretype;
+    string feature_type;
     string refinement_level_by_attribute;
     int refinement_level;
 };
@@ -430,7 +430,7 @@ public:
 class GridIntersectionBlock : public DefinitionBlock
 {
 public:
-    bool isAction() const override { return true; }
+    bool is_action() const override { return true; }
 
     GridIntersectionBlock(DefinitionBlock & block) : DefinitionBlock(block)
     {
@@ -458,7 +458,7 @@ public:
 class GridToUsgdataBlock : public DefinitionBlock
 {
 public:
-    bool isAction() const override { return true; }
+    bool is_action() const override { return true; }
 
     GridToUsgdataBlock(DefinitionBlock & block) : DefinitionBlock(block)
     {
@@ -481,7 +481,7 @@ public:
 class GridToShapefileBlock : public DefinitionBlock
 {
 public:
-    bool isAction() const override { return true; }
+    bool is_action() const override { return true; }
 
     GridToShapefileBlock(DefinitionBlock & block) : DefinitionBlock(block)
     {
@@ -530,7 +530,7 @@ public:
 class GridToVtkfileBlock : public DefinitionBlock
 {
 public:
-    bool isAction() const override { return true; }
+    bool is_action() const override { return true; }
 
     GridToVtkfileBlock(DefinitionBlock & block) : DefinitionBlock(block)
     {

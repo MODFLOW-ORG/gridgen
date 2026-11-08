@@ -36,6 +36,7 @@
 builddir/
 builddir-coverage/
 builddir-sanitize/
+builddir-lint/
 
 # Executables
 bin/

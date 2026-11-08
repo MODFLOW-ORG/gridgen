@@ -1,5 +1,5 @@
-#ifndef _GHOSTNODE_H_
-#define _GHOSTNODE_H_
+#ifndef GHOSTNODE_H
+#define GHOSTNODE_H
 
 #include "QuadTree3D.h"
 namespace cusg
@@ -26,7 +26,7 @@ struct GhostNode
 void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes);
 
 //write ghost node
-void writeGhostNode(string filePath, vector<GhostNode> & ghost_nodes, int offset);
+void write_ghost_node(string file_path, vector<GhostNode> & ghost_nodes, int offset);
 }
 
 #endif

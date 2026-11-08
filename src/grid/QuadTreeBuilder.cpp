@@ -32,10 +32,10 @@ inline string tolower(const string & s)
     return lower;
 }
 
-inline int getField(string field_name, ShapeReader & shpReader)
+inline int get_field(string field_name, ShapeReader & shp_reader)
 {
     int id = 0;
-    vector<ShapeIntField> & int_fields = shpReader.getIntFields();
+    vector<ShapeIntField> & int_fields = shp_reader.get_int_fields();
     for (vector<ShapeIntField>::iterator sit = int_fields.begin(); sit != int_fields.end();
          ++sit, ++id)
     {
@@ -45,10 +45,10 @@ inline int getField(string field_name, ShapeReader & shpReader)
     return -1;
 }
 
-void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
+void QuadtreeBuilder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
 {
     //rotate qtree
-    ModflowGrid * rmfgrid = qtree->getModflowGrid();
+    ModflowGrid * rmfgrid = qtree->get_modflow_grid();
     double cx, cy, angle;
     rmfgrid->get_rotation(cx, cy, angle);
 
@@ -64,11 +64,11 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
         else if (operation_top == "asciigrid") //ASCII file
         {
             qtree->set_top_operator(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
-            qtree->setTopSource(i, rawdata.top[i].second);
+            qtree->set_top_source(i, rawdata.top[i].second);
 
             if (rawdata.top_area_weighted.find(i) != rawdata.top_area_weighted.end())
             {
-                qtree->setTopAreaWeighted(i, rawdata.top_area_weighted[i]);
+                qtree->set_top_area_weighted(i, rawdata.top_area_weighted[i]);
             }
         }
         else
@@ -86,11 +86,11 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
         else if (operation_bot == "asciigrid") //ASCII file
         {
             qtree->set_bottom_operator(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
-            qtree->setBotSource(i, rawdata.bot[i].second);
+            qtree->set_bot_source(i, rawdata.bot[i].second);
 
             if (rawdata.bot_area_weighted.find(i) != rawdata.bot_area_weighted.end())
             {
-                qtree->setBotAreaWeighted(i, rawdata.bot_area_weighted[i]);
+                qtree->set_bot_area_weighted(i, rawdata.bot_area_weighted[i]);
             }
         }
         else
@@ -118,12 +118,12 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
 
             //prepare for attribute based refinement and store the specified using field_index
             int field_index = -1; //index of refinement_level
-            bool bByAttribute = (refinement->refinement_level_by_attribute.empty() == false);
-            vector<ShapeIntField> & int_fields = shp_reader.getIntFields();
+            bool by_attribute = (refinement->refinement_level_by_attribute.empty() == false);
+            vector<ShapeIntField> & int_fields = shp_reader.get_int_fields();
 
-            if (bByAttribute)
+            if (by_attribute)
             {
-                field_index = getField(refinement->refinement_level_by_attribute, shp_reader);
+                field_index = get_field(refinement->refinement_level_by_attribute, shp_reader);
                 if (field_index == -1)
                     throw GridgenError("shapefile " + refinement->shapefile + " (" + block +
                                        ") has no integer field named " +
@@ -132,11 +132,11 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
             }
 
             // refine using the given feature (refinement)
-            string feature_type = tolower(refinement->featuretype);
+            string feature_type = tolower(refinement->feature_type);
             int nfeatures = 0, noutside = 0;
             if (feature_type == "line")
             {
-                vector<GIS_polyline> & arcs = shp_reader.getArcList();
+                vector<GisPolyline> & arcs = shp_reader.get_arc_list();
                 //subdivide the qtree using the features
                 nfeatures = arcs.size();
                 for (int j = 0; j < nfeatures; j++)
@@ -144,7 +144,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
                     //rotate
                     if (angle != 0) arcs[j].rotate(cx, cy, -angle);
 
-                    int level = (bByAttribute) ? int_fields[field_index].values[arcs[j].m_id]
+                    int level = (by_attribute) ? int_fields[field_index].values[arcs[j].m_id]
                                                : refinement->refinement_level;
                     if (!qtree->refine((Polyline &)arcs[j], level, i)) noutside++;
 
@@ -154,19 +154,19 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
             } //end if
             else if (feature_type == "polygon")
             {
-                vector<GIS_polygon> & polygons = shp_reader.getPolyList();
+                vector<GisPolygon> & polygons = shp_reader.get_poly_list();
                 //subdivide the qtree using the features
                 nfeatures = polygons.size();
 
                 for (int j = 0; j < nfeatures; j++)
                 {
                     //make sure that bounding box is computed
-                    polygons[j].buildBoxAndCenter();
+                    polygons[j].build_box_and_center();
 
                     //rotate
                     if (angle != 0) polygons[j].rotate(cx, cy, -angle);
 
-                    int level = (bByAttribute) ? int_fields[field_index].values[polygons[j].m_id]
+                    int level = (by_attribute) ? int_fields[field_index].values[polygons[j].m_id]
                                                : refinement->refinement_level;
                     if (!qtree->refine(polygons[j], level, i)) noutside++; //i is the layer
 
@@ -176,7 +176,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
             }
             else if (feature_type == "point")
             {
-                vector<GIS_Point2d> & pts = shp_reader.getPointList();
+                vector<GisPoint2d> & pts = shp_reader.get_point_list();
                 //subdivide the qtree using the features
                 nfeatures = pts.size();
                 for (int j = 0; j < nfeatures; j++)
@@ -184,7 +184,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
                     //rotate
                     if (angle != 0) pts[j].rotate(cx, cy, -angle);
 
-                    int level = (bByAttribute) ? int_fields[field_index].values[pts[j].m_id]
+                    int level = (by_attribute) ? int_fields[field_index].values[pts[j].m_id]
                                                : refinement->refinement_level;
                     if (!qtree->refine(pts[j], level, i)) noutside++;
 
@@ -194,7 +194,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
             }
             else
             {
-                throw GridgenError("FEATURE_TYPE " + refinement->featuretype + " (" + block +
+                throw GridgenError("FEATURE_TYPE " + refinement->feature_type + " (" + block +
                                    ") is not line, polygon, or point");
             }
 
@@ -224,7 +224,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
 
         cout << "  * Determine the active domain for layer " << i + 1 << endl;
 
-        qtree->nodegroup.disable_nodes_in_layer(i);
+        qtree->node_group.disable_nodes_in_layer(i);
         for (auto & f : refinements)
         {
             gd.build(qtree, i, f);
@@ -233,7 +233,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
 
     //
     // ask the grid to renumber nodes
-    // node number are used to retrieve the leaf nodoes
+    // cell numbers are used to retrieve the leaf boxes
     //
     qtree->set_one_based_node_numbering(rawdata.one_based_node_numbering);
     qtree->number_nodes();
@@ -256,9 +256,9 @@ void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
     // count number of active cells with negative thickness
     analyze_elevation(qtree, top_elev, bot_elev);
 
-} // void Quadtree_Builder::build
+} // void QuadtreeBuilder::build
 
-void Quadtree_Builder::analyze_elevation(QuadTree3D * qtree, double * top_elev, double * bot_elev)
+void QuadtreeBuilder::analyze_elevation(QuadTree3D * qtree, double * top_elev, double * bot_elev)
 {
     int nodesize = qtree->nodes();
     int negative_count = 0;
@@ -269,7 +269,7 @@ void Quadtree_Builder::analyze_elevation(QuadTree3D * qtree, double * top_elev, 
     for (int cell = 0; cell < nodesize; cell++)
     {
         Box * box = qtree->get_cell_box(cell);
-        assert(box->isLeaf);                //make sure this node is a leaf node...
+        assert(box->is_leaf);               //make sure this node is a leaf node...
         if (box->active == false) continue; //disabled...
 
         //check to top and bottom
@@ -298,6 +298,6 @@ void Quadtree_Builder::analyze_elevation(QuadTree3D * qtree, double * top_elev, 
     }
     //
 }
-//end Quadtree_Builder::analyze_elevation()
+//end QuadtreeBuilder::analyze_elevation()
 
 } //namespace cusg

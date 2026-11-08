@@ -29,12 +29,12 @@ struct CSRData
 {
     CSRData() : nodes(0), nja(0) {}
 
-    CSRData(int _nodes, int _nja, vector<double> _area, vector<int> _ia, vector<int> _ja,
-            vector<double> _cl1, vector<double> _cl2, vector<double> _fahl, vector<int> _fldr,
-            vector<int> _iac = vector<int>())
-        : nodes(_nodes), nja(_nja), ja(std::move(_ja)), ia(std::move(_ia)), area(std::move(_area)),
-          cl1(std::move(_cl1)), cl2(std::move(_cl2)), fahl(std::move(_fahl)),
-          fldr(std::move(_fldr)), iac(std::move(_iac))
+    CSRData(int nodes, int nja, vector<double> area, vector<int> ia, vector<int> ja,
+            vector<double> cl1, vector<double> cl2, vector<double> fahl, vector<int> fldr,
+            vector<int> iac = vector<int>())
+        : nodes(nodes), nja(nja), ja(std::move(ja)), ia(std::move(ia)), area(std::move(area)),
+          cl1(std::move(cl1)), cl2(std::move(cl2)), fahl(std::move(fahl)), fldr(std::move(fldr)),
+          iac(std::move(iac))
     {
     }
 

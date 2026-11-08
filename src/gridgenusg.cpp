@@ -26,14 +26,14 @@ static int run(const string & action, const string & dfn_file)
     DefinitionParser def_parser;
     def_parser.parse(dfn_file);
 
-    DefinitionBlock * data = def_parser.getBlockData(action);
+    DefinitionBlock * data = def_parser.get_block_data(action);
 
     if (data == nullptr)
         throw GridgenError("definition file " + dfn_file + " has no block named " + action);
 
-    bool initialized = data->initialize(def_parser.getBlockData());
+    bool initialized = data->initialize(def_parser.get_block_data());
     if (initialized == false) throw GridgenError(data->label() + " cannot be read");
-    data->warnIfNotAction();
+    data->warn_if_not_action();
 
     Grid * grid = nullptr;
 
@@ -42,7 +42,7 @@ static int run(const string & action, const string & dfn_file)
     QuadtreeBuilderBlock * qtree_builder_data = dynamic_cast<QuadtreeBuilderBlock *>(data);
     GridToShapefileBlock * grid2shp = dynamic_cast<GridToShapefileBlock *>(data);
     GridToUsgdataBlock * grid2usg = dynamic_cast<GridToUsgdataBlock *>(data);
-    GridIntersectionBlock * gridintersection = dynamic_cast<GridIntersectionBlock *>(data);
+    GridIntersectionBlock * grid_intersection = dynamic_cast<GridIntersectionBlock *>(data);
     GridToVtkfileBlock * grid2vtk = dynamic_cast<GridToVtkfileBlock *>(data);
 
     //check if this is a type of grid
@@ -59,9 +59,9 @@ static int run(const string & action, const string & dfn_file)
     {
         grid = grid2usg->grid;
     }
-    else if (gridintersection != nullptr)
+    else if (grid_intersection != nullptr)
     {
-        grid = gridintersection->grid;
+        grid = grid_intersection->grid;
     }
     else if (grid2vtk != nullptr)
     {
@@ -75,9 +75,9 @@ static int run(const string & action, const string & dfn_file)
     if (qtree_builder_data != nullptr)
     {
         DefinitionExporter def_exporter;
-        const string & outputfile = qtree_builder_data->grid_definition_file;
+        const string & output_file = qtree_builder_data->grid_definition_file;
 
-        def_exporter.save(outputfile, *qtree_builder_data);
+        def_exporter.save(output_file, *qtree_builder_data);
     }
     else if (grid2shp != nullptr)
     {
@@ -123,14 +123,14 @@ static int run(const string & action, const string & dfn_file)
         def_exporter.save(*grid2usg);
         def_exporter.save_node_coordinate(grid2usg->usg_data_prefix, grid2usg->grid);
     }
-    else if (gridintersection != nullptr)
+    else if (grid_intersection != nullptr)
     {
-        GridIntersection gi(0, gridintersection->layer);
+        GridIntersection gi(0, grid_intersection->layer);
         gi.set_save_intersection_info(true);
-        gi.build(*gridintersection);
+        gi.build(*grid_intersection);
         //save results
-        gi.save(gridintersection->output_file, gridintersection->attributes);
-        gi.saveShp(gridintersection->output_shapefile, gridintersection->attributes);
+        gi.save(grid_intersection->output_file, grid_intersection->attributes);
+        gi.save_shp(grid_intersection->output_shapefile, grid_intersection->attributes);
     }
 
     return 0;

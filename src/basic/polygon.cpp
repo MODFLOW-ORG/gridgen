@@ -5,10 +5,10 @@
 
 namespace cusg
 {
-//    c_polygon g_P;
-//    c_polygon g_Q;
-//    c_polygon& getP(){ return g_P; }
-//    c_polygon& getQ(){ return g_Q; }
+//    Polygon g_P;
+//    Polygon g_Q;
+//    Polygon& getP(){ return g_P; }
+//    Polygon& getQ(){ return g_Q; }
 
 LinkedVertex::~LinkedVertex()
 {
@@ -17,54 +17,54 @@ LinkedVertex::~LinkedVertex()
 
 // - compute normal
 // - check if the vertex is reflex or not
-void LinkedVertex::computeExtraInfo()
+void LinkedVertex::compute_extra_info()
 {
-    reflex = true;
+    m_reflex = true;
 
     //compute normal direction
-    if (next != nullptr)
+    if (m_next != nullptr)
     {
-        Vector2d v = next->pos - pos;
+        Vector2d v = m_next->m_pos - m_pos;
         if (v[0] == 0)
         {
             if (v[1] > 0)
             {
-                normal[0] = 1;
-                normal[1] = 0;
+                m_normal[0] = 1;
+                m_normal[1] = 0;
             }
             else
             {
-                normal[0] = -1;
-                normal[1] = 0;
+                m_normal[0] = -1;
+                m_normal[1] = 0;
             }
         }
         else if (v[0] > 0)
         {
-            normal[1] = -1;
-            normal[0] = (v[1] / v[0]);
+            m_normal[1] = -1;
+            m_normal[0] = (v[1] / v[0]);
         }
         else
         { //v[0]<0
-            normal[1] = 1;
-            normal[0] = -(v[1] / v[0]);
+            m_normal[1] = 1;
+            m_normal[0] = -(v[1] / v[0]);
         }
 
-        normal = normal.normalize();
+        m_normal = m_normal.normalize();
 
-        if (pre != nullptr)
+        if (m_pre != nullptr)
         {
             //compute if left or right turn
-            Vector2d u = pos - pre->pos;
+            Vector2d u = m_pos - m_pre->m_pos;
             float z = u[0] * v[1] - u[1] * v[0];
-            if (z > 0) reflex = false;
+            if (z > 0) m_reflex = false;
         }
     } //end if(next!=NULL)
 }
 
 void LinkedVertex::reverse()
 {
-    swap(next, pre);
-    computeExtraInfo();
+    swap(m_next, m_pre);
+    compute_extra_info();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,275 +72,275 @@ void LinkedVertex::reverse()
 // clean up the space allocated
 void Ring::destroy()
 {
-    if (head == nullptr) return;
-    LinkedVertex * ptr = head;
+    if (m_head == nullptr) return;
+    LinkedVertex * ptr = m_head;
     do
     {
-        LinkedVertex * n = ptr->getNext();
+        LinkedVertex * n = ptr->get_next();
         delete ptr;
         ptr = n;
-    } while (ptr != head);
-    head = tail = nullptr;
+    } while (ptr != m_head);
+    m_head = m_tail = nullptr;
 
-    all.clear();
+    m_all.clear();
 }
 
 // Create a empty polygon
-void Ring::beginPoly()
+void Ring::begin_poly()
 {
-    head = tail = nullptr;
-    all.clear();
+    m_head = m_tail = nullptr;
+    m_all.clear();
 }
 
 // Add a vertex to the polygonal chain
-void Ring::addVertex(double x, double y, bool remove_duplicate)
+void Ring::add_vertex(double x, double y, bool remove_duplicate)
 {
     Point2d pt(x, y);
 
-    if (tail != nullptr)
+    if (m_tail != nullptr)
     {
-        if (tail->getPos() == pt && remove_duplicate) return; //don't add
+        if (m_tail->get_pos() == pt && remove_duplicate) return; //don't add
     }
 
     LinkedVertex * v = new LinkedVertex(pt);
-    if (tail != nullptr)
+    if (m_tail != nullptr)
     {
-        tail->setNext(v);
+        m_tail->set_next(v);
     }
-    tail = v;
-    if (head == nullptr) head = tail;
-    v->setVID(all.size()); //id of the vertex in this ring
-    all.push_back(v);
+    m_tail = v;
+    if (m_head == nullptr) m_head = m_tail;
+    v->set_vid(m_all.size()); //id of the vertex in this ring
+    m_all.push_back(v);
 }
 
 // finish building the polygon
-void Ring::endPoly(bool remove_duplicate)
+void Ring::end_poly(bool remove_duplicate)
 {
-    if (head != nullptr && tail != nullptr)
+    if (m_head != nullptr && m_tail != nullptr)
     {
         if (remove_duplicate)
         {
-            if (head->getPos() == tail->getPos())
+            if (m_head->get_pos() == m_tail->get_pos())
             { //remove tail..
-                delete tail;
-                all.pop_back();
-                tail = all.back();
+                delete m_tail;
+                m_all.pop_back();
+                m_tail = m_all.back();
             }
         } //
     }
 
-    tail->setNext(head);
-    doInit();
+    m_tail->set_next(m_head);
+    do_init();
 }
 
 // initialize property of the this polychain
 // Compute normals and find reflective vertices
-void Ring::doInit()
+void Ring::do_init()
 {
     //compute area
-    getArea();
-    if (this->area < 0 && type == POUT)
+    get_area();
+    if (this->m_area < 0 && m_type == POUT)
     {
         reverse();
     }
-    else if (this->area > 0 && type == PIN)
+    else if (this->m_area > 0 && m_type == PIN)
     {
         reverse();
     }
 
     //compute normals
-    LinkedVertex * ptr = head;
+    LinkedVertex * ptr = m_head;
     do
     {
-        ptr->computeExtraInfo();
-        ptr = ptr->getNext();
-    } while (ptr != head);
+        ptr->compute_extra_info();
+        ptr = ptr->get_next();
+    } while (ptr != m_head);
 }
 
-const Point2d & Ring::getCenter()
+const Point2d & Ring::get_center()
 {
-    if (radius <= 0)
+    if (m_radius <= 0)
     {
-        this->center.set(0, 0);
-        LinkedVertex * ptr = head;
-        const Point2d & first = ptr->getPos();
+        this->m_center.set(0, 0);
+        LinkedVertex * ptr = m_head;
+        const Point2d & first = ptr->get_pos();
         uint size = 0;
         do
         {
             size++;
-            Vector2d v = ptr->getPos() - first;
-            this->center[0] += v[0];
-            this->center[1] += v[1];
-            ptr = ptr->getNext();
-        } while (ptr != head); //end while
-        this->center[0] = (center[0] / size) + first[0];
-        this->center[1] = (center[1] / size) + first[1];
+            Vector2d v = ptr->get_pos() - first;
+            this->m_center[0] += v[0];
+            this->m_center[1] += v[1];
+            ptr = ptr->get_next();
+        } while (ptr != m_head); //end while
+        this->m_center[0] = (m_center[0] / size) + first[0];
+        this->m_center[1] = (m_center[1] / size) + first[1];
 
-        radius = 0;
+        m_radius = 0;
     }
 
-    return this->center;
+    return this->m_center;
 }
 
-const Point2d Ring::getCenter() const
+const Point2d Ring::get_center() const
 {
-    if (radius < 0)
+    if (m_radius < 0)
     {
         Point2d center;
-        LinkedVertex * ptr = head;
-        const Point2d & first = ptr->getPos();
+        LinkedVertex * ptr = m_head;
+        const Point2d & first = ptr->get_pos();
         uint size = 0;
         do
         {
             size++;
-            Vector2d v = ptr->getPos() - first;
+            Vector2d v = ptr->get_pos() - first;
             center[0] += v[0];
             center[1] += v[1];
-            ptr = ptr->getNext();
-        } while (ptr != head); //end while
+            ptr = ptr->get_next();
+        } while (ptr != m_head); //end while
         center[0] = (center[0] / size) + first[0];
         center[1] = (center[1] / size) + first[1];
         return center;
     }
     else
-        return this->center;
+        return this->m_center;
 }
 
 //reverse the order of the vertices
 void Ring::reverse()
 {
-    LinkedVertex * ptr = head;
+    LinkedVertex * ptr = m_head;
     do
     {
         ptr->reverse();
-        ptr = ptr->getNext();
-    } while (ptr != head); //end while
+        ptr = ptr->get_next();
+    } while (ptr != m_head); //end while
 
-    this->area = -this->area;
-    all.clear();
+    this->m_area = -this->m_area;
+    m_all.clear();
 }
 
-float Ring::getRadius() const
+float Ring::get_radius() const
 {
-    if (radius <= 0)
+    if (m_radius <= 0)
     {
         double radius = 0;
-        getCenter();
-        LinkedVertex * ptr = head;
+        get_center();
+        LinkedVertex * ptr = m_head;
         do
         {
-            float d = (center - ptr->getPos()).normsqr();
+            float d = (m_center - ptr->get_pos()).normsqr();
             if (d > radius) radius = d;
-            ptr = ptr->getNext();
-        } while (ptr != head); //end while
+            ptr = ptr->get_next();
+        } while (ptr != m_head); //end while
         radius = sqrt(radius);
 
         return radius;
     }
     else
-        return radius;
+        return m_radius;
 }
 
-float Ring::getArea()
+float Ring::get_area()
 {
-    if (area == -FLT_MAX)
+    if (m_area == -FLT_MAX)
     {
-        area = 0;
-        getCenter();
-        LinkedVertex * ptr = head;
+        m_area = 0;
+        get_center();
+        LinkedVertex * ptr = m_head;
         do
         {
-            LinkedVertex * next = ptr->getNext();
-            const Point2d & p1 = ptr->getPos();
-            const Point2d & p2 = next->getPos();
-            area += Area(p1.get(), p2.get(), center.get());
+            LinkedVertex * next = ptr->get_next();
+            const Point2d & p1 = ptr->get_pos();
+            const Point2d & p2 = next->get_pos();
+            m_area += area(p1.get(), p2.get(), m_center.get());
             ptr = next;
-        } while (ptr != head); //end while
+        } while (ptr != m_head); //end while
     }
 
-    return area;
+    return m_area;
 }
 
 void Ring::build_all()
 {
     uint vid = 0;
-    all.clear();
-    LinkedVertex * ptr = head;
+    m_all.clear();
+    LinkedVertex * ptr = m_head;
     do
     {
-        ptr->setVID(vid++);
-        all.push_back(ptr);
-        ptr = ptr->getNext();
-    } while (ptr != head); //end while
+        ptr->set_vid(vid++);
+        m_all.push_back(ptr);
+        ptr = ptr->get_next();
+    } while (ptr != m_head); //end while
 }
 
 //
 // Compute the center and the box of a list of rings
 //
 
-void RingList::buildBoxAndCenter()
+void RingList::build_box_and_center()
 {
-    if (is_buildboxandcenter_called == false)
+    if (m_build_box_and_center_called == false)
     {
-        box[0] = box[2] = FLT_MAX;
-        box[1] = box[3] = -FLT_MAX;
+        m_box[0] = m_box[2] = FLT_MAX;
+        m_box[1] = m_box[3] = -FLT_MAX;
         for (auto & i : *this)
         {
 
-            LinkedVertex * ptr = i.getHead();
+            LinkedVertex * ptr = i.get_head();
             do
             {
-                const Point2d & p = ptr->getPos();
-                if (p[0] < box[0]) box[0] = p[0];
-                if (p[0] > box[1]) box[1] = p[0];
-                if (p[1] < box[2]) box[2] = p[1];
-                if (p[1] > box[3]) box[3] = p[1];
-                ptr = ptr->getNext();
-            } while (ptr != i.getHead()); //end while
+                const Point2d & p = ptr->get_pos();
+                if (p[0] < m_box[0]) m_box[0] = p[0];
+                if (p[0] > m_box[1]) m_box[1] = p[0];
+                if (p[1] < m_box[2]) m_box[2] = p[1];
+                if (p[1] > m_box[3]) m_box[3] = p[1];
+                ptr = ptr->get_next();
+            } while (ptr != i.get_head()); //end while
         }
 
-        center[0] = (box[0] + box[1]) / 2;
-        center[1] = (box[2] + box[3]) / 2;
+        m_center[0] = (m_box[0] + m_box[1]) / 2;
+        m_center[1] = (m_box[2] + m_box[3]) / 2;
 
-        is_buildboxandcenter_called = true;
+        m_build_box_and_center_called = true;
     }
 }
 
-void c_polygon::destroy()
+void Polygon::destroy()
 {
     for (auto & i : *this)
     {
         i.destroy();
     }
     clear(); //remove all ring from this list
-    all.clear();
+    m_all.clear();
 }
 
-void c_polygon::build_all()
+void Polygon::build_all()
 {
     uint vid = 0;
     for (auto & i : *this)
     {
-        uint vsize = i.getSize();
+        uint vsize = i.get_size();
         for (uint j = 0; j < vsize; j++)
         {
-            i[j]->setVID(vid++); //id of vertex in the polygons
-            all.push_back(i[j]);
+            i[j]->set_vid(vid++); //id of vertex in the polygons
+            m_all.push_back(i[j]);
         }
     } //end for i
 }
 
-double c_polygon::getArea()
+double Polygon::get_area()
 {
-    if (area == 0)
+    if (m_area == 0)
     {
         for (auto & i : *this)
         {
-            area += i.getArea();
+            m_area += i.get_area();
         } //end for i
     }
 
-    return area;
+    return m_area;
 }
 
 istream & operator>>(istream & is, Ring & poly)
@@ -350,11 +350,11 @@ istream & operator>>(istream & is, Ring & poly)
     is >> vsize >> str_type;
 
     if (str_type.find("out") != string::npos)
-        poly.type = Ring::POUT;
+        poly.m_type = Ring::POUT;
     else
-        poly.type = Ring::PIN;
+        poly.m_type = Ring::PIN;
 
-    poly.beginPoly();
+    poly.begin_poly();
     //read in all the vertices
     int iv;
     vector<pair<double, double>> pts;
@@ -370,10 +370,10 @@ istream & operator>>(istream & is, Ring & poly)
     {
         is >> id;
         id = id - 1;
-        poly.addVertex(pts[id].first, pts[id].second);
+        poly.add_vertex(pts[id].first, pts[id].second);
     }
 
-    poly.endPoly();
+    poly.end_poly();
     return is;
 }
 
@@ -403,10 +403,10 @@ istream & operator>>(istream & is, RingList & p)
         Ring poly(Ring::UNKNOWN);
         is >> poly;
         p.push_back(poly);
-        uint vsize = poly.getSize();
+        uint vsize = poly.get_size();
         for (uint j = 0; j < vsize; j++)
         {
-            poly[j]->setVID(vid++); //id of vertex in the polygons
+            poly[j]->set_vid(vid++); //id of vertex in the polygons
         }
     }
     return is;

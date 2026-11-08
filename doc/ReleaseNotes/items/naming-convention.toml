@@ -1,0 +1,3 @@
+section = "internal"
+subsection = ""
+description = "Names in the C++ source follow one case convention: classes, structs, and enumerations in PascalCase; functions, variables, and members in snake_case, with private and protected members prefixed m_; and constants, enumerators, and macros in upper case. The convention is checked with clang-tidy by the format check run on every change. The program and its output are unchanged."

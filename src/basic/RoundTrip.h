@@ -12,13 +12,13 @@ namespace cusg
 
 /// a real number that is written with the fewest significant digits, up to
 /// 17, that read back to the same value
-struct round_trip
+struct RoundTrip
 {
-    explicit round_trip(double v) : value(v) {}
+    explicit RoundTrip(double v) : value(v) {}
     double value;
 };
 
-inline std::ostream & operator<<(std::ostream & out, const round_trip & r)
+inline std::ostream & operator<<(std::ostream & out, const RoundTrip & r)
 {
     char buf[32];
     for (int digits = 15; digits <= 17; digits++)
@@ -30,13 +30,13 @@ inline std::ostream & operator<<(std::ostream & out, const round_trip & r)
 }
 
 /// real numbers are written to round trip; other values as they are
-inline round_trip round_trip_value(double v)
+inline RoundTrip round_trip_value(double v)
 {
-    return round_trip(v);
+    return RoundTrip(v);
 }
-inline round_trip round_trip_value(float v)
+inline RoundTrip round_trip_value(float v)
 {
-    return round_trip(v);
+    return RoundTrip(v);
 }
 template <typename T> inline const T & round_trip_value(const T & v)
 {

@@ -6,7 +6,7 @@ using namespace std;
 
 namespace cusg
 {
-Point2d getCenter(VNode * head)
+Point2d get_center(VNode * head)
 {
     double x = 0, y = 0;
     int size = 0;
@@ -23,39 +23,39 @@ Point2d getCenter(VNode * head)
     return Point2d(x / size, y / size);
 }
 
-bool AlmostSame(double a[2], double b[2])
+bool almost_same(double a[2], double b[2])
 {
     return (fabs(a[0] - b[0]) <= SMALLCOORDINATE && fabs(a[1] - b[1]) <= SMALLCOORDINATE);
 }
-bool AlmostEqual(VNode * v1, VNode * v2)
+bool almost_equal(VNode * v1, VNode * v2)
 {
     return (fabs(v1->x - v2->x) <= SMALLCOORDINATE && fabs(v1->y - v2->y) <= SMALLCOORDINATE);
 }
 //slope, along the line per unit distance from it, of the edge that leaves v on the kept side
-double keptSlope(VNode * v, bool isX)
+double kept_slope(VNode * v, bool is_x)
 {
     for (int side = 0; side < 2; side++)
     {
         VNode * n = side == 0 ? v->next : v->prev;
-        while (n != v && AlmostEqual(n, v)) n = side == 0 ? n->next : n->prev;
-        double along = isX ? n->y - v->y : n->x - v->x;
-        double away = fabs(isX ? n->x - v->x : n->y - v->y);
-        if (n->isInDirect && away > SMALLCOORDINATE) return along / away;
+        while (n != v && almost_equal(n, v)) n = side == 0 ? n->next : n->prev;
+        double along = is_x ? n->y - v->y : n->x - v->x;
+        double away = fabs(is_x ? n->x - v->x : n->y - v->y);
+        if (n->is_in_direct && away > SMALLCOORDINATE) return along / away;
     }
     return 0;
 }
 //true if a sorts after b along the line; crossings at the same place are sorted by where
 //their rings run just inside the kept side
-bool sortsAfter(VNode * a, VNode * b, bool isX)
+bool sorts_after(VNode * a, VNode * b, bool is_x)
 {
-    double pa = isX ? a->y : a->x;
-    double pb = isX ? b->y : b->x;
-    if (pa == pb || (AlmostEqual(a, b) && fabs(pa - pb) <= SMALLCOORDINATE))
-        return keptSlope(a, isX) > keptSlope(b, isX);
+    double pa = is_x ? a->y : a->x;
+    double pb = is_x ? b->y : b->x;
+    if (pa == pb || (almost_equal(a, b) && fabs(pa - pb) <= SMALLCOORDINATE))
+        return kept_slope(a, is_x) > kept_slope(b, is_x);
     return pa > pb;
 }
 //sort the vertices based on X or Y ascendingly
-void InsertionSortV(vector<VNode *> & vertices, bool isX)
+void insertion_sort_v(vector<VNode *> & vertices, bool is_x)
 {
     int vsize = vertices.size();
     if (vsize < 2) return;
@@ -64,7 +64,7 @@ void InsertionSortV(vector<VNode *> & vertices, bool isX)
     {
         VNode * key = vertices[i];
         int j = i - 1;
-        while (j >= 0 && sortsAfter(vertices[j], key, isX))
+        while (j >= 0 && sorts_after(vertices[j], key, is_x))
         {
             vertices[j + 1] = vertices[j];
             j--;
@@ -73,16 +73,16 @@ void InsertionSortV(vector<VNode *> & vertices, bool isX)
     }
 }
 
-int locateVInVector(vector<VNode *> & vertices, VNode * target, int start_index, int totalSize)
+int locate_v_in_vector(vector<VNode *> & vertices, VNode * target, int start_index, int total_size)
 {
-    for (int i = start_index; i < totalSize; i++)
+    for (int i = start_index; i < total_size; i++)
     {
         if (vertices[i] == target) return i;
     }
     return -1;
 }
 
-void getXYBound(VNode * first, double & xmin, double & xmax, double & ymin, double & ymax)
+void get_xy_bound(VNode * first, double & xmin, double & xmax, double & ymin, double & ymax)
 {
     xmin = ymin = FLT_MAX;
     xmax = ymax = FLT_MIN;
@@ -97,12 +97,12 @@ void getXYBound(VNode * first, double & xmin, double & xmax, double & ymin, doub
     } while (node != first);
 }
 
-VNode * copy_ring(VNode * head, bool bSetVisited)
+VNode * copy_ring(VNode * head, bool set_visited)
 {
     if (head == nullptr) return nullptr;
 
     VNode * new_head = new VNode(head->x, head->y);
-    if (bSetVisited) head->isVisited = true;
+    if (set_visited) head->is_visited = true;
     new_head->next = new_head->prev = new_head;
     VNode * node = head->next;
     while (node != head)
@@ -113,18 +113,18 @@ VNode * copy_ring(VNode * head, bool bSetVisited)
         node_copy->next = new_head;
         new_head->prev = node_copy;
 
-        if (bSetVisited) node->isVisited = true;
+        if (set_visited) node->is_visited = true;
 
         node = node->next;
     }
 
     return new_head;
 }
-RingClipper * copy_ring_clipper(RingClipper * ring_clip, bool bSetVisited = false)
+RingClipper * copy_ring_clipper(RingClipper * ring_clip, bool set_visited = false)
 {
     RingClipper * clip_copy = new RingClipper();
 
-    VNode * new_head = copy_ring(ring_clip->first, bSetVisited);
+    VNode * new_head = copy_ring(ring_clip->first, set_visited);
     clip_copy->first = new_head;
     clip_copy->rings.push_back(new_head);
 
@@ -134,13 +134,13 @@ RingClipper * copy_ring_clipper(RingClipper * ring_clip, bool bSetVisited = fals
         ++vit;
         for (; vit != ring_clip->rings.end(); ++vit)
         {
-            VNode * ring_copy = copy_ring(*vit, bSetVisited);
+            VNode * ring_copy = copy_ring(*vit, set_visited);
             clip_copy->rings.push_back(ring_copy);
         }
     }
     return clip_copy;
 }
-void RingClipper::resetStatus()
+void RingClipper::reset_status()
 {
     //delete the new added
     for (auto added : added_vertices)
@@ -157,12 +157,12 @@ void RingClipper::resetStatus()
     //loop over the influenced vertices
     for (auto vertex : changed_vertices)
     {
-        vertex->resetStatus();
+        vertex->reset_status();
     }
     changed_vertices.clear();
 }
 
-double getRotAngle(Vector2d & v1, Vector2d & v2)
+double get_rot_angle(Vector2d & v1, Vector2d & v2)
 {
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
     //have bug here
@@ -196,76 +196,76 @@ bool clip_ring_encloses(VNode * head, const Point2d & p2d)
     {
         double a[2] = {node->x, node->y};
         double b[2] = {node->next->x, node->next->y};
-        if (CrossesRay(a, b, p2d.get())) inside = !inside;
+        if (crosses_ray(a, b, p2d.get())) inside = !inside;
         node = node->next;
     } while (node != head);
 
     return inside;
 }
 
-void getFeasiblePreNext(VNode * vertex, VNode *& prev_vertex, VNode *& next_vertex,
-                        VNode *& prev_adjacent, VNode *& next_adjacent)
+void get_feasible_pre_next(VNode * vertex, VNode *& prev_vertex, VNode *& next_vertex,
+                           VNode *& prev_adjacent, VNode *& next_adjacent)
 {
     prev_vertex = vertex->prev;
     next_vertex = vertex->next;
-    while (AlmostEqual(prev_vertex, vertex))
+    while (almost_equal(prev_vertex, vertex))
     {
         prev_vertex = prev_vertex->prev;
     }
-    while (AlmostEqual(next_vertex, vertex))
+    while (almost_equal(next_vertex, vertex))
     {
         next_vertex = next_vertex->next;
     }
     prev_adjacent = prev_vertex;
     next_adjacent = next_vertex;
     //filtering
-    while (prev_vertex->isScanPoint)
+    while (prev_vertex->is_scan_point)
     {
         prev_adjacent = prev_vertex;
         prev_vertex = prev_vertex->prev;
     }
-    while (next_vertex->isScanPoint)
+    while (next_vertex->is_scan_point)
     {
         next_adjacent = next_vertex;
         next_vertex = next_vertex->next;
     }
 }
-bool decideNextOrderForOut(VNode * vertex, bool isX, bool isBigger)
+bool decide_next_order_for_out(VNode * vertex, bool is_x, bool is_bigger)
 {
-    assert(vertex->isInDirect);
-    assert(vertex->next->isInDirect || vertex->prev->isInDirect);
+    assert(vertex->is_in_direct);
+    assert(vertex->next->is_in_direct || vertex->prev->is_in_direct);
 
-    if (!(vertex->prev->isInDirect && vertex->next->isInDirect))
-        return vertex->next->isInDirect;
+    if (!(vertex->prev->is_in_direct && vertex->next->is_in_direct))
+        return vertex->next->is_in_direct;
     else
     {
         //1:pre; 2:next
         VNode *prev_vertex = nullptr, *next_vertex = nullptr, *prev_adjacent = nullptr,
               *next_adjacent = nullptr;
-        getFeasiblePreNext(vertex, prev_vertex, next_vertex, prev_adjacent, next_adjacent);
-        assert(!(prev_adjacent->isVisited && next_adjacent->isVisited));
+        get_feasible_pre_next(vertex, prev_vertex, next_vertex, prev_adjacent, next_adjacent);
+        assert(!(prev_adjacent->is_visited && next_adjacent->is_visited));
         //if one of them is not in indirection
-        if (!(prev_vertex->isInDirect && next_vertex->isInDirect))
+        if (!(prev_vertex->is_in_direct && next_vertex->is_in_direct))
         {
-            if (prev_vertex->isInDirect && (!prev_adjacent->isVisited)) //previous
+            if (prev_vertex->is_in_direct && (!prev_adjacent->is_visited)) //previous
                 return false;
-            else if (next_vertex->isInDirect && (!next_adjacent->isVisited)) //next
+            else if (next_vertex->is_in_direct && (!next_adjacent->is_visited)) //next
                 return true;
             else
                 assert(false);
         }
         //if both are in direction, but one of them has been visited
-        if (prev_vertex->isInDirect && next_vertex->isInDirect)
+        if (prev_vertex->is_in_direct && next_vertex->is_in_direct)
         {
-            if (prev_adjacent->isVisited || prev_vertex->isVisited) return true;
-            if (next_adjacent->isVisited || next_vertex->isVisited) return false;
+            if (prev_adjacent->is_visited || prev_vertex->is_visited) return true;
+            if (next_adjacent->is_visited || next_vertex->is_visited) return false;
         }
-        if (!(prev_adjacent->isScanPoint && next_adjacent->isScanPoint))
+        if (!(prev_adjacent->is_scan_point && next_adjacent->is_scan_point))
         {
             Vector2d to_prev(prev_adjacent->x - vertex->x, prev_adjacent->y - vertex->y);
             Vector2d to_next(next_adjacent->x - vertex->x, next_adjacent->y - vertex->y);
-            double angle = getRotAngle(to_prev, to_next);
-            if ((!isX && isBigger) || (isX && !isBigger))
+            double angle = get_rot_angle(to_prev, to_next);
+            if ((!is_x && is_bigger) || (is_x && !is_bigger))
                 return (angle <= PI);
             else
                 return (angle >= PI);
@@ -274,66 +274,66 @@ bool decideNextOrderForOut(VNode * vertex, bool isX, bool isBigger)
         {
             Vector2d to_prev(prev_adjacent->x - vertex->x, prev_adjacent->y - vertex->y);
             Vector2d to_next(next_vertex->x - vertex->x, next_vertex->y - vertex->y);
-            double angle = getRotAngle(to_prev, to_next);
-            if ((!isX && isBigger) || (isX && !isBigger))
+            double angle = get_rot_angle(to_prev, to_next);
+            if ((!is_x && is_bigger) || (is_x && !is_bigger))
                 return (angle <= PI);
             else
                 return (angle >= PI);
         }
     }
 }
-bool decideNextOrderForHole(VNode * vertex, bool isX, bool isBigger)
+bool decide_next_order_for_hole(VNode * vertex, bool is_x, bool is_bigger)
 {
-    assert(vertex->isInDirect);
-    assert(vertex->next->isInDirect || vertex->prev->isInDirect);
+    assert(vertex->is_in_direct);
+    assert(vertex->next->is_in_direct || vertex->prev->is_in_direct);
 
-    if (!(vertex->prev->isInDirect && vertex->next->isInDirect))
-        return vertex->next->isInDirect;
+    if (!(vertex->prev->is_in_direct && vertex->next->is_in_direct))
+        return vertex->next->is_in_direct;
     else
     {
         //1:pre; 2:next
         VNode *prev_vertex = nullptr, *next_vertex = nullptr, *prev_adjacent = nullptr,
               *next_adjacent = nullptr;
-        getFeasiblePreNext(vertex, prev_vertex, next_vertex, prev_adjacent, next_adjacent);
-        assert(!(prev_adjacent->isVisited && next_adjacent->isVisited));
-        if (!(prev_vertex->isInDirect && next_vertex->isInDirect))
+        get_feasible_pre_next(vertex, prev_vertex, next_vertex, prev_adjacent, next_adjacent);
+        assert(!(prev_adjacent->is_visited && next_adjacent->is_visited));
+        if (!(prev_vertex->is_in_direct && next_vertex->is_in_direct))
         {
-            if (prev_vertex->isInDirect && (!prev_adjacent->isVisited))
+            if (prev_vertex->is_in_direct && (!prev_adjacent->is_visited))
                 return false;
-            else if (next_vertex->isInDirect && (!next_adjacent->isVisited))
+            else if (next_vertex->is_in_direct && (!next_adjacent->is_visited))
                 return true;
             else
                 assert(false);
         }
         //if both are in direction, but one of them has been visited
-        if (prev_vertex->isInDirect && next_vertex->isInDirect)
+        if (prev_vertex->is_in_direct && next_vertex->is_in_direct)
         {
-            if (prev_adjacent->isVisited || prev_vertex->isVisited) return true;
-            if (next_adjacent->isVisited || next_vertex->isVisited) return false;
+            if (prev_adjacent->is_visited || prev_vertex->is_visited) return true;
+            if (next_adjacent->is_visited || next_vertex->is_visited) return false;
         }
     }
 
     Vector2d to_prev(vertex->prev->x - vertex->x, vertex->prev->y - vertex->y);
     Vector2d to_next(vertex->next->x - vertex->x, vertex->next->y - vertex->y);
 
-    double angle = getRotAngle(to_prev, to_next);
-    if (((!isX) && isBigger) || (isX && (!isBigger)))
+    double angle = get_rot_angle(to_prev, to_next);
+    if (((!is_x) && is_bigger) || (is_x && (!is_bigger)))
         return (angle >= PI);
     else
         return (angle <= PI);
 }
 
-bool checkAllIndirect(double line_coordinate, bool isX, bool isBigger, VNode * head)
+bool check_all_indirect(double line_coordinate, bool is_x, bool is_bigger, VNode * head)
 {
 
-    Point2d p2d = getCenter(head);
-    if (isX)
+    Point2d p2d = get_center(head);
+    if (is_x)
     {
-        return (isBigger == (p2d[0] > line_coordinate));
+        return (is_bigger == (p2d[0] > line_coordinate));
     }
     else
     {
-        return (isBigger == (p2d[1] > line_coordinate));
+        return (is_bigger == (p2d[1] > line_coordinate));
     }
 }
 RingClipper::RingClipper()
@@ -407,24 +407,24 @@ void RingClipper::insert(VNode * before, VNode * after, VNode * v)
     v->next = after;
     after->prev = v;
 }
-VNode * RingClipper::collectAlongWay(vector<VNode *> & vertices, VNode * start, bool forward)
+VNode * RingClipper::collect_along_way(vector<VNode *> & vertices, VNode * start, bool forward)
 {
-    assert(start->isInDirect && start->isScanPoint);
+    assert(start->is_in_direct && start->is_scan_point);
     VNode * previous = start;
     vertices.push_back(previous);
     VNode * node = forward ? start->next : start->prev;
 
-    while (AlmostEqual(previous, node) && node->isInDirect)
+    while (almost_equal(previous, node) && node->is_in_direct)
     {
         vertices.push_back(node);
         previous = node;
         node = forward ? node->next : node->prev;
     }
     ///{
-    while (node->isInDirect)
+    while (node->is_in_direct)
     {
         vertices.push_back(node);
-        if (node->isScanPoint) break;
+        if (node->is_scan_point) break;
         node = forward ? node->next : node->prev;
     }
 
@@ -432,25 +432,25 @@ VNode * RingClipper::collectAlongWay(vector<VNode *> & vertices, VNode * start, 
 }
 
 //true if v is on the line and both its neighbors are on the kept side, off the line
-bool touchesKeptSide(VNode * v)
+bool touches_kept_side(VNode * v)
 {
-    return v->isOnline && v->next->isInDirect && !v->next->isOnline && v->prev->isInDirect &&
-           !v->prev->isOnline;
+    return v->is_online && v->next->is_in_direct && !v->next->is_online && v->prev->is_in_direct &&
+           !v->prev->is_online;
 }
 
 //set intersection
-int RingClipper::setIntersection(VNode * start_vertex, double line_coordinate, bool isX,
-                                 bool isBigger, vector<VNode *> & line_vertices)
+int RingClipper::set_intersection(VNode * start_vertex, double line_coordinate, bool is_x,
+                                  bool is_bigger, vector<VNode *> & line_vertices)
 {
     double xmin = 0, ymin = 0, xmax = 0, ymax = 0;
-    getXYBound(start_vertex, xmin, xmax, ymin, ymax);
+    get_xy_bound(start_vertex, xmin, xmax, ymin, ymax);
     double xwidth = fabs(xmax - xmin);
     double ywidth = fabs(ymax - ymin);
     if (xwidth < SMALLNUMBER) xwidth = ywidth;
     if (ywidth < SMALLNUMBER) ywidth = xwidth;
 
     double a[2] = {0}, b[2] = {0};
-    if (isX)
+    if (is_x)
     {
         a[0] = line_coordinate;
         a[1] = ymin - ywidth / 2;
@@ -470,9 +470,9 @@ int RingClipper::setIntersection(VNode * start_vertex, double line_coordinate, b
     VNode * snap = start_vertex;
     do
     {
-        if (snap->Online(line_coordinate, isX))
+        if (snap->on_line(line_coordinate, is_x))
         {
-            if (isX)
+            if (is_x)
                 snap->x = line_coordinate;
             else
                 snap->y = line_coordinate;
@@ -481,66 +481,66 @@ int RingClipper::setIntersection(VNode * start_vertex, double line_coordinate, b
     } while (snap != start_vertex);
 
     //try to intersect
-    map<VNode *, bool> shouldRecord;
-    vector<VNode *> interCand;
+    map<VNode *, bool> should_record;
+    vector<VNode *> inter_cand;
     VNode * vertex = start_vertex;
     do
     {
         double c[2] = {0}, d[2] = {0}, p[2] = {FLT_MIN, FLT_MIN};
-        vertex->setDirection(line_coordinate, isX, isBigger);
+        vertex->set_direction(line_coordinate, is_x, is_bigger);
         //intersect
         c[0] = vertex->x;
         c[1] = vertex->y;
         d[0] = vertex->next->x;
         d[1] = vertex->next->y;
-        //an edge with both ends on the line lies along it; SegSegInt can miss this by rounding
+        //an edge with both ends on the line lies along it; seg_seg_int can miss this by rounding
         char code = 0;
-        if ((isX && c[0] == line_coordinate && d[0] == line_coordinate) ||
-            (!isX && c[1] == line_coordinate && d[1] == line_coordinate))
+        if ((is_x && c[0] == line_coordinate && d[0] == line_coordinate) ||
+            (!is_x && c[1] == line_coordinate && d[1] == line_coordinate))
             code = 'e';
         else
-            code = SegSegInt(a, b, c, d, p);
+            code = seg_seg_int(a, b, c, d, p);
 
         //set influenced vertices
-        if (vertex->isInDirect) changed_vertices.push_back(vertex);
+        if (vertex->is_in_direct) changed_vertices.push_back(vertex);
         if (code == 'e')
         {
-            vertex->isOnline = vertex->next->isOnline = true;
-            vertex->isScanPoint = vertex->next->isScanPoint = true; //
+            vertex->is_online = vertex->next->is_online = true;
+            vertex->is_scan_point = vertex->next->is_scan_point = true; //
             changed_vertices.push_back(vertex);
             changed_vertices.push_back(vertex->next);
         }
         else if (code == 'v')
         {
-            //if(AlmostEqual(c, p))
-            if (AlmostSame(c, p))
+            //if(almost_equal(c, p))
+            if (almost_same(c, p))
             {
-                vertex->isOnline = true;
-                vertex->isScanPoint = true; //
+                vertex->is_online = true;
+                vertex->is_scan_point = true; //
                 changed_vertices.push_back(vertex);
             }
             else
             {
-                assert(AlmostSame(d, p));
-                vertex->next->isOnline = true;
-                vertex->next->isScanPoint = true; //
+                assert(almost_same(d, p));
+                vertex->next->is_online = true;
+                vertex->next->is_scan_point = true; //
                 changed_vertices.push_back(vertex->next);
             }
         }
         else if (code == '1')
         {
-            //if(AlmostEqual(c, p))
-            if (AlmostSame(c, p))
+            //if(almost_equal(c, p))
+            if (almost_same(c, p))
             {
-                vertex->isOnline = true;
-                vertex->isScanPoint = true; //
+                vertex->is_online = true;
+                vertex->is_scan_point = true; //
                 changed_vertices.push_back(vertex);
             }
-            //else if(AlmostEqual(d, p))
-            else if (AlmostSame(d, p))
+            //else if(almost_equal(d, p))
+            else if (almost_same(d, p))
             {
-                vertex->next->isOnline = true;
-                vertex->next->isScanPoint = true; //
+                vertex->next->is_online = true;
+                vertex->next->is_scan_point = true; //
                 changed_vertices.push_back(vertex->next);
             }
             else
@@ -550,10 +550,10 @@ int RingClipper::setIntersection(VNode * start_vertex, double line_coordinate, b
                 //add to the added_vertices array
                 added_vertices.push_back(new_vertex);
 
-                new_vertex->isInDirect = true;
-                new_vertex->isScanPoint = true; //
+                new_vertex->is_in_direct = true;
+                new_vertex->is_scan_point = true; //
 
-                shouldRecord.insert(make_pair(new_vertex, true));
+                should_record.insert(make_pair(new_vertex, true));
                 vertex = vertex->next;
             }
         }
@@ -565,141 +565,143 @@ int RingClipper::setIntersection(VNode * start_vertex, double line_coordinate, b
     vertex = start_vertex;
     do
     {
-        if (vertex->isOnline)
+        if (vertex->is_online)
         {
-            vertex->isInDirect = true;
-            interCand.push_back(vertex);
-            shouldRecord.insert(make_pair(vertex, true));
+            vertex->is_in_direct = true;
+            inter_cand.push_back(vertex);
+            should_record.insert(make_pair(vertex, true));
         }
         vertex = vertex->next;
     } while (vertex != start_vertex);
 
-    vector<VNode *> uselessNodes;
-    vector<VNode *> notOnline;
+    vector<VNode *> useless_nodes;
+    vector<VNode *> not_online;
     vector<VNode *> touching;
-    for (auto candidate : interCand)
+    for (auto candidate : inter_cand)
     {
-        bool pureInDir1 = (candidate->next->isInDirect && (!candidate->next->isOnline));
-        bool pureInDir2 = (candidate->prev->isInDirect && (!candidate->prev->isOnline));
-        if (candidate->isOnline && (!(pureInDir1 && pureInDir2)))
+        bool pure_in_dir1 = (candidate->next->is_in_direct && (!candidate->next->is_online));
+        bool pure_in_dir2 = (candidate->prev->is_in_direct && (!candidate->prev->is_online));
+        if (candidate->is_online && (!(pure_in_dir1 && pure_in_dir2)))
         {
-            notOnline.push_back(candidate);
+            not_online.push_back(candidate);
         }
 
         //a candidate that touches the line from the kept side does not cross it, unless the
         //ring also crosses the line at the same place
-        if (touchesKeptSide(candidate))
+        if (touches_kept_side(candidate))
         {
             bool alone = true;
-            for (auto & mit : shouldRecord)
+            for (auto & mit : should_record)
             {
-                if (mit.first != candidate && AlmostEqual(mit.first, candidate) &&
-                    !touchesKeptSide(mit.first))
+                if (mit.first != candidate && almost_equal(mit.first, candidate) &&
+                    !touches_kept_side(mit.first))
                     alone = false;
             }
             if (alone)
             {
                 touching.push_back(candidate);
-                shouldRecord[candidate] = false;
+                should_record[candidate] = false;
                 continue;
             }
         }
 
-        if (pureInDir1 || pureInDir2)
-            shouldRecord[candidate] = true;
+        if (pure_in_dir1 || pure_in_dir2)
+            should_record[candidate] = true;
         else
-            shouldRecord[candidate] = false;
+            should_record[candidate] = false;
 
-        if (!(pureInDir1 || pureInDir2))
+        if (!(pure_in_dir1 || pure_in_dir2))
         {
-            uselessNodes.push_back(candidate);
+            useless_nodes.push_back(candidate);
         }
     }
     //not online
-    for (auto candidate : notOnline)
+    for (auto candidate : not_online)
     {
-        candidate->isOnline = false;
+        candidate->is_online = false;
     }
     //useless nodes
-    for (auto candidate : uselessNodes)
+    for (auto candidate : useless_nodes)
     {
-        candidate->isOnline = false;
-        candidate->isInDirect = false; // candidate->isScanPoint = false;
+        candidate->is_online = false;
+        candidate->is_in_direct = false; // candidate->is_scan_point = false;
     }
     //touching nodes are kept as ordinary vertices
     for (auto candidate : touching)
     {
-        candidate->isOnline = false;
-        candidate->isScanPoint = false;
+        candidate->is_online = false;
+        candidate->is_scan_point = false;
     }
 
     //decide the final intersection vertices, in ring order rather than by address so that
     //vertices at the same place on the scanning line are always sorted the same way
-    int onNum = 0;
+    int on_num = 0;
     vertex = start_vertex;
     do
     {
-        map<VNode *, bool>::iterator mit = shouldRecord.find(vertex);
-        if (mit != shouldRecord.end() && mit->second)
+        map<VNode *, bool>::iterator mit = should_record.find(vertex);
+        if (mit != should_record.end() && mit->second)
         {
             line_vertices.push_back(vertex);
-            onNum++;
+            on_num++;
         }
         vertex = vertex->next;
     } while (vertex != start_vertex);
 
-    return onNum;
+    return on_num;
 }
 
-void RingClipper::collectSecondPart(vector<VNode *> & line_vertices, int start_index, int end_index,
-                                    VNode * start_node, VNode * end_node, bool forward,
-                                    int vertex_count, list<RingClipper *> & clip_results, bool isX,
-                                    bool isBigger, vector<VNode *> & secondHalf)
+void RingClipper::collect_second_part(vector<VNode *> & line_vertices, int start_index,
+                                      int end_index, VNode * start_node, VNode * end_node,
+                                      bool forward, int vertex_count,
+                                      list<RingClipper *> & clip_results, bool is_x, bool is_bigger,
+                                      vector<VNode *> & second_half)
 {
 
     //collect these vertices
     vector<VNode *> along_vertices;
-    VNode * along_end = collectAlongWay(along_vertices, line_vertices[start_index], forward);
+    VNode * along_end = collect_along_way(along_vertices, line_vertices[start_index], forward);
 
     for (auto vertex : along_vertices)
     {
-        if (!vertex->isVisited)
+        if (!vertex->is_visited)
         {
-            secondHalf.push_back(vertex);
-            vertex->isVisited = true;
+            second_half.push_back(vertex);
+            vertex->is_visited = true;
         }
     }
 
-    int along_end_index = locateVInVector(line_vertices, along_end, start_index, vertex_count);
+    int along_end_index = locate_v_in_vector(line_vertices, along_end, start_index, vertex_count);
     assert(along_end_index != -1);
 
     /**************************************************************/
     //deal with the first part
     int first_start = start_index + 1;
-    bool first_forward = false; //decideNextOrderForOut(line_vertices[first_start], isX, isBigger);
+    bool first_forward =
+        false; //decide_next_order_for_out(line_vertices[first_start], is_x, is_bigger);
     VNode * start_neighbor =
         forward ? line_vertices[start_index]->prev : line_vertices[start_index]->next;
-    if (line_vertices[start_index]->isOnline && start_neighbor->isInDirect &&
-        (!start_neighbor->isVisited))
+    if (line_vertices[start_index]->is_online && start_neighbor->is_in_direct &&
+        (!start_neighbor->is_visited))
     {
         first_start = start_index;
         first_forward = !forward;
     }
     if (first_start != start_index && first_start < along_end_index)
-        first_forward = decideNextOrderForOut(line_vertices[first_start], isX, isBigger);
+        first_forward = decide_next_order_for_out(line_vertices[first_start], is_x, is_bigger);
 
     int first_end = along_end_index - 1;
     VNode * after_end_first =
         forward ? line_vertices[along_end_index]->next : line_vertices[along_end_index]->prev;
-    if (line_vertices[along_end_index]->isOnline && after_end_first->isInDirect &&
-        (!after_end_first->isVisited))
+    if (line_vertices[along_end_index]->is_online && after_end_first->is_in_direct &&
+        (!after_end_first->is_visited))
     {
-        bool end_forward = decideNextOrderForHole(
-            line_vertices[along_end_index], isX,
-            isBigger); // !(decideNextOrderForOut(line_vertices[along_end_index], isX, isBigger));
+        bool end_forward = decide_next_order_for_hole(
+            line_vertices[along_end_index], is_x,
+            is_bigger); // !(decide_next_order_for_out(line_vertices[along_end_index], is_x, is_bigger));
         VNode * hole_next = end_forward ? line_vertices[along_end_index]->next
                                         : line_vertices[along_end_index]->prev;
-        if (hole_next->isVisited)
+        if (hole_next->is_visited)
         {
             first_end = along_end_index;
         }
@@ -708,8 +710,8 @@ void RingClipper::collectSecondPart(vector<VNode *> & line_vertices, int start_i
     //deal with the first part
     if (first_start < first_end)
     {
-        collectPolygonsInInterval(isX, isBigger, line_vertices, clip_results, first_start,
-                                  first_end, first_forward);
+        collect_polygons_in_interval(is_x, is_bigger, line_vertices, clip_results, first_start,
+                                     first_end, first_forward);
     }
     //end of first part
     /**********************************************************************************************/
@@ -718,18 +720,18 @@ void RingClipper::collectSecondPart(vector<VNode *> & line_vertices, int start_i
     //deal with the second part
     int second_start = along_end_index + 1;
     bool second_forward =
-        false; //decideNextOrderForOut(line_vertices[second_start], isX, isBigger);
+        false; //decide_next_order_for_out(line_vertices[second_start], is_x, is_bigger);
     VNode * after_end_second =
         forward ? line_vertices[along_end_index]->next : line_vertices[along_end_index]->prev;
-    if (line_vertices[along_end_index]->isOnline && after_end_second->isInDirect &&
-        (!after_end_second->isVisited))
+    if (line_vertices[along_end_index]->is_online && after_end_second->is_in_direct &&
+        (!after_end_second->is_visited))
     {
-        bool end_forward = decideNextOrderForHole(
-            line_vertices[along_end_index], isX,
-            isBigger); //!(decideNextOrderForOut(line_vertices[along_end_index], isX, isBigger));
+        bool end_forward = decide_next_order_for_hole(
+            line_vertices[along_end_index], is_x,
+            is_bigger); //!(decide_next_order_for_out(line_vertices[along_end_index], is_x, is_bigger));
         VNode * hole_next = end_forward ? line_vertices[along_end_index]->next
                                         : line_vertices[along_end_index]->prev;
-        if (!hole_next->isVisited)
+        if (!hole_next->is_visited)
         {
             second_start = along_end_index;
             second_forward = forward;
@@ -738,33 +740,33 @@ void RingClipper::collectSecondPart(vector<VNode *> & line_vertices, int start_i
 
     if (second_start != along_end_index && second_start < end_index)
     {
-        second_forward = decideNextOrderForOut(line_vertices[second_start], isX, isBigger);
+        second_forward = decide_next_order_for_out(line_vertices[second_start], is_x, is_bigger);
     }
 
     if (second_start < end_index)
     {
-        collectSecondPart(line_vertices, second_start, end_index, line_vertices[second_start],
-                          end_node, second_forward, vertex_count, clip_results, isX, isBigger,
-                          secondHalf);
+        collect_second_part(line_vertices, second_start, end_index, line_vertices[second_start],
+                            end_node, second_forward, vertex_count, clip_results, is_x, is_bigger,
+                            second_half);
     }
     //end of second part
     /*********************************************************************************************/
 }
 
-void RingClipper::construct_clip_rings(vector<VNode *> & firstHalf, vector<VNode *> & secondHalf,
+void RingClipper::construct_clip_rings(vector<VNode *> & first_half, vector<VNode *> & second_half,
                                        list<RingClipper *> & clip_results)
 {
-    if (firstHalf.size() + secondHalf.size() < 3)
+    if (first_half.size() + second_half.size() < 3)
         return;
     else
     {
         RingClipper * ring_clip = new RingClipper();
-        for (auto & vit : firstHalf)
+        for (auto & vit : first_half)
         {
             ring_clip->add(copy(vit));
         }
-        for (vector<VNode *>::reverse_iterator rvit = secondHalf.rbegin();
-             rvit != secondHalf.rend(); ++rvit)
+        for (vector<VNode *>::reverse_iterator rvit = second_half.rbegin();
+             rvit != second_half.rend(); ++rvit)
         {
             ring_clip->add(copy(*rvit));
         }
@@ -772,7 +774,7 @@ void RingClipper::construct_clip_rings(vector<VNode *> & firstHalf, vector<VNode
 
         Ring ring;
         convert_clip_to_ring(ring_clip->first, ring);
-        if (fabs(ring.getArea()) < SMALLAREA) //SMALLNUMBER
+        if (fabs(ring.get_area()) < SMALLAREA) //SMALLNUMBER
         {
             ring.destroy();
             delete ring_clip;
@@ -786,111 +788,112 @@ void RingClipper::construct_clip_rings(vector<VNode *> & firstHalf, vector<VNode
     }
 }
 void RingClipper::collect_ring(vector<VNode *> & line_vertices, int start_index, int end_index,
-                               bool isNextOrder, list<RingClipper *> & clip_results, bool isX,
-                               bool isBigger)
+                               bool is_next_order, list<RingClipper *> & clip_results, bool is_x,
+                               bool is_bigger)
 {
     int vsize = line_vertices.size();
-    vector<VNode *> firstHalf;
-    vector<VNode *> secondHalf;
+    vector<VNode *> first_half;
+    vector<VNode *> second_half;
 
     //collect first half: out boundary
     VNode * start_node = line_vertices[start_index];
     VNode * end_node = line_vertices[end_index];
     VNode * node = start_node;
-    firstHalf.push_back(start_node);
-    start_node->isVisited = true;
+    first_half.push_back(start_node);
+    start_node->is_visited = true;
     do
     {
-        if (isNextOrder)
+        if (is_next_order)
             node = node->next;
         else
             node = node->prev;
 
-        node->isVisited = true;
-        firstHalf.push_back(node);
+        node->is_visited = true;
+        first_half.push_back(node);
     } while (node != end_node);
 
     //filter the starting vertex
-    int startId = start_index + 1;
-    int endId = end_index - 1;
-    bool forward = !isNextOrder;
+    int start_id = start_index + 1;
+    int end_id = end_index - 1;
+    bool forward = !is_next_order;
     VNode * start_neighbor =
-        !isNextOrder ? line_vertices[start_index]->next : line_vertices[start_index]->prev;
-    if (line_vertices[start_index]->isOnline && (!start_neighbor->isVisited))
+        !is_next_order ? line_vertices[start_index]->next : line_vertices[start_index]->prev;
+    if (line_vertices[start_index]->is_online && (!start_neighbor->is_visited))
     {
-        assert(start_neighbor->isInDirect);
-        forward = !isNextOrder;
-        startId = start_index;
+        assert(start_neighbor->is_in_direct);
+        forward = !is_next_order;
+        start_id = start_index;
     }
     else
     {
-        startId = start_index + 1;
-        if (startId < endId) forward = decideNextOrderForOut(line_vertices[startId], isX, isBigger);
+        start_id = start_index + 1;
+        if (start_id < end_id)
+            forward = decide_next_order_for_out(line_vertices[start_id], is_x, is_bigger);
     }
 
-    //if(line_vertices[end_index]->isOnline
+    //if(line_vertices[end_index]->is_online
 
-    if (startId < endId)
+    if (start_id < end_id)
     {
-        collectSecondPart(line_vertices, startId, endId, line_vertices[startId],
-                          line_vertices[endId], forward, vsize, clip_results, isX, isBigger,
-                          secondHalf);
+        collect_second_part(line_vertices, start_id, end_id, line_vertices[start_id],
+                            line_vertices[end_id], forward, vsize, clip_results, is_x, is_bigger,
+                            second_half);
     }
 
     //combine two lists to get a new polygon
-    construct_clip_rings(firstHalf, secondHalf, clip_results);
+    construct_clip_rings(first_half, second_half, clip_results);
 }
 
-void RingClipper::collectPolygonsInInterval(bool isX, bool isBigger,
-                                            vector<VNode *> & line_vertices,
-                                            list<RingClipper *> & clips, int from, int to,
-                                            bool start_forward)
+void RingClipper::collect_polygons_in_interval(bool is_x, bool is_bigger,
+                                               vector<VNode *> & line_vertices,
+                                               list<RingClipper *> & clips, int from, int to,
+                                               bool start_forward)
 {
     int size = line_vertices.size();
     bool forward = start_forward;
 
-    int startId = from;
-    while (startId < to)
+    int start_id = from;
+    while (start_id < to)
     {
-        VNode * start_node = line_vertices[startId];
-        assert(start_node->next->isInDirect || start_node->prev->isInDirect);
+        VNode * start_node = line_vertices[start_id];
+        assert(start_node->next->is_in_direct || start_node->prev->is_in_direct);
 
         vector<VNode *> along_vertices;
-        VNode * end_node = collectAlongWay(along_vertices, start_node, forward);
-        int endId = locateVInVector(line_vertices, end_node, startId, size);
+        VNode * end_node = collect_along_way(along_vertices, start_node, forward);
+        int end_id = locate_v_in_vector(line_vertices, end_node, start_id, size);
 
-        assert(endId != -1);
+        assert(end_id != -1);
 
-        collect_ring(line_vertices, startId, endId, forward, clips, isX,
-                     isBigger); //note here or not, may have bugs here
+        collect_ring(line_vertices, start_id, end_id, forward, clips, is_x,
+                     is_bigger); //note here or not, may have bugs here
 
-        if (endId >= to)
+        if (end_id >= to)
         {
-            assert(endId == to);
+            assert(end_id == to);
             break;
         }
 
-        VNode * end_onward = forward ? line_vertices[endId]->next : line_vertices[endId]->prev;
-        if (line_vertices[endId]->isOnline && (!end_onward->isVisited))
+        VNode * end_onward = forward ? line_vertices[end_id]->next : line_vertices[end_id]->prev;
+        if (line_vertices[end_id]->is_online && (!end_onward->is_visited))
         {
-            startId = endId;
+            start_id = end_id;
         }
         else
         {
-            startId = endId + 1;
-            forward = decideNextOrderForOut(line_vertices[startId], isX, isBigger);
+            start_id = end_id + 1;
+            forward = decide_next_order_for_out(line_vertices[start_id], is_x, is_bigger);
         }
     }
 }
 
-void RingClipper::collectPolygons(double line_coordinate, bool isX, bool isBigger,
-                                  vector<int> & line_vertex_counts, vector<VNode *> & line_vertices,
-                                  list<RingClipper *> & clips)
+void RingClipper::collect_polygons(double line_coordinate, bool is_x, bool is_bigger,
+                                   vector<int> & line_vertex_counts,
+                                   vector<VNode *> & line_vertices, list<RingClipper *> & clips)
 {
     int size = line_vertices.size();
     if (size <= 1)
     {
-        if (checkAllIndirect(line_coordinate, isX, isBigger, first))
+        if (check_all_indirect(line_coordinate, is_x, is_bigger, first))
         {
             clips.push_back(copy_ring_clipper(this, true));
         }
@@ -900,14 +903,16 @@ void RingClipper::collectPolygons(double line_coordinate, bool isX, bool isBigge
     }
 
     //sort the intersection vertices
-    InsertionSortV(line_vertices, isX);
+    insertion_sort_v(line_vertices, is_x);
 
-    bool isNextO = decideNextOrderForOut(line_vertices[0], isX, isBigger); //need modify here
+    bool is_next_order =
+        decide_next_order_for_out(line_vertices[0], is_x, is_bigger); //need modify here
 
-    collectPolygonsInInterval(isX, isBigger, line_vertices, clips, 0, size - 1, isNextO);
+    collect_polygons_in_interval(is_x, is_bigger, line_vertices, clips, 0, size - 1, is_next_order);
 }
 
-void RingClipper::clip(double line_coordinate, bool isX, bool isBigger, list<RingClipper *> & clips)
+void RingClipper::clip(double line_coordinate, bool is_x, bool is_bigger,
+                       list<RingClipper *> & clips)
 {
     vector<int> line_vertex_counts;
     vector<VNode *> line_vertices;
@@ -915,12 +920,12 @@ void RingClipper::clip(double line_coordinate, bool isX, bool isBigger, list<Rin
     for (auto ring : rings)
     {
         int line_vertex_count =
-            setIntersection(ring, line_coordinate, isX, isBigger, line_vertices);
+            set_intersection(ring, line_coordinate, is_x, is_bigger, line_vertices);
         line_vertex_counts.push_back(line_vertex_count);
     }
 
     //collect the out boundary
-    collectPolygons(line_coordinate, isX, isBigger, line_vertex_counts, line_vertices, clips);
+    collect_polygons(line_coordinate, is_x, is_bigger, line_vertex_counts, line_vertices, clips);
 
     /**********************************************/
     if (rings.size() == 0 || line_vertex_counts.size() == 0) return;
@@ -931,31 +936,31 @@ void RingClipper::clip(double line_coordinate, bool isX, bool isBigger, list<Rin
     for (; pit != rings.end(); ++pit, ++iit)
     {
 
-        if (*iit == 0 && ((*pit)->isVisited == false) && (*pit)->isInDirect)
+        if (*iit == 0 && ((*pit)->is_visited == false) && (*pit)->is_in_direct)
         {
-            if ((*pit)->isScanPoint)
+            if ((*pit)->is_scan_point)
             {
                 VNode *prev_vertex = nullptr, *next_vertex = nullptr, *prev_adjacent = nullptr,
                       *next_adjacent = nullptr;
-                getFeasiblePreNext(*pit, prev_vertex, next_vertex, prev_adjacent, next_adjacent);
-                if (!prev_adjacent->isInDirect || !next_adjacent->isInDirect) continue;
+                get_feasible_pre_next(*pit, prev_vertex, next_vertex, prev_adjacent, next_adjacent);
+                if (!prev_adjacent->is_in_direct || !next_adjacent->is_in_direct) continue;
             }
 
-            bool haveAdded = false;
+            bool have_added = false;
             VNode * new_vertex = *pit;
             Ring nrings(Ring::PIN);
             convert_clip_to_ring(new_vertex, nrings);
-            const Point2d & center = nrings.getCenter();
+            const Point2d & center = nrings.get_center();
             for (auto & clip_part : clips)
             {
                 if (clip_ring_encloses(clip_part->first, center))
                 {
                     clip_part->rings.push_back(copy_ring(new_vertex));
-                    haveAdded = true;
+                    have_added = true;
                     break;
                 }
             }
-            if (!haveAdded)
+            if (!have_added)
             {
                 RingClipper * ring_clip = convert_ring_to_clip(nrings);
                 ring_clip->rings.push_back(ring_clip->first);
@@ -1005,18 +1010,18 @@ VNode * RingClipper::copy(const VNode * v)
 
 VNode * convert_ring_to_vertex_nodes(const Ring & ring)
 {
-    LinkedVertex * head = ring.getHead();
-    VNode * new_head = new VNode(head->getPos()[0], head->getPos()[1]);
+    LinkedVertex * head = ring.get_head();
+    VNode * new_head = new VNode(head->get_pos()[0], head->get_pos()[1]);
     new_head->next = new_head->prev = new_head;
-    LinkedVertex * vertex = head->getNext();
+    LinkedVertex * vertex = head->get_next();
     while (vertex != head)
     {
-        VNode * node_copy = new VNode(vertex->getPos()[0], vertex->getPos()[1]);
+        VNode * node_copy = new VNode(vertex->get_pos()[0], vertex->get_pos()[1]);
         //leave out a repeated vertex, such as the closing vertex of a shapefile ring
-        if (AlmostEqual(node_copy, new_head->prev) || AlmostEqual(node_copy, new_head))
+        if (almost_equal(node_copy, new_head->prev) || almost_equal(node_copy, new_head))
         {
             delete node_copy;
-            vertex = vertex->getNext();
+            vertex = vertex->get_next();
             continue;
         }
         new_head->prev->next = node_copy;
@@ -1024,7 +1029,7 @@ VNode * convert_ring_to_vertex_nodes(const Ring & ring)
         node_copy->next = new_head;
         new_head->prev = node_copy;
 
-        vertex = vertex->getNext();
+        vertex = vertex->get_next();
     }
 
     return new_head;
@@ -1034,14 +1039,14 @@ VNode * convert_ring_to_vertex_nodes(const Ring & ring)
 RingClipper * convert_ring_to_clip(const Ring & ring)
 {
     RingClipper * ring_clip = new RingClipper();
-    LinkedVertex * head = ring.getHead();
+    LinkedVertex * head = ring.get_head();
     LinkedVertex * vertex = head;
     do
     {
-        VNode * node = new VNode(vertex->getPos()[0], vertex->getPos()[1]);
+        VNode * node = new VNode(vertex->get_pos()[0], vertex->get_pos()[1]);
         ring_clip->add(node);
 
-        vertex = vertex->getNext();
+        vertex = vertex->get_next();
     } while (vertex != head);
     return ring_clip;
 }
@@ -1049,24 +1054,24 @@ RingClipper * convert_ring_to_clip(const Ring & ring)
 //convert
 void convert_clip_to_ring(VNode * first_vertex, Ring & ring)
 {
-    ring.beginPoly();
+    ring.begin_poly();
     VNode * vertex = first_vertex;
     do
     {
-        ring.addVertex(vertex->x, vertex->y, true);
+        ring.add_vertex(vertex->x, vertex->y, true);
         vertex = vertex->next;
     } while (vertex != first_vertex);
 
-    ring.endPoly(false);
+    ring.end_poly(false);
 }
 
 //convert
-RingClipper * convertCPolygonToClip(const GIS_polygon & polygon)
+RingClipper * convert_polygon_to_clip(const GisPolygon & polygon)
 {
     RingClipper * ring_clip = new RingClipper();
     for (const auto & part : polygon)
     {
-        if (part.getType() == Ring::POUT)
+        if (part.get_type() == Ring::POUT)
         {
             VNode * part_vertices = convert_ring_to_vertex_nodes(part);
             ring_clip->first = part_vertices;
@@ -1085,7 +1090,7 @@ RingClipper * convertCPolygonToClip(const GIS_polygon & polygon)
     return ring_clip;
 }
 //convert
-void convertClipToPolygon(RingClipper * ring_clip, GIS_polygon * polygon)
+void convert_clip_to_polygon(RingClipper * ring_clip, GisPolygon * polygon)
 {
     if (ring_clip == nullptr || ring_clip->first == nullptr) return;
     //loop over
@@ -1104,12 +1109,12 @@ void convertClipToPolygon(RingClipper * ring_clip, GIS_polygon * polygon)
     }
 }
 
-RingClipper * convertSimplePolygonToClip(const c_polygon & polygon)
+RingClipper * convert_simple_polygon_to_clip(const Polygon & polygon)
 {
     RingClipper * ring_clip = new RingClipper();
     for (const auto & part : polygon)
     {
-        if (part.getType() == Ring::POUT)
+        if (part.get_type() == Ring::POUT)
         {
             VNode * part_vertices = convert_ring_to_vertex_nodes(part);
             ring_clip->first = part_vertices;
@@ -1128,8 +1133,8 @@ RingClipper * convertSimplePolygonToClip(const c_polygon & polygon)
     return ring_clip;
 }
 
-VNode * convertBoxToClip(Point2d lower_left, Point2d lower_right, Point2d upper_right,
-                         Point2d upper_left)
+VNode * convert_box_to_clip(Point2d lower_left, Point2d lower_right, Point2d upper_right,
+                            Point2d upper_left)
 {
     VNode * corners[4];
     corners[0] = new VNode(lower_left[0], lower_left[1]);
@@ -1151,25 +1156,25 @@ VNode * convertBoxToClip(Point2d lower_left, Point2d lower_right, Point2d upper_
     return head;
 }
 
-double getOutBdArea(RingClipper * ring_clip)
+double get_out_bd_area(RingClipper * ring_clip)
 {
     Ring outer_ring(Ring::POUT);
     convert_clip_to_ring(ring_clip->first, outer_ring);
 
-    double area = outer_ring.getArea();
+    double area = outer_ring.get_area();
     outer_ring.destroy();
     return area;
 }
 
 //make sure the min and max are in correct order
-double intersectTwoBox(Point2d lower_left, Point2d lower_right, Point2d upper_right,
-                       Point2d upper_left, double xmin2, double xmax2, double ymin2, double ymax2)
+double intersect_two_box(Point2d lower_left, Point2d lower_right, Point2d upper_right,
+                         Point2d upper_left, double xmin2, double xmax2, double ymin2, double ymax2)
 {
     double area(0.0);
 
     //build a BoxClip
     RingClipper ring_clip;
-    VNode * head = convertBoxToClip(lower_left, lower_right, upper_right, upper_left);
+    VNode * head = convert_box_to_clip(lower_left, lower_right, upper_right, upper_left);
     ring_clip.first = head;
     ring_clip.rings.push_back(head);
 
@@ -1179,7 +1184,7 @@ double intersectTwoBox(Point2d lower_left, Point2d lower_right, Point2d upper_ri
     for (auto & clip_part : clips)
     {
 
-        area += getOutBdArea(clip_part);
+        area += get_out_bd_area(clip_part);
 
         clip_part->destroy();
         delete clip_part;

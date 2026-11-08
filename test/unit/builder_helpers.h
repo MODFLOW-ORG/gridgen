@@ -164,9 +164,9 @@ inline void build_qtree(const std::string & dfn_text, int * nodes = nullptr,
     std::istringstream dfn(dfn_text);
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
-    auto * data = dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
+    auto * data = dynamic_cast<QuadtreeBuilderBlock *>(parser.get_block_data("qtb"));
     ASSERT_NE(data, nullptr);
-    ASSERT_TRUE(data->initialize(parser.getBlockData()));
+    ASSERT_TRUE(data->initialize(parser.get_block_data()));
     auto * qtree = dynamic_cast<QuadTree3D *>(data->build());
     ASSERT_NE(qtree, nullptr);
     if (nodes != nullptr) *nodes = qtree->nodes();

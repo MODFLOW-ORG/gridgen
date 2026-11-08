@@ -1,6 +1,6 @@
 
-#ifndef _SHPREADER_H_
-#define _SHPREADER_H_
+#ifndef SHPREADER_H
+#define SHPREADER_H
 
 #include "polygon.h"
 #include "polyline.h"
@@ -44,9 +44,9 @@ class ShapeReader
 public:
     ShapeReader()
     {
-        already_read = false;
-        bbox[0] = bbox[2] = DBL_MAX;
-        bbox[1] = bbox[3] = -DBL_MAX;
+        m_already_read = false;
+        m_bbox[0] = m_bbox[2] = DBL_MAX;
+        m_bbox[1] = m_bbox[3] = -DBL_MAX;
     }
 
     ShapeReader(const ShapeReader &) = delete;
@@ -55,55 +55,55 @@ public:
     ~ShapeReader() { destroy(); }
 
     //read field attributes
-    bool readAttributes(DBFHandle & dbfHandle, int iShape);
+    bool read_attributes(DBFHandle & dbf_handle, int shape_index);
 
     //read from file
     bool read(const string & filename);
 
     //get poly/arc/pts
-    vector<GIS_polygon> & getPolyList() { return m_polygon_list; }
-    vector<GIS_polyline> & getArcList() { return m_arc_list; }
-    vector<GIS_Point2d> & getPointList() { return m_pt_list; }
+    vector<GisPolygon> & get_poly_list() { return m_polygon_list; }
+    vector<GisPolyline> & get_arc_list() { return m_arc_list; }
+    vector<GisPoint2d> & get_point_list() { return m_pt_list; }
 
     //set tags for getting information from database
-    void setBaseElevationTag(const string & tag) { base_elevation_tag = tag; }
-    void setHeightTag(const string & tag) { height_tag = tag; }
+    void set_base_elevation_tag(const string & tag) { m_base_elevation_tag = tag; }
+    void set_height_tag(const string & tag) { m_height_tag = tag; }
 
     void destroy();
 
-    vector<ShapeIntField> & getIntFields() { return m_intFlds; }
-    vector<ShapeDoubleField> & getDBFields() { return m_dbFlds; }
-    vector<ShapeStringField> & getStrFields() { return m_strFlds; }
-    vector<ShapeLogField> & getLogicalFields() { return m_logFlds; }
+    vector<ShapeIntField> & get_int_fields() { return m_int_fields; }
+    vector<ShapeDoubleField> & get_double_fields() { return m_double_fields; }
+    vector<ShapeStringField> & get_str_fields() { return m_str_fields; }
+    vector<ShapeLogField> & get_logical_fields() { return m_logical_fields; }
 
 private:
-    void add_polygon(Ring & ring, int iShape);
+    void add_polygon(Ring & ring, int shape_index);
 
-    void read_polygon(SHPObject * psShape, int iShape);
-    void readArc(SHPObject * psShape, int iShape);
-    void readPts(SHPObject * psShape, int iShape);
-    void readMultiPatch(SHPObject * psShape, int iShape);
+    void read_polygon(SHPObject * shape, int shape_index);
+    void read_arc(SHPObject * shape, int shape_index);
+    void read_pts(SHPObject * shape, int shape_index);
+    void read_multi_patch(SHPObject * shape, int shape_index);
 
-    vector<GIS_polygon> m_polygon_list; //a list of polygons
-    vector<GIS_polyline> m_arc_list;    //a list of arcs
-    vector<GIS_Point2d> m_pt_list;      //a list of points
-    string base_elevation_tag;
-    string height_tag;
+    vector<GisPolygon> m_polygon_list; //a list of polygons
+    vector<GisPolyline> m_arc_list;    //a list of arcs
+    vector<GisPoint2d> m_pt_list;      //a list of points
+    string m_base_elevation_tag;
+    string m_height_tag;
 
-    double bbox[4];
+    double m_bbox[4];
 
-    bool already_read;
+    bool m_already_read;
     string m_filename; //for warnings
 
     ////add by Guilin
 
     //field id, names and values
-    vector<ShapeIntField> m_intFlds;
-    vector<ShapeDoubleField> m_dbFlds;
-    vector<ShapeStringField> m_strFlds;
-    vector<ShapeLogField> m_logFlds;
+    vector<ShapeIntField> m_int_fields;
+    vector<ShapeDoubleField> m_double_fields;
+    vector<ShapeStringField> m_str_fields;
+    vector<ShapeLogField> m_logical_fields;
 };
 
 } //namespace cusg
 
-#endif //_SHPREADER_H_
+#endif //SHPREADER_H

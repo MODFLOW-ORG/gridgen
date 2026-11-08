@@ -19,10 +19,10 @@ struct VNode
     double x, y;
     struct VNode * next;
     struct VNode * prev;
-    bool isInDirect;
-    bool isOnline;
-    bool isVisited;
-    bool isScanPoint;
+    bool is_in_direct;
+    bool is_online;
+    bool is_visited;
+    bool is_scan_point;
     VNode() { init(); }
     VNode(double x_coordinate, double y_coordinate)
     {
@@ -39,46 +39,46 @@ struct VNode
     {
         next = nullptr;
         prev = nullptr;
-        isInDirect = false;
-        isOnline = false;
-        isVisited = false;
-        isScanPoint = false;
+        is_in_direct = false;
+        is_online = false;
+        is_visited = false;
+        is_scan_point = false;
     }
-    void resetStatus()
+    void reset_status()
     {
-        isInDirect = false;
-        isOnline = false;
-        isVisited = false;
-        isScanPoint = false;
+        is_in_direct = false;
+        is_online = false;
+        is_visited = false;
+        is_scan_point = false;
     }
-    void setDirection(double line_coordinate, bool isX, bool isGreater)
+    void set_direction(double line_coordinate, bool is_x, bool is_greater)
     {
-        if (isX)
+        if (is_x)
         {
             if (fabs(x - line_coordinate) < SMALLNUMBER)
             {
-                isInDirect = true;
+                is_in_direct = true;
                 return;
             }
             bool big = (x >= line_coordinate);
-            isInDirect = (big == isGreater);
+            is_in_direct = (big == is_greater);
         }
         else
         {
             if (fabs(y - line_coordinate) < SMALLNUMBER)
             {
-                isInDirect = true;
+                is_in_direct = true;
                 return;
             }
             bool big = (y >= line_coordinate);
-            isInDirect = (big == isGreater);
+            is_in_direct = (big == is_greater);
         }
     }
-    bool Online(double line_coordinate, bool isX)
+    bool on_line(double line_coordinate, bool is_x)
     {
-        if (isX && (fabs(x - line_coordinate) < SMALLNUMBER))
+        if (is_x && (fabs(x - line_coordinate) < SMALLNUMBER))
             return true;
-        else if ((!isX) && (fabs(y - line_coordinate) < SMALLNUMBER))
+        else if ((!is_x) && (fabs(y - line_coordinate) < SMALLNUMBER))
             return true;
         return false;
     }
@@ -92,7 +92,7 @@ public:
 
     void destroy();
     void destroy(VNode * head);
-    void resetStatus();
+    void reset_status();
 
     //add a vertex, which this clip then owns
     void add(VNode * v);
@@ -102,37 +102,37 @@ public:
     VNode * next(VNode * v);
 
     //clip using scanning line
-    void clip(double line_coordinate, bool isX, bool isBigger, list<RingClipper *> & clips);
+    void clip(double line_coordinate, bool is_x, bool is_bigger, list<RingClipper *> & clips);
     //clip using a box
     void clip(double xmin, double xmax, double ymin, double ymax, list<RingClipper *> & clips);
 
     //set intersection based on the scanning line
-    int setIntersection(VNode * start_vertex, double line_coordinate, bool isX, bool isBigger,
-                        vector<VNode *> & line_vertices);
+    int set_intersection(VNode * start_vertex, double line_coordinate, bool is_x, bool is_bigger,
+                         vector<VNode *> & line_vertices);
 
     //collect
-    void collectPolygonsInInterval(bool isX, bool isBigger, vector<VNode *> & line_vertices,
-                                   list<RingClipper *> & clips, int from, int to, bool forward);
+    void collect_polygons_in_interval(bool is_x, bool is_bigger, vector<VNode *> & line_vertices,
+                                      list<RingClipper *> & clips, int from, int to, bool forward);
 
     //collect polygon results
-    void collectPolygons(double line_coordinate, bool isX, bool isBigger,
-                         vector<int> & line_vertex_counts, vector<VNode *> & line_vertices,
-                         list<RingClipper *> & clips);
+    void collect_polygons(double line_coordinate, bool is_x, bool is_bigger,
+                          vector<int> & line_vertex_counts, vector<VNode *> & line_vertices,
+                          list<RingClipper *> & clips);
     //collect one ring
-    //RingClipper* collect_ring(vector<VNode*>& line_vertices, int start_index, int end_index, bool isNextOrder);
+    //RingClipper* collect_ring(vector<VNode*>& line_vertices, int start_index, int end_index, bool is_next_order);
     void collect_ring(vector<VNode *> & line_vertices, int start_index, int end_index,
-                      bool isNextOrder, list<RingClipper *> & clip_results, bool isX,
-                      bool isBigger);
+                      bool is_next_order, list<RingClipper *> & clip_results, bool is_x,
+                      bool is_bigger);
 
-    void collectSecondPart(vector<VNode *> & line_vertices, int start_index, int end_index,
-                           VNode * start_node, VNode * end_node, bool forward, int vertex_count,
-                           list<RingClipper *> & clip_results, bool isX, bool isBigger,
-                           vector<VNode *> & secondHalf);
+    void collect_second_part(vector<VNode *> & line_vertices, int start_index, int end_index,
+                             VNode * start_node, VNode * end_node, bool forward, int vertex_count,
+                             list<RingClipper *> & clip_results, bool is_x, bool is_bigger,
+                             vector<VNode *> & second_half);
 
-    void construct_clip_rings(vector<VNode *> & firstHalf, vector<VNode *> & secondHalf,
+    void construct_clip_rings(vector<VNode *> & first_half, vector<VNode *> & second_half,
                               list<RingClipper *> & clip_results);
 
-    VNode * collectAlongWay(vector<VNode *> & vertices, VNode * start, bool forward);
+    VNode * collect_along_way(vector<VNode *> & vertices, VNode * start, bool forward);
     //unprocessed
     //bool unprocessed();
     VNode * copy(const VNode * v);
@@ -154,18 +154,19 @@ RingClipper * convert_ring_to_clip(const Ring & ring);
 
 void convert_clip_to_ring(VNode * first_vertex, Ring & ring);
 
-RingClipper * convertCPolygonToClip(const GIS_polygon & polygon);
+RingClipper * convert_polygon_to_clip(const GisPolygon & polygon);
 
-RingClipper * convertSimplePolygonToClip(const c_polygon & polygon);
+RingClipper * convert_simple_polygon_to_clip(const Polygon & polygon);
 
-void convertClipToPolygon(RingClipper * ring_clip, GIS_polygon * polygon);
+void convert_clip_to_polygon(RingClipper * ring_clip, GisPolygon * polygon);
 
-VNode * copy_ring(VNode * head, bool bSetVisited = false);
+VNode * copy_ring(VNode * head, bool set_visited = false);
 
-double getRotAngle(Vector2d & v1, Vector2d & v2);
+double get_rot_angle(Vector2d & v1, Vector2d & v2);
 
 //make sure the min and max are in correct order
-double intersectTwoBox(Point2d lower_left, Point2d lower_right, Point2d upper_right,
-                       Point2d upper_left, double xmin2, double xmax2, double ymin2, double ymax2);
+double intersect_two_box(Point2d lower_left, Point2d lower_right, Point2d upper_right,
+                         Point2d upper_left, double xmin2, double xmax2, double ymin2,
+                         double ymax2);
 
 }

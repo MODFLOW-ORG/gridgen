@@ -7,8 +7,8 @@
 */
 
 #pragma once
-#ifndef _MATHTOOL_Vector
-#define _MATHTOOL_Vector
+#ifndef MATHTOOL_VECTOR
+#define MATHTOOL_VECTOR
 
 #include "Basic.h"
 
@@ -22,12 +22,12 @@ namespace cusg
 template <class T, int D = 3> class Vector
 {
 public:
-    Vector(const T V[D]);
-    Vector(const Vector & V);
+    Vector(const T v[D]);
+    Vector(const Vector & v);
     Vector(const T & x = 0, const T & y = 0, const T & z = 0, const T & w = 0);
 
-    T & operator[](int i) { return v[i]; }
-    const T & operator[](int i) const { return v[i]; }
+    T & operator[](int i) { return m_v[i]; }
+    const T & operator[](int i) const { return m_v[i]; }
 
     T norm() const;           //!< magnitude of vector
     T normsqr() const;        //!< magnitude squared
@@ -35,30 +35,30 @@ public:
 
     void set(const Vector & other)
     {
-        for (int i = 0; i < D; i++) v[i] = other.v[i];
+        for (int i = 0; i < D; i++) m_v[i] = other.m_v[i];
     }
 
     void set(const T other[D])
     {
-        for (int i = 0; i < D; i++) v[i] = other[i];
+        for (int i = 0; i < D; i++) m_v[i] = other[i];
     }
 
     void set(const T & x = 0, const T & y = 0, const T & z = 0, const T & w = 0)
     {
-        if (D > 0) v[0] = x;
-        if (D > 1) v[1] = y;
-        if (D > 2) v[2] = z;
-        if (D > 3) v[3] = w;
+        if (D > 0) m_v[0] = x;
+        if (D > 1) m_v[1] = y;
+        if (D > 2) m_v[2] = z;
+        if (D > 3) m_v[3] = w;
     }
 
     void get(T other[D]) const
     {
-        for (int i = 0; i < D; i++) other[i] = v[i];
+        for (int i = 0; i < D; i++) other[i] = m_v[i];
     }
 
-    const T * get() const { return v; }
+    const T * get() const { return m_v; }
 
-    T * get() { return v; }
+    T * get() { return m_v; }
 
     // Vector operator prototypes
     const Vector & operator=(const Vector & v2); //!< assignment
@@ -74,13 +74,13 @@ public:
     bool operator==(const Vector & two) const; //!< equality
 
 protected:
-    T v[D];
+    T m_v[D];
 };
 
 //Implementation
-template <class T, int D> Vector<T, D>::Vector(const T V[D])
+template <class T, int D> Vector<T, D>::Vector(const T v[D])
 {
-    set(V);
+    set(v);
 }
 
 template <class T, int D> Vector<T, D>::Vector(const T & x, const T & y, const T & z, const T & w)
@@ -88,9 +88,9 @@ template <class T, int D> Vector<T, D>::Vector(const T & x, const T & y, const T
     set(x, y, z, w);
 }
 
-template <class T, int D> Vector<T, D>::Vector(const Vector<T, D> & V)
+template <class T, int D> Vector<T, D>::Vector(const Vector<T, D> & v)
 {
-    for (int i = 0; i < D; i++) v[i] = V.v[i];
+    for (int i = 0; i < D; i++) m_v[i] = v.m_v[i];
 }
 
 template <class T, int D> T Vector<T, D>::norm() const // magnitude of vector
@@ -101,7 +101,7 @@ template <class T, int D> T Vector<T, D>::norm() const // magnitude of vector
 template <class T, int D> T Vector<T, D>::normsqr() const // magnitude squared
 {
     T sumsqr = 0;
-    for (int i = 0; i < D; i++) sumsqr += sqr(v[i]);
+    for (int i = 0; i < D; i++) sumsqr += SQR(m_v[i]);
     return sumsqr;
 }
 
@@ -112,69 +112,69 @@ template <class T, int D> Vector<T, D> Vector<T, D>::normalize() const // normal
     int i;
     for (i = 0; i < D; i++)
     {
-        newv.v[i] = v[i] / magnitude;
+        newv.m_v[i] = m_v[i] / magnitude;
         //a zero vector has no direction
-        if (fabs(v[i]) > magnitude * HUGENUMBER) break;
+        if (fabs(m_v[i]) > magnitude * HUGENUMBER) break;
     }
     for (; i < D; i++)
     {
-        newv.v[i] = v[i] / magnitude;
+        newv.m_v[i] = m_v[i] / magnitude;
     }
     return newv;
 }
 
 template <class T, int D> const Vector<T, D> & Vector<T, D>::operator=(const Vector<T, D> & v2)
 {
-    for (int i = 0; i < D; i++) v[i] = v2.v[i];
+    for (int i = 0; i < D; i++) m_v[i] = v2.m_v[i];
     return *this;
 }
 
 template <class T, int D> Vector<T, D> Vector<T, D>::operator-() const
 {
     Vector<T, D> newv(*this);
-    for (int i = 0; i < D; i++) newv.v[i] = -newv.v[i];
+    for (int i = 0; i < D; i++) newv.m_v[i] = -newv.m_v[i];
     return newv;
 }
 
 template <class T, int D> Vector<T, D> Vector<T, D>::operator+(const Vector & v2) const
 {
     Vector<T, D> newv(*this);
-    for (int i = 0; i < D; i++) newv.v[i] += v2.v[i];
+    for (int i = 0; i < D; i++) newv.m_v[i] += v2.m_v[i];
     return newv;
 }
 
 template <class T, int D> Vector<T, D> Vector<T, D>::operator-(const Vector & v2) const
 {
     Vector<T, D> newv(*this);
-    for (int i = 0; i < D; i++) newv.v[i] -= v2.v[i];
+    for (int i = 0; i < D; i++) newv.m_v[i] -= v2.m_v[i];
     return newv;
 }
 
 template <class T, int D> Vector<T, D> Vector<T, D>::operator*(const T & s) const
 {
     Vector<T, D> newv(*this);
-    for (int i = 0; i < D; i++) newv.v[i] *= s;
+    for (int i = 0; i < D; i++) newv.m_v[i] *= s;
     return newv;
 }
 
 template <class T, int D> Vector<T, D> Vector<T, D>::operator/(const T & s) const
 {
     Vector<T, D> newv(*this);
-    for (int i = 0; i < D; i++) newv.v[i] /= s;
+    for (int i = 0; i < D; i++) newv.m_v[i] /= s;
     return newv;
 }
 
 template <class T, int D> Vector<T, D> Vector<T, D>::operator^(const Vector<T, D> & v2) const
 {
     Vector<T, D> newv(*this);
-    for (int i = 0; i < D; i++) newv.v[i] *= v2.v[i];
+    for (int i = 0; i < D; i++) newv.m_v[i] *= v2.m_v[i];
     return newv;
 }
 
 template <class T, int D> T Vector<T, D>::operator*(const Vector<T, D> & v2) const
 {
     T dot = 0;
-    for (int i = 0; i < D; i++) dot += (v[i] * v2.v[i]);
+    for (int i = 0; i < D; i++) dot += (m_v[i] * v2.m_v[i]);
     return dot;
 }
 
@@ -184,16 +184,16 @@ template <class T, int D> Vector<T, D> Vector<T, D>::operator%(const Vector<T, D
     if (D == 2) return Vector<T, D>(0, 0);
     //D==3
     Vector<T, D> newv(*this);
-    newv.v[0] = v[1] * v2.v[2] - v[2] * v2.v[1];
-    newv.v[1] = v[2] * v2.v[0] - v[0] * v2.v[2];
-    newv.v[2] = v[0] * v2.v[1] - v[1] * v2.v[0];
+    newv.m_v[0] = m_v[1] * v2.m_v[2] - m_v[2] * v2.m_v[1];
+    newv.m_v[1] = m_v[2] * v2.m_v[0] - m_v[0] * v2.m_v[2];
+    newv.m_v[2] = m_v[0] * v2.m_v[1] - m_v[1] * v2.m_v[0];
     return newv;
 }
 
 template <class T, int D> bool Vector<T, D>::operator==(const Vector<T, D> & other) const
 {
     for (int i = 0; i < D; i++)
-        if (v[i] != other.v[i]) return false;
+        if (m_v[i] != other.m_v[i]) return false;
     return true;
 }
 
@@ -228,4 +228,4 @@ using Vector4d = Vector<REAL, 4>;
 
 } //end of namespace
 
-#endif //_MATHTOOL_Vector
+#endif //MATHTOOL_VECTOR

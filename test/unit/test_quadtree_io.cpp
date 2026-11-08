@@ -64,8 +64,8 @@ QuadTree3D * read_structure(DefinitionParser & parser, const std::string & struc
     {
         if (parser.parse(in))
         {
-            QuadtreeBlock * data = dynamic_cast<QuadtreeBlock *>(parser.getBlockData("qtg"));
-            if (data != nullptr && data->initialize(parser.getBlockData()))
+            QuadtreeBlock * data = dynamic_cast<QuadtreeBlock *>(parser.get_block_data("qtg"));
+            if (data != nullptr && data->initialize(parser.get_block_data()))
             {
                 rebuilt = dynamic_cast<QuadTree3D *>(data->build());
             }

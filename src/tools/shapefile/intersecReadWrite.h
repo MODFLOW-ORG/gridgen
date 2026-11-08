@@ -1,6 +1,6 @@
 
-#ifndef _INTERSECT_READ_WRITE_H_
-#define _INTERSECT_READ_WRITE_H_
+#ifndef INTERSECT_READ_WRITE_H
+#define INTERSECT_READ_WRITE_H
 
 #include "Box.h"
 #include "polygon.h"
@@ -28,18 +28,18 @@ enum FILETYPE
 };
 
 //check whether the array attributes contain the given attribute
-bool checkAttributesContain(const char * attribute_name, vector<string> & attributes);
+bool check_attributes_contain(const char * attribute_name, vector<string> & attributes);
 
 //write the grid and point intersection
-void writePntIntersect(GridIntersection * grid_intersection, string file,
-                       vector<string> & attributes, FILETYPE filetype);
+void write_pnt_intersect(GridIntersection * grid_intersection, string file,
+                         vector<string> & attributes, FILETYPE filetype);
 
 //write the line and grid intersection
-void writeLineIntersect(GridIntersection * grid_intersection, string file,
-                        vector<string> & attributes, FILETYPE filetype);
+void write_line_intersect(GridIntersection * grid_intersection, string file,
+                          vector<string> & attributes, FILETYPE filetype);
 
 //writhe the polygon and grid intersection
-void writePolyIntersect(GridIntersection * grid_intersection, string file,
-                        vector<string> & attributes, FILETYPE filetype);
+void write_poly_intersect(GridIntersection * grid_intersection, string file,
+                          vector<string> & attributes, FILETYPE filetype);
 
 #endif

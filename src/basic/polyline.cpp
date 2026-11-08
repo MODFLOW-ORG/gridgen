@@ -11,63 +11,63 @@ namespace cusg
 // clean up the space allocated
 void Polyline::destroy()
 {
-    if (head == nullptr) return;
-    LinkedVertex * ptr = head;
+    if (m_head == nullptr) return;
+    LinkedVertex * ptr = m_head;
     do
     {
-        LinkedVertex * n = ptr->getNext();
+        LinkedVertex * n = ptr->get_next();
         delete ptr;
         ptr = n;
     } while (ptr != nullptr);
-    head = tail = nullptr;
+    m_head = m_tail = nullptr;
 
-    all.clear();
+    m_all.clear();
 }
 
 // Create a empty polygon
-void Polyline::beginPoly()
+void Polyline::begin_poly()
 {
-    head = tail = nullptr;
-    all.clear();
+    m_head = m_tail = nullptr;
+    m_all.clear();
 }
 
 // Add a vertex to the polygonal chain
-void Polyline::addVertex(double x, double y, bool remove_duplicate)
+void Polyline::add_vertex(double x, double y, bool remove_duplicate)
 {
     Point2d pt(x, y);
 
-    if (tail != nullptr)
+    if (m_tail != nullptr)
     {
-        if (tail->getPos() == pt && remove_duplicate) return; //don't add
+        if (m_tail->get_pos() == pt && remove_duplicate) return; //don't add
     }
 
     LinkedVertex * v = new LinkedVertex(pt);
-    if (tail != nullptr)
+    if (m_tail != nullptr)
     {
-        tail->setNext(v);
+        m_tail->set_next(v);
     }
-    tail = v;
-    if (head == nullptr) head = tail;
-    v->setVID(all.size()); //id of the vertex in this ring
-    all.push_back(v);
+    m_tail = v;
+    if (m_head == nullptr) m_head = m_tail;
+    v->set_vid(m_all.size()); //id of the vertex in this ring
+    m_all.push_back(v);
 }
 
 // finish building the polygon
-void Polyline::endPoly()
+void Polyline::end_poly()
 {
-    doInit();
+    do_init();
 }
 
 // initialize property of the this polychain
 // Compute normals and find reflective vertices
-void Polyline::doInit()
+void Polyline::do_init()
 {
     //compute normals
-    LinkedVertex * ptr = head;
+    LinkedVertex * ptr = m_head;
     do
     {
-        ptr->computeExtraInfo();
-        ptr = ptr->getNext();
+        ptr->compute_extra_info();
+        ptr = ptr->get_next();
     } while (ptr != nullptr);
 }
 
@@ -76,29 +76,29 @@ void Polyline::doInit()
 void Polyline::build_all()
 {
     uint vid = 0;
-    all.clear();
-    LinkedVertex * ptr = head;
+    m_all.clear();
+    LinkedVertex * ptr = m_head;
     do
     {
-        ptr->setVID(vid++);
-        all.push_back(ptr);
-        ptr = ptr->getNext();
+        ptr->set_vid(vid++);
+        m_all.push_back(ptr);
+        ptr = ptr->get_next();
     } while (ptr != nullptr); //end while
 }
 
 //return the i-th line segment from this polyline
-GIS_LineSeg2d GIS_polyline::getLineSegment(int i)
+GisLineSeg2d GisPolyline::get_line_segment(int i)
 {
-    int vsize = getSize();
+    int vsize = get_size();
     if (i >= vsize)
     {
         throw GridgenError("internal error: a line has no segment " + to_string(i + 1));
     }
 
-    if (geodesic_dist.empty()) computeGeodesicDist();
+    if (geodesic_dist.empty()) compute_geodesic_dist();
 
-    //create a GIS_LineSeg2d from the polyline...
-    GIS_LineSeg2d line((*this)[i]->getPos(), (*this)[i + 1]->getPos());
+    //create a GisLineSeg2d from the polyline...
+    GisLineSeg2d line((*this)[i]->get_pos(), (*this)[i + 1]->get_pos());
     line.m_curve_id = this->m_id;
     line.m_seg_id = i;
     line.m_start_geo_dist = this->geodesic_dist[i];
@@ -107,19 +107,19 @@ GIS_LineSeg2d GIS_polyline::getLineSegment(int i)
     return line;
 }
 
-void GIS_polyline::computeGeodesicDist()
+void GisPolyline::compute_geodesic_dist()
 {
-    int vsize = getSize();
+    int vsize = get_size();
     geodesic_dist = vector<double>(vsize, 0);
 
-    LinkedVertex * ptr = head->getNext();
+    LinkedVertex * ptr = m_head->get_next();
     double dist = 0;
     for (int i = 1; i < vsize; i++)
     {
-        LinkedVertex * pre = ptr->getPre();
-        dist += (ptr->getPos() - pre->getPos()).norm();
+        LinkedVertex * pre = ptr->get_pre();
+        dist += (ptr->get_pos() - pre->get_pos()).norm();
         geodesic_dist[i] = dist;
-        ptr = ptr->getNext();
+        ptr = ptr->get_next();
     }
 }
 //
@@ -135,7 +135,7 @@ istream & operator>>(istream & is, Polyline & poly)
     int vsize;
     is >> vsize;
 
-    poly.beginPoly();
+    poly.begin_poly();
 
     //read in all the vertices
     int iv;
@@ -153,21 +153,21 @@ istream & operator>>(istream & is, Polyline & poly)
     {
         is >> id;
         id = id - 1;
-        poly.addVertex(pts[id].first, pts[id].second);
+        poly.add_vertex(pts[id].first, pts[id].second);
     }
 
-    poly.endPoly();
+    poly.end_poly();
     return is;
 }
 
 void Polyline::rotate(double cx, double cy, double angle)
 {
-    LinkedVertex * head = this->getHead();
+    LinkedVertex * head = this->get_head();
     LinkedVertex * p = head;
     do
     {
         p->rotate(cx, cy, angle);
-        p = p->getNext();
+        p = p->get_next();
     } while (p != nullptr);
 }
 

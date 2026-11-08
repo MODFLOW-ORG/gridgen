@@ -120,13 +120,13 @@ ModflowGridBlock * parse_grid(DefinitionParser & parser, const std::string & blo
 {
     std::istringstream dfn(block);
     if (!parser.parse(dfn)) return NULL;
-    ModflowGridBlock * data = dynamic_cast<ModflowGridBlock *>(parser.getBlockData("mfg"));
-    if (data == NULL || !data->initialize(parser.getBlockData())) return NULL;
+    ModflowGridBlock * data = dynamic_cast<ModflowGridBlock *>(parser.get_block_data("mfg"));
+    if (data == NULL || !data->initialize(parser.get_block_data())) return NULL;
     return data;
 }
 
 // a grid one cell wide, 110 km long, rotated 17.3 degrees
-const char * LONG_GRID = "BEGIN MODFLOW_GRID mfg\n"
+const char * long_grid = "BEGIN MODFLOW_GRID mfg\n"
                          "  ROTATION_ANGLE = 17.3\n"
                          "  X_OFFSET = 543750\n"
                          "  Y_OFFSET = 2792250\n"
@@ -202,7 +202,7 @@ TEST(SharedVertices, QuarterTurnAboutLowerLeftCorner)
         make_mfgrid(1, 1, 1, 4.0, 2.0, 10.0, 8.0, 19.0, 0.5 * PI_DOUBLE);
     GridVertices gv(mfgrid.get());
     double x[4], y[4];
-    gv.get_corners(mfgrid->nodegroup[0], x, y);
+    gv.get_corners(mfgrid->node_group[0], x, y);
 
     // a quarter turn counterclockwise maps (x, y) to (-y, x)
     const double ex[4] = {6.0, 6.0, 8.0, 8.0};
@@ -212,7 +212,7 @@ TEST(SharedVertices, QuarterTurnAboutLowerLeftCorner)
         EXPECT_NEAR(x[i], ex[i], 1e-12) << "corner " << i;
         EXPECT_NEAR(y[i], ey[i], 1e-12) << "corner " << i;
     }
-    const Point2d & c = gv.center(mfgrid->nodegroup[0]);
+    const Point2d & c = gv.center(mfgrid->node_group[0]);
     EXPECT_NEAR(c[0], 7.0, 1e-12);
     EXPECT_NEAR(c[1], 21.0, 1e-12);
 }
@@ -221,15 +221,15 @@ TEST(SharedVertices, UnrotatedCornersAreEdges)
 {
     std::unique_ptr<QuadTree3D> qtree = make_refined(0.0);
     GridVertices gv(qtree.get());
-    ModflowGrid * mfgrid = qtree->getModflowGrid();
+    ModflowGrid * mfgrid = qtree->get_modflow_grid();
 
     // the base grid corners are the offset plus the summed cell sizes
     double xe = 0.0;
     for (int c = 0; c < mfgrid->ncol; c++) xe += mfgrid->delr[c];
     double ye = 0.0;
     for (int r = 0; r < mfgrid->nrow; r++) ye += mfgrid->delc[r];
-    Box * ne = qtree->nodegroup[mfgrid->get_box_index(0, 0, mfgrid->ncol - 1)];
-    while (!ne->isLeaf) ne = ne->pChildren[1];
+    Box * ne = qtree->node_group[mfgrid->get_box_index(0, 0, mfgrid->ncol - 1)];
+    while (!ne->is_leaf) ne = ne->p_children[1];
     const Point2d & p = gv.vertices()[gv.corners(ne)[1]];
     EXPECT_EQ(p[0], XOFF + xe);
     EXPECT_EQ(p[1], YOFF + ye);
@@ -238,7 +238,7 @@ TEST(SharedVertices, UnrotatedCornersAreEdges)
 TEST(SharedVertices, RotationUsesExactPi)
 {
     DefinitionParser parser;
-    ModflowGridBlock * data = parse_grid(parser, LONG_GRID);
+    ModflowGridBlock * data = parse_grid(parser, long_grid);
     ASSERT_NE(data, nullptr);
     EXPECT_DOUBLE_EQ(data->rotation_angle, 17.3 * PI_DOUBLE / 180.0);
 
@@ -262,7 +262,7 @@ TEST(SharedVertices, RotationUsesExactPi)
 TEST(SharedVertices, RotationAngleRoundTrips)
 {
     DefinitionParser parser;
-    ModflowGridBlock * data = parse_grid(parser, LONG_GRID);
+    ModflowGridBlock * data = parse_grid(parser, long_grid);
     ASSERT_NE(data, nullptr);
 
     std::ostringstream out;
@@ -317,9 +317,9 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
     std::string dir = ::testing::TempDir();
     {
         std::ofstream fr((dir + "gridgen_delr.dat").c_str());
-        for (double v : delr) fr << round_trip(v) << " ";
+        for (double v : delr) fr << RoundTrip(v) << " ";
         std::ofstream fc((dir + "gridgen_delc.dat").c_str());
-        for (double v : delc) fc << round_trip(v) << " ";
+        for (double v : delc) fc << RoundTrip(v) << " ";
     }
     std::string block = "BEGIN MODFLOW_GRID mfg\n"
                         "  ROTATION_ANGLE = 17.3\n"
@@ -361,9 +361,9 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
     for (int c = 0; c < 4; c++) xl += delr[c];
     for (int r = 2; r >= 0; r--) yl += delc[r];
     double t = 17.3 * PI_DOUBLE / 180.0;
-    Box * ne = qtree->nodegroup[mfgrid->get_box_index(0, 0, 3)];
-    ASSERT_FALSE(ne->isLeaf);
-    while (!ne->isLeaf) ne = ne->pChildren[1];
+    Box * ne = qtree->node_group[mfgrid->get_box_index(0, 0, 3)];
+    ASSERT_FALSE(ne->is_leaf);
+    while (!ne->is_leaf) ne = ne->p_children[1];
     const Point2d & p = gv.vertices()[gv.corners(ne)[1]];
     EXPECT_DOUBLE_EQ(p[0], XOFF + (xl * std::cos(t) - yl * std::sin(t)));
     EXPECT_DOUBLE_EQ(p[1], YOFF + (xl * std::sin(t) + yl * std::cos(t)));
@@ -405,8 +405,8 @@ TEST(Precision, PassThroughAreasAreDouble)
     // center cells of layers 1 and 3 connect over the full cell area
     std::unique_ptr<QuadTree3D> qtree =
         make_qtree(make_mfgrid(3, 3, 3, 812.7 / 16, 793.3 / 16), {});
-    ModflowGrid * mfgrid = qtree->getModflowGrid();
-    qtree->nodegroup[mfgrid->get_box_index(1, 1, 1)]->active = false;
+    ModflowGrid * mfgrid = qtree->get_modflow_grid();
+    qtree->node_group[mfgrid->get_box_index(1, 1, 1)]->active = false;
     qtree->number_nodes();
     qtree->refresh();
     qtree->vertical_pass_through = true;

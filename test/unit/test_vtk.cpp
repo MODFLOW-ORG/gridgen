@@ -49,7 +49,7 @@ std::vector<double> center_vertex_z(int rf, int cf, int ri, int ci)
     std::unique_ptr<QuadTree3D> qtree = std::make_unique<QuadTree3D>(mfgrid.get());
     Point2d pt(50.0 + 100.0 * cf, 150.0 - 100.0 * rf);
     qtree->refine(pt, 1, 0);
-    qtree->nodegroup[mfgrid->get_box_index(0, ri, ci)]->active = false;
+    qtree->node_group[mfgrid->get_box_index(0, ri, ci)]->active = false;
     qtree->set_one_based_node_numbering(false);
     qtree->number_nodes();
     qtree->refresh();

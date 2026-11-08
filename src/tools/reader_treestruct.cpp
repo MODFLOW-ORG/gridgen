@@ -28,25 +28,25 @@ string & trim(string & s)
 }
 
 //parse the tree structure node
-void parseNodeStr(string & nodeStr, TreeStructNode & node)
+void parse_node_str(string & node_str, TreeStructNode & node)
 {
-    trim(nodeStr);
+    trim(node_str);
 
-    int number_end = nodeStr.find_first_of(',');
-    string number_text = nodeStr.substr(0, number_end);
+    int number_end = node_str.find_first_of(',');
+    string number_text = node_str.substr(0, number_end);
 
-    int open_paren = nodeStr.find_first_of('(');
-    int layer_end = nodeStr.find_first_of(',', open_paren);
-    string layer_text = nodeStr.substr(open_paren + 1, layer_end - open_paren - 1);
+    int open_paren = node_str.find_first_of('(');
+    int layer_end = node_str.find_first_of(',', open_paren);
+    string layer_text = node_str.substr(open_paren + 1, layer_end - open_paren - 1);
 
-    int row_end = nodeStr.find_first_of(',', layer_end + 1);
-    string row_text = nodeStr.substr(layer_end + 1, row_end - layer_end - 1);
-    int close_paren = nodeStr.find_first_of(')', row_end + 1);
-    string col_text = nodeStr.substr(row_end + 1, close_paren - row_end - 1);
+    int row_end = node_str.find_first_of(',', layer_end + 1);
+    string row_text = node_str.substr(layer_end + 1, row_end - layer_end - 1);
+    int close_paren = node_str.find_first_of(')', row_end + 1);
+    string col_text = node_str.substr(row_end + 1, close_paren - row_end - 1);
 
-    if ((unsigned)(close_paren + 1) < nodeStr.size())
+    if ((unsigned)(close_paren + 1) < node_str.size())
     {
-        string location_text = nodeStr.substr(close_paren + 1, nodeStr.size() - close_paren - 1);
+        string location_text = node_str.substr(close_paren + 1, node_str.size() - close_paren - 1);
         //any character but a space is kept, so a code that is not 1 to 4 is reported
         for (char t : location_text)
         {
@@ -60,24 +60,24 @@ void parseNodeStr(string & nodeStr, TreeStructNode & node)
     node.col = atoi(col_text.c_str());
 }
 
-void parseTreeStructFile(string fileName, vector<TreeStructNode> & tree, string folderPath)
+void parse_tree_struct_file(string file_name, vector<TreeStructNode> & tree, string folder_path)
 {
-    string filePath = folderPath;
-    filePath += fileName;
+    string file_path = folder_path;
+    file_path += file_name;
     //replace the '\' with '/'
-    int pathsize = filePath.size();
+    int pathsize = file_path.size();
     for (int i = 0; i < pathsize; i++)
     {
-        if (filePath[i] == '\\')
+        if (file_path[i] == '\\')
         {
-            filePath[i] = '/';
+            file_path[i] = '/';
         }
     }
 
-    ifstream fin(filePath.c_str());
+    ifstream fin(file_path.c_str());
     if (!fin.good())
     {
-        throw cusg::GridgenError("cannot open structure file " + filePath);
+        throw cusg::GridgenError("cannot open structure file " + file_path);
     } //end good
 
     /************************************************************************/
@@ -89,9 +89,9 @@ void parseTreeStructFile(string fileName, vector<TreeStructNode> & tree, string 
     //Note: (3/25/2014) number of active nodes and number of connections are now stored in .nod file
 
     //read in total node number.
-    int nodeNumber = -INT_MAX; //, active_nodeNumber=-INT_MAX, connectionNumber=-INT_MAX;
+    int node_number = -INT_MAX; //, active_nodeNumber=-INT_MAX, connectionNumber=-INT_MAX;
 
-    while (nodeNumber == -INT_MAX) // || active_nodeNumber==-INT_MAX || connectionNumber==-INT_MAX)
+    while (node_number == -INT_MAX) // || active_nodeNumber==-INT_MAX || connectionNumber==-INT_MAX)
     {
         getline(fin, line);
         while ((line.empty() || line[0] == '#') && !fin.eof())
@@ -99,17 +99,17 @@ void parseTreeStructFile(string fileName, vector<TreeStructNode> & tree, string 
             getline(fin, line);
         }
 
-        if (nodeNumber == -INT_MAX) nodeNumber = atoi(line.c_str());
+        if (node_number == -INT_MAX) node_number = atoi(line.c_str());
     }
 
-    for (int i = 0; i < nodeNumber; i++)
+    for (int i = 0; i < node_number; i++)
     {
-        string lineStr;
-        getline(fin, lineStr);
+        string line_str;
+        getline(fin, line_str);
         if (!(line.empty() || line[0] == '#'))
         {
             tree.push_back(TreeStructNode());
-            parseNodeStr(lineStr, tree.back());
+            parse_node_str(line_str, tree.back());
         }
     } //end for i
 }

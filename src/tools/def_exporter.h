@@ -82,20 +82,20 @@ public:
     bool save_node_coordinate(const string & prefix, Grid * grid);
 
 protected:
-    template <typename T> void save(ostream & out, const vector<T> & A)
+    template <typename T> void save(ostream & out, const vector<T> & a)
     {
-        int size = A.size();
+        int size = a.size();
         for (int i = 0; i < size; i++)
         {
-            save(out, A[i]);
+            save(out, a[i]);
             out << " ";
         }
     }
 
-    template <typename T> void save(ostream & out, const list<T> & A)
+    template <typename T> void save(ostream & out, const list<T> & a)
     {
         using IT = typename list<T>::iterator;
-        for (IT i = A.begin(); i != A.end(); i++)
+        for (IT i = a.begin(); i != a.end(); i++)
         {
             T & t = *i;
             save(out, t);
@@ -104,17 +104,17 @@ protected:
     }
 
     //save an array of things
-    template <typename T> void save(ostream & out, T * A, int size)
+    template <typename T> void save(ostream & out, T * a, int size)
     {
         for (int i = 0; i < size; i++)
         {
             if (i % m_number_per_line == 0 && i > 0) out << "\n";
-            out << round_trip_value(A[i]) << " ";
+            out << round_trip_value(a[i]) << " ";
         }
     }
 
     //save an array of things with formatting info
-    template <typename T> void save(ostream & out, T * A, int size, int * line_ends)
+    template <typename T> void save(ostream & out, T * a, int size, int * line_ends)
     {
         int fid = 0;
         int last_newline_id = 0;
@@ -137,15 +137,15 @@ protected:
                 out << "\n";
 
             //output the value
-            out << round_trip_value(A[i]) << " ";
+            out << round_trip_value(a[i]) << " ";
         }
     }
 
-    void save(ostream & out, const double & data) { out << round_trip(data); }
-    void save(ostream & out, const float & data) { out << round_trip(data); }
+    void save(ostream & out, const double & data) { out << RoundTrip(data); }
+    void save(ostream & out, const float & data) { out << RoundTrip(data); }
     void save(ostream & out, const int & data) { out << data; }
-    void save(ostream & out, const double * data) { out << round_trip(*data); }
-    void save(ostream & out, float * data) { out << round_trip(*data); }
+    void save(ostream & out, const double * data) { out << RoundTrip(*data); }
+    void save(ostream & out, float * data) { out << RoundTrip(*data); }
     void save(ostream & out, int * data) { out << *data; }
 
 private:

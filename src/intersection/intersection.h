@@ -13,8 +13,8 @@ Contains various functions for computational geometry in 2D space.
 */
 
 #pragma once
-#ifndef _CUSG_INTERSECTION_H_
-#define _CUSG_INTERSECTION_H_
+#ifndef CUSG_INTERSECTION_H
+#define CUSG_INTERSECTION_H
 #include <Basic.h>
 #include <cassert>
 
@@ -26,7 +26,7 @@ namespace cusg
         \param[out] p    The target of the assignment
         \param[in]  a   The pair of values to assign
      */
-template <class real> void Assign(real p[2], real a[2])
+template <class Real> void assign(Real p[2], Real a[2])
 {
     p[0] = a[0];
     p[1] = a[1];
@@ -37,7 +37,7 @@ template <class real> void Assign(real p[2], real a[2])
        Counting the edges of a ring that cross the ray tells whether p is
        inside the ring: an odd count is inside.
      */
-inline bool CrossesRay(const double a[2], const double b[2], const double p[2])
+inline bool crosses_ray(const double a[2], const double b[2], const double p[2])
 {
     if ((a[1] > p[1]) == (b[1] > p[1])) return false;
     double x = a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]);
@@ -54,14 +54,14 @@ inline bool CrossesRay(const double a[2], const double b[2], const double p[2])
        \returns The area of the region enclosed by the
        three vertices (may be negative)
      */
-template <class real> real Area(const real a[2], const real b[2], const real c[2])
+template <class Real> Real area(const Real a[2], const Real b[2], const Real c[2])
 {
     return ((b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1])) / 2;
 }
 
 /*! \brief Determines the sign of a triangle's area
 
-       Computes the area of a 2D triangle using the \c Area function,
+       Computes the area of a 2D triangle using the \c area function,
        then returns a value indicating whether the area is positive,
        negative or zero.
        \param[in] a         The (x,y) coordinates of the first vertex
@@ -75,13 +75,13 @@ template <class real> real Area(const real a[2], const real b[2], const real c[2
        to be zero).
 
      */
-template <class real> int AreaSign(const real a[2], const real b[2], const real c[2])
+template <class Real> int area_sign(const Real a[2], const Real b[2], const Real c[2])
 {
-    real area = Area(a, b, c);
+    Real signed_area = area(a, b, c);
 
-    if (area > SMALLNUMBER)
+    if (signed_area > SMALLNUMBER)
         return 1;
-    else if (area < -SMALLNUMBER)
+    else if (signed_area < -SMALLNUMBER)
         return -1;
     else
         return 0;
@@ -99,11 +99,11 @@ template <class real> int AreaSign(const real a[2], const real b[2], const real 
        \param[in] c     The (x,y) coordinates of the third vertex
        \returns \b 1 if the points are collinear; \b 0 otherwise.
        \remarks Whether or not the area is zero is determined
-                via the \c AreaSign function.
+                via the \c area_sign function.
      */
-template <class real> int Collinear(const real a[2], const real b[2], const real c[2])
+template <class Real> int collinear(const Real a[2], const Real b[2], const Real c[2])
 {
-    return AreaSign(a, b, c) == 0;
+    return area_sign(a, b, c) == 0;
 }
 
 /*! \brief Returns \b true iff point \a c lies on the closed segment \a ab
@@ -113,7 +113,7 @@ template <class real> int Collinear(const real a[2], const real b[2], const real
        \returns \b True if \a c lies between \a a and \a b, or on them; \b false otherwise.
        \remarks Assumes it is already known that \a a and \b b are collinear.
      */
-template <class real> bool Between(const real a[2], const real b[2], const real c[2])
+template <class Real> bool between(const Real a[2], const Real b[2], const Real c[2])
 {
     // If ab not vertical, check betweenness on x; else on y.
     //if ( a[0]!=b[0] )
@@ -131,7 +131,7 @@ template <class real> bool Between(const real a[2], const real b[2], const real 
                     (If \a c is the same vertex as \a a or \a b, this function
                     returns \b false.)
      */
-template <class real> bool Between_strict(const real a[2], const real b[2], const real c[2])
+template <class Real> bool between_strict(const Real a[2], const Real b[2], const Real c[2])
 {
     // If ab is not vertical enough, check betweenness on x; else on y.
     if (fabs(a[0] - b[0]) > SMALLNUMBER)
@@ -152,7 +152,7 @@ template <class real> bool Between_strict(const real a[2], const real b[2], cons
        points are considered the same).
        \returns \b True if \a a is essentially equal to \a b; \b false otherwise.
      */
-template <class real> bool AlmostEqual3(const real a[3], const real b[3])
+template <class Real> bool almost_equal3(const Real a[3], const Real b[3])
 {
     return (fabs(a[0] - b[0]) < SMALLNUMBER && fabs(a[1] - b[1]) < SMALLNUMBER &&
             fabs(a[2] - b[2]) < SMALLNUMBER);
@@ -166,7 +166,7 @@ template <class real> bool AlmostEqual3(const real a[3], const real b[3])
        points are considered the same).
        \returns \b True if \a a is essentially equal to \a b; \b false otherwise.
      */
-template <class real> bool AlmostEqual(const real a[2], const real b[2])
+template <class Real> bool almost_equal(const Real a[2], const Real b[2])
 {
     return (fabs(a[0] - b[0]) < SMALLNUMBER && fabs(a[1] - b[1]) < SMALLNUMBER);
 }
@@ -177,7 +177,7 @@ template <class real> bool AlmostEqual(const real a[2], const real b[2])
        take floating-point imprecision into account.
        \returns \b True if vertex \a a equals vertex \a b; \b false otherwise.
      */
-template <class real> bool Equal3(const real a[3], const real b[3])
+template <class Real> bool equal3(const Real a[3], const Real b[3])
 {
     return (a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]);
 }
@@ -188,7 +188,7 @@ template <class real> bool Equal3(const real a[3], const real b[3])
        take floating-point imprecision into account.
        \returns \b True if vertex \a a equals vertex \a b; \b false otherwise.
      */
-template <class real> bool Equal(const real a[2], const real b[2])
+template <class Real> bool equal(const Real a[2], const Real b[2])
 {
     return (a[0] == b[0]) && (a[1] == b[1]);
 }
@@ -197,30 +197,30 @@ template <class real> bool Equal(const real a[2], const real b[2])
       \brief Compute union of two colinear  segments ab and cd  place the union in p
        return false if the union is degenerated
      */
-inline bool Union(const double a[2], const double b[2], const double c[2], const double d[2],
-                  const double * p[2])
+inline bool segment_union(const double a[2], const double b[2], const double c[2],
+                          const double d[2], const double * p[2])
 {
     int id = 0;
-    if (AlmostEqual(a, c))
+    if (almost_equal(a, c))
     {
         p[0] = a;
 
         //can only be b or d
-        if (AlmostEqual(b, d))
+        if (almost_equal(b, d))
         {
             p[1] = b;
             return true;
         }
 
         //
-        else if (Between_strict(a, b, d))
+        else if (between_strict(a, b, d))
         {
             p[1] = d;
             return true;
         }
 
         //
-        else if (Between_strict(c, d, b))
+        else if (between_strict(c, d, b))
         {
             p[1] = b;
             return true;
@@ -232,25 +232,25 @@ inline bool Union(const double a[2], const double b[2], const double c[2], const
 
     //ok, now a!=c
 
-    if (AlmostEqual(a, d)) //a==d
+    if (almost_equal(a, d)) //a==d
     {
         p[0] = a; //a==d and a!=c, so can only be ab, ac,
 
-        if (AlmostEqual(b, c))
+        if (almost_equal(b, c))
         {
             p[1] = b;
             return true;
         }
 
         //
-        else if (Between_strict(a, b, c))
+        else if (between_strict(a, b, c))
         {
             p[1] = c;
             return true;
         }
 
         //
-        else if (Between_strict(c, d, b))
+        else if (between_strict(c, d, b))
         {
             p[1] = b;
             return true;
@@ -260,21 +260,21 @@ inline bool Union(const double a[2], const double b[2], const double c[2], const
         return false;
     }
 
-    if (AlmostEqual(b, c))
+    if (almost_equal(b, c))
     {
         p[id] = b; //b==c. a!=c, a!=d
 
         //can only have a and d
 
         //
-        if (Between_strict(a, b, d))
+        if (between_strict(a, b, d))
         {
             p[1] = d;
             return true;
         }
 
         //
-        else if (Between_strict(c, d, a))
+        else if (between_strict(c, d, a))
         {
             p[1] = a;
             return true;
@@ -283,20 +283,20 @@ inline bool Union(const double a[2], const double b[2], const double c[2], const
         return false;
     }
 
-    if (AlmostEqual(b, d))
+    if (almost_equal(b, d))
     {
         p[id] = b; //b==d, b!=c. a!=c, a!=d
 
         //can only have a and c
 
-        if (Between_strict(a, b, c))
+        if (between_strict(a, b, c))
         {
             p[1] = c;
             return true;
         }
 
         //
-        else if (Between_strict(c, d, a))
+        else if (between_strict(c, d, a))
         {
             p[1] = a;
             return true;
@@ -305,22 +305,22 @@ inline bool Union(const double a[2], const double b[2], const double c[2], const
         return false;
     }
 
-    if (Between_strict(a, b, c))
+    if (between_strict(a, b, c))
     {
         p[0] = c;
-        if (Between_strict(a, b, d))
+        if (between_strict(a, b, d))
         {
             p[1] = d;
             return true;
         }
 
-        if (Between_strict(c, d, a))
+        if (between_strict(c, d, a))
         {
             p[1] = a;
             return true;
         }
 
-        if (Between_strict(c, d, b))
+        if (between_strict(c, d, b))
         {
             p[1] = b;
             return true;
@@ -329,23 +329,23 @@ inline bool Union(const double a[2], const double b[2], const double c[2], const
         return false;
     }
 
-    if (Between_strict(a, b, d))
+    if (between_strict(a, b, d))
     {
         p[0] = d;
 
-        if (Between_strict(a, b, c))
+        if (between_strict(a, b, c))
         {
             p[1] = c;
             return true;
         }
 
-        if (Between_strict(c, d, a))
+        if (between_strict(c, d, a))
         {
             p[1] = a;
             return true;
         }
 
-        if (Between_strict(c, d, b))
+        if (between_strict(c, d, b))
         {
             p[1] = b;
             return true;
@@ -354,23 +354,23 @@ inline bool Union(const double a[2], const double b[2], const double c[2], const
         return false;
     }
 
-    if (Between_strict(c, d, a))
+    if (between_strict(c, d, a))
     {
         p[0] = a;
 
-        if (Between_strict(a, b, c))
+        if (between_strict(a, b, c))
         {
             p[1] = c;
             return true;
         }
 
-        if (Between_strict(a, b, d))
+        if (between_strict(a, b, d))
         {
             p[1] = d;
             return true;
         }
 
-        if (Between_strict(c, d, b))
+        if (between_strict(c, d, b))
         {
             p[1] = b;
             return true;
@@ -379,22 +379,22 @@ inline bool Union(const double a[2], const double b[2], const double c[2], const
         return false;
     }
 
-    if (Between_strict(c, d, b))
+    if (between_strict(c, d, b))
     {
         p[0] = b;
-        if (Between_strict(a, b, c))
+        if (between_strict(a, b, c))
         {
             p[1] = c;
             return true;
         }
 
-        if (Between_strict(a, b, d))
+        if (between_strict(a, b, d))
         {
             p[1] = d;
             return true;
         }
 
-        if (Between_strict(c, d, a))
+        if (between_strict(c, d, a))
         {
             p[1] = a;
             return true;
@@ -419,38 +419,38 @@ inline bool Union(const double a[2], const double b[2], const double c[2], const
        - \c e if the segments collinearly intersect
        - \c v if an endpoint of one segment is on the other segment
      */
-template <class real>
-char ParallelInt(const real a[2], const real b[2], const real c[2], const real d[2], real p[2])
+template <class Real>
+char parallel_int(const Real a[2], const Real b[2], const Real c[2], const Real d[2], Real p[2])
 {
-    if (!Collinear(a, b, c)) return '0';
+    if (!collinear(a, b, c)) return '0';
 
     //check if they overlap..
-    if (Between(a, b, c)) return 'e';
-    if (Between(a, b, d)) return 'e';
-    if (Between(c, d, a)) return 'e';
-    if (Between(c, d, b)) return 'e';
+    if (between(a, b, c)) return 'e';
+    if (between(a, b, d)) return 'e';
+    if (between(c, d, a)) return 'e';
+    if (between(c, d, b)) return 'e';
 
     //they don't overlap but the end points may..
     //check if the end points overlap
-    if (AlmostEqual(a, c))
+    if (almost_equal(a, c))
     {
         p[0] = a[0];
         p[1] = a[1];
         return 'v';
     }
-    if (AlmostEqual(b, c))
+    if (almost_equal(b, c))
     {
         p[0] = b[0];
         p[1] = b[1];
         return 'v';
     }
-    if (AlmostEqual(a, d))
+    if (almost_equal(a, d))
     {
         p[0] = a[0];
         p[1] = a[1];
         return 'v';
     }
-    if (AlmostEqual(b, d))
+    if (almost_equal(b, d))
     {
         p[0] = b[0];
         p[1] = b[1];
@@ -470,59 +470,60 @@ char ParallelInt(const real a[2], const real b[2], const real c[2], const real d
        \param[out] p   The union will be placed in this parameter
        \returns \b False if the union is degenerated. Otherwise returns \b true.
      */
-template <class real>
-bool Union(const real a[2], const real b[2], const real c[2], const real d[2], const real * p[2])
+template <class Real>
+bool segment_union(const Real a[2], const Real b[2], const Real c[2], const Real d[2],
+                   const Real * p[2])
 {
     int id = 0;
-    if (Equal(a, c))
+    if (equal(a, c))
     {
         p[id] = a;
         id++;
     }
 
-    if (Equal(a, d))
+    if (equal(a, d))
     {
         p[id] = a;
         id++;
     }
     if (id == 2) return p[0] != p[1];
 
-    if (Equal(b, c))
+    if (equal(b, c))
     {
         p[id] = b;
         id++;
     }
     if (id == 2) return p[0] != p[1];
 
-    if (Equal(b, d))
+    if (equal(b, d))
     {
         p[id] = b;
         id++;
     }
     if (id == 2) return p[0] != p[1];
 
-    if (Between_strict(a, b, c))
+    if (between_strict(a, b, c))
     {
         p[id] = c;
         id++;
     }
     if (id == 2) return p[0] != p[1];
 
-    if (Between_strict(a, b, d))
+    if (between_strict(a, b, d))
     {
         p[id] = d;
         id++;
     }
     if (id == 2) return p[0] != p[1];
 
-    if (Between_strict(c, d, a))
+    if (between_strict(c, d, a))
     {
         p[id] = a;
         id++;
     }
     if (id == 2) return p[0] != p[1];
 
-    if (Between_strict(c, d, b))
+    if (between_strict(c, d, b))
     {
         p[id] = b;
         id++;
@@ -533,8 +534,8 @@ bool Union(const real a[2], const real b[2], const real c[2], const real d[2], c
 }
 
 /*! \brief Determines if segments ab and cd intersect. */
-template <class real>
-bool SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2])
+template <class Real>
+bool seg_seg_int(const Real a[2], const Real b[2], const Real c[2], const Real d[2])
 {
     //check X and Y coordinates
     for (int i = 0; i < 2; i++)
@@ -568,26 +569,26 @@ bool SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2
     } //end for i
 
     //OK potential intersection
-    int abc = AreaSign(a, b, c);
-    int abd = AreaSign(a, b, d);
+    int abc = area_sign(a, b, c);
+    int abd = area_sign(a, b, d);
 
     if (abc == 0 && abd == 0)
     { //collinear
         //check if they overlap..
-        if (Between(a, b, c)) return true;
-        if (Between(a, b, d)) return true;
-        if (Between(c, d, a)) return true;
-        if (Between(c, d, b)) return true;
+        if (between(a, b, c)) return true;
+        if (between(a, b, d)) return true;
+        if (between(c, d, a)) return true;
+        if (between(c, d, b)) return true;
         return false;
     }
     else if (abc == 0)
     {
-        if (Between(a, b, c)) return true;
+        if (between(a, b, c)) return true;
         return false;
     }
     else if (abd == 0)
     {
-        if (Between(a, b, d)) return true;
+        if (between(a, b, d)) return true;
         return false;
     }
     //
@@ -597,19 +598,19 @@ bool SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2
         if (abc < 0 && abd < 0) return false;
     }
 
-    int cda = AreaSign(c, d, a);
-    int cdb = AreaSign(c, d, b);
+    int cda = area_sign(c, d, a);
+    int cdb = area_sign(c, d, b);
 
     assert(cda != 0 || cdb != 0);
 
     if (cda == 0)
     {
-        if (Between(c, d, a)) return true;
+        if (between(c, d, a)) return true;
         return false;
     }
     else if (cdb == 0)
     {
-        if (Between(c, d, b)) return true;
+        if (between(c, d, b)) return true;
         return false;
     }
     else
@@ -640,14 +641,14 @@ bool SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2
        \remarks Two collinear segments that share just one point, an endpoint
                 of each, returns \c e rather than \c v as one might expect.
      */
-template <class real>
-char SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2], real p[2])
+template <class Real>
+char seg_seg_int(const Real a[2], const Real b[2], const Real c[2], const Real d[2], Real p[2])
 {
-    real s, t;                // The two parameters of the parametric eqns.
-    real num_s, num_t, denom; // Numerator and denominator of equations.
+    Real s, t;                // The two parameters of the parametric eqns.
+    Real num_s, num_t, denom; // Numerator and denominator of equations.
     char code = '?';          // Return char characterizing intersection.
 
-    const real small_number = SMALLNUMBER;
+    const Real small_number = SMALLNUMBER;
 
     //
     if (a[0] == c[0] && a[1] == c[1])
@@ -680,29 +681,29 @@ char SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2
         a[0] * (d[1] - c[1]) + b[0] * (c[1] - d[1]) + d[0] * (b[1] - a[1]) + c[0] * (a[1] - b[1]);
 
     // If denom is zero, then segments are parallel: handle separately.
-    if (denom == 0) return ParallelInt(a, b, c, d, p);
+    if (denom == 0) return parallel_int(a, b, c, d, p);
 
     if (fabs(denom) < small_number)
     {
         //ok, we are using double, may need more precision
         if (sizeof(a[0]) <= sizeof(double) && sizeof(REAL) != sizeof(double))
         {
-            REAL A[2];
-            A[0] = a[0];
-            A[1] = a[1];
-            REAL B[2];
-            B[0] = b[0];
-            B[1] = b[1];
-            REAL C[2];
-            C[0] = c[0];
-            C[1] = c[1];
-            REAL D[2];
-            D[0] = d[0];
-            D[1] = d[1];
-            REAL P[2];
-            char r = SegSegInt<REAL>(A, B, C, D, P);
-            p[0] = P[0];
-            p[1] = P[1];
+            REAL precise_a[2];
+            precise_a[0] = a[0];
+            precise_a[1] = a[1];
+            REAL precise_b[2];
+            precise_b[0] = b[0];
+            precise_b[1] = b[1];
+            REAL precise_c[2];
+            precise_c[0] = c[0];
+            precise_c[1] = c[1];
+            REAL precise_d[2];
+            precise_d[0] = d[0];
+            precise_d[1] = d[1];
+            REAL precise_p[2];
+            char r = seg_seg_int<REAL>(precise_a, precise_b, precise_c, precise_d, precise_p);
+            p[0] = precise_p[0];
+            p[1] = precise_p[1];
             return r;
         }
     }
@@ -772,4 +773,4 @@ char SegSegInt(const real a[2], const real b[2], const real c[2], const real d[2
 }
 } //namespace cusg
 
-#endif //_CUSG_INTERSECTION_H_
+#endif //CUSG_INTERSECTION_H

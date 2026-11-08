@@ -40,7 +40,7 @@ std::unique_ptr<QuadTree3D> qtree_over(const std::string & path)
 {
     std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 4, 4, 15.0, 15.0), {});
     qtree->set_bottom_operator(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
-    qtree->setBotSource(0, path);
+    qtree->set_bot_source(0, path);
     return qtree;
 }
 
@@ -55,7 +55,7 @@ TEST(AsciiGrid, NodataIsLeftOutOfInterpolation)
     {
         SCOPED_TRACE(area_weighted ? "area weighted" : "bilinear");
         std::unique_ptr<QuadTree3D> qtree = qtree_over(path);
-        qtree->setBotAreaWeighted(0, area_weighted);
+        qtree->set_bot_area_weighted(0, area_weighted);
         double * bot = qtree->get_bot();
         for (int n = 0; n < qtree->nodes(); n++) EXPECT_DOUBLE_EQ(bot[n], 10.0) << n;
     }
@@ -101,7 +101,7 @@ TEST(AsciiGrid, CellOverOnlyNodataIsAnError)
     {
         SCOPED_TRACE(area_weighted ? "area weighted" : "bilinear");
         std::unique_ptr<QuadTree3D> qtree = qtree_over(path);
-        qtree->setBotAreaWeighted(0, area_weighted);
+        qtree->set_bot_area_weighted(0, area_weighted);
         EXPECT_THROW(qtree->get_bot(), GridgenError);
     }
 }
@@ -129,7 +129,7 @@ TEST(AsciiGrid, CellBeyondGridTakesEdgeValue)
     {
         SCOPED_TRACE(area_weighted ? "area weighted" : "bilinear");
         std::unique_ptr<QuadTree3D> qtree = qtree_over(path);
-        qtree->setBotAreaWeighted(0, area_weighted);
+        qtree->set_bot_area_weighted(0, area_weighted);
         double * bot = qtree->get_bot();
         for (int n = 0; n < qtree->nodes(); n++) EXPECT_DOUBLE_EQ(bot[n], 10.0) << n;
     }
@@ -162,7 +162,7 @@ TEST(AsciiGrid, AverageCoversCellThatIsNotSquare)
         std::unique_ptr<QuadTree3D> qtree =
             make_qtree(make_mfgrid(1, s.nrow, s.ncol, s.delr, s.delc), {});
         qtree->set_bottom_operator(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
-        qtree->setBotSource(0, path);
+        qtree->set_bot_source(0, path);
         double * bot = qtree->get_bot();
         for (int n = 0; n < qtree->nodes(); n++)
         {

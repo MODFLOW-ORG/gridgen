@@ -59,4 +59,4 @@ struct VPassBox
     double area;
 };
 
-void get_vertical_passes(Box * b, vector<VPTPair> & pairs, bool topToDown);
+void get_vertical_passes(Box * b, vector<VPTPair> & pairs, bool top_to_down);

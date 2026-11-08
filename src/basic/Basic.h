@@ -1,7 +1,7 @@
 
 #pragma once
-#ifndef _MATHTOOL_UTILITY
-#define _MATHTOOL_UTILITY
+#ifndef MATHTOOL_UTILITY
+#define MATHTOOL_UTILITY
 
 #include <math.h>
 #include <string.h>
@@ -27,7 +27,7 @@ namespace cusg
 
 /* Miscellaneous Scalar Math */
 //#define abs(x)      (((x) < 0) ? (-(x)) : (x))
-#define sqr(x) ((x) * (x))
+#define SQR(x) ((x) * (x))
 
 inline int round(REAL x, REAL p)
 {
@@ -51,8 +51,8 @@ inline int round(REAL v)
         return (fraction >= -0.5) ? integer : integer + 1;
 }
 
-#define sign(x) ((x) >= 0 ? 1 : -1)
-#define applysign(x, y) ((y) >= 0 ? abs(x) : -abs(x))
+#define SIGN(x) ((x) >= 0 ? 1 : -1)
+#define APPLYSIGN(x, y) ((y) >= 0 ? abs(x) : -abs(x))
 
 /* Angle Conversions & Constants */
 
@@ -67,8 +67,8 @@ inline int round(REAL v)
 #define RAD2DEG (180 / PI)
 #define DEG2RAD (PI / 180)
 
-#define DegToRad(x) ((x) * DEG2RAD)
-#define RadToDeg(x) ((x) * RAD2DEG)
+#define DEG_TO_RAD(x) ((x) * DEG2RAD)
+#define RAD_TO_DEG(x) ((x) * RAD2DEG)
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -105,4 +105,4 @@ extern "C"
 
 } //end of namespace
 
-#endif //_MATHTOOL_UTILITY
+#endif //MATHTOOL_UTILITY

@@ -29,19 +29,18 @@ struct XY
 };
 
 // a polygon from an outer ring and optional holes, vertices in the order given
-c_polygon make_polygon(const std::vector<XY> & outer,
-                       const std::vector<std::vector<XY>> & holes = {})
+Polygon make_polygon(const std::vector<XY> & outer, const std::vector<std::vector<XY>> & holes = {})
 {
-    c_polygon polygon;
+    Polygon polygon;
     for (std::size_t r = 0; r <= holes.size(); r++)
     {
         Ring ring(r == 0 ? Ring::POUT : Ring::PIN);
-        ring.beginPoly();
-        for (const XY & v : (r == 0 ? outer : holes[r - 1])) ring.addVertex(v.x, v.y);
-        ring.endPoly();
+        ring.begin_poly();
+        for (const XY & v : (r == 0 ? outer : holes[r - 1])) ring.add_vertex(v.x, v.y);
+        ring.end_poly();
         polygon.push_back(ring);
     }
-    polygon.buildBoxAndCenter();
+    polygon.build_box_and_center();
     return polygon;
 }
 
@@ -50,11 +49,11 @@ template <typename T>
 std::vector<Box *> intersect_square(T * grid, const std::vector<XY> & vertices,
                                     const std::vector<std::vector<XY>> & holes = {})
 {
-    c_polygon polygon = make_polygon(vertices, holes);
+    Polygon polygon = make_polygon(vertices, holes);
 
     GridIntersection gi(0, 0);
     gi.intersect(grid, polygon);
-    std::vector<Box *> cells = gi.getIntersections();
+    std::vector<Box *> cells = gi.get_intersections();
     polygon.destroy();
     return cells;
 }
@@ -137,7 +136,7 @@ TEST(QuadTree, RefineByPolygonEnclosingGrid)
     // a refinement polygon around the whole grid refines every cell, as one
     // crossing the grid refines the cells inside it (#53)
     std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 10, 10, 10.0, 10.0), {});
-    c_polygon polygon = make_polygon(square(-50.0, 150.0));
+    Polygon polygon = make_polygon(square(-50.0, 150.0));
     qtree->refine(polygon, 1, 0);
     polygon.destroy();
     qtree->refresh();
@@ -153,16 +152,16 @@ template <typename T>
 std::map<Box *, double> polygon_areas(T * grid, const std::vector<XY> & outer,
                                       const std::vector<std::vector<XY>> & holes, bool once = true)
 {
-    GIS_polygon polygon;
-    static_cast<c_polygon &>(polygon) = make_polygon(outer, holes);
-    RingClipper * ring_clip = convertCPolygonToClip(polygon);
+    GisPolygon polygon;
+    static_cast<Polygon &>(polygon) = make_polygon(outer, holes);
+    RingClipper * ring_clip = convert_polygon_to_clip(polygon);
 
     GridIntersection gi(0, 0);
     gi.set_save_intersection_info(true);
     gi.intersect(grid, polygon, ring_clip);
 
     std::map<Box *, double> areas;
-    for (const PolygonCellIntersectionInfo & info : gi.getPolygonIntersectionInfo())
+    for (const PolygonCellIntersectionInfo & info : gi.get_polygon_intersection_info())
     {
         if (once)
             EXPECT_EQ(areas.count(info.box), 0u)
@@ -312,7 +311,7 @@ TEST(GridIntersection, LineAlongGridLine)
     std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
     GridIntersection gi(0, 0);
     gi.intersect_segment(mfgrid.get(), LineSeg2d(95.0, 60.0, 30.0, 60.0));
-    expect_each_cell_once(gi.getIntersections(), 14);
+    expect_each_cell_once(gi.get_intersections(), 14);
 }
 
 TEST(GridIntersection, OutputShapefileRingsAreClosedAndOriented)
@@ -324,16 +323,16 @@ TEST(GridIntersection, OutputShapefileRingsAreClosedAndOriented)
     std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
     std::vector<XY> hole = square(41.0, 48.0);
     std::reverse(hole.begin(), hole.end());
-    GIS_polygon polygon;
-    static_cast<c_polygon &>(polygon) = make_polygon(square(5.0, 95.0), {hole});
-    RingClipper * ring_clip = convertCPolygonToClip(polygon);
+    GisPolygon polygon;
+    static_cast<Polygon &>(polygon) = make_polygon(square(5.0, 95.0), {hole});
+    RingClipper * ring_clip = convert_polygon_to_clip(polygon);
     GridIntersection gi(0, 0);
     gi.set_save_intersection_info(true);
     gi.intersect(mfgrid.get(), polygon, ring_clip);
 
     std::string path = testing::TempDir() + "gridgen_unit_rings";
     std::vector<std::string> attributes;
-    writePolyIntersect(&gi, path, attributes, WRITE_SHP);
+    write_poly_intersect(&gi, path, attributes, WRITE_SHP);
     ring_clip->destroy();
     delete ring_clip;
     polygon.destroy();
@@ -383,8 +382,8 @@ namespace
 {
 
 // an outer ring with a long edge that subtends a small angle from the hole
-const std::vector<XY> thin_outer = {{25.0, 72.5}, {12.5, 40.5}, {35.3, 27.5}, {50.0, 7.5}};
-const std::vector<XY> thin_hole = {{29.9, 45.0}, {25.0, 37.5}, {22.5, 37.5}};
+const std::vector<XY> THIN_OUTER = {{25.0, 72.5}, {12.5, 40.5}, {35.3, 27.5}, {50.0, 7.5}};
+const std::vector<XY> THIN_HOLE = {{29.9, 45.0}, {25.0, 37.5}, {22.5, 37.5}};
 
 } // namespace
 
@@ -401,10 +400,10 @@ TEST(GridIntersection, HoleSeenAcrossThinOuterEdge)
         if (refined)
         {
             qtree = make_qtree(mfgrid.get(), {{45.0, 45.0, 2, 0}}, true);
-            areas = polygon_areas(qtree.get(), thin_outer, {thin_hole});
+            areas = polygon_areas(qtree.get(), THIN_OUTER, {THIN_HOLE});
         }
         else
-            areas = polygon_areas(mfgrid.get(), thin_outer, {thin_hole});
+            areas = polygon_areas(mfgrid.get(), THIN_OUTER, {THIN_HOLE});
 
         double total = 0.0;
         for (const auto & a : areas) total += a.second;
@@ -426,15 +425,15 @@ TEST(PolygonChecker, HoleSeenAcrossThinOuterEdge)
 {
     // a ring inside another is read as its hole when an edge of the outer ring
     // subtends a small angle from the hole's center (#113)
-    GIS_polygon polygon;
-    static_cast<c_polygon &>(polygon) = make_polygon(thin_outer, {thin_hole});
-    vector<GIS_polygon *> polygons;
-    checkHole(polygon, polygons);
+    GisPolygon polygon;
+    static_cast<Polygon &>(polygon) = make_polygon(THIN_OUTER, {THIN_HOLE});
+    vector<GisPolygon *> polygons;
+    check_hole(polygon, polygons);
     ASSERT_EQ(polygons.size(), 1u);
     EXPECT_EQ(polygons.front()->size(), 2u);
-    EXPECT_NEAR(polygons.front()->getArea(), 664.425, 1e-3);
+    EXPECT_NEAR(polygons.front()->get_area(), 664.425, 1e-3);
     // the polygons hold the input rings, so freeing them frees the input
-    for (GIS_polygon * p : polygons)
+    for (GisPolygon * p : polygons)
     {
         p->destroy();
         delete p;

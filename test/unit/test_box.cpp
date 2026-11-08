@@ -11,16 +11,16 @@ TEST(Box, SplitCreatesFourQuarterChildren)
 {
     Box box(0.0, 0.0, 8.0, 4.0);
     ASSERT_TRUE(box.split(1e-10));
-    EXPECT_FALSE(box.isLeaf);
+    EXPECT_FALSE(box.is_leaf);
 
     // children are numbered NW, NE, SE, SW
     const double xc[4] = {-2.0, 2.0, 2.0, -2.0};
     const double yc[4] = {1.0, 1.0, -1.0, -1.0};
     for (int i = 0; i < 4; i++)
     {
-        Box * child = box.pChildren[i];
+        Box * child = box.p_children[i];
         ASSERT_NE(child, nullptr);
-        EXPECT_TRUE(child->isLeaf);
+        EXPECT_TRUE(child->is_leaf);
         EXPECT_EQ(child->depth, 1);
         EXPECT_DOUBLE_EQ(child->x, xc[i]);
         EXPECT_DOUBLE_EQ(child->y, yc[i]);
@@ -29,14 +29,14 @@ TEST(Box, SplitCreatesFourQuarterChildren)
     }
 
     // in a grid, the node group owns the children
-    for (Box * child : box.pChildren) delete child;
+    for (Box * child : box.p_children) delete child;
 }
 
 TEST(Box, SplitRefusedForLeafSmallerThanEpsilon)
 {
     Box box(0.0, 0.0, 1.0, 1.0);
     EXPECT_FALSE(box.split(2.0));
-    EXPECT_TRUE(box.isLeaf);
+    EXPECT_TRUE(box.is_leaf);
 }
 
 TEST(Box, RotateCenter)
@@ -46,7 +46,7 @@ TEST(Box, RotateCenter)
 
     // a quarter turn counterclockwise maps (x, y) to (-y, x)
     double cx, cy;
-    box.rotateCtr(0.0, 0.0, angle, cx, cy);
+    box.rotate_ctr(0.0, 0.0, angle, cx, cy);
     EXPECT_NEAR(cx, -20.0, 1e-12);
     EXPECT_NEAR(cy, 10.0, 1e-12);
 }

@@ -20,7 +20,7 @@ using namespace cusg;
 namespace
 {
 
-const char * MFG_BLOCK = "BEGIN MODFLOW_GRID mfg\n"
+const char * mfg_block = "BEGIN MODFLOW_GRID mfg\n"
                          "  ROTATION_ANGLE = 30\n"
                          "  X_OFFSET = 1000.5\n"
                          "  Y_OFFSET = 2000.25\n"
@@ -35,10 +35,10 @@ const char * MFG_BLOCK = "BEGIN MODFLOW_GRID mfg\n"
                          "  BOTTOM LAYER 2 = CONSTANT -10.\n"
                          "END MODFLOW_GRID\n";
 
-// MFG_BLOCK with one record replaced
+// mfg_block with one record replaced
 std::string mfg_block_with(const std::string & from, const std::string & to)
 {
-    std::string block = MFG_BLOCK;
+    std::string block = mfg_block;
     block.replace(block.find(from), from.size(), to);
     return block;
 }
@@ -63,22 +63,22 @@ std::string initialize_error(const std::string & definition, const std::string &
     std::istringstream dfn(definition);
     DefinitionParser parser;
     parser.parse(dfn);
-    DefinitionBlock * data = parser.getBlockData(name);
+    DefinitionBlock * data = parser.get_block_data(name);
     if (data == nullptr) return "no block " + name;
-    return error_message([&] { data->initialize(parser.getBlockData()); });
+    return error_message([&] { data->initialize(parser.get_block_data()); });
 }
 
 } // namespace
 
 TEST(DefinitionParser, ModflowGridBlock)
 {
-    std::istringstream dfn(MFG_BLOCK);
+    std::istringstream dfn(mfg_block);
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
-    ModflowGridBlock * data = dynamic_cast<ModflowGridBlock *>(parser.getBlockData("mfg"));
+    ModflowGridBlock * data = dynamic_cast<ModflowGridBlock *>(parser.get_block_data("mfg"));
     ASSERT_NE(data, nullptr);
-    ASSERT_TRUE(data->initialize(parser.getBlockData()));
+    ASSERT_TRUE(data->initialize(parser.get_block_data()));
 
     EXPECT_EQ(data->nlay, 2);
     EXPECT_EQ(data->nrow, 3);
@@ -129,7 +129,7 @@ TEST(DefinitionParser, ReferenceToAnUndefinedBlockIsAnError)
               "record MODFLOW_GRID in QUADTREE_BUILDER block qtb names block nogrid, which is "
               "not defined");
 
-    EXPECT_EQ(initialize_error(std::string(MFG_BLOCK) + "BEGIN QUADTREE_BUILDER qtb\n"
+    EXPECT_EQ(initialize_error(std::string(mfg_block) + "BEGIN QUADTREE_BUILDER qtb\n"
                                                         "  MODFLOW_GRID = mfg\n"
                                                         "  REFINEMENT_FEATURES LAYER 2 = typo\n"
                                                         "  GRID_DEFINITION_FILE = qtg.dfn\n"
@@ -155,7 +155,7 @@ TEST(DefinitionParser, ReferenceToABlockOfTheWrongTypeIsAnError)
               "record GRID in GRID_TO_SHAPEFILE block shp names ACTIVE_DOMAIN block domain, "
               "which is not a MODFLOW_GRID, QUADTREE, or QUADTREE_BUILDER block");
 
-    EXPECT_EQ(initialize_error(std::string(MFG_BLOCK) + domain +
+    EXPECT_EQ(initialize_error(std::string(mfg_block) + domain +
                                    "BEGIN QUADTREE_BUILDER qtb\n"
                                    "  MODFLOW_GRID = mfg\n"
                                    "  REFINEMENT_FEATURES LAYER 1 = domain\n"
@@ -175,9 +175,9 @@ TEST(DefinitionParser, ArrayErrors)
         std::istringstream dfn(mfg_block_with("CONSTANT 25.", delc));
         DefinitionParser parser;
         ASSERT_TRUE(parser.parse(dfn));
-        ModflowGridBlock * data = dynamic_cast<ModflowGridBlock *>(parser.getBlockData("mfg"));
+        ModflowGridBlock * data = dynamic_cast<ModflowGridBlock *>(parser.get_block_data("mfg"));
         ASSERT_NE(data, nullptr);
-        EXPECT_THROW(data->initialize(parser.getBlockData()), GridgenError);
+        EXPECT_THROW(data->initialize(parser.get_block_data()), GridgenError);
         EXPECT_EQ(data->delr, nullptr);
         EXPECT_TRUE(data->bot.empty());
     }
@@ -185,10 +185,10 @@ TEST(DefinitionParser, ArrayErrors)
 
 TEST(DefinitionParser, UnknownBlockIsNull)
 {
-    std::istringstream dfn(MFG_BLOCK);
+    std::istringstream dfn(mfg_block);
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
-    EXPECT_EQ(parser.getBlockData("missing"), nullptr);
+    EXPECT_EQ(parser.get_block_data("missing"), nullptr);
 }
 
 TEST(DefinitionParser, LayerRecordsReadIndependently)
@@ -204,7 +204,8 @@ TEST(DefinitionParser, LayerRecordsReadIndependently)
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
-    QuadtreeBuilderBlock * data = dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
+    QuadtreeBuilderBlock * data =
+        dynamic_cast<QuadtreeBuilderBlock *>(parser.get_block_data("qtb"));
     ASSERT_NE(data, nullptr);
 
     EXPECT_EQ(data->active_domain_str.count(0), 0u);
@@ -235,7 +236,7 @@ TEST(DefinitionParser, SurfaceRecordsAfterGapAreRead)
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
-    QuadtreeBuilderBlock * qtb = dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
+    QuadtreeBuilderBlock * qtb = dynamic_cast<QuadtreeBuilderBlock *>(parser.get_block_data("qtb"));
     ASSERT_NE(qtb, nullptr);
     ASSERT_EQ(qtb->top_str.count(2), 1u);
     ASSERT_EQ(qtb->bot_str.count(2), 1u);
@@ -243,7 +244,7 @@ TEST(DefinitionParser, SurfaceRecordsAfterGapAreRead)
     EXPECT_EQ(qtb->bot_str.count(0), 0u);
     EXPECT_EQ(qtb->active_domain_str.size(), 1u);
 
-    QuadtreeBlock * qtg = dynamic_cast<QuadtreeBlock *>(parser.getBlockData("qtg"));
+    QuadtreeBlock * qtg = dynamic_cast<QuadtreeBlock *>(parser.get_block_data("qtg"));
     ASSERT_NE(qtg, nullptr);
     EXPECT_EQ(qtg->top_str.count(0), 0u);
     ASSERT_EQ(qtg->top_str.count(1), 1u);
@@ -264,7 +265,8 @@ TEST(DefinitionParser, RefinementAliasesAndTopOnlyAreRead)
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
-    QuadtreeBuilderBlock * data = dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
+    QuadtreeBuilderBlock * data =
+        dynamic_cast<QuadtreeBuilderBlock *>(parser.get_block_data("qtb"));
     ASSERT_NE(data, nullptr);
 
     ASSERT_EQ(data->refine_by_features_str.count(0), 1u);
@@ -284,7 +286,7 @@ QuadtreeBuilderBlock * parse_builder(DefinitionParser & parser, const std::strin
                            "  GRID_DEFINITION_FILE = qtg.dfn\n" +
                            records + "END QUADTREE_BUILDER\n");
     EXPECT_TRUE(parser.parse(dfn));
-    return dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
+    return dynamic_cast<QuadtreeBuilderBlock *>(parser.get_block_data("qtb"));
 }
 
 RefinementFeaturesBlock * parse_refinement(DefinitionParser & parser, const std::string & records)
@@ -294,7 +296,7 @@ RefinementFeaturesBlock * parse_refinement(DefinitionParser & parser, const std:
                            "  FEATURE_TYPE = point\n" +
                            records + "END REFINEMENT_FEATURES\n");
     EXPECT_TRUE(parser.parse(dfn));
-    return dynamic_cast<RefinementFeaturesBlock *>(parser.getBlockData("rf"));
+    return dynamic_cast<RefinementFeaturesBlock *>(parser.get_block_data("rf"));
 }
 
 } // namespace
@@ -350,7 +352,7 @@ TEST(DefinitionParser, RefinementArrayIsReportedAsIgnored)
     {
         DefinitionParser parser;
         parse_builder(parser, std::string("  ") + name + " LAYER 1 = OPEN/CLOSE refine.dat\n");
-        const std::list<std::string> & warnings = parser.getWarnings();
+        const std::list<std::string> & warnings = parser.get_warnings();
         ASSERT_EQ(warnings.size(), 1u) << name;
         EXPECT_NE(warnings.front().find(std::string(name) + " LAYER 1"), std::string::npos)
             << warnings.front();
@@ -361,7 +363,7 @@ TEST(DefinitionParser, RefinementArrayIsReportedAsIgnored)
 TEST(DefinitionParser, RefinementArrayFileIsNotRead)
 {
     // an ignored refinement array whose file does not exist does not stop initialization (#93)
-    std::istringstream dfn(std::string(MFG_BLOCK) +
+    std::istringstream dfn(std::string(mfg_block) +
                            "BEGIN QUADTREE_BUILDER qtb\n"
                            "  MODFLOW_GRID = mfg\n"
                            "  GRID_DEFINITION_FILE = qtg.dfn\n"
@@ -369,9 +371,10 @@ TEST(DefinitionParser, RefinementArrayFileIsNotRead)
                            "END QUADTREE_BUILDER\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
-    QuadtreeBuilderBlock * data = dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
+    QuadtreeBuilderBlock * data =
+        dynamic_cast<QuadtreeBuilderBlock *>(parser.get_block_data("qtb"));
     ASSERT_NE(data, nullptr);
-    EXPECT_TRUE(data->initialize(parser.getBlockData()));
+    EXPECT_TRUE(data->initialize(parser.get_block_data()));
 }
 
 TEST(DefinitionParser, UnrecognizedRecordIsReported)
@@ -382,7 +385,7 @@ TEST(DefinitionParser, UnrecognizedRecordIsReported)
                           "  TOP LAYER 1 = REPLICATE mfg\n"
                           "  REFINEMENT_FEATURES LAYER 2 = wells\n"
                           "  HORIZONTAL_SMOOTHING_LEVLE = 2\n");
-    const std::list<std::string> & warnings = parser.getWarnings();
+    const std::list<std::string> & warnings = parser.get_warnings();
     ASSERT_EQ(warnings.size(), 1u);
     EXPECT_NE(warnings.front().find("HORIZONTAL_SMOOTHING_LEVLE"), std::string::npos)
         << warnings.front();
@@ -403,7 +406,7 @@ TEST(DefinitionParser, IntersectionVtkfileIsReportedAsIgnored)
                            "END GRID_INTERSECTION\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
-    const std::list<std::string> & warnings = parser.getWarnings();
+    const std::list<std::string> & warnings = parser.get_warnings();
     ASSERT_EQ(warnings.size(), 1u);
     EXPECT_NE(warnings.front().find("OUTPUT_VTKFILE"), std::string::npos) << warnings.front();
     EXPECT_NE(warnings.front().find("is ignored"), std::string::npos) << warnings.front();
@@ -444,16 +447,16 @@ std::string export_blocks(const std::string & grid)
 TEST(DefinitionParser, QuadtreeExportRecordsAreReportedAsIgnored)
 {
     // a quadtree grid is written with its own numbering and without inactive cells (#102)
-    std::istringstream dfn(std::string(MFG_BLOCK) + export_blocks("qtb"));
+    std::istringstream dfn(std::string(mfg_block) + export_blocks("qtb"));
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
     const char * blocks[] = {"shp", "vtk"};
     for (const char * name : blocks)
     {
-        DefinitionBlock * data = parser.getBlockData(name);
+        DefinitionBlock * data = parser.get_block_data(name);
         ASSERT_NE(data, nullptr) << name;
-        ASSERT_TRUE(data->initialize(parser.getBlockData())) << name;
-        const std::list<std::string> & warnings = data->getWarnings();
+        ASSERT_TRUE(data->initialize(parser.get_block_data())) << name;
+        const std::list<std::string> & warnings = data->get_warnings();
         ASSERT_EQ(warnings.size(), 2u) << name;
         EXPECT_NE(warnings.front().find("NODE_NUMBERING"), std::string::npos) << warnings.front();
         EXPECT_NE(warnings.back().find("WITHOUT_INACTIVE"), std::string::npos) << warnings.back();
@@ -463,23 +466,23 @@ TEST(DefinitionParser, QuadtreeExportRecordsAreReportedAsIgnored)
 TEST(DefinitionParser, ModflowGridExportRecordsAreNotReported)
 {
     // the same records are used for a MODFLOW_GRID (#102)
-    std::istringstream dfn(std::string(MFG_BLOCK) + export_blocks("mfg"));
+    std::istringstream dfn(std::string(mfg_block) + export_blocks("mfg"));
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
     const char * blocks[] = {"shp", "vtk"};
     for (const char * name : blocks)
     {
-        DefinitionBlock * data = parser.getBlockData(name);
+        DefinitionBlock * data = parser.get_block_data(name);
         ASSERT_NE(data, nullptr) << name;
-        ASSERT_TRUE(data->initialize(parser.getBlockData())) << name;
-        EXPECT_TRUE(data->getWarnings().empty()) << name;
+        ASSERT_TRUE(data->initialize(parser.get_block_data())) << name;
+        EXPECT_TRUE(data->get_warnings().empty()) << name;
     }
 }
 
 TEST(DefinitionParser, QuadtreeExportWithoutTheRecordsIsNotReported)
 {
     // only records that are given are reported (#102)
-    std::istringstream dfn(std::string(MFG_BLOCK) + "BEGIN QUADTREE_BUILDER qtb\n"
+    std::istringstream dfn(std::string(mfg_block) + "BEGIN QUADTREE_BUILDER qtb\n"
                                                     "  MODFLOW_GRID = mfg\n"
                                                     "  GRID_DEFINITION_FILE = qtg.dfn\n"
                                                     "END QUADTREE_BUILDER\n"
@@ -490,10 +493,10 @@ TEST(DefinitionParser, QuadtreeExportWithoutTheRecordsIsNotReported)
                                                     "END GRID_TO_SHAPEFILE\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
-    DefinitionBlock * data = parser.getBlockData("shp");
+    DefinitionBlock * data = parser.get_block_data("shp");
     ASSERT_NE(data, nullptr);
-    ASSERT_TRUE(data->initialize(parser.getBlockData()));
-    EXPECT_TRUE(data->getWarnings().empty());
+    ASSERT_TRUE(data->initialize(parser.get_block_data()));
+    EXPECT_TRUE(data->get_warnings().empty());
 }
 
 // a block of type T, named after its type, with no records
@@ -521,7 +524,7 @@ TEST(DefinitionParser, RunningABlockThatIsNotAnActionWarns)
     for (auto & [block, is_action] : blocks)
     {
         clear_warnings();
-        block->warnIfNotAction();
+        block->warn_if_not_action();
         if (is_action)
         {
             EXPECT_TRUE(get_warnings().empty()) << block->label();

@@ -27,7 +27,7 @@ namespace cusg
     reference to them in the nodearray, which is a numpy array.
 
     Added a removed nodes capability so that when a node is removed,
-    the space in the nodegroup array can be reused.  The add_node
+    the space in the node_group array can be reused.  The add_node
     method first checks to see if there are any removed node spaces
     that can be used and it uses them if possible.
 
@@ -42,10 +42,10 @@ NodeGroup::NodeGroup(Grid * g)
     grid = g;
     nlay = 1; //number of layers (? why is this here)
     rebuild_box_index_array = true;
-    nextnodenumber = 0;
-    chunksize = 10;
-    total_leaf_number = 0;
-    active_leaf_number = 0;
+    next_node_number = 0;
+    chunk_size = 10;
+    m_total_leaf_number = 0;
+    m_active_leaf_number = 0;
 }
 
 int NodeGroup::add(Box * box)
@@ -64,15 +64,15 @@ int NodeGroup::add(Box * box)
         push_back(box);
     }
 
-    owned_boxes.emplace_back(box);
+    m_owned_boxes.emplace_back(box);
     box->id = box_index; //box_index is the position of the box in the array (group)
 
     rebuild_box_index_array = true;
 
-    if (box->isLeaf)
+    if (box->is_leaf)
     {
-        total_leaf_number++;
-        if (box->active) active_leaf_number += 1;
+        m_total_leaf_number++;
+        if (box->active) m_active_leaf_number += 1;
     }
 
     if (box->layer > nlay) nlay = box->layer;
@@ -83,17 +83,17 @@ int NodeGroup::add(Box * box)
 void NodeGroup::share(const NodeGroup & other)
 {
     vector<Box *>::operator=(other);
-    owned_boxes.clear();
+    m_owned_boxes.clear();
     grid = other.grid;
     box_index_array = other.box_index_array;
     layer_cell_counts = other.layer_cell_counts;
     nlay = other.nlay;
     rebuild_box_index_array = other.rebuild_box_index_array;
-    nextnodenumber = other.nextnodenumber;
-    chunksize = other.chunksize;
+    next_node_number = other.next_node_number;
+    chunk_size = other.chunk_size;
     removed_nodes = other.removed_nodes;
-    total_leaf_number = other.total_leaf_number;
-    active_leaf_number = other.active_leaf_number;
+    m_total_leaf_number = other.m_total_leaf_number;
+    m_active_leaf_number = other.m_active_leaf_number;
 }
 
 /*!
@@ -126,14 +126,14 @@ int * NodeGroup::get_layer_cell_counts()
 NodeGroup::size_type NodeGroup::node_size()
 {
     if (rebuild_box_index_array) build_node_info();
-    return active_leaf_number;
+    return m_active_leaf_number;
 }
 
 ///get the total number of leaf size including inactive leaves
 NodeGroup::size_type NodeGroup::get_total_leaf_size()
 {
     if (rebuild_box_index_array) build_node_info();
-    return total_leaf_number;
+    return m_total_leaf_number;
 }
 
 void NodeGroup::disable_nodes_in_layer(int layer)
@@ -154,34 +154,34 @@ void NodeGroup::build_node_info()
 {
 
     //count the number of leaf nodes
-    this->total_leaf_number = 0;
-    this->active_leaf_number = 0;
+    this->m_total_leaf_number = 0;
+    this->m_active_leaf_number = 0;
     for (auto & i : *this)
     {
         if (i == nullptr) continue;
-        if (i->isLeaf)
+        if (i->is_leaf)
         {
-            total_leaf_number++;
-            if (i->active) active_leaf_number += 1;
+            m_total_leaf_number++;
+            if (i->active) m_active_leaf_number += 1;
         }
     }
 
     //reset things...
-    box_index_array.assign(this->active_leaf_number, 0);
+    box_index_array.assign(this->m_active_leaf_number, 0);
     layer_cell_counts.assign(nlay, 0); // number of nodes per layer
 
     //number the nodes, starting with the lowest layer number
     //this is the id of the node in CSR/COO
-    //only leaves have valid node number
+    //only leaves have a cell number
     grid->number_nodes();
 
-    //node number is ordered by layer
-    //node id is the position in this class
+    //cell numbers are ordered by layer
+    //a box index is the position in this group
     for (auto box : *this)
     {
         if (box == nullptr) continue;
 
-        if (box->isLeaf)
+        if (box->is_leaf)
         {
             if (box->active)
             {

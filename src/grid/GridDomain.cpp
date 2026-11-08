@@ -31,7 +31,7 @@ void GridDomain::build(Grid * grid, int layer, ActiveDomainBlock * data)
     ModflowGrid * rmfgrid = mfgrid;
     if (rmfgrid == nullptr)
     {
-        if (qtgrid != nullptr) rmfgrid = qtgrid->getModflowGrid();
+        if (qtgrid != nullptr) rmfgrid = qtgrid->get_modflow_grid();
     }
     if (rmfgrid == nullptr)
         throw GridgenError("the grid of " + data->label() +
@@ -51,7 +51,7 @@ void GridDomain::build(Grid * grid, int layer, ActiveDomainBlock * data)
     GridIntersection gi(0, layer);
     if (data->feature_type == "line")
     {
-        vector<GIS_polyline> & arcs = shp_reader.getArcList();
+        vector<GisPolyline> & arcs = shp_reader.get_arc_list();
         //subdivide the qtree using the features
         nfeatures = arcs.size();
         for (int j = 0; j < nfeatures; j++)
@@ -59,14 +59,14 @@ void GridDomain::build(Grid * grid, int layer, ActiveDomainBlock * data)
             if (angle != 0) arcs[j].rotate(cx, cy, -angle);
 
             //intersect returns true even for a segment outside the grid, so count the cells found
-            int ncells = gi.getIntersectionSize();
-            LinkedVertex * ptr = arcs[j].getHead();
+            int ncells = gi.get_intersection_size();
+            LinkedVertex * ptr = arcs[j].get_head();
             do
             {
-                LinkedVertex * next = ptr->getNext();
+                LinkedVertex * next = ptr->get_next();
                 if (next != nullptr)
                 {
-                    LineSeg2d line(ptr->getPos(), next->getPos());
+                    LineSeg2d line(ptr->get_pos(), next->get_pos());
 
                     if (qtgrid != nullptr)
                         gi.intersect_segment(qtgrid, line);
@@ -77,14 +77,14 @@ void GridDomain::build(Grid * grid, int layer, ActiveDomainBlock * data)
                 }
                 ptr = next;
             } while (ptr != nullptr);
-            if (gi.getIntersectionSize() == ncells) noutside++;
+            if (gi.get_intersection_size() == ncells) noutside++;
             if (angle != 0) arcs[j].rotate(cx, cy, angle);
         }
     } //end if
     else if (data->feature_type == "polygon")
     {
         gi.set_include_poly_boundary_flag(data->include_boundary);
-        vector<GIS_polygon> & polygons = shp_reader.getPolyList();
+        vector<GisPolygon> & polygons = shp_reader.get_poly_list();
         nfeatures = polygons.size();
 
         for (int j = 0; j < nfeatures; j++)
@@ -96,12 +96,12 @@ void GridDomain::build(Grid * grid, int layer, ActiveDomainBlock * data)
             }
 
             //make sure that bounding box is computed
-            polygons[j].buildBoxAndCenter();
+            polygons[j].build_box_and_center();
 
             //determine intersection
             bool intersects = false;
             if (qtgrid != nullptr)
-                intersects = gi.intersect(qtgrid, (c_polygon &)polygons[j]);
+                intersects = gi.intersect(qtgrid, (Polygon &)polygons[j]);
             else if (mfgrid != nullptr)
                 intersects = gi.intersect(mfgrid, polygons[j]);
             else if (mf2dqtgrid != nullptr)
@@ -117,7 +117,7 @@ void GridDomain::build(Grid * grid, int layer, ActiveDomainBlock * data)
     }
     else if (data->feature_type == "point")
     {
-        vector<GIS_Point2d> & pts = shp_reader.getPointList();
+        vector<GisPoint2d> & pts = shp_reader.get_point_list();
 
         //subdivide the qtree using the features
         nfeatures = pts.size();
@@ -146,7 +146,7 @@ void GridDomain::build(Grid * grid, int layer, ActiveDomainBlock * data)
     warn_features_outside(noutside, nfeatures, data->shapefile, block, layer,
                           "no cells are made active by them");
 
-    vector<Box *> & boxes = gi.getIntersections();
+    vector<Box *> & boxes = gi.get_intersections();
     domain_boxes.insert(domain_boxes.end(), boxes.begin(), boxes.end());
 
     //now go through the intersections and disable the boxes
