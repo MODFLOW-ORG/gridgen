@@ -1,14 +1,14 @@
 
 #include "polygon.h"
 #include <vector>
-#include "BoxPlyClip.h"
+#include "RingClipper.h"
 using namespace cusg;
 using namespace std;
 
 //check the validity of the polygon, whether the holes are inside out-boundary
 //return true: if the polygon is good
 //return false: if
-bool CPlyEnclose(const c_ply & ply, const Point2d & point);
+bool ring_encloses(const Ring & ring, const Point2d & point);
 
 bool checkHole(GIS_polygon & polygon, vector<GIS_polygon *> & polygons);
 

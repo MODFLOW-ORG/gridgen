@@ -21,8 +21,8 @@ namespace cusg
 class Quadtree_Builder
 {
 public:
-    ///build quadtree from quadtree_builder_raw_data
-    void build(QuadTree3D * qtree, quadtree_builder_raw_data & rawdata);
+    ///build quadtree from QuadtreeBuilderBlock
+    void build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata);
 
 protected:
     ///analyze the thickness of the top and bottom elevations

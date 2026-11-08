@@ -12,7 +12,7 @@ using namespace std;
 
 namespace cusg
 {
-class BoxPlyClip;
+class RingClipper;
 
 struct VNode
 {
@@ -84,11 +84,11 @@ struct VNode
     }
 };
 
-class BoxPlyClip
+class RingClipper
 {
 public:
-    BoxPlyClip(void);
-    ~BoxPlyClip(void);
+    RingClipper(void);
+    ~RingClipper(void);
 
     void destroy();
     void destroy(VNode * head);
@@ -102,9 +102,9 @@ public:
     VNode * next(VNode * v);
 
     //clip using scanning line
-    void clip(double line_coordinate, bool isX, bool isBigger, list<BoxPlyClip *> & clips);
+    void clip(double line_coordinate, bool isX, bool isBigger, list<RingClipper *> & clips);
     //clip using a box
-    void clip(double xmin, double xmax, double ymin, double ymax, list<BoxPlyClip *> & clips);
+    void clip(double xmin, double xmax, double ymin, double ymax, list<RingClipper *> & clips);
 
     //set intersection based on the scanning line
     int setIntersection(VNode * start_vertex, double line_coordinate, bool isX, bool isBigger,
@@ -112,25 +112,25 @@ public:
 
     //collect
     void collectPolygonsInInterval(bool isX, bool isBigger, vector<VNode *> & line_vertices,
-                                   list<BoxPlyClip *> & clips, int from, int to, bool forward);
+                                   list<RingClipper *> & clips, int from, int to, bool forward);
 
     //collect polygon results
     void collectPolygons(double line_coordinate, bool isX, bool isBigger,
                          vector<int> & line_vertex_counts, vector<VNode *> & line_vertices,
-                         list<BoxPlyClip *> & clips);
-    //collect one ply
-    //BoxPlyClip* collectOnePly(vector<VNode*>& line_vertices, int start_index, int end_index, bool isNextOrder);
-    void collectOnePly(vector<VNode *> & line_vertices, int start_index, int end_index,
-                       bool isNextOrder, list<BoxPlyClip *> & clip_results, bool isX,
-                       bool isBigger);
+                         list<RingClipper *> & clips);
+    //collect one ring
+    //RingClipper* collect_ring(vector<VNode*>& line_vertices, int start_index, int end_index, bool isNextOrder);
+    void collect_ring(vector<VNode *> & line_vertices, int start_index, int end_index,
+                      bool isNextOrder, list<RingClipper *> & clip_results, bool isX,
+                      bool isBigger);
 
     void collectSecondPart(vector<VNode *> & line_vertices, int start_index, int end_index,
                            VNode * start_node, VNode * end_node, bool forward, int vertex_count,
-                           list<BoxPlyClip *> & clip_results, bool isX, bool isBigger,
+                           list<RingClipper *> & clip_results, bool isX, bool isBigger,
                            vector<VNode *> & secondHalf);
 
-    void constructClipPly(vector<VNode *> & firstHalf, vector<VNode *> & secondHalf,
-                          list<BoxPlyClip *> & clip_results);
+    void construct_clip_rings(vector<VNode *> & firstHalf, vector<VNode *> & secondHalf,
+                              list<RingClipper *> & clip_results);
 
     VNode * collectAlongWay(vector<VNode *> & vertices, VNode * start, bool forward);
     //unprocessed
@@ -138,29 +138,29 @@ public:
     VNode * copy(const VNode * v);
 
     //this vector stores the array of holes
-    VNode * first;      //mark the outboundary
-    list<VNode *> plys; //make sure the order, out boundary is the first one
+    VNode * first;       //mark the outboundary
+    list<VNode *> rings; //make sure the order, out boundary is the first one
 
     //new added vertices
     list<VNode *> added_vertices;
     //influenced vertices
     list<VNode *> changed_vertices;
 };
-//convert the ply to BoxPlyClip
-BoxPlyClip * convertPlyToClip(const c_ply & ply);
+//convert the ring to RingClipper
+RingClipper * convert_ring_to_clip(const Ring & ring);
 
-//convert BoxPlyClip to c_ply
-//void convertClipToPly(BoxPlyClip* tcp, c_ply& ply);
+//convert RingClipper to Ring
+//void convert_clip_to_ring(RingClipper* tcp, Ring& ring);
 
-void convertClipToPly(VNode * first_vertex, c_ply & ply);
+void convert_clip_to_ring(VNode * first_vertex, Ring & ring);
 
-BoxPlyClip * convertCPolygonToClip(const GIS_polygon & polygon);
+RingClipper * convertCPolygonToClip(const GIS_polygon & polygon);
 
-BoxPlyClip * convertSimplePolygonToClip(const c_polygon & polygon);
+RingClipper * convertSimplePolygonToClip(const c_polygon & polygon);
 
-void convertClipToPolygon(BoxPlyClip * ply_clip, GIS_polygon * polygon);
+void convertClipToPolygon(RingClipper * ring_clip, GIS_polygon * polygon);
 
-VNode * copyOnePly(VNode * head, bool bSetVisited = false);
+VNode * copy_ring(VNode * head, bool bSetVisited = false);
 
 double getRotAngle(Vector2d & v1, Vector2d & v2);
 

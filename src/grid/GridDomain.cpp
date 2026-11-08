@@ -16,7 +16,7 @@
 namespace cusg
 {
 
-void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
+void GridDomain::build(Grid * grid, int layer, ActiveDomainBlock * data)
 {
     //check the refinement rules
     map<string, ShapeReader> shp_readers;
@@ -37,7 +37,7 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
         throw GridgenError("the grid of " + data->label() +
                            " is neither a MODFLOW grid nor a quadtree grid");
     double cx, cy, angle;
-    rmfgrid->getRotatePara(cx, cy, angle);
+    rmfgrid->get_rotation(cx, cy, angle);
 
     //read from shapefile
     string block = "ACTIVE_DOMAIN " + data->name;
@@ -51,7 +51,7 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
     GridIntersection gi(0, layer);
     if (data->feature_type == "line")
     {
-        vector<GIS_plyline> & arcs = shp_reader.getArcList();
+        vector<GIS_polyline> & arcs = shp_reader.getArcList();
         //subdivide the qtree using the features
         nfeatures = arcs.size();
         for (int j = 0; j < nfeatures; j++)
@@ -60,20 +60,20 @@ void GridDomain::build(Grid * grid, int layer, active_domain_raw_data * data)
 
             //intersect returns true even for a segment outside the grid, so count the cells found
             int ncells = gi.getIntersectionSize();
-            ply_vertex * ptr = arcs[j].getHead();
+            LinkedVertex * ptr = arcs[j].getHead();
             do
             {
-                ply_vertex * next = ptr->getNext();
+                LinkedVertex * next = ptr->getNext();
                 if (next != nullptr)
                 {
                     LineSeg2d line(ptr->getPos(), next->getPos());
 
                     if (qtgrid != nullptr)
-                        gi.intersect(qtgrid, line);
+                        gi.intersect_segment(qtgrid, line);
                     else if (mfgrid != nullptr)
-                        gi.intersect(mfgrid, line);
+                        gi.intersect_segment(mfgrid, line);
                     else if (mf2dqtgrid != nullptr)
-                        gi.intersect(mf2dqtgrid, line);
+                        gi.intersect_segment(mf2dqtgrid, line);
                 }
                 ptr = next;
             } while (ptr != nullptr);

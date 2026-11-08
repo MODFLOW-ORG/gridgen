@@ -20,18 +20,18 @@ namespace gridgen_test
 
 using namespace cusg;
 
-using Ring = std::vector<std::pair<double, double>>;
+using Vertices = std::vector<std::pair<double, double>>;
 
 // a closed square ring with its lower left corner at (x0, y0)
-inline Ring square(double x0, double y0, double size)
+inline Vertices square(double x0, double y0, double size)
 {
     return {{x0, y0}, {x0, y0 + size}, {x0 + size, y0 + size}, {x0 + size, y0}, {x0, y0}};
 }
 
 // write a shapefile of one shape for each ring, each with an integer field
 // LEVEL of 1 unless fields is false
-inline std::string write_shapefile(const std::string & name, int type,
-                                   const std::vector<Ring> & rings, bool fields = true)
+inline std::string write_test_shapefile(const std::string & name, int type,
+                                        const std::vector<Vertices> & rings, bool fields = true)
 {
     std::string path = testing::TempDir() + name;
     SHPHandle shp = SHPCreate(path.c_str(), type);
@@ -80,7 +80,7 @@ inline std::string write_shapefile(const std::string & name, int type,
 // shape, and its LEVEL
 struct Shape
 {
-    std::vector<Ring> parts;
+    std::vector<Vertices> parts;
     int level;
 };
 
@@ -99,7 +99,7 @@ inline std::string write_shapes(const std::string & name, int type,
     {
         std::vector<double> x, y;
         std::vector<int> starts, part_types;
-        for (const Ring & part : shapes[i].parts)
+        for (const Vertices & part : shapes[i].parts)
         {
             starts.push_back(static_cast<int>(x.size()));
             part_types.push_back(SHPP_OUTERRING);
@@ -164,7 +164,7 @@ inline void build_qtree(const std::string & dfn_text, int * nodes = nullptr,
     std::istringstream dfn(dfn_text);
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
-    auto * data = dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+    auto * data = dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
     ASSERT_NE(data, nullptr);
     ASSERT_TRUE(data->initialize(parser.getBlockData()));
     auto * qtree = dynamic_cast<QuadTree3D *>(data->build());
@@ -175,7 +175,7 @@ inline void build_qtree(const std::string & dfn_text, int * nodes = nullptr,
         cells->clear();
         for (int n = 0; n < qtree->nodes(); n++)
         {
-            Box * box = qtree->get_nodeobj(n);
+            Box * box = qtree->get_cell_box(n);
             cells->emplace_back(box->depth, box->x, box->y);
         }
     }

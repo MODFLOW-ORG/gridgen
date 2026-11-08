@@ -61,8 +61,8 @@ public:
     bool read(const string & filename);
 
     //get poly/arc/pts
-    vector<GIS_polygon> & getPolyList() { return m_ply_list; }
-    vector<GIS_plyline> & getArcList() { return m_arc_list; }
+    vector<GIS_polygon> & getPolyList() { return m_polygon_list; }
+    vector<GIS_polyline> & getArcList() { return m_arc_list; }
     vector<GIS_Point2d> & getPointList() { return m_pt_list; }
 
     //set tags for getting information from database
@@ -77,16 +77,16 @@ public:
     vector<ShapeLogField> & getLogicalFields() { return m_logFlds; }
 
 private:
-    void add_ply(c_ply & plys, int iShape);
+    void add_polygon(Ring & ring, int iShape);
 
-    void readPly(SHPObject * psShape, int iShape);
+    void read_polygon(SHPObject * psShape, int iShape);
     void readArc(SHPObject * psShape, int iShape);
     void readPts(SHPObject * psShape, int iShape);
     void readMultiPatch(SHPObject * psShape, int iShape);
 
-    vector<GIS_polygon> m_ply_list; //a list of polygons
-    vector<GIS_plyline> m_arc_list; //a list of arcs
-    vector<GIS_Point2d> m_pt_list;  //a list of points
+    vector<GIS_polygon> m_polygon_list; //a list of polygons
+    vector<GIS_polyline> m_arc_list;    //a list of arcs
+    vector<GIS_Point2d> m_pt_list;      //a list of points
     string base_elevation_tag;
     string height_tag;
 

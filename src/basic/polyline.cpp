@@ -9,13 +9,13 @@ namespace cusg
 {
 
 // clean up the space allocated
-void c_plyline::destroy()
+void Polyline::destroy()
 {
     if (head == nullptr) return;
-    ply_vertex * ptr = head;
+    LinkedVertex * ptr = head;
     do
     {
-        ply_vertex * n = ptr->getNext();
+        LinkedVertex * n = ptr->getNext();
         delete ptr;
         ptr = n;
     } while (ptr != nullptr);
@@ -25,14 +25,14 @@ void c_plyline::destroy()
 }
 
 // Create a empty polygon
-void c_plyline::beginPoly()
+void Polyline::beginPoly()
 {
     head = tail = nullptr;
     all.clear();
 }
 
 // Add a vertex to the polygonal chain
-void c_plyline::addVertex(double x, double y, bool remove_duplicate)
+void Polyline::addVertex(double x, double y, bool remove_duplicate)
 {
     Point2d pt(x, y);
 
@@ -41,29 +41,29 @@ void c_plyline::addVertex(double x, double y, bool remove_duplicate)
         if (tail->getPos() == pt && remove_duplicate) return; //don't add
     }
 
-    ply_vertex * v = new ply_vertex(pt);
+    LinkedVertex * v = new LinkedVertex(pt);
     if (tail != nullptr)
     {
         tail->setNext(v);
     }
     tail = v;
     if (head == nullptr) head = tail;
-    v->setVID(all.size()); //id of the vertex in this ply
+    v->setVID(all.size()); //id of the vertex in this ring
     all.push_back(v);
 }
 
 // finish building the polygon
-void c_plyline::endPoly()
+void Polyline::endPoly()
 {
     doInit();
 }
 
 // initialize property of the this polychain
 // Compute normals and find reflective vertices
-void c_plyline::doInit()
+void Polyline::doInit()
 {
     //compute normals
-    ply_vertex * ptr = head;
+    LinkedVertex * ptr = head;
     do
     {
         ptr->computeExtraInfo();
@@ -73,11 +73,11 @@ void c_plyline::doInit()
 
 ///////////////////////////////////////////////////////////////////////////
 
-void c_plyline::build_all()
+void Polyline::build_all()
 {
     uint vid = 0;
     all.clear();
-    ply_vertex * ptr = head;
+    LinkedVertex * ptr = head;
     do
     {
         ptr->setVID(vid++);
@@ -87,7 +87,7 @@ void c_plyline::build_all()
 }
 
 //return the i-th line segment from this polyline
-GIS_LineSeg2d GIS_plyline::getLineSegment(int i)
+GIS_LineSeg2d GIS_polyline::getLineSegment(int i)
 {
     int vsize = getSize();
     if (i >= vsize)
@@ -107,30 +107,30 @@ GIS_LineSeg2d GIS_plyline::getLineSegment(int i)
     return line;
 }
 
-void GIS_plyline::computeGeodesicDist()
+void GIS_polyline::computeGeodesicDist()
 {
     int vsize = getSize();
     geodesic_dist = vector<double>(vsize, 0);
 
-    ply_vertex * ptr = head->getNext();
+    LinkedVertex * ptr = head->getNext();
     double dist = 0;
     for (int i = 1; i < vsize; i++)
     {
-        ply_vertex * pre = ptr->getPre();
+        LinkedVertex * pre = ptr->getPre();
         dist += (ptr->getPos() - pre->getPos()).norm();
         geodesic_dist[i] = dist;
         ptr = ptr->getNext();
     }
 }
 //
-// Compute the center and the box of a list of plys
+// Compute the center and the box of a list of rings
 //
 
 //
 //
 // IO operators
 //
-istream & operator>>(istream & is, c_plyline & poly)
+istream & operator>>(istream & is, Polyline & poly)
 {
     int vsize;
     is >> vsize;
@@ -160,10 +160,10 @@ istream & operator>>(istream & is, c_plyline & poly)
     return is;
 }
 
-void c_plyline::rotate(double cx, double cy, double angle)
+void Polyline::rotate(double cx, double cy, double angle)
 {
-    ply_vertex * head = this->getHead();
-    ply_vertex * p = head;
+    LinkedVertex * head = this->getHead();
+    LinkedVertex * p = head;
     do
     {
         p->rotate(cx, cy, angle);

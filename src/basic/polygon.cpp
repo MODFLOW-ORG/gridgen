@@ -10,14 +10,14 @@ namespace cusg
 //    c_polygon& getP(){ return g_P; }
 //    c_polygon& getQ(){ return g_Q; }
 
-ply_vertex::~ply_vertex()
+LinkedVertex::~LinkedVertex()
 {
     //doing nothing for now
 }
 
 // - compute normal
 // - check if the vertex is reflex or not
-void ply_vertex::computeExtraInfo()
+void LinkedVertex::computeExtraInfo()
 {
     reflex = true;
 
@@ -61,7 +61,7 @@ void ply_vertex::computeExtraInfo()
     } //end if(next!=NULL)
 }
 
-void ply_vertex::reverse()
+void LinkedVertex::reverse()
 {
     swap(next, pre);
     computeExtraInfo();
@@ -70,13 +70,13 @@ void ply_vertex::reverse()
 ///////////////////////////////////////////////////////////////////////////////
 
 // clean up the space allocated
-void c_ply::destroy()
+void Ring::destroy()
 {
     if (head == nullptr) return;
-    ply_vertex * ptr = head;
+    LinkedVertex * ptr = head;
     do
     {
-        ply_vertex * n = ptr->getNext();
+        LinkedVertex * n = ptr->getNext();
         delete ptr;
         ptr = n;
     } while (ptr != head);
@@ -86,14 +86,14 @@ void c_ply::destroy()
 }
 
 // Create a empty polygon
-void c_ply::beginPoly()
+void Ring::beginPoly()
 {
     head = tail = nullptr;
     all.clear();
 }
 
 // Add a vertex to the polygonal chain
-void c_ply::addVertex(double x, double y, bool remove_duplicate)
+void Ring::addVertex(double x, double y, bool remove_duplicate)
 {
     Point2d pt(x, y);
 
@@ -102,19 +102,19 @@ void c_ply::addVertex(double x, double y, bool remove_duplicate)
         if (tail->getPos() == pt && remove_duplicate) return; //don't add
     }
 
-    ply_vertex * v = new ply_vertex(pt);
+    LinkedVertex * v = new LinkedVertex(pt);
     if (tail != nullptr)
     {
         tail->setNext(v);
     }
     tail = v;
     if (head == nullptr) head = tail;
-    v->setVID(all.size()); //id of the vertex in this ply
+    v->setVID(all.size()); //id of the vertex in this ring
     all.push_back(v);
 }
 
 // finish building the polygon
-void c_ply::endPoly(bool remove_duplicate)
+void Ring::endPoly(bool remove_duplicate)
 {
     if (head != nullptr && tail != nullptr)
     {
@@ -135,7 +135,7 @@ void c_ply::endPoly(bool remove_duplicate)
 
 // initialize property of the this polychain
 // Compute normals and find reflective vertices
-void c_ply::doInit()
+void Ring::doInit()
 {
     //compute area
     getArea();
@@ -149,7 +149,7 @@ void c_ply::doInit()
     }
 
     //compute normals
-    ply_vertex * ptr = head;
+    LinkedVertex * ptr = head;
     do
     {
         ptr->computeExtraInfo();
@@ -157,12 +157,12 @@ void c_ply::doInit()
     } while (ptr != head);
 }
 
-const Point2d & c_ply::getCenter()
+const Point2d & Ring::getCenter()
 {
     if (radius <= 0)
     {
         this->center.set(0, 0);
-        ply_vertex * ptr = head;
+        LinkedVertex * ptr = head;
         const Point2d & first = ptr->getPos();
         uint size = 0;
         do
@@ -182,12 +182,12 @@ const Point2d & c_ply::getCenter()
     return this->center;
 }
 
-const Point2d c_ply::getCenter() const
+const Point2d Ring::getCenter() const
 {
     if (radius < 0)
     {
         Point2d center;
-        ply_vertex * ptr = head;
+        LinkedVertex * ptr = head;
         const Point2d & first = ptr->getPos();
         uint size = 0;
         do
@@ -207,9 +207,9 @@ const Point2d c_ply::getCenter() const
 }
 
 //reverse the order of the vertices
-void c_ply::reverse()
+void Ring::reverse()
 {
-    ply_vertex * ptr = head;
+    LinkedVertex * ptr = head;
     do
     {
         ptr->reverse();
@@ -220,13 +220,13 @@ void c_ply::reverse()
     all.clear();
 }
 
-float c_ply::getRadius() const
+float Ring::getRadius() const
 {
     if (radius <= 0)
     {
         double radius = 0;
         getCenter();
-        ply_vertex * ptr = head;
+        LinkedVertex * ptr = head;
         do
         {
             float d = (center - ptr->getPos()).normsqr();
@@ -241,16 +241,16 @@ float c_ply::getRadius() const
         return radius;
 }
 
-float c_ply::getArea()
+float Ring::getArea()
 {
     if (area == -FLT_MAX)
     {
         area = 0;
         getCenter();
-        ply_vertex * ptr = head;
+        LinkedVertex * ptr = head;
         do
         {
-            ply_vertex * next = ptr->getNext();
+            LinkedVertex * next = ptr->getNext();
             const Point2d & p1 = ptr->getPos();
             const Point2d & p2 = next->getPos();
             area += Area(p1.get(), p2.get(), center.get());
@@ -261,11 +261,11 @@ float c_ply::getArea()
     return area;
 }
 
-void c_ply::build_all()
+void Ring::build_all()
 {
     uint vid = 0;
     all.clear();
-    ply_vertex * ptr = head;
+    LinkedVertex * ptr = head;
     do
     {
         ptr->setVID(vid++);
@@ -275,10 +275,10 @@ void c_ply::build_all()
 }
 
 //
-// Compute the center and the box of a list of plys
+// Compute the center and the box of a list of rings
 //
 
-void c_plylist::buildBoxAndCenter()
+void RingList::buildBoxAndCenter()
 {
     if (is_buildboxandcenter_called == false)
     {
@@ -287,7 +287,7 @@ void c_plylist::buildBoxAndCenter()
         for (auto & i : *this)
         {
 
-            ply_vertex * ptr = i.getHead();
+            LinkedVertex * ptr = i.getHead();
             do
             {
                 const Point2d & p = ptr->getPos();
@@ -312,7 +312,7 @@ void c_polygon::destroy()
     {
         i.destroy();
     }
-    clear(); //remove all ply from this list
+    clear(); //remove all ring from this list
     all.clear();
 }
 
@@ -343,16 +343,16 @@ double c_polygon::getArea()
     return area;
 }
 
-istream & operator>>(istream & is, c_ply & poly)
+istream & operator>>(istream & is, Ring & poly)
 {
     int vsize;
     string str_type;
     is >> vsize >> str_type;
 
     if (str_type.find("out") != string::npos)
-        poly.type = c_ply::POUT;
+        poly.type = Ring::POUT;
     else
-        poly.type = c_ply::PIN;
+        poly.type = Ring::PIN;
 
     poly.beginPoly();
     //read in all the vertices
@@ -377,7 +377,7 @@ istream & operator>>(istream & is, c_ply & poly)
     return is;
 }
 
-istream & operator>>(istream & is, c_plylist & p)
+istream & operator>>(istream & is, RingList & p)
 {
     //remove header comments
     do
@@ -400,7 +400,7 @@ istream & operator>>(istream & is, c_plylist & p)
     uint vid = 0;
     for (uint i = 0; i < size; i++)
     {
-        c_ply poly(c_ply::UNKNOWN);
+        Ring poly(Ring::UNKNOWN);
         is >> poly;
         p.push_back(poly);
         uint vsize = poly.getSize();

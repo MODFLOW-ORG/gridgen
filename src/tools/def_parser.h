@@ -25,25 +25,25 @@ public:
     virtual bool parse(istream & in, string folder = "");
 
     //does nothing...
-    virtual bool parse(block_raw_data & block) { return true; }
+    virtual bool parse(DefinitionBlock & block) { return true; }
 
     //
     // access functions
     //
-    block_raw_data * getBlockData(const string & name) { return m_blocks[name]; }
-    map<string, block_raw_data *> & getBlockData() { return m_blocks; }
+    DefinitionBlock * getBlockData(const string & name) { return m_blocks[name]; }
+    map<string, DefinitionBlock *> & getBlockData() { return m_blocks; }
 
     //warnings for records that a block does not recognize
     const list<string> & getWarnings() const { return m_warnings; }
 
 protected:
-    using BLOCK_TYPE_MAP = map<string, block_raw_data * (*)(block_raw_data & block)>;
+    using BLOCK_TYPE_MAP = map<string, DefinitionBlock * (*)(DefinitionBlock & block)>;
     BLOCK_TYPE_MAP m_block_type_map;
-    map<string, block_raw_data *> m_blocks;
+    map<string, DefinitionBlock *> m_blocks;
     list<string> m_warnings;
 };
 
-template <typename T> block_raw_data * createBlockType(block_raw_data & block)
+template <typename T> DefinitionBlock * createBlockType(DefinitionBlock & block)
 {
     return new T(block);
 }

@@ -107,7 +107,7 @@ inline int skip_backslash_new_line(std::istream & in)
 //
 //-----------------------------------------------------------------------------
 
-bool BaseParser::readBlock(istream & in, block_raw_data & block)
+bool BaseParser::readBlock(istream & in, DefinitionBlock & block)
 {
     const int size = 1024;
     const char * ignore = " \t[]()<>,!{}\r\n";
@@ -162,7 +162,7 @@ bool BaseParser::readBlock(istream & in, block_raw_data & block)
         }
         else
         {
-            entry_raw_data data;
+            BlockRecord data;
             data.name = tolower(merge(name, " "));
 
             data.value = tokenize(name_value.second, ignore);
@@ -236,12 +236,12 @@ string BaseParser::toupper(const string & s)
 //-----------------------------------------------------------------------------
 //
 //
-// modflow_grid_raw_data
+// ModflowGridBlock
 //
 //
 //-----------------------------------------------------------------------------
 
-bool modflow_grid_raw_data::parse()
+bool ModflowGridBlock::parse()
 {
     map<string, list<string>> name_value_map;
 
@@ -364,7 +364,7 @@ bool modflow_grid_raw_data::parse()
     return true;
 }
 
-modflow_grid_raw_data::~modflow_grid_raw_data()
+ModflowGridBlock::~ModflowGridBlock()
 {
     delete mfgrid;
     delete[] delr;
@@ -373,7 +373,7 @@ modflow_grid_raw_data::~modflow_grid_raw_data()
     for (REAL * b : bot) delete[] b;
 }
 
-bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
+bool ModflowGridBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
@@ -398,7 +398,7 @@ bool modflow_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
     return true;
 }
 
-Grid * modflow_grid_raw_data::build()
+Grid * ModflowGridBlock::build()
 {
     if (mfgrid == nullptr)
     {
@@ -413,12 +413,12 @@ Grid * modflow_grid_raw_data::build()
 //-----------------------------------------------------------------------------
 //
 //
-// quadtree_grid_raw_data
+// QuadtreeBlock
 //
 //
 //-----------------------------------------------------------------------------
 
-bool quadtree_grid_raw_data::parse()
+bool QuadtreeBlock::parse()
 {
     map<string, list<string>> name_value_map;
 
@@ -463,7 +463,7 @@ bool quadtree_grid_raw_data::parse()
     return true;
 }
 
-bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
+bool QuadtreeBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
@@ -476,12 +476,12 @@ bool quadtree_grid_raw_data::initialize(map<string, block_raw_data *> & blocks)
     return true;
 }
 
-quadtree_grid_raw_data::~quadtree_grid_raw_data()
+QuadtreeBlock::~QuadtreeBlock()
 {
     delete qtree_grid;
 }
 
-Grid * quadtree_grid_raw_data::build()
+Grid * QuadtreeBlock::build()
 {
     //
     if (this->modflow_data == nullptr)
@@ -496,7 +496,7 @@ Grid * quadtree_grid_raw_data::build()
         try
         {
             //fill the QuadTree3d
-            fillQuadTree3D();
+            build_from_structure();
 
             //copy surface data from top/bottom to those in qtree_grid
             int nodesize = qtree_grid->nodes();
@@ -507,7 +507,7 @@ Grid * quadtree_grid_raw_data::build()
             int index = 0;
             for (int layer = 0; layer < modflowGrid->nlay; layer++)
             {
-                int node_per_layer = qtree_grid->nodegroup.nodelay_array[layer];
+                int node_per_layer = qtree_grid->nodegroup.layer_cell_counts[layer];
 
                 unique_ptr<REAL[]> top_tmp(
                     createArray<REAL>(top_str[layer], node_per_layer, getFolderPath()));
@@ -535,7 +535,7 @@ Grid * quadtree_grid_raw_data::build()
     return (Grid *)qtree_grid;
 }
 
-void quadtree_grid_raw_data::fillQuadTree3D()
+void QuadtreeBlock::build_from_structure()
 {
     int count = 0;
     bool zero_based = false;
@@ -550,8 +550,8 @@ void quadtree_grid_raw_data::fillQuadTree3D()
         int row = tree_node.row - 1;
         int col = tree_node.col - 1;
 
-        int nodeid = qtree_grid->getModflowGrid()->get_nodeid(layerNum, row, col);
-        Box * nodeobj = qtree_grid->nodegroup[nodeid];
+        int box_index = qtree_grid->getModflowGrid()->get_box_index(layerNum, row, col);
+        Box * nodeobj = qtree_grid->nodegroup[box_index];
 
         if ((strcmp(tree_node.code.c_str(), "") == 0) || tree_node.code.empty())
         {
@@ -632,12 +632,12 @@ void quadtree_grid_raw_data::fillQuadTree3D()
 //-----------------------------------------------------------------------------
 //
 //
-// quadtree_builder_raw_data
+// QuadtreeBuilderBlock
 //
 //
 //-----------------------------------------------------------------------------
 
-bool quadtree_builder_raw_data::parse()
+bool QuadtreeBuilderBlock::parse()
 {
     map<string, list<string>> name_value_map;
 
@@ -716,7 +716,7 @@ bool quadtree_builder_raw_data::parse()
     return true;
 }
 
-bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & blocks)
+bool QuadtreeBuilderBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
@@ -725,13 +725,13 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
     active_domain_data.reserve(modflow_data->nlay);
     for (int i = 0; i < modflow_data->nlay; i++)
     {
-        list<active_domain_raw_data *> domains;
+        list<ActiveDomainBlock *> domains;
         list<string> & domain_names = active_domain_str[i];
         string rname = "active_domain layer " + to_string(i + 1);
         for (auto & domain_name : domain_names)
         {
-            block_raw_data * block = findBlock(blocks, rname, domain_name);
-            auto * domain = dynamic_cast<active_domain_raw_data *>(block);
+            DefinitionBlock * block = findBlock(blocks, rname, domain_name);
+            auto * domain = dynamic_cast<ActiveDomainBlock *>(block);
             if (domain == nullptr) throw wrongBlockType(rname, block, "an ACTIVE_DOMAIN block");
             domain->initialize(blocks);
             domains.push_back(domain);
@@ -763,13 +763,13 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
     for (int i = 0; i < modflow_data->nlay; i++)
     {
         //refine by features
-        list<refinement_raw_data *> refinements;
+        list<RefinementFeaturesBlock *> refinements;
         list<string> & refinement_names = refine_by_features_str[i];
         string rname = "refinement_features layer " + to_string(i + 1);
         for (auto & refinement_name : refinement_names)
         {
-            block_raw_data * block = findBlock(blocks, rname, refinement_name);
-            auto * refinement = dynamic_cast<refinement_raw_data *>(block);
+            DefinitionBlock * block = findBlock(blocks, rname, refinement_name);
+            auto * refinement = dynamic_cast<RefinementFeaturesBlock *>(block);
             if (refinement == nullptr)
                 throw wrongBlockType(rname, block, "a REFINEMENT_FEATURES block");
             refinements.push_back(refinement);
@@ -804,12 +804,12 @@ bool quadtree_builder_raw_data::initialize(map<string, block_raw_data *> & block
     return true;
 }
 
-quadtree_builder_raw_data::~quadtree_builder_raw_data()
+QuadtreeBuilderBlock::~QuadtreeBuilderBlock()
 {
     delete qtree_grid;
 }
 
-Grid * quadtree_builder_raw_data::build()
+Grid * QuadtreeBuilderBlock::build()
 {
     //
     if (this->modflow_data == nullptr)
@@ -849,7 +849,7 @@ Grid * quadtree_builder_raw_data::build()
 //-----------------------------------------------------------------------------
 //
 //
-// surface_interpolation_raw_data
+// SurfaceInterpolationBlock
 //
 //
 //-----------------------------------------------------------------------------
@@ -857,12 +857,12 @@ Grid * quadtree_builder_raw_data::build()
 //-----------------------------------------------------------------------------
 //
 //
-// grid_intersection_raw_data
+// GridIntersectionBlock
 //
 //
 //-----------------------------------------------------------------------------
 
-bool grid_intersection_raw_data::parse()
+bool GridIntersectionBlock::parse()
 {
     map<string, list<string>> name_value_map;
 
@@ -972,7 +972,7 @@ bool grid_intersection_raw_data::parse()
     return true;
 }
 
-bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & blocks)
+bool GridIntersectionBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
@@ -986,12 +986,12 @@ bool grid_intersection_raw_data::initialize(map<string, block_raw_data *> & bloc
 //-----------------------------------------------------------------------------
 //
 //
-// active_domain_raw_data
+// ActiveDomainBlock
 //
 //
 //-----------------------------------------------------------------------------
 
-bool active_domain_raw_data::parse()
+bool ActiveDomainBlock::parse()
 {
     map<string, list<string>> name_value_map;
 
@@ -1031,7 +1031,7 @@ bool active_domain_raw_data::parse()
     return true;
 }
 
-bool active_domain_raw_data::initialize(map<string, block_raw_data *> & blocks)
+bool ActiveDomainBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
@@ -1043,12 +1043,12 @@ bool active_domain_raw_data::initialize(map<string, block_raw_data *> & blocks)
 //-----------------------------------------------------------------------------
 //
 //
-// refinement_raw_data
+// RefinementFeaturesBlock
 //
 //
 //-----------------------------------------------------------------------------
 
-bool refinement_raw_data::parse()
+bool RefinementFeaturesBlock::parse()
 {
     map<string, list<string>> name_value_map;
 
@@ -1098,12 +1098,12 @@ bool refinement_raw_data::parse()
 //-----------------------------------------------------------------------------
 //
 //
-// grid_to_usgdata_raw_data
+// GridToUsgdataBlock
 //
 //
 //-----------------------------------------------------------------------------
 
-bool grid_to_usgdata_raw_data::parse()
+bool GridToUsgdataBlock::parse()
 {
     map<string, list<string>> name_value_map;
 
@@ -1145,7 +1145,7 @@ bool grid_to_usgdata_raw_data::parse()
     return true;
 }
 
-bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks)
+bool GridToUsgdataBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
@@ -1159,12 +1159,12 @@ bool grid_to_usgdata_raw_data::initialize(map<string, block_raw_data *> & blocks
 //-----------------------------------------------------------------------------
 //
 //
-// gridtoshape_raw_data
+// GridToShapefileBlock
 //
 //
 //-----------------------------------------------------------------------------
 
-bool gridtoshape_raw_data::parse()
+bool GridToShapefileBlock::parse()
 {
     map<string, list<string>> name_value_map;
 
@@ -1242,7 +1242,7 @@ bool gridtoshape_raw_data::parse()
 
     return true;
 }
-bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
+bool GridToShapefileBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
@@ -1254,7 +1254,7 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
     return true;
 }
 
-void block_raw_data::warnIfNotAction()
+void DefinitionBlock::warnIfNotAction()
 {
     if (isAction()) return;
     warn(label() + " is not an action, so running it writes nothing; run a QUADTREE_BUILDER, "
@@ -1262,30 +1262,30 @@ void block_raw_data::warnIfNotAction()
                    "block to write output");
 }
 
-block_raw_data * block_raw_data::findBlock(map<string, block_raw_data *> & blocks,
-                                           const string & rname, const string & block_name)
+DefinitionBlock * DefinitionBlock::findBlock(map<string, DefinitionBlock *> & blocks,
+                                             const string & rname, const string & block_name)
 {
     auto found = blocks.find(block_name);
     if (found == blocks.end() || found->second == nullptr) throw undefinedBlock(rname, block_name);
     return found->second;
 }
 
-modflow_grid_raw_data * block_raw_data::findModflowGrid(map<string, block_raw_data *> & blocks,
-                                                        const string & grid_name)
+ModflowGridBlock * DefinitionBlock::findModflowGrid(map<string, DefinitionBlock *> & blocks,
+                                                    const string & grid_name)
 {
-    block_raw_data * block = findBlock(blocks, "modflow_grid", grid_name);
-    auto * modflow_data = dynamic_cast<modflow_grid_raw_data *>(block);
+    DefinitionBlock * block = findBlock(blocks, "modflow_grid", grid_name);
+    auto * modflow_data = dynamic_cast<ModflowGridBlock *>(block);
     if (modflow_data == nullptr)
         throw wrongBlockType("modflow_grid", block, "a MODFLOW_GRID block");
     modflow_data->initialize(blocks);
     return modflow_data;
 }
 
-Grid * block_raw_data::buildReferencedGrid(map<string, block_raw_data *> & blocks,
-                                           const string & rname, const string & grid_name)
+Grid * DefinitionBlock::buildReferencedGrid(map<string, DefinitionBlock *> & blocks,
+                                            const string & rname, const string & grid_name)
 {
-    block_raw_data * block = findBlock(blocks, rname, grid_name);
-    grid_raw_data * grid = dynamic_cast<grid_raw_data *>(block);
+    DefinitionBlock * block = findBlock(blocks, rname, grid_name);
+    GridBlock * grid = dynamic_cast<GridBlock *>(block);
     if (grid == nullptr)
         throw wrongBlockType(rname, block, "a MODFLOW_GRID, QUADTREE, or QUADTREE_BUILDER block");
 
@@ -1294,7 +1294,7 @@ Grid * block_raw_data::buildReferencedGrid(map<string, block_raw_data *> & block
 }
 
 //records that do not change any output of a quadtree grid
-void block_raw_data::warnQuadtreeExportRecords(Grid * grid)
+void DefinitionBlock::warnQuadtreeExportRecords(Grid * grid)
 {
     if (dynamic_cast<QuadTree3D *>(grid) == nullptr) return;
     if (hasRecord("node_numbering"))
@@ -1308,12 +1308,12 @@ void block_raw_data::warnQuadtreeExportRecords(Grid * grid)
 //-----------------------------------------------------------------------------
 //
 //
-// gridtovtk_raw_data
+// GridToVtkfileBlock
 //
 //
 //-----------------------------------------------------------------------------
 
-bool gridtovtk_raw_data::parse()
+bool GridToVtkfileBlock::parse()
 {
     map<string, list<string>> name_value_map;
 
@@ -1373,7 +1373,7 @@ bool gridtovtk_raw_data::parse()
 
     return true;
 }
-bool gridtovtk_raw_data::initialize(map<string, block_raw_data *> & blocks)
+bool GridToVtkfileBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 

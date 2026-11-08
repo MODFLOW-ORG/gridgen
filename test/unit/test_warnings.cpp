@@ -21,9 +21,9 @@ using gridgen_test::build_qtree;
 using gridgen_test::builder_dfn;
 using gridgen_test::make_mfgrid;
 using gridgen_test::make_qtree;
-using gridgen_test::Ring;
 using gridgen_test::square;
-using gridgen_test::write_shapefile;
+using gridgen_test::Vertices;
+using gridgen_test::write_test_shapefile;
 
 namespace
 {
@@ -70,7 +70,7 @@ TEST(QuadTree, RefineReportsFeatureOutsideGrid)
     EXPECT_TRUE(qtree->refine(inside, 1));
     EXPECT_FALSE(qtree->refine(outside, 1));
 
-    c_plyline line_in, line_out;
+    Polyline line_in, line_out;
     line_in.beginPoly();
     line_in.addVertex(10.0, 10.0);
     line_in.addVertex(290.0, 10.0);
@@ -88,7 +88,7 @@ TEST(QuadTree, RefineReportsFeatureOutsideGrid)
     EXPECT_TRUE(qtree->refine(inside, 1));
 
     // a line that crosses the grid with both ends outside intersects it
-    c_plyline line_across;
+    Polyline line_across;
     line_across.beginPoly();
     line_across.addVertex(-50.0, 250.0);
     line_across.addVertex(350.0, 250.0);
@@ -99,8 +99,8 @@ TEST(QuadTree, RefineReportsFeatureOutsideGrid)
 
 TEST(QuadTreeBuilder, RefinementFeatureOutsideGridIsReported)
 {
-    std::string path = write_shapefile("gridgen_unit_refine_outside", SHPT_POLYGON,
-                                       {square(50.0, 50.0, 20.0), square(500.0, 500.0, 20.0)});
+    std::string path = write_test_shapefile("gridgen_unit_refine_outside", SHPT_POLYGON,
+                                            {square(50.0, 50.0, 20.0), square(500.0, 500.0, 20.0)});
     clear_warnings();
     build_qtree(builder_dfn(path, "Polygon"));
     EXPECT_TRUE(warned("1 of the 2 features in shapefile " + path +
@@ -111,7 +111,7 @@ TEST(QuadTreeBuilder, RefinementFeatureOutsideGridIsReported)
 TEST(QuadTreeBuilder, RefinementShapefileWithoutFeaturesOfTypeIsReported)
 {
     std::string path =
-        write_shapefile("gridgen_unit_refine_type", SHPT_POLYGON, {square(50.0, 50.0, 20.0)});
+        write_test_shapefile("gridgen_unit_refine_type", SHPT_POLYGON, {square(50.0, 50.0, 20.0)});
     clear_warnings();
     build_qtree(builder_dfn(path, "line"));
     EXPECT_TRUE(warned("has no line features"));
@@ -119,8 +119,8 @@ TEST(QuadTreeBuilder, RefinementShapefileWithoutFeaturesOfTypeIsReported)
 
 TEST(QuadTreeBuilder, RefinementErrors)
 {
-    std::string path =
-        write_shapefile("gridgen_unit_refine_errors", SHPT_POLYGON, {square(50.0, 50.0, 20.0)});
+    std::string path = write_test_shapefile("gridgen_unit_refine_errors", SHPT_POLYGON,
+                                            {square(50.0, 50.0, 20.0)});
     std::string missing = testing::TempDir() + "gridgen_unit_no_such_shapefile";
     EXPECT_THROW(build_qtree(builder_dfn(missing, "polygon")), GridgenError);
     EXPECT_THROW(
@@ -132,7 +132,7 @@ TEST(QuadTreeBuilder, RefinementErrors)
 }
 
 // lines from beside the 3x3 grid of 100 m cells across it, within one cell, and beside the grid
-std::vector<Ring> lines_one_outside()
+std::vector<Vertices> lines_one_outside()
 {
     return {{{-50.0, 10.0}, {290.0, 10.0}},
             {{10.0, 10.0}, {20.0, 10.0}},
@@ -141,13 +141,13 @@ std::vector<Ring> lines_one_outside()
 
 TEST(GridDomain, FeatureOutsideGridIsReported)
 {
-    std::string path = write_shapefile("gridgen_unit_domain_outside", SHPT_POLYGON,
-                                       {square(50.0, 50.0, 20.0), square(500.0, 500.0, 20.0)});
+    std::string path = write_test_shapefile("gridgen_unit_domain_outside", SHPT_POLYGON,
+                                            {square(50.0, 50.0, 20.0), square(500.0, 500.0, 20.0)});
     std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 3, 3, 100.0, 100.0), {});
 
-    block_raw_data block;
+    DefinitionBlock block;
     block.name = "domain";
-    active_domain_raw_data domain(block);
+    ActiveDomainBlock domain(block);
     domain.shapefile = path;
     domain.feature_type = "polygon";
 
@@ -158,7 +158,8 @@ TEST(GridDomain, FeatureOutsideGridIsReported)
                        "are made active by it."));
 
     // a line within one cell is inside; one beside the grid is not
-    domain.shapefile = write_shapefile("gridgen_unit_domain_lines", SHPT_ARC, lines_one_outside());
+    domain.shapefile =
+        write_test_shapefile("gridgen_unit_domain_lines", SHPT_ARC, lines_one_outside());
     domain.feature_type = "line";
     clear_warnings();
     GridDomain().build(qtree.get(), 0, &domain);
@@ -172,13 +173,13 @@ TEST(GridDomain, FeatureOutsideGridIsReported)
 
 TEST(GridIntersection, FeatureOutsideGridIsReported)
 {
-    std::string path = write_shapefile("gridgen_unit_intersect_outside", SHPT_POINT,
-                                       {{{150.0, 150.0}}, {{450.0, 150.0}}});
+    std::string path = write_test_shapefile("gridgen_unit_intersect_outside", SHPT_POINT,
+                                            {{{150.0, 150.0}}, {{450.0, 150.0}}});
     std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 3, 3, 100.0, 100.0), {});
 
-    block_raw_data block;
+    DefinitionBlock block;
     block.name = "points";
-    grid_intersection_raw_data data(block);
+    GridIntersectionBlock data(block);
     data.grid = qtree.get();
     data.shapefile = path;
     data.feature_type = "point";
@@ -190,7 +191,8 @@ TEST(GridIntersection, FeatureOutsideGridIsReported)
                        " (GRID_INTERSECTION points) do not intersect layer 1 of the grid; no "
                        "intersections are written for it."));
 
-    data.shapefile = write_shapefile("gridgen_unit_intersect_lines", SHPT_ARC, lines_one_outside());
+    data.shapefile =
+        write_test_shapefile("gridgen_unit_intersect_lines", SHPT_ARC, lines_one_outside());
     data.feature_type = "line";
     clear_warnings();
     GridIntersection gi_lines(0, 0);
@@ -206,8 +208,9 @@ TEST(GridIntersection, FeatureOutsideGridIsReported)
 
 TEST(ShapeReader, ShapefileWithoutFieldsIsRead)
 {
-    std::string path = write_shapefile("gridgen_unit_no_fields", SHPT_POLYGON,
-                                       {square(0.0, 0.0, 10.0), square(20.0, 0.0, 10.0)}, false);
+    std::string path =
+        write_test_shapefile("gridgen_unit_no_fields", SHPT_POLYGON,
+                             {square(0.0, 0.0, 10.0), square(20.0, 0.0, 10.0)}, false);
     ShapeReader reader;
     ASSERT_TRUE(reader.read(path));
     EXPECT_EQ(reader.getPolyList().size(), 2u);
@@ -222,7 +225,7 @@ TEST(DefinitionParser, FeatureTypeIsCheckedAndCaseInsensitive)
         std::istringstream dfn(block + "Polygon\n  INCLUDE_BOUNDARY = True\nEND ACTIVE_DOMAIN\n");
         DefinitionParser parser;
         ASSERT_TRUE(parser.parse(dfn));
-        auto * data = dynamic_cast<active_domain_raw_data *>(parser.getBlockData("domain"));
+        auto * data = dynamic_cast<ActiveDomainBlock *>(parser.getBlockData("domain"));
         ASSERT_NE(data, nullptr);
         EXPECT_EQ(data->feature_type, "polygon");
     }
@@ -243,7 +246,7 @@ bool close_polygons(const std::string & records)
                            records + "END GRID_TO_SHAPEFILE\n");
     DefinitionParser parser;
     EXPECT_TRUE(parser.parse(dfn));
-    auto * data = dynamic_cast<gridtoshape_raw_data *>(parser.getBlockData("shp"));
+    auto * data = dynamic_cast<GridToShapefileBlock *>(parser.getBlockData("shp"));
     EXPECT_NE(data, nullptr);
     return data != nullptr && data->close_polygons;
 }
@@ -336,7 +339,7 @@ TEST(DefinitionParser, ShortArrayFileIsAnError)
                            "END MODFLOW_GRID\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
-    block_raw_data * data = parser.getBlockData("mfg");
+    DefinitionBlock * data = parser.getBlockData("mfg");
     ASSERT_NE(data, nullptr);
     EXPECT_THROW(data->initialize(parser.getBlockData()), GridgenError);
 }

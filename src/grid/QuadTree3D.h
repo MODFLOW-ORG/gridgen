@@ -63,55 +63,55 @@ public:
     //
     //refine the cells a feature intersects, and return whether it intersects any
     bool refine(Point2d & pt, int max_level, int at_layer = 0);
-    bool refine(c_plyline & arc, int max_level, int at_layer = 0);
+    bool refine(Polyline & arc, int max_level, int at_layer = 0);
     bool refine(c_polygon & pgon, int max_level, int at_layer = 0);
 
     /// Return a numpy array of size (nodes) that contains the area for all cells.
     vector<double> get_cell_areas() override;
 
     /*!
-        \brief Return the four vertices for the specified nodeid.
+        \brief Return the four vertices for the specified box_index.
     */
 
     /*! 
-        Return an array of size nodes that contains the nodeid for all
+        Return an array of size nodes that contains the box_index for all
         active leaf nodes.  Thus the array contains:
         
-        nodeid_array[nodenumber] = nodeid
+        box_index_array[cell] = box_index
         
         Note that this array is rebuilt, but only if the
-        nodegroup.rebuild_nodeid_array flag is True.  This flag is set to
+        nodegroup.rebuild_box_index_array flag is True.  This flag is set to
         true anytime quadtree nodes are added or removed.
     */
-    int * getnodeid_array();
+    int * get_box_index_array();
 
-    ///get nodelay_array
-    int * get_nodelay();
+    ///the number of cells in each layer
+    int * get_layer_cell_counts();
     /*!
-	    \brief Create a nodenumber_array of size nodegroup with the following:
+	    \brief Create a cell_array of size nodegroup with the following:
         
-        node number is the id of the node in CSR or Coo array
+        a cell is the number of a node in the CSR or COO arrays
 
-        nodenumber_array[nodeid] = nodenumber
+        cell_array[box_index] = cell
      */
-    int * createnodenumber_array();
+    int * create_cell_array();
 
     /*! 
-	    Return an array of len(nodegroup) that contains the nodenumber for all
+	    Return an array of len(nodegroup) that contains the cell for all
         active leaf nodes.  Thus the array contains:
         
-        nodenumber_array[nodeid] = nodenumber
+        cell_array[box_index] = cell
         
         Note that this array is rebuilt, but only if the
-        nodegroup.rebuild_nodeid_array flag is True.  This flag is set to
+        nodegroup.rebuild_box_index_array flag is True.  This flag is set to
         true anytime quadtree nodes are added or removed.
     */
-    int * getnodenumber_array();
+    int * get_cell_array();
 
-    ///get box from id
-    Box * get_nodeobj(int nodenumber) override;
+    ///the box of cell
+    Box * get_cell_box(int cell) override;
 
-    int get_nodenumber(int nodeid);
+    int get_cell(int box_index);
 
     void set_one_based_node_numbering(bool flag) { one_based_node_numbering = flag; }
 
@@ -119,17 +119,16 @@ public:
 
     ///get box connections from id
     ///Return a sorted list of connections, where a connection is
-    ///a list [tonodeid, fldir].  fldir is -1, +1, -2, +2 for -x, +x, -y, +y, -z, +z.
-    ///notice that this function takes "nodenumber" not "nodeid"
-    ///remember again that the return is for node id.
+    ///a list [to_box_index, fldir].  fldir is -1, +1, -2, +2 for -x, +x, -y, +y, -z, +z.
+    ///the connections are to box indices
 
-    list<pair<int, int>> get_node_connections(int nodenumber) override;
+    list<pair<int, int>> get_node_connections(int cell) override;
     list<pair<int, int>> get_node_connections(Box * box);
 
-    list<pair<int, int>> get_node_connections_vp(int nodenumber, vector<double> * area);
+    list<pair<int, int>> get_node_connections_with_pass_through(int cell, vector<double> * area);
 
     //return the
-    list<pair<int, int>> get_node_connections_vp(Box * box, vector<double> * area);
+    list<pair<int, int>> get_node_connections_with_pass_through(Box * box, vector<double> * area);
 
     /*! \brief Obtain CSRData
 
@@ -154,10 +153,10 @@ public:
     double * get_bot();
 
     ///align the elevation (z) between the shared surface (bottom of top cell and top of bottom cells)
-    bool align_elev();
+    bool align_shared_elevations();
 
     ///recompute z value and dz value of each cell based on the top and bottom
-    bool recompute_z_of_cells();
+    bool set_cell_elevations();
 
     ///number the nodes (i.e. leaves) in the grid
     void number_nodes() override;
@@ -178,10 +177,10 @@ protected:
     void _add_root_nodes();
 
     ///sort the given connection by the node number
-    void sortconnectionbynodenumber(list<pair<int, int>> & connectionlist);
+    void sort_connections_by_cell(list<pair<int, int>> & connectionlist);
 
     //sort the area array based on connection id
-    void sortareabyconid(const list<pair<int, int>> & connectionlist, vector<double> & area);
+    void sort_areas_by_cell(const list<pair<int, int>> & connectionlist, vector<double> & area);
 
     bool smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq, int level_tol_horizontal,
                            int level_tol_vertical);
@@ -194,7 +193,7 @@ protected:
                                   bool useAreaWeighted = true);
 
     ///align the elevation (z) between the shared surface (bottom of top cell and top of bottom cells) of the given box
-    void align_elev(Box * top_box);
+    void align_shared_elevations(Box * top_box);
 
 public:
     //linear interpolation the value of the center of the box
@@ -205,11 +204,11 @@ protected:
     ///modflow grid
     ModflowGrid * m_mfgrid;
 
-    vector<int> nodenumber_array;
-    int * nodeid_array;
-    int * nodelay_array; //? used, there is a same member in nodegroup...
-    bool rebuild_nodenumber_array;
-    bool rebuild_nodeid_array;
+    vector<int> cell_array;
+    int * box_index_array;
+    int * layer_cell_counts; //? used, there is a same member in nodegroup...
+    bool rebuild_cell_array;
+    bool rebuild_box_index_array;
 
     bool one_based_node_numbering;
 
@@ -221,10 +220,10 @@ public:
         Z_VALUE_REPLICATE_OPERATOR,
         Z_VALUE_LINEAR_INTERPOLATION_OPERATOR
     };
-    void setTopOperators(int i, LAYER_Z_VALUE_OPERATOR op) { m_top_layer_z_operator[i] = op; }
-    void setBotOperators(int i, LAYER_Z_VALUE_OPERATOR op) { m_bot_layer_z_operator[i] = op; }
-    LAYER_Z_VALUE_OPERATOR getTopOperators(int i) { return m_top_layer_z_operator[i]; }
-    LAYER_Z_VALUE_OPERATOR getBotOperators(int i) { return m_bot_layer_z_operator[i]; }
+    void set_top_operator(int i, LAYER_Z_VALUE_OPERATOR op) { m_top_layer_z_operator[i] = op; }
+    void set_bottom_operator(int i, LAYER_Z_VALUE_OPERATOR op) { m_bot_layer_z_operator[i] = op; }
+    LAYER_Z_VALUE_OPERATOR get_top_operator(int i) { return m_top_layer_z_operator[i]; }
+    LAYER_Z_VALUE_OPERATOR get_bottom_operator(int i) { return m_bot_layer_z_operator[i]; }
 
     void setTopSource(int i, const string & source) { m_top_layer_z_source[i] = source; }
     void setBotSource(int i, const string & source) { m_bot_layer_z_source[i] = source; }

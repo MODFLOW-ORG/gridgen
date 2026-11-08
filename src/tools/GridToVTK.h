@@ -36,17 +36,14 @@ public:
     Vertex * vertices[8];
 };
 
-//export modflow grid to a paraview vtk file
-void writeModflowGrid2VTK(ModflowGrid * modflow, string vtkName, bool without_inactive = true,
-                          bool one_based_numbering = true);
+//write a MODFLOW grid to a VTK file, with the cells sharing their vertices or
+//each cell with its own
+void write_vtk(ModflowGrid * modflow, string vtkName, bool share_vertices,
+               bool without_inactive = true, bool one_based_numbering = true);
 
-void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool without_inactive = true,
-                                 bool one_based_numbering = true);
-
-//write the Quadtree grid
-void writeQuadtreeGrid2VTK(QuadTree3D * qtree, string vtkName);
-
-void writeQuadtreeGrid2VTK_shareV(QuadTree3D * qtree, string vtkName);
+//write a quadtree grid to a VTK file, with the cells sharing their vertices or
+//each cell with its own
+void write_vtk(QuadTree3D * qtree, string vtkName, bool share_vertices);
 
 //build sharing vertices data here
 void buildSharingVertices(QuadTree3D * qtree, vector<Vertex *> & vdata, BoxVtx * box_vertices);

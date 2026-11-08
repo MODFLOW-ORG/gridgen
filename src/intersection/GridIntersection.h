@@ -18,7 +18,7 @@
 #include "polyline.h"
 #include "def_struct.h"
 #include "shpReader.h"
-#include "BoxPlyClip.h"
+#include "RingClipper.h"
 #include "PolygonChecker.h"
 #include "Warnings.h"
 #include <map>
@@ -48,7 +48,7 @@ struct PolylineCellIntersectionInfo
     double m_startGeoDist;
     double m_endGeoDist;
     Box * box;
-    c_plyline * m_plyline; //the cut polyline
+    Polyline * m_polyline; //the cut polyline
 };
 
 struct SegmentCellIntersectionInfo
@@ -98,19 +98,19 @@ public:
     }
     ~GridIntersection()
     {
-        for (auto & pit : m_ply_interaction_info)
+        for (auto & pit : m_polygon_intersection_info)
         {
             pit.m_interPolygon->destroy();
 
             delete pit.m_interPolygon;
             pit.m_interPolygon = nullptr;
         }
-        for (auto & lit : m_plyline_intersection_info)
+        for (auto & lit : m_polyline_intersection_info)
         {
-            lit.m_plyline->destroy();
+            lit.m_polyline->destroy();
 
-            delete lit.m_plyline;
-            lit.m_plyline = nullptr;
+            delete lit.m_polyline;
+            lit.m_polyline = nullptr;
         }
     }
 
@@ -123,7 +123,7 @@ public:
     void set_save_intersection_info(bool flag) { m_b_save_intersection_info = flag; }
 
     //build intersection from grid_intersection raw data
-    void build(grid_intersection_raw_data & data);
+    void build(GridIntersectionBlock & data);
 
     //save intersection information to file
     bool save(string & filename, vector<string> & attributes);
@@ -138,30 +138,30 @@ public:
     //
     bool intersect(QuadTree3D * grid, double x, double y) { return intersect(grid, Point2d(x, y)); }
 
-    bool intersect(QuadTree3D * grid, double x1, double y1, double x2, double y2)
+    bool intersect_segment(QuadTree3D * grid, double x1, double y1, double x2, double y2)
     {
         Point2d p1(x1, y1);
         Point2d p2(x2, y2);
         LineSeg2d segment(p1, p2);
 
-        return intersect(grid, segment);
+        return intersect_segment(grid, segment);
     }
 
     bool intersect(QuadTree3D * grid, vector<double> & coordinates)
     {
-        //create ply
-        c_ply ply(c_ply::POUT);
+        //create ring
+        Ring ring(Ring::POUT);
         int size = coordinates.size();
-        ply.beginPoly();
+        ring.beginPoly();
         for (int i = 0; i < size; i++)
         {
             double x = coordinates[i];
             double y = coordinates[++i];
-            ply.addVertex(x, y);
+            ring.addVertex(x, y);
         }
-        ply.endPoly();
+        ring.endPoly();
 
-        return intersect(grid, ply);
+        return intersect(grid, ring);
     }
 
     Box * getIntersections(int i) { return m_intersection[i]; }
@@ -184,17 +184,19 @@ public:
     //
     bool intersect(QuadTree3D * grid, const Point2d & pt); //, bool noBound=false);
 
-    //intersect a generic Grid with a line segment
-    template <typename T> bool intersect(T * grid, const LineSeg2d & line); //, bool noBound=false);
+    //add the cells that a line segment crosses to the intersection; false if an end
+    //of the segment inside the grid is in no cell, and true otherwise, including
+    //when the segment misses the grid
+    template <typename T> bool intersect_segment(T * grid, const LineSeg2d & line);
 
     //intersect a generic Grid with a polygon..
-    template <typename T> bool intersect(T * grid, const c_ply & ply); //, bool noBound=false);
+    template <typename T> bool intersect(T * grid, const Ring & ring); //, bool noBound=false);
     template <typename T>
     bool intersect(T * grid, const c_polygon & polygon); //, bool noBound=false);
 
-    //intersect a generic Grid with a ply..
+    //intersect a generic Grid with a ring..
     template <typename T>
-    bool intersect(T * grid, const c_ply & ply, list<Box *> & bd_intersection,
+    bool intersect(T * grid, const Ring & ring, list<Box *> & bd_intersection,
                    list<Box *> & enclosed_intersection);
 
     //intersect a generic Grid with a polygon..
@@ -203,10 +205,10 @@ public:
                    list<Box *> & enclosed_intersection);
 
     bool intersect(Box * b, const LineSeg2d & line);
-    double intersect_len(Box * b, const LineSeg2d & line);
+    double intersection_length(Box * b, const LineSeg2d & line);
     void intersect_polygon(Box * b, const GIS_polygon & polygon,
                            vector<GIS_polygon *> & result_polygons,
-                           BoxPlyClip * ply_clip = nullptr);
+                           RingClipper * ring_clip = nullptr);
 
     //retrieve detailed information
     bool getIntersection(Box * b, const LineSeg2d & line, LineSeg2d & clipped_segment);
@@ -216,9 +218,9 @@ public:
 
     //intersection for GIS based primitives
     template <typename T> bool intersect(T * grid, /*const*/ GIS_Point2d & pt);
-    template <typename T> bool intersect(T * grid, /*const*/ GIS_LineSeg2d & line);
+    template <typename T> bool intersect_segment(T * grid, /*const*/ GIS_LineSeg2d & line);
     template <typename T>
-    bool intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyClip * ply_clip = nullptr);
+    bool intersect(T * grid, /*const*/ GIS_polygon & polygon, RingClipper * ring_clip = nullptr);
 
     /// clip off a line segment if its end points are out side of the grid
     /// return false when the entire segment is outside of the grid
@@ -232,26 +234,26 @@ public:
     //cells of the whole layer if the polygon encloses the grid, when no
     //polygon edge crosses it
     template <typename T, typename P>
-    void enclose_grid(T * grid, const P & polygon, set<Box *> & visited,
-                      list<Box *> & enclosed_intersection);
+    void find_cells_inside(T * grid, const P & polygon, set<Box *> & visited,
+                           list<Box *> & enclosed_intersection);
 
     //utility functions
-    int checkNeighbor(Box * box, Box * other);
+    int shared_edge_side(Box * box, Box * other);
     //check box edge collinearly intersect with line
-    bool checkEdgeCollinear(Box * box, int dir, const LineSeg2d & line);
+    bool line_runs_along_edge(Box * box, int dir, const LineSeg2d & line);
 
 protected:
-    //check if the given pt is inside the ply
-    bool intersect(const Point2d & pt, const c_ply & ply);
+    //check if the given pt is inside the ring
+    bool intersect(const Point2d & pt, const Ring & ring);
 
     //check if the given pt is inside the polygon
     bool intersect(const Point2d & pt, const c_polygon & polygon);
 
     //create information for intersection
     //the given box should be intersecting with the given geometry already
-    void buildIntersectionInfo(Box * box, const GIS_polygon & ply,
+    void buildIntersectionInfo(Box * box, const GIS_polygon & polygon,
                                vector<PolygonCellIntersectionInfo> & infoResult,
-                               BoxPlyClip * ply_clip = nullptr);
+                               RingClipper * ring_clip = nullptr);
 
     SegmentCellIntersectionInfo buildIntersectionInfo(Box * box, const GIS_LineSeg2d & line);
     PointCellIntersectionInfo buildIntersectionInfo(Box * box, const GIS_Point2d & pt);
@@ -271,12 +273,12 @@ protected:
 
     bool m_b_save_intersection_info;
 
-    vector<PolygonCellIntersectionInfo> m_ply_interaction_info;
+    vector<PolygonCellIntersectionInfo> m_polygon_intersection_info;
     vector<SegmentCellIntersectionInfo> m_seg_interaction_info;
     vector<PointCellIntersectionInfo> m_pt_interaction_info;
-    vector<PolylineCellIntersectionInfo> m_plyline_intersection_info;
+    vector<PolylineCellIntersectionInfo> m_polyline_intersection_info;
 
-    map<Box *, list<ply_vertex *>>
+    map<Box *, list<LinkedVertex *>>
         boxvertexMap; //mapping a box to a list of polygon vertices/edges inside the box
 
     //
@@ -289,7 +291,7 @@ public:
 
     vector<PolygonCellIntersectionInfo> & getPolygonIntersectionInfo()
     {
-        return m_ply_interaction_info;
+        return m_polygon_intersection_info;
     }
 
     vector<SegmentCellIntersectionInfo> & getSegmentIntersectionInfo()
@@ -301,7 +303,7 @@ public:
 
     vector<PolylineCellIntersectionInfo> & getPolylineIntersectionInfo()
     {
-        return m_plyline_intersection_info;
+        return m_polyline_intersection_info;
     }
 };
 
@@ -313,11 +315,11 @@ public:
 
 //intersection a generic Grid with a polygon..
 template <typename T>
-bool GridIntersection::intersect(T * grid, const c_ply & ply) //, bool noBound)
+bool GridIntersection::intersect(T * grid, const Ring & ring) //, bool noBound)
 {
     list<Box *> bd_intersection;
     list<Box *> enclosed_intersection;
-    bool found = intersect(grid, ply, bd_intersection, enclosed_intersection);
+    bool found = intersect(grid, ring, bd_intersection, enclosed_intersection);
 
     if (found)
     {
@@ -352,9 +354,9 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon) //, bool n
     return found;
 }
 
-//intersection a Grid with a ply..
+//intersection a Grid with a ring..
 template <typename T>
-bool GridIntersection::intersect(T * grid, const c_ply & ply, list<Box *> & bd_intersection,
+bool GridIntersection::intersect(T * grid, const Ring & ring, list<Box *> & bd_intersection,
                                  list<Box *> & enclosed_intersection)
 {
     vector<Box *> backup;
@@ -363,13 +365,13 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply, list<Box *> & bd_i
     set<Box *> visited;
 
     //get all boundary cells
-    ply_vertex * ptr = ply.getHead();
+    LinkedVertex * ptr = ring.getHead();
     do
     {
-        ply_vertex * next = ptr->getNext();
+        LinkedVertex * next = ptr->getNext();
 
         LineSeg2d line(ptr->getPos(), next->getPos());
-        bool found = intersect(grid, line);
+        bool found = intersect_segment(grid, line);
         assert(found);
 
         //record the relationship between the boxes and this segment
@@ -385,12 +387,12 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply, list<Box *> & bd_i
         }
         m_intersection.clear();
         ptr = next;
-    } while (ptr != ply.getHead());
+    } while (ptr != ring.getHead());
 
     //no edge crosses the grid, so the polygon encloses all of the layer or none of it
     if (visited.empty())
     {
-        enclose_grid(grid, ply, visited, enclosed_intersection);
+        find_cells_inside(grid, ring, visited, enclosed_intersection);
         backup.swap(m_intersection);
         return !enclosed_intersection.empty();
     }
@@ -419,7 +421,7 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply, list<Box *> & bd_i
 
                 if (visited.find(neighbor) != visited.end()) continue; //visited
                 Point2d box_center(neighbor->x, neighbor->y);          //center of the box
-                if (intersect(box_center, ply)) //if the center of the box is inside...
+                if (intersect(box_center, ring)) //if the center of the box is inside...
                 {
                     open.push_back(neighbor);
                     visited.insert(neighbor);
@@ -437,8 +439,8 @@ bool GridIntersection::intersect(T * grid, const c_ply & ply, list<Box *> & bd_i
 }
 
 template <typename T, typename P>
-void GridIntersection::enclose_grid(T * grid, const P & polygon, set<Box *> & visited,
-                                    list<Box *> & enclosed_intersection)
+void GridIntersection::find_cells_inside(T * grid, const P & polygon, set<Box *> & visited,
+                                         list<Box *> & enclosed_intersection)
 {
     Point2d center = grid_center(grid);
     if (!intersect(center, polygon)) return;
@@ -464,17 +466,17 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
     set<Box *> visited;
 
     //get all boundary cells
-    for (const auto & ply : polygon)
+    for (const auto & ring : polygon)
     {
-        ply_vertex * ptr = ply.getHead();
+        LinkedVertex * ptr = ring.getHead();
 
         do
         {
-            ply_vertex * next =
-                ptr->getNext(); //ptr is the current vertex and next is the next vertex in this ply
+            LinkedVertex * next =
+                ptr->getNext(); //ptr is the current vertex and next is the next vertex in this ring
 
             LineSeg2d line(ptr->getPos(), next->getPos());
-            bool found = intersect(grid, line);
+            bool found = intersect_segment(grid, line);
 
             assert(found);
 
@@ -491,13 +493,13 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
             }
             m_intersection.clear();
             ptr = next;
-        } while (ptr != ply.getHead());
+        } while (ptr != ring.getHead());
     }
 
     //no edge crosses the grid, so the polygon encloses all of the layer or none of it
     if (visited.empty())
     {
-        enclose_grid(grid, polygon, visited, enclosed_intersection);
+        find_cells_inside(grid, polygon, visited, enclosed_intersection);
         backup.swap(m_intersection);
         return !enclosed_intersection.empty();
     }
@@ -545,8 +547,7 @@ bool GridIntersection::intersect(T * grid, const c_polygon & polygon, list<Box *
 
 //modify here to solve the problem of non-symmetrical refinement
 
-template <typename T>
-bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBoud)
+template <typename T> bool GridIntersection::intersect_segment(T * grid, const LineSeg2d & line)
 {
     LineSeg2d clipped_line;
     bool clipped = clip_line(grid, line, clipped_line);
@@ -585,11 +586,11 @@ bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBo
     }
 
     //check if start_box and end_box share an edge that the line runs along
-    int neiID = checkNeighbor(start_box, end_box);
+    int neiID = shared_edge_side(start_box, end_box);
     if (neiID != -1)
     {
         //check if the box edge collinearly intersect with the line
-        if (checkEdgeCollinear(start_box, neiID, line))
+        if (line_runs_along_edge(start_box, neiID, line))
         {
             m_intersection.pop_back();
             return true; //done
@@ -633,10 +634,10 @@ bool GridIntersection::intersect(T * grid, const LineSeg2d & line) //, bool noBo
                     //add by Guilin
                     //if collinear intersection
                     //a line along the shared edge is assigned to the cell b
-                    if (checkEdgeCollinear(b, i, line)) continue;
+                    if (line_runs_along_edge(b, i, line)) continue;
 
                     double epsilon = min(neighbor->dx, neighbor->dy) / 1000;
-                    if (intersect_len(neighbor, line) > epsilon) //long enough...
+                    if (intersection_length(neighbor, line) > epsilon) //long enough...
                     {
 
                         m_intersection.push_back(neighbor);
@@ -679,14 +680,15 @@ template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_P
     return found;
 }
 
-template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_LineSeg2d & line)
+template <typename T>
+bool GridIntersection::intersect_segment(T * grid, /*const*/ GIS_LineSeg2d & line)
 {
     ////rotate
     ////rotate
 
     vector<Box *> previous;
     m_intersection.swap(previous);
-    bool found = intersect(grid, (const LineSeg2d &)line);
+    bool found = intersect_segment(grid, (const LineSeg2d &)line);
 
     //process information
     if (this->m_b_save_intersection_info && found)
@@ -705,13 +707,13 @@ template <typename T> bool GridIntersection::intersect(T * grid, /*const*/ GIS_L
 }
 
 template <typename T>
-bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyClip * ply_clip)
+bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & polygon, RingClipper * ring_clip)
 {
 
     list<Box *> bd_intersection;
     list<Box *> enclosed_intersection;
     bool found =
-        intersect(grid, (const c_ply &)ply.front(), bd_intersection, enclosed_intersection);
+        intersect(grid, (const Ring &)polygon.front(), bd_intersection, enclosed_intersection);
 
     if (found)
     {
@@ -727,9 +729,9 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
             {
                 //store intersection info here...
                 vector<PolygonCellIntersectionInfo> infos;
-                buildIntersectionInfo(box, ply, infos, ply_clip);
-                m_ply_interaction_info.insert(m_ply_interaction_info.end(), infos.begin(),
-                                              infos.end());
+                buildIntersectionInfo(box, polygon, infos, ring_clip);
+                m_polygon_intersection_info.insert(m_polygon_intersection_info.end(), infos.begin(),
+                                                   infos.end());
             }
         }
 
@@ -747,9 +749,9 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ply, BoxPlyCl
 
                     //store intersection info here...
                     vector<PolygonCellIntersectionInfo> infos;
-                    buildIntersectionInfo(i, ply, infos, ply_clip);
-                    m_ply_interaction_info.insert(m_ply_interaction_info.end(), infos.begin(),
-                                                  infos.end());
+                    buildIntersectionInfo(i, polygon, infos, ring_clip);
+                    m_polygon_intersection_info.insert(m_polygon_intersection_info.end(),
+                                                       infos.begin(), infos.end());
                 }
             }
         } //end if(m_b_include_poly_boundary)

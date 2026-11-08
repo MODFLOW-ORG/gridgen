@@ -162,11 +162,11 @@ void DFSCollect(Grid * grid, Box * b, int layer, int row, int col, string & loca
     }
 }
 
-void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, bool close_polygons)
+void write_shapefile(QuadTree3D * qtree, string shpName, string feature_type, bool close_polygons)
 {
     if (feature_type == "line")
     {
-        writeQuadtree2ShpLine(qtree, shpName);
+        write_line_shapefile(qtree, shpName);
         return;
     }
 
@@ -215,7 +215,7 @@ void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, 
     ModflowGrid * mfgrid = qtree->getModflowGrid();
 
     double cx, cy, rotation;
-    mfgrid->getRotatePara(cx, cy, rotation);
+    mfgrid->get_rotation(cx, cy, rotation);
 
     vector<Box *> boxes;
     vector<int> numbers, layers, rows, cols;
@@ -227,7 +227,7 @@ void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, 
         {
             for (int c = 0; c < mfgrid->ncol; c++)
             {
-                int bid = mfgrid->get_nodeid(l, r, c);
+                int bid = mfgrid->get_box_index(l, r, c);
                 Box * box = qtree->nodegroup[bid];
                 string location;
 
@@ -251,12 +251,12 @@ void writeQuadtree2Shp(QuadTree3D * qtree, string shpName, string feature_type, 
     SHPClose(handler);
 }
 
-void writeModflowGrid2Shp(ModflowGrid * modflow, string gridShpName, string feature_type,
-                          bool without_inactive, bool one_based_numbering, bool close_polygons)
+void write_shapefile(ModflowGrid * modflow, string gridShpName, string feature_type,
+                     bool without_inactive, bool one_based_numbering, bool close_polygons)
 {
     if (feature_type == "line")
     {
-        writeModflowGrid2ShpLine(modflow, gridShpName);
+        write_line_shapefile(modflow, gridShpName);
         return;
     }
 
@@ -306,7 +306,7 @@ void writeModflowGrid2Shp(ModflowGrid * modflow, string gridShpName, string feat
     char extra[64];
 
     double cx, cy, rotation;
-    modflow->getRotatePara(cx, cy, rotation);
+    modflow->get_rotation(cx, cy, rotation);
 
     vector<Box *> boxes;
     vector<int> numbers, layers, rows, cols;
@@ -317,7 +317,7 @@ void writeModflowGrid2Shp(ModflowGrid * modflow, string gridShpName, string feat
         {
             for (int c = 0; c < mfgrid->ncol; c++)
             {
-                int bid = mfgrid->get_nodeid(l, r, c);
+                int bid = mfgrid->get_box_index(l, r, c);
                 Box * box = mfgrid->nodegroup[bid];
                 string extra_str = extra;
                 string location;

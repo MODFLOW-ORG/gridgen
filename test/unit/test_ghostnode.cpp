@@ -30,7 +30,7 @@ TEST(GhostNode, RefinedCenterCell)
     }
 
     std::vector<GhostNode> ghost_nodes;
-    computeGNC(qtree.get(), ghost_nodes);
+    compute_ghost_nodes(qtree.get(), ghost_nodes);
     ASSERT_EQ(ghost_nodes.size(), 8u);
 
     for (const GhostNode & ghost_node : ghost_nodes)

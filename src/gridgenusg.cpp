@@ -26,7 +26,7 @@ static int run(const string & action, const string & dfn_file)
     DefinitionParser def_parser;
     def_parser.parse(dfn_file);
 
-    block_raw_data * data = def_parser.getBlockData(action);
+    DefinitionBlock * data = def_parser.getBlockData(action);
 
     if (data == nullptr)
         throw GridgenError("definition file " + dfn_file + " has no block named " + action);
@@ -38,14 +38,12 @@ static int run(const string & action, const string & dfn_file)
     Grid * grid = nullptr;
 
     //try to case the data to various blocks
-    grid_raw_data * grid_data = dynamic_cast<grid_raw_data *>(data);
-    quadtree_builder_raw_data * qtree_builder_data =
-        dynamic_cast<quadtree_builder_raw_data *>(data);
-    gridtoshape_raw_data * grid2shp = dynamic_cast<gridtoshape_raw_data *>(data);
-    grid_to_usgdata_raw_data * grid2usg = dynamic_cast<grid_to_usgdata_raw_data *>(data);
-    grid_intersection_raw_data * gridintersection =
-        dynamic_cast<grid_intersection_raw_data *>(data);
-    gridtovtk_raw_data * grid2vtk = dynamic_cast<gridtovtk_raw_data *>(data);
+    GridBlock * grid_data = dynamic_cast<GridBlock *>(data);
+    QuadtreeBuilderBlock * qtree_builder_data = dynamic_cast<QuadtreeBuilderBlock *>(data);
+    GridToShapefileBlock * grid2shp = dynamic_cast<GridToShapefileBlock *>(data);
+    GridToUsgdataBlock * grid2usg = dynamic_cast<GridToUsgdataBlock *>(data);
+    GridIntersectionBlock * gridintersection = dynamic_cast<GridIntersectionBlock *>(data);
+    GridToVtkfileBlock * grid2vtk = dynamic_cast<GridToVtkfileBlock *>(data);
 
     //check if this is a type of grid
     if (grid_data != nullptr)
@@ -85,17 +83,16 @@ static int run(const string & action, const string & dfn_file)
     {
         cout << "- Saving grid: " << grid2shp->grid_name << " to shapefile: " << grid2shp->shapefile
              << endl;
-        //save to shapefile...
         if (qtree_grid != nullptr)
         {
-            writeQuadtree2Shp(qtree_grid, grid2shp->shapefile, grid2shp->feature_type,
-                              grid2shp->close_polygons);
+            write_shapefile(qtree_grid, grid2shp->shapefile, grid2shp->feature_type,
+                            grid2shp->close_polygons);
         }
         else if (modflow_grid != nullptr)
         {
-            writeModflowGrid2Shp(modflow_grid, grid2shp->shapefile, grid2shp->feature_type,
-                                 grid2shp->without_inactive, grid2shp->one_based_node_numbering,
-                                 grid2shp->close_polygons);
+            write_shapefile(modflow_grid, grid2shp->shapefile, grid2shp->feature_type,
+                            grid2shp->without_inactive, grid2shp->one_based_node_numbering,
+                            grid2shp->close_polygons);
         }
         else
         {
@@ -106,31 +103,14 @@ static int run(const string & action, const string & dfn_file)
     {
         cout << "- Saving grid: " << grid2vtk->grid_name << " to vtkfile: " << grid2vtk->vtkfile
              << endl;
-        //save to shapefile...
         if (qtree_grid != nullptr)
         {
-            if (grid2vtk->b_share_vertex)
-            {
-                writeQuadtreeGrid2VTK_shareV(qtree_grid, grid2vtk->vtkfile);
-            }
-            else
-            {
-                writeQuadtreeGrid2VTK(qtree_grid, grid2vtk->vtkfile);
-            }
+            write_vtk(qtree_grid, grid2vtk->vtkfile, grid2vtk->b_share_vertex);
         }
         else if (modflow_grid != nullptr)
         {
-            if (grid2vtk->b_share_vertex)
-            {
-                writeModflowGrid2VTK_shareV(modflow_grid, grid2vtk->vtkfile,
-                                            grid2vtk->without_inactive,
-                                            grid2vtk->one_based_node_numbering);
-            }
-            else
-            {
-                writeModflowGrid2VTK(modflow_grid, grid2vtk->vtkfile, grid2vtk->without_inactive,
-                                     grid2vtk->one_based_node_numbering);
-            }
+            write_vtk(modflow_grid, grid2vtk->vtkfile, grid2vtk->b_share_vertex,
+                      grid2vtk->without_inactive, grid2vtk->one_based_node_numbering);
         }
         else
         {

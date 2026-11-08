@@ -34,8 +34,8 @@ int max_level_jump(QuadTree3D * qtree, const CSRData & csr, bool vertical)
         {
             bool isvert = std::abs(csr.fldr[ipos]) == 3;
             if (isvert != vertical) continue;
-            int dn = qtree->get_nodeobj(n)->depth;
-            int dm = qtree->get_nodeobj(csr.ja[ipos])->depth;
+            int dn = qtree->get_cell_box(n)->depth;
+            int dm = qtree->get_cell_box(csr.ja[ipos])->depth;
             jump = std::max(jump, std::abs(dn - dm));
         }
     }
@@ -48,7 +48,7 @@ std::set<int> line_refined_cells(const std::vector<std::pair<double, double>> & 
 {
     std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 3, 3, 100.0, 100.0);
     std::unique_ptr<QuadTree3D> qtree = std::make_unique<QuadTree3D>(mfgrid.get());
-    c_plyline arc;
+    Polyline arc;
     arc.beginPoly();
     for (const auto & pt : points) arc.addVertex(pt.first, pt.second);
     arc.endPoly();
@@ -60,7 +60,7 @@ std::set<int> line_refined_cells(const std::vector<std::pair<double, double>> & 
     std::set<int> cells;
     for (int n = 0; n < qtree->nodes(); n++)
     {
-        Box * box = qtree->get_nodeobj(n);
+        Box * box = qtree->get_cell_box(n);
         if (box->depth == 0) continue;
         int row = static_cast<int>((300.0 - box->y) / 100.0);
         int col = static_cast<int>(box->x / 100.0);
@@ -171,7 +171,7 @@ TEST(QuadTree, VerticalPassThroughInactiveCell)
     Box * center = nullptr;
     for (int n = 0; n < qtree->nodes(); n++)
     {
-        Box * box = qtree->get_nodeobj(n);
+        Box * box = qtree->get_cell_box(n);
         if (box->layer == 1 && box->x == 150.0 && box->y == 150.0) center = box;
     }
     ASSERT_NE(center, nullptr);
@@ -188,8 +188,8 @@ TEST(QuadTree, VerticalPassThroughInactiveCell)
     {
         for (int ipos = csr.ia[n] + 1; ipos < csr.ia[n + 1]; ipos++)
         {
-            Box * bn = qtree->get_nodeobj(n);
-            Box * bm = qtree->get_nodeobj(csr.ja[ipos]);
+            Box * bn = qtree->get_cell_box(n);
+            Box * bm = qtree->get_cell_box(csr.ja[ipos]);
             if (std::abs(bn->layer - bm->layer) == 2) nlong++;
         }
     }
@@ -254,8 +254,8 @@ TEST(QuadTreeBuilder, LineWithEndsOutsideRotatedGridRefinesCellsItCrosses)
 {
     // rotated 90 degrees, the grid covers x from -300 to 0, and the line
     // crosses its middle row
-    std::string path = gridgen_test::write_shapefile("gridgen_unit_rotated_line", SHPT_ARC,
-                                                     {{{-150.0, -50.0}, {-150.0, 350.0}}});
+    std::string path = gridgen_test::write_test_shapefile("gridgen_unit_rotated_line", SHPT_ARC,
+                                                          {{{-150.0, -50.0}, {-150.0, 350.0}}});
     int nodes = 0;
     gridgen_test::build_qtree(gridgen_test::builder_dfn(path, "line", "REFINEMENT_LEVEL = 1", "90"),
                               &nodes);
@@ -265,8 +265,8 @@ TEST(QuadTreeBuilder, LineWithEndsOutsideRotatedGridRefinesCellsItCrosses)
 // each feature of a shape is refined to the level of that shape (issue #133)
 TEST(QuadTreeBuilder, MultipartLineIsRefinedToItsShapeLevel)
 {
-    gridgen_test::Ring a = {{10.0, 250.0}, {90.0, 250.0}}, b = {{210.0, 250.0}, {290.0, 250.0}},
-                       c = {{110.0, 50.0}, {190.0, 50.0}};
+    gridgen_test::Vertices a = {{10.0, 250.0}, {90.0, 250.0}}, b = {{210.0, 250.0}, {290.0, 250.0}},
+                           c = {{110.0, 50.0}, {190.0, 50.0}};
     auto cells = attribute_refined_cells("gridgen_unit_level_lines", SHPT_ARC, "line",
                                          {{{a, b}, 2}, {{c}, 1}});
     EXPECT_EQ(cells.size(), 9u + 2 * 15 + 3);
@@ -276,7 +276,7 @@ TEST(QuadTreeBuilder, MultipartLineIsRefinedToItsShapeLevel)
 
 TEST(QuadTreeBuilder, MultipointIsRefinedToItsShapeLevel)
 {
-    gridgen_test::Ring ab = {{50.0, 250.0}, {250.0, 250.0}}, c = {{150.0, 50.0}};
+    gridgen_test::Vertices ab = {{50.0, 250.0}, {250.0, 250.0}}, c = {{150.0, 50.0}};
     auto cells = attribute_refined_cells("gridgen_unit_level_points", SHPT_MULTIPOINT, "point",
                                          {{{ab}, 2}, {{c}, 1}});
     EXPECT_EQ(cells.size(), 9u + 2 * 15 + 3);
@@ -286,9 +286,9 @@ TEST(QuadTreeBuilder, MultipointIsRefinedToItsShapeLevel)
 
 TEST(QuadTreeBuilder, MultipatchIsRefinedToItsShapeLevel)
 {
-    gridgen_test::Ring a = gridgen_test::square(20.0, 220.0, 40.0),
-                       b = gridgen_test::square(220.0, 220.0, 40.0),
-                       c = gridgen_test::square(120.0, 20.0, 40.0);
+    gridgen_test::Vertices a = gridgen_test::square(20.0, 220.0, 40.0),
+                           b = gridgen_test::square(220.0, 220.0, 40.0),
+                           c = gridgen_test::square(120.0, 20.0, 40.0);
     auto cells = attribute_refined_cells("gridgen_unit_level_polygons", SHPT_MULTIPATCH, "polygon",
                                          {{{a, b}, 2}, {{c}, 1}});
     EXPECT_EQ(cells.size(), 9u + 2 * 15 + 3);
@@ -298,7 +298,7 @@ TEST(QuadTreeBuilder, MultipatchIsRefinedToItsShapeLevel)
 
 TEST(QuadTreeBuilder, NullShapeDoesNotShiftLevels)
 {
-    gridgen_test::Ring a = {{10.0, 250.0}, {90.0, 250.0}};
+    gridgen_test::Vertices a = {{10.0, 250.0}, {90.0, 250.0}};
     auto cells =
         attribute_refined_cells("gridgen_unit_level_null", SHPT_ARC, "line", {{{}, 2}, {{a}, 1}});
     EXPECT_EQ(cells.size(), 9u + 3);
@@ -310,8 +310,8 @@ TEST(QuadTreeBuilder, NullShapeDoesNotShiftLevels)
 // the ring it is inside, whatever the order and orientation of the rings
 TEST(QuadTreeBuilder, PolygonWithTwoOuterRingsRefinesBoth)
 {
-    gridgen_test::Ring a = gridgen_test::square(20.0, 220.0, 40.0),
-                       b = gridgen_test::square(220.0, 220.0, 40.0);
+    gridgen_test::Vertices a = gridgen_test::square(20.0, 220.0, 40.0),
+                           b = gridgen_test::square(220.0, 220.0, 40.0);
     auto cells =
         attribute_refined_cells("gridgen_unit_two_rings", SHPT_POLYGON, "polygon", {{{a, b}, 2}});
     EXPECT_EQ(cells.size(), 9u + 2 * 15);
@@ -322,8 +322,8 @@ TEST(QuadTreeBuilder, PolygonWithTwoOuterRingsRefinesBoth)
 TEST(QuadTreeBuilder, PolygonHoleIsNotRefined)
 {
     // the hole holds the center cell, so the cells around it are refined
-    gridgen_test::Ring outer = gridgen_test::square(10.0, 10.0, 280.0),
-                       hole = gridgen_test::square(90.0, 90.0, 120.0);
+    gridgen_test::Vertices outer = gridgen_test::square(10.0, 10.0, 280.0),
+                           hole = gridgen_test::square(90.0, 90.0, 120.0);
     auto cells =
         attribute_refined_cells("gridgen_unit_hole", SHPT_POLYGON, "polygon", {{{outer, hole}, 1}});
     EXPECT_EQ(cells.size(), 1u + 8 * 4);
@@ -333,10 +333,10 @@ TEST(QuadTreeBuilder, PolygonHoleIsNotRefined)
 
 TEST(QuadTreeBuilder, PolygonWithTwoOuterRingsAndHoles)
 {
-    gridgen_test::Ring a = gridgen_test::square(10.0, 210.0, 80.0),
-                       ahole = gridgen_test::square(30.0, 230.0, 40.0),
-                       b = gridgen_test::square(210.0, 10.0, 80.0),
-                       bhole = gridgen_test::square(230.0, 30.0, 40.0);
+    gridgen_test::Vertices a = gridgen_test::square(10.0, 210.0, 80.0),
+                           ahole = gridgen_test::square(30.0, 230.0, 40.0),
+                           b = gridgen_test::square(210.0, 10.0, 80.0),
+                           bhole = gridgen_test::square(230.0, 30.0, 40.0);
     auto separate = attribute_refined_cells("gridgen_unit_holes1", SHPT_POLYGON, "polygon",
                                             {{{a, ahole}, 1}, {{b, bhole}, 1}});
     EXPECT_EQ(separate.size(), 9u + 2 * 3);
@@ -352,10 +352,10 @@ TEST(QuadTreeBuilder, PolygonHoleTouchingOuterRingIsAHole)
 {
     // the hole meets the outer ring along x = 290 and holds the middle right
     // cell, which is not refined whichever vertex the hole starts at
-    gridgen_test::Ring outer = gridgen_test::square(10.0, 10.0, 280.0);
-    gridgen_test::Ring hole = {
+    gridgen_test::Vertices outer = gridgen_test::square(10.0, 10.0, 280.0);
+    gridgen_test::Vertices hole = {
         {190.0, 90.0}, {190.0, 210.0}, {290.0, 210.0}, {290.0, 90.0}, {190.0, 90.0}};
-    gridgen_test::Ring hole_from_edge = {
+    gridgen_test::Vertices hole_from_edge = {
         {290.0, 210.0}, {290.0, 90.0}, {190.0, 90.0}, {190.0, 210.0}, {290.0, 210.0}};
     auto cells = attribute_refined_cells("gridgen_unit_touching_hole", SHPT_POLYGON, "polygon",
                                          {{{outer, hole}, 1}});
@@ -367,9 +367,9 @@ TEST(QuadTreeBuilder, PolygonHoleTouchingOuterRingIsAHole)
 
 TEST(QuadTreeBuilder, PolygonIslandInHoleIsAPolygon)
 {
-    gridgen_test::Ring outer = gridgen_test::square(10.0, 10.0, 280.0),
-                       hole = gridgen_test::square(60.0, 60.0, 180.0),
-                       island = gridgen_test::square(140.0, 140.0, 20.0);
+    gridgen_test::Vertices outer = gridgen_test::square(10.0, 10.0, 280.0),
+                           hole = gridgen_test::square(60.0, 60.0, 180.0),
+                           island = gridgen_test::square(140.0, 140.0, 20.0);
     EXPECT_EQ(attribute_refined_cells("gridgen_unit_island", SHPT_POLYGON, "polygon",
                                       {{{island, outer, hole}, 1}}),
               attribute_refined_cells("gridgen_unit_island1", SHPT_POLYGON, "polygon",

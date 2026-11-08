@@ -49,7 +49,7 @@ std::vector<double> center_vertex_z(int rf, int cf, int ri, int ci)
     std::unique_ptr<QuadTree3D> qtree = std::make_unique<QuadTree3D>(mfgrid.get());
     Point2d pt(50.0 + 100.0 * cf, 150.0 - 100.0 * rf);
     qtree->refine(pt, 1, 0);
-    qtree->nodegroup[mfgrid->get_nodeid(0, ri, ci)]->active = false;
+    qtree->nodegroup[mfgrid->get_box_index(0, ri, ci)]->active = false;
     qtree->set_one_based_node_numbering(false);
     qtree->number_nodes();
     qtree->refresh();
@@ -58,13 +58,13 @@ std::vector<double> center_vertex_z(int rf, int cf, int ri, int ci)
     double * bot = qtree->get_bot();
     for (int n = 0; n < qtree->nodes(); n++)
     {
-        Box * b = qtree->get_nodeobj(n);
+        Box * b = qtree->get_cell_box(n);
         top[n] = top_at(b->x, b->y);
         bot[n] = top[n] - 10.0;
     }
 
     std::string name = ::testing::TempDir() + "gridgen_sharedvertex";
-    writeQuadtreeGrid2VTK_shareV(qtree.get(), name);
+    write_vtk(qtree.get(), name, true);
     std::vector<double> xyz = read_vtu_points(name + ".vtu");
 
     std::vector<double> zs;

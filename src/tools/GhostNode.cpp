@@ -122,7 +122,7 @@ void computeGNNeigh(Box * small_cell, list<Box *> & neighbors, int direction,
     }
 }
 
-void computeGNC(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes)
+void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes)
 {
     //loop over all the leaf node
     for (auto b : qtree->nodegroup)

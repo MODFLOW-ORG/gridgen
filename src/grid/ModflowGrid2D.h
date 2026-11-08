@@ -68,7 +68,7 @@ public:
     vector<double> get_cell_areas() override;
 
     /*!
-        \brief Return the four vertices for the specified nodeid.
+        \brief Return the four vertices for the specified box_index.
 
         3-------2
         |       |
@@ -76,11 +76,11 @@ public:
         0-------1
     */
 
-    ///Return the nodeid for the modflow grid.
-    int get_nodeid(int i, int j);
+    ///Return the box_index for the modflow grid.
+    int get_box_index(int i, int j);
 
-    ///Return the indices for the specified nodeid. (row major (row_id, col_id))
-    Index2d get_indices(int nodeid);
+    ///Return the indices for the specified box_index. (row major (row_id, col_id))
+    Index2d get_indices(int box_index);
 
     ///find the index of the node containing pt (row major (row_id, col_id))
     Index2d getIndex(const Point2d & pt);
@@ -90,13 +90,13 @@ public:
     int getYIndexByBinarySearch(const Point2d & pt, double * Ye, int left, int right,
                                 bool ascending);
 
-    /// return the box containing the given id
-    Box * find_nodeobj(int i, int j);
+    /// the box in row i, column j
+    Box * find_box(int i, int j);
 
     ///get box connections from id
     ///Return a sorted list of connections, where a connection is
-    ///a list [tonodeid, fldir].  fldir is -1, +1, -2, +2 for -x, +x, -y, +y.
-    list<pair<int, int>> get_node_connections(int nodeid) override;
+    ///a list [to_box_index, fldir].  fldir is -1, +1, -2, +2 for -x, +x, -y, +y.
+    list<pair<int, int>> get_node_connections(int box_index) override;
 
     //	/*!
     //	    Method for intersecting the model grid with a point, line, rectangle,

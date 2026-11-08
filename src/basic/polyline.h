@@ -12,25 +12,25 @@ namespace cusg
 //
 // Polyline
 //
-class c_plyline
+class Polyline
 {
 
 public:
     ///////////////////////////////////////////////////////////////////////////
-    c_plyline() { head = tail = nullptr; }
+    Polyline() { head = tail = nullptr; }
 
     void destroy();
 
     ///////////////////////////////////////////////////////////////////////////
-    // create c_ply
+    // create Ring
     void beginPoly();
     void addVertex(double x, double y, bool remove_duplicate = false);
     void endPoly();
 
     ///////////////////////////////////////////////////////////////////////////
     // Access
-    ply_vertex * getHead() const { return head; }
-    ply_vertex * getTail() const { return tail; }
+    LinkedVertex * getHead() const { return head; }
+    LinkedVertex * getTail() const { return tail; }
 
     int getSize()
     {
@@ -38,7 +38,7 @@ public:
         return all.size();
     }
 
-    ply_vertex * operator[](unsigned int id)
+    LinkedVertex * operator[](unsigned int id)
     {
         if (all.empty()) build_all();
         return all[id];
@@ -47,8 +47,8 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     // Operator
     //check if give poly line is the same as this
-    bool operator==(const c_plyline & other) { return other.head == head; }
-    friend istream & operator>>(istream &, c_plyline &);
+    bool operator==(const Polyline & other) { return other.head == head; }
+    friend istream & operator>>(istream &, Polyline &);
 
     //rotate function
     void rotate(double cx, double cy, double angle);
@@ -57,20 +57,20 @@ protected:
     ///////////////////////////////////////////////////////////////////////////
     void doInit(); /*return # of vertices in this poly*/
 
-    //build elements in vector<ply_vertex*> all
+    //build elements in vector<LinkedVertex*> all
     void build_all();
 
-    ply_vertex * head; //the head of vertex list
-    ply_vertex * tail; //end of the vertex list
+    LinkedVertex * head; //the head of vertex list
+    LinkedVertex * tail; //end of the vertex list
 
-    vector<ply_vertex *> all; //all vertices
+    vector<LinkedVertex *> all; //all vertices
 };
 
-class GIS_plyline : public c_plyline
+class GIS_polyline : public Polyline
 {
 public:
-    GIS_plyline() : c_plyline() { m_id = 0; }
-    GIS_plyline(const GIS_plyline & other) : c_plyline((c_plyline &)other) { m_id = other.m_id; }
+    GIS_polyline() : Polyline() { m_id = 0; }
+    GIS_polyline(const GIS_polyline & other) : Polyline((Polyline &)other) { m_id = other.m_id; }
 
     //return the i-th line segment from this polyline
     GIS_LineSeg2d getLineSegment(int i);

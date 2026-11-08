@@ -91,14 +91,14 @@ static string upper(string s)
 }
 
 //a warning for each record in block that its block type does not accept
-static list<string> unrecognized_records(const block_raw_data & block)
+static list<string> unrecognized_records(const DefinitionBlock & block)
 {
     list<string> warnings;
     const map<string, set<string>> & records = block_records();
     map<string, set<string>>::const_iterator known = records.find(block.type);
     if (known == records.end()) return warnings;
 
-    for (block_raw_data::const_iterator e = block.begin(); e != block.end(); e++)
+    for (DefinitionBlock::const_iterator e = block.begin(); e != block.end(); e++)
     {
         //a record given for a layer is matched without its layer number
         string name = e->name;
@@ -119,7 +119,7 @@ static list<string> unrecognized_records(const block_raw_data & block)
     return warnings;
 }
 
-//template<typename T> block_raw_data* createBlockType(block_raw_data& block) { return new T(block); }
+//template<typename T> DefinitionBlock* createBlockType(DefinitionBlock& block) { return new T(block); }
 
 //-----------------------------------------------------------------------------
 //
@@ -132,15 +132,15 @@ static list<string> unrecognized_records(const block_raw_data & block)
 //constructor
 DefinitionParser::DefinitionParser()
 {
-    m_block_type_map["modflow_grid"] = &createBlockType<modflow_grid_raw_data>;
-    m_block_type_map["quadtree"] = &createBlockType<quadtree_grid_raw_data>;
-    m_block_type_map["quadtree_builder"] = &createBlockType<quadtree_builder_raw_data>;
-    m_block_type_map["refinement_features"] = &createBlockType<refinement_raw_data>;
-    m_block_type_map["active_domain"] = &createBlockType<active_domain_raw_data>;
-    m_block_type_map["grid_to_shapefile"] = &createBlockType<gridtoshape_raw_data>;
-    m_block_type_map["grid_to_usgdata"] = &createBlockType<grid_to_usgdata_raw_data>;
-    m_block_type_map["grid_intersection"] = &createBlockType<grid_intersection_raw_data>;
-    m_block_type_map["grid_to_vtkfile"] = &createBlockType<gridtovtk_raw_data>;
+    m_block_type_map["modflow_grid"] = &createBlockType<ModflowGridBlock>;
+    m_block_type_map["quadtree"] = &createBlockType<QuadtreeBlock>;
+    m_block_type_map["quadtree_builder"] = &createBlockType<QuadtreeBuilderBlock>;
+    m_block_type_map["refinement_features"] = &createBlockType<RefinementFeaturesBlock>;
+    m_block_type_map["active_domain"] = &createBlockType<ActiveDomainBlock>;
+    m_block_type_map["grid_to_shapefile"] = &createBlockType<GridToShapefileBlock>;
+    m_block_type_map["grid_to_usgdata"] = &createBlockType<GridToUsgdataBlock>;
+    m_block_type_map["grid_intersection"] = &createBlockType<GridIntersectionBlock>;
+    m_block_type_map["grid_to_vtkfile"] = &createBlockType<GridToVtkfileBlock>;
 }
 
 //destructor
@@ -171,7 +171,7 @@ bool DefinitionParser::parse(istream & in, string folder)
     while (!in.eof())
     {
         //parse raw data
-        block_raw_data block;
+        DefinitionBlock block;
         bool done = readBlock(in, block);
         if (done == false) break;
 
@@ -221,7 +221,7 @@ bool DefinitionParser::parse(istream & in, string folder)
             for (auto & warning : warnings) warn(warning);
             m_warnings.splice(m_warnings.end(), warnings);
             //held until parsed, so a block whose records are in error is freed
-            unique_ptr<block_raw_data> ptr_block(m_block_type_map[block.type](block));
+            unique_ptr<DefinitionBlock> ptr_block(m_block_type_map[block.type](block));
             if (ptr_block != nullptr)
             {
                 bool parsed = ptr_block->parse();

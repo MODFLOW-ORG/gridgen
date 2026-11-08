@@ -63,7 +63,7 @@ std::string initialize_error(const std::string & definition, const std::string &
     std::istringstream dfn(definition);
     DefinitionParser parser;
     parser.parse(dfn);
-    block_raw_data * data = parser.getBlockData(name);
+    DefinitionBlock * data = parser.getBlockData(name);
     if (data == nullptr) return "no block " + name;
     return error_message([&] { data->initialize(parser.getBlockData()); });
 }
@@ -76,8 +76,7 @@ TEST(DefinitionParser, ModflowGridBlock)
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
-    modflow_grid_raw_data * data =
-        dynamic_cast<modflow_grid_raw_data *>(parser.getBlockData("mfg"));
+    ModflowGridBlock * data = dynamic_cast<ModflowGridBlock *>(parser.getBlockData("mfg"));
     ASSERT_NE(data, nullptr);
     ASSERT_TRUE(data->initialize(parser.getBlockData()));
 
@@ -176,8 +175,7 @@ TEST(DefinitionParser, ArrayErrors)
         std::istringstream dfn(mfg_block_with("CONSTANT 25.", delc));
         DefinitionParser parser;
         ASSERT_TRUE(parser.parse(dfn));
-        modflow_grid_raw_data * data =
-            dynamic_cast<modflow_grid_raw_data *>(parser.getBlockData("mfg"));
+        ModflowGridBlock * data = dynamic_cast<ModflowGridBlock *>(parser.getBlockData("mfg"));
         ASSERT_NE(data, nullptr);
         EXPECT_THROW(data->initialize(parser.getBlockData()), GridgenError);
         EXPECT_EQ(data->delr, nullptr);
@@ -206,8 +204,7 @@ TEST(DefinitionParser, LayerRecordsReadIndependently)
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
-    quadtree_builder_raw_data * data =
-        dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+    QuadtreeBuilderBlock * data = dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
     ASSERT_NE(data, nullptr);
 
     EXPECT_EQ(data->active_domain_str.count(0), 0u);
@@ -238,8 +235,7 @@ TEST(DefinitionParser, SurfaceRecordsAfterGapAreRead)
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
-    quadtree_builder_raw_data * qtb =
-        dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+    QuadtreeBuilderBlock * qtb = dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
     ASSERT_NE(qtb, nullptr);
     ASSERT_EQ(qtb->top_str.count(2), 1u);
     ASSERT_EQ(qtb->bot_str.count(2), 1u);
@@ -247,8 +243,7 @@ TEST(DefinitionParser, SurfaceRecordsAfterGapAreRead)
     EXPECT_EQ(qtb->bot_str.count(0), 0u);
     EXPECT_EQ(qtb->active_domain_str.size(), 1u);
 
-    quadtree_grid_raw_data * qtg =
-        dynamic_cast<quadtree_grid_raw_data *>(parser.getBlockData("qtg"));
+    QuadtreeBlock * qtg = dynamic_cast<QuadtreeBlock *>(parser.getBlockData("qtg"));
     ASSERT_NE(qtg, nullptr);
     EXPECT_EQ(qtg->top_str.count(0), 0u);
     ASSERT_EQ(qtg->top_str.count(1), 1u);
@@ -269,8 +264,7 @@ TEST(DefinitionParser, RefinementAliasesAndTopOnlyAreRead)
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
 
-    quadtree_builder_raw_data * data =
-        dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+    QuadtreeBuilderBlock * data = dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
     ASSERT_NE(data, nullptr);
 
     ASSERT_EQ(data->refine_by_features_str.count(0), 1u);
@@ -283,24 +277,24 @@ TEST(DefinitionParser, RefinementAliasesAndTopOnlyAreRead)
 namespace
 {
 
-quadtree_builder_raw_data * parse_builder(DefinitionParser & parser, const std::string & records)
+QuadtreeBuilderBlock * parse_builder(DefinitionParser & parser, const std::string & records)
 {
     std::istringstream dfn("BEGIN QUADTREE_BUILDER qtb\n"
                            "  MODFLOW_GRID = mfg\n"
                            "  GRID_DEFINITION_FILE = qtg.dfn\n" +
                            records + "END QUADTREE_BUILDER\n");
     EXPECT_TRUE(parser.parse(dfn));
-    return dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+    return dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
 }
 
-refinement_raw_data * parse_refinement(DefinitionParser & parser, const std::string & records)
+RefinementFeaturesBlock * parse_refinement(DefinitionParser & parser, const std::string & records)
 {
     std::istringstream dfn("BEGIN REFINEMENT_FEATURES rf\n"
                            "  SHAPEFILE = wells\n"
                            "  FEATURE_TYPE = point\n" +
                            records + "END REFINEMENT_FEATURES\n");
     EXPECT_TRUE(parser.parse(dfn));
-    return dynamic_cast<refinement_raw_data *>(parser.getBlockData("rf"));
+    return dynamic_cast<RefinementFeaturesBlock *>(parser.getBlockData("rf"));
 }
 
 } // namespace
@@ -314,7 +308,7 @@ TEST(DefinitionParser, SmoothingLevelSpellings)
     {
         SCOPED_TRACE(s[0]);
         DefinitionParser parser;
-        quadtree_builder_raw_data * data =
+        QuadtreeBuilderBlock * data =
             parse_builder(parser, std::string("  ") + s[0] + " = 3\n  " + s[1] + " = 2\n");
         ASSERT_NE(data, nullptr);
         EXPECT_EQ(data->smoothing_level_horizontal, 3);
@@ -322,8 +316,8 @@ TEST(DefinitionParser, SmoothingLevelSpellings)
     }
 
     DefinitionParser parser;
-    quadtree_builder_raw_data * data = parse_builder(parser, "  SMOOTHING_LEVEL_HORIZONTAL = 2\n"
-                                                             "  HORIZONTAL_SMOOTHING_LEVEL = 4\n");
+    QuadtreeBuilderBlock * data = parse_builder(parser, "  SMOOTHING_LEVEL_HORIZONTAL = 2\n"
+                                                        "  HORIZONTAL_SMOOTHING_LEVEL = 4\n");
     ASSERT_NE(data, nullptr);
     EXPECT_EQ(data->smoothing_level_horizontal, 4);
 }
@@ -335,14 +329,14 @@ TEST(DefinitionParser, RefineLevelByAttributeSpellings)
     {
         SCOPED_TRACE(name);
         DefinitionParser parser;
-        refinement_raw_data * data = parse_refinement(
+        RefinementFeaturesBlock * data = parse_refinement(
             parser, std::string("  REFINEMENT_LEVEL = 2\n  ") + name + " = LEVEL\n");
         ASSERT_NE(data, nullptr);
         EXPECT_EQ(data->refinement_level_by_attribute, "LEVEL");
     }
 
     DefinitionParser parser;
-    refinement_raw_data * data = parse_refinement(parser, "  REFINEMENT_LEVEL = 2\n");
+    RefinementFeaturesBlock * data = parse_refinement(parser, "  REFINEMENT_LEVEL = 2\n");
     ASSERT_NE(data, nullptr);
     EXPECT_EQ(data->refinement_level, 2);
     EXPECT_TRUE(data->refinement_level_by_attribute.empty());
@@ -375,8 +369,7 @@ TEST(DefinitionParser, RefinementArrayFileIsNotRead)
                            "END QUADTREE_BUILDER\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
-    quadtree_builder_raw_data * data =
-        dynamic_cast<quadtree_builder_raw_data *>(parser.getBlockData("qtb"));
+    QuadtreeBuilderBlock * data = dynamic_cast<QuadtreeBuilderBlock *>(parser.getBlockData("qtb"));
     ASSERT_NE(data, nullptr);
     EXPECT_TRUE(data->initialize(parser.getBlockData()));
 }
@@ -457,7 +450,7 @@ TEST(DefinitionParser, QuadtreeExportRecordsAreReportedAsIgnored)
     const char * blocks[] = {"shp", "vtk"};
     for (const char * name : blocks)
     {
-        block_raw_data * data = parser.getBlockData(name);
+        DefinitionBlock * data = parser.getBlockData(name);
         ASSERT_NE(data, nullptr) << name;
         ASSERT_TRUE(data->initialize(parser.getBlockData())) << name;
         const std::list<std::string> & warnings = data->getWarnings();
@@ -476,7 +469,7 @@ TEST(DefinitionParser, ModflowGridExportRecordsAreNotReported)
     const char * blocks[] = {"shp", "vtk"};
     for (const char * name : blocks)
     {
-        block_raw_data * data = parser.getBlockData(name);
+        DefinitionBlock * data = parser.getBlockData(name);
         ASSERT_NE(data, nullptr) << name;
         ASSERT_TRUE(data->initialize(parser.getBlockData())) << name;
         EXPECT_TRUE(data->getWarnings().empty()) << name;
@@ -497,16 +490,16 @@ TEST(DefinitionParser, QuadtreeExportWithoutTheRecordsIsNotReported)
                                                     "END GRID_TO_SHAPEFILE\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
-    block_raw_data * data = parser.getBlockData("shp");
+    DefinitionBlock * data = parser.getBlockData("shp");
     ASSERT_NE(data, nullptr);
     ASSERT_TRUE(data->initialize(parser.getBlockData()));
     EXPECT_TRUE(data->getWarnings().empty());
 }
 
 // a block of type T, named after its type, with no records
-template <typename T> std::unique_ptr<block_raw_data> empty_block(const std::string & type)
+template <typename T> std::unique_ptr<DefinitionBlock> empty_block(const std::string & type)
 {
-    block_raw_data block;
+    DefinitionBlock block;
     block.type = type;
     block.name = type;
     return std::make_unique<T>(block);
@@ -515,16 +508,16 @@ template <typename T> std::unique_ptr<block_raw_data> empty_block(const std::str
 TEST(DefinitionParser, RunningABlockThatIsNotAnActionWarns)
 {
     // running an object block writes nothing (#151); running an action does
-    std::vector<std::pair<std::unique_ptr<block_raw_data>, bool>> blocks;
-    blocks.emplace_back(empty_block<modflow_grid_raw_data>("modflow_grid"), false);
-    blocks.emplace_back(empty_block<quadtree_grid_raw_data>("quadtree"), false);
-    blocks.emplace_back(empty_block<refinement_raw_data>("refinement_features"), false);
-    blocks.emplace_back(empty_block<active_domain_raw_data>("active_domain"), false);
-    blocks.emplace_back(empty_block<quadtree_builder_raw_data>("quadtree_builder"), true);
-    blocks.emplace_back(empty_block<gridtoshape_raw_data>("grid_to_shapefile"), true);
-    blocks.emplace_back(empty_block<grid_to_usgdata_raw_data>("grid_to_usgdata"), true);
-    blocks.emplace_back(empty_block<gridtovtk_raw_data>("grid_to_vtkfile"), true);
-    blocks.emplace_back(empty_block<grid_intersection_raw_data>("grid_intersection"), true);
+    std::vector<std::pair<std::unique_ptr<DefinitionBlock>, bool>> blocks;
+    blocks.emplace_back(empty_block<ModflowGridBlock>("modflow_grid"), false);
+    blocks.emplace_back(empty_block<QuadtreeBlock>("quadtree"), false);
+    blocks.emplace_back(empty_block<RefinementFeaturesBlock>("refinement_features"), false);
+    blocks.emplace_back(empty_block<ActiveDomainBlock>("active_domain"), false);
+    blocks.emplace_back(empty_block<QuadtreeBuilderBlock>("quadtree_builder"), true);
+    blocks.emplace_back(empty_block<GridToShapefileBlock>("grid_to_shapefile"), true);
+    blocks.emplace_back(empty_block<GridToUsgdataBlock>("grid_to_usgdata"), true);
+    blocks.emplace_back(empty_block<GridToVtkfileBlock>("grid_to_vtkfile"), true);
+    blocks.emplace_back(empty_block<GridIntersectionBlock>("grid_intersection"), true);
     for (auto & [block, is_action] : blocks)
     {
         clear_warnings();

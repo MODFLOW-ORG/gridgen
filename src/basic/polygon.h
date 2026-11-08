@@ -30,23 +30,23 @@ using uint = unsigned int;
 namespace cusg
 {
 /// Vertex of polygon
-class ply_vertex
+class LinkedVertex
 {
 public:
     ///////////////////////////////////////////////////////////////////////////
-    ply_vertex() { init(); }
-    ply_vertex(const Point2d & p)
+    LinkedVertex() { init(); }
+    LinkedVertex(const Point2d & p)
     {
         pos = p;
         init();
     }
-    virtual ~ply_vertex();
-    void setNext(ply_vertex * n)
+    virtual ~LinkedVertex();
+    void setNext(LinkedVertex * n)
     {
         next = n;
         if (n != nullptr) n->pre = this;
     }
-    void setPre(ply_vertex * n)
+    void setPre(LinkedVertex * n)
     {
         pre = n;
         if (n != nullptr) n->next = this;
@@ -62,8 +62,8 @@ public:
 
     void translate(const Vector2d & v) { pos = pos + v; }
 
-    virtual ply_vertex * getNext() const { return next; }
-    virtual ply_vertex * getPre() const { return pre; }
+    virtual LinkedVertex * getNext() const { return next; }
+    virtual LinkedVertex * getPre() const { return pre; }
 
     const Vector2d & getNormal() const { return normal; }
     bool isReflex() const { return reflex; }
@@ -81,10 +81,10 @@ private:
     }
 
     //basic info
-    Point2d pos;       //!< position
-    ply_vertex * next; //!< next vertex in the polygon
-    ply_vertex * pre;  //!< previous vertex in the polygon
-    Vector2d normal;   //!< normal, the segment normal from this v to the next.
+    Point2d pos;         //!< position
+    LinkedVertex * next; //!< next vertex in the polygon
+    LinkedVertex * pre;  //!< previous vertex in the polygon
+    Vector2d normal;     //!< normal, the segment normal from this v to the next.
     bool reflex;
     uint vid;
 
@@ -93,7 +93,7 @@ public:
 };
 
 /// Polygon chain
-class c_ply
+class Ring
 {
 public:
     enum POLYTYPE
@@ -104,17 +104,17 @@ public:
     };
 
     ///////////////////////////////////////////////////////////////////////////
-    //c_ply(const c_ply& cp);//add
+    //Ring(const Ring& cp);//add
 
     ///////////////////////////////////////////////////////////////////////////
-    c_ply()
+    Ring()
     {
         head = tail = nullptr;
         type = UNKNOWN;
         radius = -1;
         area = -FLT_MAX;
     }
-    c_ply(POLYTYPE t)
+    Ring(POLYTYPE t)
     {
         head = tail = nullptr;
         type = t;
@@ -125,7 +125,7 @@ public:
     void destroy();
 
     ///////////////////////////////////////////////////////////////////////////
-    /// create c_ply
+    /// create Ring
     void beginPoly();
     void addVertex(double x, double y, bool remove_duplicate = false);
     void endPoly(bool remove_duplicate = false);
@@ -134,9 +134,9 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////
     // Access
-    ply_vertex * getHead() const { return head; }
+    LinkedVertex * getHead() const { return head; }
     POLYTYPE getType() const { return type; }
-    void set(POLYTYPE t, ply_vertex * h)
+    void set(POLYTYPE t, LinkedVertex * h)
     {
         type = t;
         head = h;
@@ -156,7 +156,7 @@ public:
         return all.size();
     }
 
-    ply_vertex * operator[](unsigned int id)
+    LinkedVertex * operator[](unsigned int id)
     {
         if (all.empty()) build_all();
         return all[id];
@@ -178,21 +178,21 @@ public:
     ///////////////////////////////////////////////////////////////////////////
     // Operator
     /// check if given poly line is the same as this
-    bool operator==(const c_ply & other) { return other.head == head; }
-    friend istream & operator>>(istream &, c_ply &);
+    bool operator==(const Ring & other) { return other.head == head; }
+    friend istream & operator>>(istream &, Ring &);
 
 protected:
     ///////////////////////////////////////////////////////////////////////////
     void doInit(); /*return # of vertices in this poly*/
 
-    /// build elements in vector<ply_vertex*> all
+    /// build elements in vector<LinkedVertex*> all
     void build_all();
 
 private:
-    ply_vertex * head; //!< the head of vertex list
-    ply_vertex * tail; //!< end of the vertex list
+    LinkedVertex * head; //!< the head of vertex list
+    LinkedVertex * tail; //!< end of the vertex list
 
-    vector<ply_vertex *> all; //!< all vertices
+    vector<LinkedVertex *> all; //!< all vertices
 
     //additional info
     Point2d center;
@@ -203,13 +203,13 @@ private:
     POLYTYPE type;
 };
 
-/// a list of \c c_ply
-class c_plylist : public list<c_ply>
+/// a list of \c Ring
+class RingList : public list<Ring>
 {
-    friend istream & operator>>(istream &, c_plylist &);
+    friend istream & operator>>(istream &, RingList &);
 
 public:
-    c_plylist()
+    RingList()
     {
         box[0] = box[1] = box[2] = box[3] = 0;
         is_buildboxandcenter_called = false;
@@ -246,13 +246,13 @@ private:
     bool is_buildboxandcenter_called;
 };
 
-/*! \brief a restricted kind of \c c_plylist
+/*! \brief a restricted kind of \c RingList
      
         this defines a simple polygon so that
-        the first element must be a \c POUT \c c_ply and
-        the rest ply lines are a list of holes
+        the first element must be a \c POUT \c Ring and
+        the rest ring lines are a list of holes
     */
-class c_polygon : public c_plylist
+class c_polygon : public RingList
 {
 public:
     c_polygon() { area = 0; }
@@ -265,7 +265,7 @@ public:
     }
 
     /// access the vertices of the polygon as an array
-    ply_vertex * operator[](unsigned int id)
+    LinkedVertex * operator[](unsigned int id)
     {
         if (all.empty()) build_all();
         return all[id];
@@ -282,12 +282,12 @@ public:
     ///rotate this polygon
     void rotate(double cx, double cy, double angle)
     {
-        list<c_ply>::iterator pit = this->begin();
+        list<Ring>::iterator pit = this->begin();
         for (; pit != this->end(); ++pit)
         {
-            c_ply & ply = *pit;
-            ply_vertex * phead = ply.getHead();
-            ply_vertex * pcur = phead;
+            Ring & ring = *pit;
+            LinkedVertex * phead = ring.getHead();
+            LinkedVertex * pcur = phead;
             do
             {
                 pcur->rotate(cx, cy, angle);
@@ -299,7 +299,7 @@ public:
 protected:
     void build_all();
 
-    vector<ply_vertex *> all; //!< all vertices
+    vector<LinkedVertex *> all; //!< all vertices
 
     float area;
 };

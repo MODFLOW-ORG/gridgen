@@ -18,7 +18,7 @@
 #include <algorithm>
 
 #include "vert_pass.h"
-#include "BoxPlyClip.h"
+#include "RingClipper.h"
 using namespace std;
 
 namespace cusg
@@ -29,7 +29,7 @@ namespace cusg
 	be a ModflowGrid object.
 	*/
 
-QuadTree3D::QuadTree3D(ModflowGrid * mfgrid) : nodeid_array(nullptr), nodelay_array(nullptr)
+QuadTree3D::QuadTree3D(ModflowGrid * mfgrid) : box_index_array(nullptr), layer_cell_counts(nullptr)
 {
     // Store the modflowgrid, too
     m_mfgrid = mfgrid;
@@ -42,13 +42,13 @@ QuadTree3D::QuadTree3D(ModflowGrid * mfgrid) : nodeid_array(nullptr), nodelay_ar
     //an array that contains all of the node objects.
     _add_root_nodes();
 
-    //assign a variable that indiactes whether or not nodeid_array needs to
+    //assign a variable that indiactes whether or not box_index_array needs to
     //be rebuilt because nodes have been added or removed.
-    rebuild_nodeid_array = true;
-    rebuild_nodenumber_array = true;
+    rebuild_box_index_array = true;
+    rebuild_cell_array = true;
     one_based_node_numbering = true;
-    nodeid_array = getnodeid_array();
-    getnodenumber_array();
+    box_index_array = get_box_index_array();
+    get_cell_array();
 
     //how z values of top and bot should be determined
     m_bot_layer_z_operator = m_top_layer_z_operator = vector<LAYER_Z_VALUE_OPERATOR>(
@@ -79,7 +79,7 @@ void getSpecialPointIntersection(QuadTree3D * qtree, const Point2d & pt, int max
             x_id = id2d[1] + j;
             if (x_id < 0 || x_id >= mf->ncol) continue;
 
-            id = mf->get_nodeid(at_layer, y_id, x_id);
+            id = mf->get_box_index(at_layer, y_id, x_id);
             Box * box = qtree->nodegroup[id];
             if (box->in(pt[0], pt[1]))
             {
@@ -112,7 +112,7 @@ bool QuadTree3D::refine(Point2d & pt, int max_level, int at_layer)
             if (c->in(pt[0], pt[1])) boxes.push_back(c);
         }
 
-        this->rebuild_nodeid_array = true;
+        this->rebuild_box_index_array = true;
     }
 
     return intersects;
@@ -267,7 +267,7 @@ bool specialLineIntersect(QuadTree3D * qtree, const LineSeg2d & line, int max_le
 //				//check if really intersect
 //				//todo:
 
-bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
+bool QuadTree3D::refine(Polyline & arc, int max_level, int at_layer)
 {
 
     bool refined = true;
@@ -282,12 +282,12 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
 
         GridIntersection gi(max_level, at_layer);
 
-        ply_vertex * ptr = arc.getHead();
+        LinkedVertex * ptr = arc.getHead();
 
         bool line_found = false;
         do
         {
-            ply_vertex * next = ptr->getNext();
+            LinkedVertex * next = ptr->getNext();
             if (next != nullptr)
             {
                 LineSeg2d line(ptr->getPos(), next->getPos());
@@ -316,7 +316,7 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
                         nodegroup.add(c);
                     }
                     refined = true;
-                    this->rebuild_nodeid_array = true;
+                    this->rebuild_box_index_array = true;
                 }
             } //end for i
         }
@@ -329,15 +329,15 @@ bool QuadTree3D::refine(c_plyline & arc, int max_level, int at_layer)
 //	do
 //	{
 
-bool isReallyIntersect(BoxPlyClip * ply_clip, Box * b)
+bool isReallyIntersect(RingClipper * ring_clip, Box * b)
 {
     double xmin = min(b->x - b->dx / 2, b->x + b->dx / 2);
     double xmax = max(b->x - b->dx / 2, b->x + b->dx / 2);
     double ymin = min(b->y - b->dy / 2, b->y + b->dy / 2);
     double ymax = max(b->y - b->dy / 2, b->y + b->dy / 2);
 
-    list<BoxPlyClip *> clips;
-    ply_clip->clip(xmin, xmax, ymin, ymax, clips);
+    list<RingClipper *> clips;
+    ring_clip->clip(xmin, xmax, ymin, ymax, clips);
 
     double area(0.0);
     for (auto & clip_part : clips)
@@ -358,12 +358,12 @@ bool isReallyIntersect(BoxPlyClip * ply_clip, Box * b)
 
 bool isReallyIntersect(c_polygon & pgon, Box * b)
 {
-    BoxPlyClip * ply_clip = convertSimplePolygonToClip(pgon);
+    RingClipper * ring_clip = convertSimplePolygonToClip(pgon);
 
-    bool intersects = isReallyIntersect(ply_clip, b);
+    bool intersects = isReallyIntersect(ring_clip, b);
 
-    ply_clip->destroy();
-    delete ply_clip;
+    ring_clip->destroy();
+    delete ring_clip;
     return intersects;
 }
 
@@ -395,7 +395,7 @@ bool QuadTree3D::refine(c_polygon & pgon, int max_level, int at_layer)
                 for (auto & c : b->pChildren) nodegroup.add(c);
 
                 refined = true;
-                this->rebuild_nodeid_array = true;
+                this->rebuild_box_index_array = true;
             } //end for i (intersected boxes)
         }
 
@@ -416,9 +416,9 @@ bool QuadTree3D::smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq,
     // go through each connection
     for (auto & connection : connectionlist)
     {
-        int tonodeid = connection.first;
+        int to_box_index = connection.first;
         int dir = connection.second;
-        Box * nei = nodegroup[tonodeid];
+        Box * nei = nodegroup[to_box_index];
 
         if (nei == nullptr) continue;
         assert(nei->isLeaf);
@@ -452,7 +452,7 @@ bool QuadTree3D::smooth_refinement(Box * box, vector<pair<int, Box *>> & box_pq,
                     push_heap(box_pq.begin(), box_pq.end());
 
                     //flag to rebuild
-                    this->rebuild_nodeid_array = true;
+                    this->rebuild_box_index_array = true;
                 } //end for k
             }
             else
@@ -510,127 +510,127 @@ vector<double> QuadTree3D::get_cell_areas()
 
     vector<double> area(nodesize);
 
-    for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
+    for (int cell = 0; cell < nodesize; cell++)
     {
-        int nodeid = nodeid_array[nodenumber];
-        Box * nodeobj = nodegroup[nodeid];
-        area[nodenumber] = nodeobj->dx * nodeobj->dy;
+        int box_index = box_index_array[cell];
+        Box * nodeobj = nodegroup[box_index];
+        area[cell] = nodeobj->dx * nodeobj->dy;
     }
 
     return area;
 }
 
 /*!
-	\brief Return the four vertices for the specified nodeid.
+	\brief Return the four vertices for the specified box_index.
 	*/
 
 /*! 
-	Return an array of size nodes that contains the nodeid for all
+	Return an array of size nodes that contains the box_index for all
 	active leaf nodes.  Thus the array contains:
 
-	nodeid_array[nodenumber] = nodeid
+	box_index_array[cell] = box_index
 
 	Note that this array is rebuilt, but only if the
-	nodegroup.rebuild_nodeid_array flag is True.  This flag is set to
+	nodegroup.rebuild_box_index_array flag is True.  This flag is set to
 	true anytime quadtree nodes are added or removed.
 	*/
-int * QuadTree3D::getnodeid_array()
+int * QuadTree3D::get_box_index_array()
 {
-    if (nodeid_array == nullptr || nodelay_array == nullptr || rebuild_nodeid_array)
+    if (box_index_array == nullptr || layer_cell_counts == nullptr || rebuild_box_index_array)
     {
-        nodegroup.rebuild_nodeid_array = true;
-        nodeid_array = nodegroup.get_nodeid_array();
-        nodelay_array = nodegroup.get_nodelay_array();
-        rebuild_nodeid_array = false;
-        rebuild_nodenumber_array = true;
+        nodegroup.rebuild_box_index_array = true;
+        box_index_array = nodegroup.get_box_index_array();
+        layer_cell_counts = nodegroup.get_layer_cell_counts();
+        rebuild_box_index_array = false;
+        rebuild_cell_array = true;
     }
 
-    return nodeid_array;
+    return box_index_array;
 }
 
-///get nodelay_array
-int * QuadTree3D::get_nodelay()
+///the number of cells in each layer
+int * QuadTree3D::get_layer_cell_counts()
 {
-    if (nodeid_array == nullptr || nodelay_array == nullptr || rebuild_nodeid_array)
+    if (box_index_array == nullptr || layer_cell_counts == nullptr || rebuild_box_index_array)
     {
-        nodegroup.rebuild_nodeid_array = true;
-        nodeid_array = nodegroup.get_nodeid_array();
-        nodelay_array = nodegroup.get_nodelay_array();
-        rebuild_nodeid_array = false;
-        rebuild_nodenumber_array = true;
+        nodegroup.rebuild_box_index_array = true;
+        box_index_array = nodegroup.get_box_index_array();
+        layer_cell_counts = nodegroup.get_layer_cell_counts();
+        rebuild_box_index_array = false;
+        rebuild_cell_array = true;
     }
 
-    return nodelay_array;
+    return layer_cell_counts;
 }
 
 /*!
-	\brief Create a nodenumber_array of size nodegroup with the following:
+	\brief Create a cell_array of size nodegroup with the following:
 
-	node number is the id of the node in CSR or Coo array
+	a cell is the number of a node in the CSR or COO arrays
 
-	nodenumber_array[nodeid] = nodenumber
+	cell_array[box_index] = cell
 	*/
-int * QuadTree3D::createnodenumber_array()
+int * QuadTree3D::create_cell_array()
 {
     int nsize = nodegroup.size();
-    nodenumber_array.resize(nsize);
+    cell_array.resize(nsize);
     //fill every byte with that of -INT_MAX, as memset did
-    memset(nodenumber_array.data(), (int)-INT_MAX, sizeof(int) * nsize);
+    memset(cell_array.data(), (int)-INT_MAX, sizeof(int) * nsize);
 
     int leaf_size = nodes();
 
-    for (int nodenumber = 0; nodenumber < leaf_size; nodenumber++)
+    for (int cell = 0; cell < leaf_size; cell++)
     {
-        int nodeid = nodeid_array[nodenumber];
-        nodenumber_array[nodeid] = nodenumber;
+        int box_index = box_index_array[cell];
+        cell_array[box_index] = cell;
     }
 
-    return nodenumber_array.data();
+    return cell_array.data();
 }
 
 /*! 
-	Return an array of len(nodegroup) that contains the nodenumber for all
+	Return an array of len(nodegroup) that contains the cell for all
 	active leaf nodes.  Thus the array contains:
 
-	nodenumber_array[nodeid] = nodenumber
+	cell_array[box_index] = cell
 
 	Note that this array is rebuilt, but only if the
-	nodegroup.rebuild_nodeid_array flag is True.  This flag is set to
+	nodegroup.rebuild_box_index_array flag is True.  This flag is set to
 	true anytime quadtree nodes are added or removed.
 	*/
-int * QuadTree3D::getnodenumber_array()
+int * QuadTree3D::get_cell_array()
 {
-    if (nodenumber_array.empty() || rebuild_nodenumber_array)
+    if (cell_array.empty() || rebuild_cell_array)
     {
-        createnodenumber_array();
-        rebuild_nodenumber_array = false;
+        create_cell_array();
+        rebuild_cell_array = false;
     }
 
-    return nodenumber_array.data();
+    return cell_array.data();
 }
 
 ///get box from id
-Box * QuadTree3D::get_nodeobj(int nodenumber)
+Box * QuadTree3D::get_cell_box(int cell)
 {
-    int nodeid = nodeid_array[nodenumber];
-    return nodegroup[nodeid];
+    int box_index = box_index_array[cell];
+    return nodegroup[box_index];
 }
 
-int QuadTree3D::get_nodenumber(int nodeid)
+int QuadTree3D::get_cell(int box_index)
 {
-    int nodenumber = nodenumber_array[nodeid];
-    if (nodenumber == -1)
+    int cell = cell_array[box_index];
+    if (cell == -1)
     {
-        throw GridgenError("internal error: cell " + to_string(nodeid) + " has no node number");
+        throw GridgenError("internal error: cell " + to_string(box_index) + " has no node number");
     }
 
-    return nodenumber;
+    return cell;
 }
 
-list<pair<int, int>> QuadTree3D::get_node_connections(int nodenumber)
+list<pair<int, int>> QuadTree3D::get_node_connections(int cell)
 {
-    int nodeid = nodeid_array[nodenumber];
-    Box * box = nodegroup[nodeid];
+    int box_index = box_index_array[cell];
+    Box * box = nodegroup[box_index];
     assert(box->isLeaf);
     return get_node_connections(box);
 }
@@ -678,16 +678,18 @@ list<pair<int, int>> QuadTree3D::get_node_connections(Box * box)
 
 ///get box connections from id
 ///Return a sorted list of connections, where a connection is
-///a list [tonodeid, fldir].  fldir is -1, +1, -2, +2 for -x, +x, -y, +y, -z, +z.
-list<pair<int, int>> QuadTree3D::get_node_connections_vp(int nodenumber, vector<double> * area)
+///a list [to_box_index, fldir].  fldir is -1, +1, -2, +2 for -x, +x, -y, +y, -z, +z.
+list<pair<int, int>> QuadTree3D::get_node_connections_with_pass_through(int cell,
+                                                                        vector<double> * area)
 {
-    int nodeid = nodeid_array[nodenumber];
-    Box * box = nodegroup[nodeid];
+    int box_index = box_index_array[cell];
+    Box * box = nodegroup[box_index];
     assert(box->isLeaf);
-    return get_node_connections_vp(box, area);
+    return get_node_connections_with_pass_through(box, area);
 }
 
-list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<double> * area)
+list<pair<int, int>> QuadTree3D::get_node_connections_with_pass_through(Box * box,
+                                                                        vector<double> * area)
 {
     //neighbors from 4 sides and up and down
     list<Box *> nei[6];
@@ -730,7 +732,7 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
     }
     //up direction
     vector<VPTPair> passes_up;
-    getVPT(box, passes_up, false);
+    get_vertical_passes(box, passes_up, false);
     for (vector<VPTPair>::iterator vpit = passes_up.begin(); vpit != passes_up.end(); ++vpit)
     {
         assert(vpit->source == box);
@@ -748,7 +750,7 @@ list<pair<int, int>> QuadTree3D::get_node_connections_vp(Box * box, vector<doubl
     }
     //add the down vertical pass
     vector<VPTPair> passes_down;
-    getVPT(box, passes_down, true);
+    get_vertical_passes(box, passes_down, true);
     for (vector<VPTPair>::iterator vpit = passes_down.begin(); vpit != passes_down.end(); ++vpit)
     {
         assert(vpit->source == box);
@@ -772,14 +774,14 @@ CSRData QuadTree3D::get_usg_csr_data()
 {
     cout << "- Compute the cell connections" << endl;
 
-    if (this->rebuild_nodeid_array)
+    if (this->rebuild_box_index_array)
     {
-        this->getnodeid_array();
+        this->get_box_index_array();
     }
 
-    if (this->rebuild_nodenumber_array)
+    if (this->rebuild_cell_array)
     {
-        this->getnodenumber_array();
+        this->get_cell_array();
     }
 
     //this is the number of leaves of the quadtree
@@ -795,7 +797,7 @@ CSRData QuadTree3D::get_usg_csr_data()
         int csize = 0;
 
         if (vertical_pass_through)
-            csize = get_node_connections_vp(nid, &areas).size();
+            csize = get_node_connections_with_pass_through(nid, &areas).size();
         else
             csize = get_node_connections(nid).size();
         nja += csize;
@@ -818,10 +820,7 @@ CSRData QuadTree3D::get_usg_csr_data()
     int id_offset = (one_based_node_numbering) ? 1 : 0;
     for (int nid = 0; nid < box_size; nid++)
     {
-        //get an object representation of this nodeid
-        //nodeobj = self.get_nodeobj(nodenumber)
-
-        Box * nodeobj = get_nodeobj(nid);
+        Box * nodeobj = get_cell_box(nid);
         double dxdydzn[3] = {nodeobj->dx, nodeobj->dy, nodeobj->dz};
 
         //diagonal position
@@ -836,7 +835,7 @@ CSRData QuadTree3D::get_usg_csr_data()
         vector<double> conAreas;
         list<pair<int, int>> connectionlist;
         if (vertical_pass_through)
-            connectionlist = get_node_connections_vp(nid, &conAreas);
+            connectionlist = get_node_connections_with_pass_through(nid, &conAreas);
         else
             connectionlist = get_node_connections(nid);
 
@@ -845,20 +844,20 @@ CSRData QuadTree3D::get_usg_csr_data()
         if (sortconnections)
         {
             if (vertical_pass_through)
-                sortareabyconid(connectionlist, conAreas); //sort the area first
-            sortconnectionbynodenumber(connectionlist);
+                sort_areas_by_cell(connectionlist, conAreas); //sort the area first
+            sort_connections_by_cell(connectionlist);
         }
 
         // go through each connection
         vector<double>::const_iterator fit = conAreas.begin();
         for (auto & connection : connectionlist)
         {
-            int tonodeid = connection.first;
+            int to_box_index = connection.first;
             int fldir = connection.second;
 
-            Box * tonodeobj = nodegroup[tonodeid];
+            Box * tonodeobj = nodegroup[to_box_index];
 
-            int to_node = get_nodenumber(tonodeid); ///messed up here....
+            int to_node = get_cell(to_box_index); ///messed up here....
 
             double tonodedxdydz[3] = {tonodeobj->dx, tonodeobj->dy, tonodeobj->dz};
 
@@ -916,13 +915,13 @@ CSRData QuadTree3D::get_usg_csr_data()
                    std::move(cl2), std::move(fahl), std::move(fldr), std::move(iac));
 }
 
-void QuadTree3D::sortconnectionbynodenumber(list<pair<int, int>> & connectionlist)
+void QuadTree3D::sort_connections_by_cell(list<pair<int, int>> & connectionlist)
 {
     //get node numbers
     vector<pair<int, pair<int, int>>> sorted_connection_list;
     for (auto & connection : connectionlist)
     {
-        int to_node = get_nodenumber(connection.first);
+        int to_node = get_cell(connection.first);
         sorted_connection_list.push_back(make_pair(to_node, connection));
     }
     //sort by node numbers
@@ -934,7 +933,8 @@ void QuadTree3D::sortconnectionbynodenumber(list<pair<int, int>> & connectionlis
     sorted.swap(connectionlist);
 }
 
-void QuadTree3D::sortareabyconid(const list<pair<int, int>> & connectionlist, vector<double> & area)
+void QuadTree3D::sort_areas_by_cell(const list<pair<int, int>> & connectionlist,
+                                    vector<double> & area)
 {
     using CIT = list<pair<int, int>>::const_iterator;
     vector<pair<int, double>> sorted_area_list;
@@ -942,7 +942,7 @@ void QuadTree3D::sortareabyconid(const list<pair<int, int>> & connectionlist, ve
     for (CIT connection = connectionlist.begin(); connection != connectionlist.end();
          ++connection, ++fit)
     {
-        int to_node = get_nodenumber(connection->first);
+        int to_node = get_cell(connection->first);
         sorted_area_list.push_back(make_pair(to_node, *fit));
     }
     //sort by node numbers
@@ -978,20 +978,20 @@ double * QuadTree3D::get_top()
     //filled in full before it replaces the array, so an error leaves the array unchanged
     unique_ptr<double[]> z(new double[nodesize]);
 
-    for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
+    for (int cell = 0; cell < nodesize; cell++)
     {
-        Box * b = get_nodeobj(nodenumber);
+        Box * b = get_cell_box(cell);
 
         if (m_top_layer_z_operator[b->layer] == Z_VALUE_REPLICATE_OPERATOR)
         {
             Index2d i = m_mfgrid->getIndex(Point2d(b->x, b->y));
-            z[nodenumber] = m_mfgrid->botm(b->layer, i[0], i[1]);
+            z[cell] = m_mfgrid->botm(b->layer, i[0], i[1]);
         }
         else //if(m_top_layer_z_operator[b->layer]==Z_VALUE_LINEAR_INTERPOLATION_OPERATOR)
         {
             if (m_top_layer_z_source.find(b->layer) ==
                 m_top_layer_z_source.end()) //no name defined, interpolate from the based grid
-                z[nodenumber] = bilinear_interpolation(b, &m_mfgrid->bot[mfgrid_csize * b->layer]);
+                z[cell] = bilinear_interpolation(b, &m_mfgrid->bot[mfgrid_csize * b->layer]);
             else //read from ascii file
             {
                 bool area_weighted = true;
@@ -999,8 +999,7 @@ double * QuadTree3D::get_top()
                     m_top_area_weighted_interpolate.end())
                     area_weighted = m_top_area_weighted_interpolate[b->layer];
 
-                z[nodenumber] =
-                    bilinear_interpolation(b, m_top_layer_z_source[b->layer], area_weighted);
+                z[cell] = bilinear_interpolation(b, m_top_layer_z_source[b->layer], area_weighted);
             }
         }
     }
@@ -1019,21 +1018,20 @@ double * QuadTree3D::get_bot()
     //filled in full before it replaces the array, so an error leaves the array unchanged
     unique_ptr<double[]> z(new double[nodesize]);
 
-    for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
+    for (int cell = 0; cell < nodesize; cell++)
     {
-        Box * b = get_nodeobj(nodenumber);
+        Box * b = get_cell_box(cell);
 
         if (m_bot_layer_z_operator[b->layer] == Z_VALUE_REPLICATE_OPERATOR)
         {
             Index2d i = m_mfgrid->getIndex(Point2d(b->x, b->y));
-            z[nodenumber] = m_mfgrid->botm(b->layer + 1, i[0], i[1]);
+            z[cell] = m_mfgrid->botm(b->layer + 1, i[0], i[1]);
         }
         else //if(m_bot_layer_z_operator[b->layer]==Z_VALUE_LINEAR_INTERPOLATION_OPERATOR)
         {
             if (m_bot_layer_z_source.find(b->layer) ==
                 m_bot_layer_z_source.end()) //no name defined, interpolate from the based grid
-                z[nodenumber] =
-                    bilinear_interpolation(b, &m_mfgrid->bot[mfgrid_csize * (b->layer + 1)]);
+                z[cell] = bilinear_interpolation(b, &m_mfgrid->bot[mfgrid_csize * (b->layer + 1)]);
             else
             {
                 bool area_weighted = true;
@@ -1042,8 +1040,7 @@ double * QuadTree3D::get_bot()
                     area_weighted = m_bot_area_weighted_interpolate[b->layer];
 
                 //read from ascii file
-                z[nodenumber] =
-                    bilinear_interpolation(b, m_bot_layer_z_source[b->layer], area_weighted);
+                z[cell] = bilinear_interpolation(b, m_bot_layer_z_source[b->layer], area_weighted);
             }
         }
     }
@@ -1054,7 +1051,7 @@ double * QuadTree3D::get_bot()
 }
 
 ///recompute z value and dz value of each cell based on the top and bottom
-bool QuadTree3D::recompute_z_of_cells()
+bool QuadTree3D::set_cell_elevations()
 {
     //check if bot and top are created
     if (bot == nullptr || top == nullptr)
@@ -1064,17 +1061,17 @@ bool QuadTree3D::recompute_z_of_cells()
 
     int nodesize = nodes();
 
-    for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
+    for (int cell = 0; cell < nodesize; cell++)
     {
-        Box * b = get_nodeobj(nodenumber);
-        b->dz = (top[nodenumber] - bot[nodenumber]);
-        b->z = (top[nodenumber] + bot[nodenumber]) / 2;
+        Box * b = get_cell_box(cell);
+        b->dz = (top[cell] - bot[cell]);
+        b->z = (top[cell] + bot[cell]) / 2;
     }
     return true;
 }
 
 ///align the elevation (z) between the shared surface (bottom of top cell and top of bottom cells)
-bool QuadTree3D::align_elev()
+bool QuadTree3D::align_shared_elevations()
 {
     //check if bot and top are created
     if (bot == nullptr || top == nullptr)
@@ -1085,21 +1082,21 @@ bool QuadTree3D::align_elev()
     int nodesize = nodes();
 
     //for each leaf node
-    for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
+    for (int cell = 0; cell < nodesize; cell++)
     {
-        Box * box = get_nodeobj(nodenumber);
+        Box * box = get_cell_box(cell);
         assert(box->isLeaf); //make sure this node is a leaf node...
 
         if (box->active == false) continue;  //disabled...
         if (box->pDown == nullptr) continue; //no neighbors at lower level
-        align_elev(box);
-    } //end for nodenumber
+        align_shared_elevations(box);
+    } //end for cell
 
     return true;
 }
 
 ///align the elevation (z) between the shared surface (bottom of top cell and top of bottom cells) of the given box
-void QuadTree3D::align_elev(Box * top_box)
+void QuadTree3D::align_shared_elevations(Box * top_box)
 {
     //get all leaves of box->pDown
     //TODO: we need to consider VP here...
@@ -1133,7 +1130,7 @@ void QuadTree3D::number_nodes()
         {
             for (int c = 0; c < mfgrid->ncol; c++)
             {
-                int bid = mfgrid->get_nodeid(l, r, c);
+                int bid = mfgrid->get_box_index(l, r, c);
                 Box * box = nodegroup[bid];
                 number_nodes(box, number);
             } //end for c
@@ -1162,9 +1159,9 @@ void QuadTree3D::number_nodes(Box * box, unsigned int & number)
 //refresh the tree to get the new node id and number arrays
 void QuadTree3D::refresh()
 {
-    rebuild_nodeid_array = true;
-    nodeid_array = getnodeid_array();
-    getnodenumber_array();
+    rebuild_box_index_array = true;
+    box_index_array = get_box_index_array();
+    get_cell_array();
 }
 
 //print the information of the leaves
@@ -1247,7 +1244,7 @@ ostream & operator<<(ostream & out, QuadTree3D & grid)
         {
             for (int c = 0; c < mfgrid->ncol; c++)
             {
-                int bid = mfgrid->get_nodeid(l, r, c);
+                int bid = mfgrid->get_box_index(l, r, c);
                 Box * box = grid.nodegroup[bid];
                 //layer, row, and column are one based whatever the node numbering
                 sprintf(extra, "(%d,%d,%d)", l + 1, r + 1, c + 1);
@@ -1267,7 +1264,7 @@ void QuadTree3D::saveGhostNode(string filePath)
     {
         //computed in full before it is kept, so an error leaves no partial list
         vector<GhostNode> ghost_nodes;
-        computeGNC(this, ghost_nodes);
+        compute_ghost_nodes(this, ghost_nodes);
         m_gns.swap(ghost_nodes);
     }
 
@@ -1325,7 +1322,7 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
     Point2d center;
     {
         double cx, cy, rotation;
-        getModflowGrid()->getRotatePara(cx, cy, rotation);
+        getModflowGrid()->get_rotation(cx, cy, rotation);
         double rx, ry;
         box->rotateCtr(cx, cy, rotation, rx, ry);
         center.set(rx, ry);
@@ -1355,7 +1352,7 @@ double QuadTree3D::bilinear_interpolation(Box * box, const string & arcinfo_file
 
         int dminx = ag->getncols() + 1, dmaxx = -1, dminy = ag->getnrows() + 1, dmaxy = -1;
         double cx, cy, rotation;
-        getModflowGrid()->getRotatePara(cx, cy, rotation);
+        getModflowGrid()->get_rotation(cx, cy, rotation);
         for (auto & corner : corners)
         {
             double tx, ty;

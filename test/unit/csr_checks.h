@@ -63,7 +63,7 @@ inline void expect_faces_cover_sides(QuadTree3D * qtree, const CSRData & csr, do
 {
     for (int n = 0; n < csr.nodes; n++)
     {
-        Box * box = qtree->get_nodeobj(n);
+        Box * box = qtree->get_cell_box(n);
         std::map<int, double> total;
         for (int ipos = csr.ia[n] + 1; ipos < csr.ia[n + 1]; ipos++)
         {

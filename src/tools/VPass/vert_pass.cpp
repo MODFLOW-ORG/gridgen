@@ -76,7 +76,7 @@ void boxVPConnection(Box * b, vector<VPassBox> & passes, bool topToDown)
     verticalExplore(b, column, passes, topToDown);
 }
 
-void getVPT(Box * b, vector<VPTPair> & pairs, bool topToDown)
+void get_vertical_passes(Box * b, vector<VPTPair> & pairs, bool topToDown)
 {
     if (b == nullptr || (!(b->isLeaf)) || (b->active == false)) return;
 

@@ -64,8 +64,7 @@ QuadTree3D * read_structure(DefinitionParser & parser, const std::string & struc
     {
         if (parser.parse(in))
         {
-            quadtree_grid_raw_data * data =
-                dynamic_cast<quadtree_grid_raw_data *>(parser.getBlockData("qtg"));
+            QuadtreeBlock * data = dynamic_cast<QuadtreeBlock *>(parser.getBlockData("qtg"));
             if (data != nullptr && data->initialize(parser.getBlockData()))
             {
                 rebuilt = dynamic_cast<QuadTree3D *>(data->build());
@@ -111,13 +110,13 @@ TEST(QuadTreeIO, NodesNumberedLayerByLayer)
     std::unique_ptr<QuadTree3D> qtree = make_refined();
     int nodes = qtree->nodes();
 
-    int * nodelay = qtree->get_nodelay();
+    int * nodelay = qtree->get_layer_cell_counts();
     EXPECT_EQ(nodelay[0] + nodelay[1], nodes);
 
     for (int n = 0; n < nodes; n++)
     {
         int expected = (n < nodelay[0]) ? 0 : 1;
-        EXPECT_EQ(qtree->get_nodeobj(n)->layer, expected) << "node " << n;
+        EXPECT_EQ(qtree->get_cell_box(n)->layer, expected) << "node " << n;
     }
 }
 
