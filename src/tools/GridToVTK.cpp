@@ -434,7 +434,7 @@ void build_sharing_vertices_mfgrid(ModflowGrid * mfgrid, vector<Vertex *> & vdat
 
     int mfgrid_csize = (mfgrid->nrow) * (mfgrid->ncol);
 
-    //get all the Xe and Ye
+    //get all the xe and ye
     vector<double> xe = mfgrid->get_local_xe_array();
     vector<double> ye = mfgrid->get_local_ye_array();
 

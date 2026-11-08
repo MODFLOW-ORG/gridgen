@@ -142,7 +142,7 @@ double * ModflowGrid2D::get_local_y_array()
 /// x coord of all edges
 vector<double> ModflowGrid2D::get_local_xe_array()
 {
-    //The Xe array contains the edge coordinate for each cell
+    //The xe array contains the edge coordinate for each cell
     int size = ncol + 1;
     vector<double> xe(size);
     xe[0] = 0;
@@ -438,7 +438,7 @@ int ModflowGrid2D::get_x_index_by_binary_search(const Point2d & pt, double * xe,
         else
             return get_x_index_by_binary_search(pt, xe, mid, right, ascending);
     }
-    else // if(Xe[mid] <pt[0])
+    else // if(xe[mid] <pt[0])
     {
         //neither less, equal, nor greater, so the coordinate is not a number
         if (!(xe[mid] < pt[0]))
@@ -466,7 +466,7 @@ int ModflowGrid2D::get_y_index_by_binary_search(const Point2d & pt, double * ye,
         else
             return get_y_index_by_binary_search(pt, ye, left, mid, ascending);
     }
-    else //if(Ye[mid] <pt[1])
+    else //if(ye[mid] <pt[1])
     {
         //neither less, equal, nor greater, so the coordinate is not a number
         if (!(ye[mid] < pt[1]))
