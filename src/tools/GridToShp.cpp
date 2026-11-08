@@ -8,8 +8,8 @@
 using namespace std;
 
 //corners, clockwise from the upper left, and center of a box
-inline void boxCorners(const GridVertices & gv, Box * b, double * corner_x, double * corner_y,
-                       double * center_x, double * center_y)
+inline void box_corners(const GridVertices & gv, Box * b, double * corner_x, double * corner_y,
+                        double * center_x, double * center_y)
 {
     gv.get_corners(b, corner_x, corner_y);
     const Point2d & center = gv.center(b);
@@ -17,17 +17,17 @@ inline void boxCorners(const GridVertices & gv, Box * b, double * corner_x, doub
     center_y[0] = center[1];
 }
 
-SHPHandle createShpHandle(string shpName, string feature_type, int & shptype)
+SHPHandle create_shp_handle(string shp_name, string feature_type, int & shptype)
 {
     SHPHandle handler;
     if (feature_type == "polygon")
     {
-        handler = SHPCreate(shpName.c_str(), SHPT_POLYGON);
+        handler = SHPCreate(shp_name.c_str(), SHPT_POLYGON);
         shptype = 1;
     }
     else if (feature_type == "point")
     {
-        handler = SHPCreate(shpName.c_str(), SHPT_POINT);
+        handler = SHPCreate(shp_name.c_str(), SHPT_POINT);
         shptype = 0;
     }
     else
@@ -37,30 +37,31 @@ SHPHandle createShpHandle(string shpName, string feature_type, int & shptype)
     return handler;
 }
 
-void writeDB(int entityNum, DBFHandle & dbf, vector<int> & fieldIds, vector<int> & double_field_ids,
-             int num, int layer, int row, int col, string & location, double top, double bot,
-             double dx, double dy)
+void write_db(int entity_num, DBFHandle & dbf, vector<int> & field_ids,
+              vector<int> & double_field_ids, int num, int layer, int row, int col,
+              string & location, double top, double bot, double dx, double dy)
 {
     //write to DB
-    DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[0], num);
-    DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[1], layer);
-    DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[2], row);
-    DBFWriteIntegerAttribute(dbf, entityNum, fieldIds[3], col);
+    DBFWriteIntegerAttribute(dbf, entity_num, field_ids[0], num);
+    DBFWriteIntegerAttribute(dbf, entity_num, field_ids[1], layer);
+    DBFWriteIntegerAttribute(dbf, entity_num, field_ids[2], row);
+    DBFWriteIntegerAttribute(dbf, entity_num, field_ids[3], col);
 
-    DBFWriteStringAttribute(dbf, entityNum, fieldIds[4], location.c_str());
+    DBFWriteStringAttribute(dbf, entity_num, field_ids[4], location.c_str());
 
-    DBFWriteDoubleAttribute(dbf, entityNum, double_field_ids[0], top);
-    DBFWriteDoubleAttribute(dbf, entityNum, double_field_ids[1], bot);
-    DBFWriteDoubleAttribute(dbf, entityNum, double_field_ids[2], dx);
-    DBFWriteDoubleAttribute(dbf, entityNum, double_field_ids[3], dy);
+    DBFWriteDoubleAttribute(dbf, entity_num, double_field_ids[0], top);
+    DBFWriteDoubleAttribute(dbf, entity_num, double_field_ids[1], bot);
+    DBFWriteDoubleAttribute(dbf, entity_num, double_field_ids[2], dx);
+    DBFWriteDoubleAttribute(dbf, entity_num, double_field_ids[3], dy);
 }
 
 //write feature and info using index
-void writeFeatEntity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<int> & fieldIds,
-                     vector<int> & double_field_ids, vector<Box *> & boxes, vector<int> & numbers,
-                     vector<int> & layers, vector<int> & rows, vector<int> & cols,
-                     vector<string> & locations, double cx, double cy, double rotation, int shptype,
-                     bool one_base_number, vector<size_t> sort_idx, bool close_polygons)
+void write_feat_entity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<int> & field_ids,
+                       vector<int> & double_field_ids, vector<Box *> & boxes, vector<int> & numbers,
+                       vector<int> & layers, vector<int> & rows, vector<int> & cols,
+                       vector<string> & locations, double cx, double cy, double rotation,
+                       int shptype, bool one_base_number, vector<size_t> sort_idx,
+                       bool close_polygons)
 {
     QuadTree3D * qtree = dynamic_cast<QuadTree3D *>(grid);
     ModflowGrid * mfgrid = dynamic_cast<ModflowGrid *>(grid);
@@ -74,10 +75,10 @@ void writeFeatEntity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<i
     {
         id = sort_idx[i];
 
-        boxCorners(gv, boxes[id], corner_x, corner_y, center_x, center_y);
+        box_corners(gv, boxes[id], corner_x, corner_y, center_x, center_y);
 
         SHPObject * shape = nullptr;
-        int entityNum = -1;
+        int entity_num = -1;
         if (shptype == 1)
         {
             if (!close_polygons)
@@ -89,13 +90,13 @@ void writeFeatEntity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<i
                 shape = SHPCreateSimpleObject(SHPT_POLYGON, 5, corner_x, corner_y, nullptr);
             }
 
-            entityNum = SHPWriteObject(handler, -1, shape);
+            entity_num = SHPWriteObject(handler, -1, shape);
         }
         else if (shptype == 0)
         {
             shape = SHPCreateSimpleObject(SHPT_POINT, 1, center_x, center_y, nullptr);
 
-            entityNum = SHPWriteObject(handler, -1, shape);
+            entity_num = SHPWriteObject(handler, -1, shape);
         }
         else
             assert(false);
@@ -117,21 +118,21 @@ void writeFeatEntity(Grid * grid, SHPHandle & handler, DBFHandle & dbf, vector<i
             bot = mfgrid->bot[(layer + 1) * mfgrid->nrow * mfgrid->ncol + row * mfgrid->ncol + col];
         }
 
-        writeDB(entityNum, dbf, fieldIds, double_field_ids, numbers[id], layer, row, col,
-                locations[id], top, bot, boxes[id]->dx, boxes[id]->dy);
+        write_db(entity_num, dbf, field_ids, double_field_ids, numbers[id], layer, row, col,
+                 locations[id], top, bot, boxes[id]->dx, boxes[id]->dy);
     }
 }
 
 ////write feature info
 
-void DFSCollect(Grid * grid, Box * b, int layer, int row, int col, string & location,
-                bool one_based_numbering, vector<Box *> & boxes, vector<int> & numbers,
-                vector<int> & layers, vector<int> & rows, vector<int> & cols,
-                vector<string> & locations, bool without_inactive)
+void dfs_collect(Grid * grid, Box * b, int layer, int row, int col, string & location,
+                 bool one_based_numbering, vector<Box *> & boxes, vector<int> & numbers,
+                 vector<int> & layers, vector<int> & rows, vector<int> & cols,
+                 vector<string> & locations, bool without_inactive)
 {
 
     char quadrant[8] = {'\0'};
-    if (b->isLeaf)
+    if (b->is_leaf)
     {
         if (without_inactive && (!b->active)) return;
 
@@ -143,7 +144,7 @@ void DFSCollect(Grid * grid, Box * b, int layer, int row, int col, string & loca
         cols.push_back(one_based_numbering ? (col + 1) : col);
         locations.push_back(location);
     }
-    else if (b->isLeaf == false) //b is not a leaf, call this function recursively
+    else if (b->is_leaf == false) //b is not a leaf, call this function recursively
     {
         for (int i = 0; i < 4; i++)
         {
@@ -156,63 +157,64 @@ void DFSCollect(Grid * grid, Box * b, int layer, int row, int col, string & loca
             string child_location = location;
             child_location += quadrant;
 
-            DFSCollect(grid, b->pChildren[i], layer, row, col, child_location, one_based_numbering,
-                       boxes, numbers, layers, rows, cols, locations, without_inactive);
+            dfs_collect(grid, b->p_children[i], layer, row, col, child_location,
+                        one_based_numbering, boxes, numbers, layers, rows, cols, locations,
+                        without_inactive);
         }
     }
 }
 
-void write_shapefile(QuadTree3D * qtree, string shpName, string feature_type, bool close_polygons)
+void write_shapefile(QuadTree3D * qtree, string shp_name, string feature_type, bool close_polygons)
 {
     if (feature_type == "line")
     {
-        write_line_shapefile(qtree, shpName);
+        write_line_shapefile(qtree, shp_name);
         return;
     }
 
     //create a shape file
     int shptype = true; //polygon : true ; point : false
-    SHPHandle handler = createShpHandle(shpName, feature_type, shptype);
-    if (handler == nullptr) throw GridgenError("cannot write shapefile " + shpName);
+    SHPHandle handler = create_shp_handle(shp_name, feature_type, shptype);
+    if (handler == nullptr) throw GridgenError("cannot write shapefile " + shp_name);
 
     //create a .dbf file
-    string dbfName = shpName;
+    string dbf_name = shp_name;
 
-    if (shpName.find('.') != string::npos)
+    if (shp_name.find('.') != string::npos)
     {
-        int dotIndex = shpName.find_last_of('.');
-        dbfName = shpName.substr(0, dotIndex);
+        int dot_index = shp_name.find_last_of('.');
+        dbf_name = shp_name.substr(0, dot_index);
     }
 
-    dbfName += ".dbf";
-    DBFHandle dbfHandle = DBFCreate(dbfName.c_str());
-    int nodeFieldId = DBFAddField(dbfHandle, "nodenumber", FTInteger, 12, 0);
-    int layerFieldId = DBFAddField(dbfHandle, "layer", FTInteger, 20, 0);
-    int rowFieldId = DBFAddField(dbfHandle, "row", FTInteger, 20, 0);
-    int colFieldId = DBFAddField(dbfHandle, "col", FTInteger, 20, 0);
-    int locationFieldId = DBFAddField(dbfHandle, "child_location", FTString, 50, 10);
+    dbf_name += ".dbf";
+    DBFHandle dbf_handle = DBFCreate(dbf_name.c_str());
+    int node_field_id = DBFAddField(dbf_handle, "nodenumber", FTInteger, 12, 0);
+    int layer_field_id = DBFAddField(dbf_handle, "layer", FTInteger, 20, 0);
+    int row_field_id = DBFAddField(dbf_handle, "row", FTInteger, 20, 0);
+    int col_field_id = DBFAddField(dbf_handle, "col", FTInteger, 20, 0);
+    int location_field_id = DBFAddField(dbf_handle, "child_location", FTString, 50, 10);
 
-    int topFieldId = DBFAddField(dbfHandle, "top", FTDouble, 20, 8);
-    int bottomFieldId = DBFAddField(dbfHandle, "bottom", FTDouble, 20, 8);
-    int delrFieldId = DBFAddField(dbfHandle, "delr", FTDouble, 20, 8);
-    int delcFieldId = DBFAddField(dbfHandle, "delc", FTDouble, 20, 8);
+    int top_field_id = DBFAddField(dbf_handle, "top", FTDouble, 20, 8);
+    int bottom_field_id = DBFAddField(dbf_handle, "bottom", FTDouble, 20, 8);
+    int delr_field_id = DBFAddField(dbf_handle, "delr", FTDouble, 20, 8);
+    int delc_field_id = DBFAddField(dbf_handle, "delc", FTDouble, 20, 8);
 
-    vector<int> fieldIds;
-    fieldIds.push_back(nodeFieldId);
-    fieldIds.push_back(layerFieldId);
-    fieldIds.push_back(rowFieldId);
-    fieldIds.push_back(colFieldId);
-    fieldIds.push_back(locationFieldId);
+    vector<int> field_ids;
+    field_ids.push_back(node_field_id);
+    field_ids.push_back(layer_field_id);
+    field_ids.push_back(row_field_id);
+    field_ids.push_back(col_field_id);
+    field_ids.push_back(location_field_id);
 
     vector<int> double_field_ids;
-    double_field_ids.push_back(topFieldId);
-    double_field_ids.push_back(bottomFieldId);
-    double_field_ids.push_back(delrFieldId);
-    double_field_ids.push_back(delcFieldId);
+    double_field_ids.push_back(top_field_id);
+    double_field_ids.push_back(bottom_field_id);
+    double_field_ids.push_back(delr_field_id);
+    double_field_ids.push_back(delc_field_id);
 
     ////loop over all the leaf nodes
 
-    ModflowGrid * mfgrid = qtree->getModflowGrid();
+    ModflowGrid * mfgrid = qtree->get_modflow_grid();
 
     double cx, cy, rotation;
     mfgrid->get_rotation(cx, cy, rotation);
@@ -228,11 +230,11 @@ void write_shapefile(QuadTree3D * qtree, string shpName, string feature_type, bo
             for (int c = 0; c < mfgrid->ncol; c++)
             {
                 int bid = mfgrid->get_box_index(l, r, c);
-                Box * box = qtree->nodegroup[bid];
+                Box * box = qtree->node_group[bid];
                 string location;
 
-                DFSCollect(qtree, box, l, r, c, location, qtree->get_one_based_node_numbering(),
-                           boxes, numbers, layers, rows, cols, locations, true);
+                dfs_collect(qtree, box, l, r, c, location, qtree->get_one_based_node_numbering(),
+                            boxes, numbers, layers, rows, cols, locations, true);
             }
         }
     }
@@ -242,63 +244,63 @@ void write_shapefile(QuadTree3D * qtree, string shpName, string feature_type, bo
     sort(numbers, sort_idx);
 
     //write the sorted
-    writeFeatEntity(qtree, handler, dbfHandle, fieldIds, double_field_ids, boxes, numbers, layers,
-                    rows, cols, locations, cx, cy, rotation, shptype,
-                    qtree->get_one_based_node_numbering(), sort_idx, close_polygons);
+    write_feat_entity(qtree, handler, dbf_handle, field_ids, double_field_ids, boxes, numbers,
+                      layers, rows, cols, locations, cx, cy, rotation, shptype,
+                      qtree->get_one_based_node_numbering(), sort_idx, close_polygons);
 
     //close the shape file
-    DBFClose(dbfHandle);
+    DBFClose(dbf_handle);
     SHPClose(handler);
 }
 
-void write_shapefile(ModflowGrid * modflow, string gridShpName, string feature_type,
+void write_shapefile(ModflowGrid * modflow, string grid_shp_name, string feature_type,
                      bool without_inactive, bool one_based_numbering, bool close_polygons)
 {
     if (feature_type == "line")
     {
-        write_line_shapefile(modflow, gridShpName);
+        write_line_shapefile(modflow, grid_shp_name);
         return;
     }
 
     //create a shape file
     int shptype = 0; //polygon : true ; point : false
-    SHPHandle handler = createShpHandle(gridShpName, feature_type, shptype);
-    if (handler == nullptr) throw GridgenError("cannot write shapefile " + gridShpName);
+    SHPHandle handler = create_shp_handle(grid_shp_name, feature_type, shptype);
+    if (handler == nullptr) throw GridgenError("cannot write shapefile " + grid_shp_name);
 
     //create a .dbf file
-    string dbfName = gridShpName; /*
-	int lastL = gridShpName.find_last_of('/') == string::npos ? gridShpName.find;*/
-    if (gridShpName.find('.') != string::npos)
+    string dbf_name = grid_shp_name; /*
+	int lastL = grid_shp_name.find_last_of('/') == string::npos ? grid_shp_name.find;*/
+    if (grid_shp_name.find('.') != string::npos)
     {
-        int dotIndex = gridShpName.find_last_of('.');
-        dbfName = gridShpName.substr(0, dotIndex);
+        int dot_index = grid_shp_name.find_last_of('.');
+        dbf_name = grid_shp_name.substr(0, dot_index);
     }
 
-    dbfName += ".dbf";
-    DBFHandle dbfHandle = DBFCreate(dbfName.c_str());
-    int nodeFieldId = DBFAddField(dbfHandle, "nodenumber", FTInteger, 12, 0);
-    int layerFieldId = DBFAddField(dbfHandle, "layer", FTInteger, 20, 0);
-    int rowFieldId = DBFAddField(dbfHandle, "row", FTInteger, 20, 0);
-    int colFieldId = DBFAddField(dbfHandle, "col", FTInteger, 20, 0);
-    int locationFieldId = DBFAddField(dbfHandle, "child_location", FTString, 50, 10);
+    dbf_name += ".dbf";
+    DBFHandle dbf_handle = DBFCreate(dbf_name.c_str());
+    int node_field_id = DBFAddField(dbf_handle, "nodenumber", FTInteger, 12, 0);
+    int layer_field_id = DBFAddField(dbf_handle, "layer", FTInteger, 20, 0);
+    int row_field_id = DBFAddField(dbf_handle, "row", FTInteger, 20, 0);
+    int col_field_id = DBFAddField(dbf_handle, "col", FTInteger, 20, 0);
+    int location_field_id = DBFAddField(dbf_handle, "child_location", FTString, 50, 10);
 
-    int topFieldId = DBFAddField(dbfHandle, "top", FTDouble, 20, 8);
-    int bottomFieldId = DBFAddField(dbfHandle, "bottom", FTDouble, 20, 8);
-    int delrFieldId = DBFAddField(dbfHandle, "delr", FTDouble, 20, 8);
-    int delcFieldId = DBFAddField(dbfHandle, "delc", FTDouble, 20, 8);
+    int top_field_id = DBFAddField(dbf_handle, "top", FTDouble, 20, 8);
+    int bottom_field_id = DBFAddField(dbf_handle, "bottom", FTDouble, 20, 8);
+    int delr_field_id = DBFAddField(dbf_handle, "delr", FTDouble, 20, 8);
+    int delc_field_id = DBFAddField(dbf_handle, "delc", FTDouble, 20, 8);
 
-    vector<int> fieldIds;
-    fieldIds.push_back(nodeFieldId);
-    fieldIds.push_back(layerFieldId);
-    fieldIds.push_back(rowFieldId);
-    fieldIds.push_back(colFieldId);
-    fieldIds.push_back(locationFieldId);
+    vector<int> field_ids;
+    field_ids.push_back(node_field_id);
+    field_ids.push_back(layer_field_id);
+    field_ids.push_back(row_field_id);
+    field_ids.push_back(col_field_id);
+    field_ids.push_back(location_field_id);
 
     vector<int> double_field_ids;
-    double_field_ids.push_back(topFieldId);
-    double_field_ids.push_back(bottomFieldId);
-    double_field_ids.push_back(delrFieldId);
-    double_field_ids.push_back(delcFieldId);
+    double_field_ids.push_back(top_field_id);
+    double_field_ids.push_back(bottom_field_id);
+    double_field_ids.push_back(delr_field_id);
+    double_field_ids.push_back(delc_field_id);
 
     ////loop over all the leaf nodes
 
@@ -318,12 +320,12 @@ void write_shapefile(ModflowGrid * modflow, string gridShpName, string feature_t
             for (int c = 0; c < mfgrid->ncol; c++)
             {
                 int bid = mfgrid->get_box_index(l, r, c);
-                Box * box = mfgrid->nodegroup[bid];
+                Box * box = mfgrid->node_group[bid];
                 string extra_str = extra;
                 string location;
 
-                DFSCollect(modflow, box, l, r, c, location, one_based_numbering, boxes, numbers,
-                           layers, rows, cols, locations, true);
+                dfs_collect(modflow, box, l, r, c, location, one_based_numbering, boxes, numbers,
+                            layers, rows, cols, locations, true);
             }
         }
     }
@@ -333,11 +335,11 @@ void write_shapefile(ModflowGrid * modflow, string gridShpName, string feature_t
     sort(numbers, sort_idx);
 
     //write the sorted
-    writeFeatEntity(modflow, handler, dbfHandle, fieldIds, double_field_ids, boxes, numbers, layers,
-                    rows, cols, locations, cx, cy, rotation, shptype, one_based_numbering, sort_idx,
-                    close_polygons);
+    write_feat_entity(modflow, handler, dbf_handle, field_ids, double_field_ids, boxes, numbers,
+                      layers, rows, cols, locations, cx, cy, rotation, shptype, one_based_numbering,
+                      sort_idx, close_polygons);
 
     //close the shape file
-    DBFClose(dbfHandle);
+    DBFClose(dbf_handle);
     SHPClose(handler);
 }

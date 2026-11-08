@@ -59,10 +59,10 @@ public:
     double * get_local_y_array();
 
     /// x coord of all edges
-    vector<double> get_local_Xe_array();
+    vector<double> get_local_xe_array();
 
     /// y coord of all edges
-    vector<double> get_local_Ye_array();
+    vector<double> get_local_ye_array();
 
     /// Return a numpy array of size (nodes) that contains the area for all cells.
     vector<double> get_cell_areas() override;
@@ -83,12 +83,12 @@ public:
     Index2d get_indices(int box_index);
 
     ///find the index of the node containing pt (row major (row_id, col_id))
-    Index2d getIndex(const Point2d & pt);
+    Index2d get_index(const Point2d & pt);
 
-    int getXIndexByBinarySearch(const Point2d & pt, double * Xe, int left, int right,
-                                bool ascending);
-    int getYIndexByBinarySearch(const Point2d & pt, double * Ye, int left, int right,
-                                bool ascending);
+    int get_x_index_by_binary_search(const Point2d & pt, double * xe, int left, int right,
+                                     bool ascending);
+    int get_y_index_by_binary_search(const Point2d & pt, double * ye, int left, int right,
+                                     bool ascending);
 
     /// the box in row i, column j
     Box * find_box(int i, int j);
@@ -133,11 +133,11 @@ public:
     double height;
 
     //x and y coordinate of edges
-    vector<double> Xe; //x coord of all edges
-    vector<double> Ye; //y coord of all edges
+    vector<double> xe; //x coord of all edges
+    vector<double> ye; //y coord of all edges
 
 protected:
-    void init2D();
+    void init_2d();
 
     ///add connection between boxes
     ///fldir is -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z.

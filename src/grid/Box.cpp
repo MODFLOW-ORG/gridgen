@@ -40,14 +40,14 @@ namespace cusg
        |------------|
 
        when direction=0 (north)
-       then, 1st (returned by First() is the cell, on the far right
-       and end is the cell on the far left and is also the cell stored in pChildren[0]
+       then, 1st (returned by first() is the cell, on the far right
+       and end is the cell on the far left and is also the cell stored in p_children[0]
 
 */
 
 /*!
 
-    how pChildren points to the neighbors...
+    how p_children points to the neighbors...
 
         |----|
         | n0 |
@@ -73,11 +73,11 @@ namespace cusg
  *                           - 3: West
  */
 BoxIter::BoxIter(const Box * starting_node, int direction)
-    : b(starting_node), direction(direction), neighbor(nullptr)
+    : m_b(starting_node), m_direction(direction), m_neighbor(nullptr)
 {
-    prev = (direction + 3) % 4;
-    next = (direction + 1) % 4;
-    cross = (direction + 2) % 4;
+    m_prev = (direction + 3) % 4;
+    m_next = (direction + 1) % 4;
+    m_cross = (direction + 2) % 4;
 }
 
 /*! \brief Returns the first box in the node walk.
@@ -87,19 +87,19 @@ BoxIter::BoxIter(const Box * starting_node, int direction)
  *           in that direction, a null reference is returned.
  */
 
-Box * BoxIter::First()
+Box * BoxIter::first()
 {
     // Get the first box in the node walk.
     //
-    // If 'b' is a leaf node, then pChildren points to the neighbors
+    // If 'b' is a leaf node, then p_children points to the neighbors
     // of the node, with 0 = N, 1 = E, 2 = S, 3 = W. So looking up
-    // pChildren[direction] will give the adjacent box in the direction
+    // p_children[direction] will give the adjacent box in the direction
     // to walk, if such a box exists.
     //
-    // If 'b' is an internal node, then pChildren, as the name implies,
-    // holds pointers to the child nodes. For pChildren: 0 = NW, 1 = NE,
+    // If 'b' is an internal node, then p_children, as the name implies,
+    // holds pointers to the child nodes. For p_children: 0 = NW, 1 = NE,
     // 2 = SE, 3 = SW.
-    Box * n = b->pChildren[direction];
+    Box * n = m_b->p_children[m_direction];
     if (!n)
     {
         // There's no nodes when we walk in this direction,
@@ -108,13 +108,13 @@ Box * BoxIter::First()
     }
 
     // If 'b' is a leaf node, its depth will be the same as the
-    // node from pChildren, since pChildren is holding neighbor nodes.
+    // node from p_children, since p_children is holding neighbor nodes.
     // In that case, we're done; n points to the neighbor node in
     // the direction to walk, and we'll return n.
-    if (n->depth > b->depth)
+    if (n->depth > m_b->depth)
     {
         // If 'n' is outside the start box 'b', something's wrong.
-        assert(!Box::isOverLimit(b, n));
+        assert(!Box::is_over_limit(m_b, n));
 
         //get the next-most box whose x or y coord is still within the box b
 
@@ -123,46 +123,46 @@ Box * BoxIter::First()
             // If we've made it here, n shouldn't be a null pointer.
             assert(n != nullptr);
 
-            //when the n->pChildren[next] is out of bound of b
-            if (n->pChildren[next] == nullptr || Box::isOverLimit(b, n->pChildren[next]))
+            //when the n->p_children[next] is out of bound of b
+            if (n->p_children[m_next] == nullptr || Box::is_over_limit(m_b, n->p_children[m_next]))
             {
                 break;
             }
 
-            //when the n->pChildren[next] is bigger...
-            if (n->pChildren[next]->depth < b->depth)
+            //when the n->p_children[next] is bigger...
+            if (n->p_children[m_next]->depth < m_b->depth)
             {
                 break;
             }
 
-            n = n->pChildren[next];
+            n = n->p_children[m_next];
         }
 
         //get the box that touches b
         while (true)
         {
             assert(n != nullptr);
-            if (n->pChildren[cross] == b)
+            if (n->p_children[m_cross] == m_b)
             {
                 break;
             }
-            n = n->pChildren[cross];
+            n = n->p_children[m_cross];
         }
     }
 
-    neighbor = n;
-    return neighbor;
+    m_neighbor = n;
+    return m_neighbor;
 }
 
 /*! \brief    Gets the end of the node walk 
  *  \returns  The box node at the end of the walk, or a null reference
  *            if the walk contains no nodes.
  */
-Box * BoxIter::End()
+Box * BoxIter::end()
 {
-    if (b->pChildren[direction] != nullptr)
+    if (m_b->p_children[m_direction] != nullptr)
     {
-        return b->pChildren[direction]->pChildren[prev];
+        return m_b->p_children[m_direction]->p_children[m_prev];
     }
 
     return nullptr;
@@ -172,15 +172,15 @@ Box * BoxIter::End()
  *  \returns A pointer to the next neighbor, or a null reference
  *           if there are no more nodes in the node walk.
  */
-Box * BoxIter::Next()
+Box * BoxIter::next()
 {
-    if (!neighbor)
+    if (!m_neighbor)
     {
         return nullptr;
     }
 
-    neighbor = neighbor->pChildren[prev];
-    return neighbor;
+    m_neighbor = m_neighbor->p_children[m_prev];
+    return m_neighbor;
 }
 
 // ----------------------------------------------------------------------------
@@ -193,11 +193,11 @@ Box * BoxIter::Next()
 //
 // ----------------------------------------------------------------------------
 
-bool Box::isOverLimit(const Box * base, const Box * nextBox)
+bool Box::is_over_limit(const Box * base, const Box * next_box)
 {
-    if ((nextBox->x > base->x - base->dx / 2 && nextBox->x < base->x + base->dx / 2) ||
-        (nextBox->y > base->y - base->dy / 2 && nextBox->y < base->y + base->dy / 2))
-    //|| (nextBox->z > base->z - base->dz / 2 && nextBox->z < base->z + base->dz / 2) )
+    if ((next_box->x > base->x - base->dx / 2 && next_box->x < base->x + base->dx / 2) ||
+        (next_box->y > base->y - base->dy / 2 && next_box->y < base->y + base->dy / 2))
+    //|| (next_box->z > base->z - base->dz / 2 && next_box->z < base->z + base->dz / 2) )
     {
         return false;
     }
@@ -206,18 +206,18 @@ bool Box::isOverLimit(const Box * base, const Box * nextBox)
 //
 // dir: 0:north, 1 east, 2 south, 3 west
 //
-void Box::getNeighbors(list<Box *> & neighbors, int dir)
+void Box::get_neighbors(list<Box *> & neighbors, int dir)
 {
     //go through all neighboring boxes in direction i
     BoxIter iter(this, dir);
-    Box * neighbor = iter.First();
+    Box * neighbor = iter.first();
 
     if (neighbor == nullptr) return; //no neighbors...
 
-    while (neighbor != iter.End())
+    while (neighbor != iter.end())
     {
         neighbors.push_back(neighbor);
-        neighbor = iter.Next();
+        neighbor = iter.next();
     }
 }
 
@@ -242,7 +242,7 @@ bool Box::split(double epsilon)
         return false;
     }
 
-    if (!this->isLeaf)
+    if (!this->is_leaf)
     {
         return false;
     }
@@ -278,13 +278,13 @@ bool Box::split(double epsilon)
         int cross = (i + 2) % 4;
 
         //update easy cases
-        children[i]->pChildren[i] = pChildren[i];
-        children[i]->pChildren[next] = children[next];
-        children[i]->pChildren[cross] = children[prev];
+        children[i]->p_children[i] = p_children[i];
+        children[i]->p_children[next] = children[next];
+        children[i]->p_children[cross] = children[prev];
 
         //init box neighbor iterator for direction i
         BoxIter iter(this, i);
-        Box * neighbor = iter.First();
+        Box * neighbor = iter.first();
 
         if (!neighbor)
         {
@@ -296,45 +296,45 @@ bool Box::split(double epsilon)
         {
             //after split child 'next' should also point to
             //neighbor in direction i
-            children[next]->pChildren[i] = neighbor;
+            children[next]->p_children[i] = neighbor;
 
             //if neighbor's cross direction point to this, it should
             //instead point to child 'next' after split
-            if (neighbor->pChildren[cross] == this)
+            if (neighbor->p_children[cross] == this)
             {
-                neighbor->pChildren[cross] = children[next];
+                neighbor->p_children[cross] = children[next];
             }
             continue;
         }
 
-        Box * prevNeighbor = neighbor;
+        Box * prev_neighbor = neighbor;
 
         //indicate if we go across the boundary between child 'i'
         //and 'next' the first time
-        bool firstTimeCrossBetweenChildren = true;
+        bool first_time_cross_between_children = true;
 
         //if neighbor smaller
-        while (neighbor != iter.End())
+        while (neighbor != iter.end())
         {
             //within the strip of child next, neighbor's cross direction
             //should point to next
-            if (!isOverLimit(children[next], neighbor))
+            if (!is_over_limit(children[next], neighbor))
             {
-                neighbor->pChildren[cross] = children[next];
+                neighbor->p_children[cross] = children[next];
             }
 
             //within the strip of child i, neighbor's cross
             //direction should point to i
-            else if (!isOverLimit(children[i], neighbor))
+            else if (!is_over_limit(children[i], neighbor))
             {
-                neighbor->pChildren[cross] = children[i];
+                neighbor->p_children[cross] = children[i];
 
                 //first time cross between child i and next,
                 //should update next's i direction pointer
-                if (firstTimeCrossBetweenChildren)
+                if (first_time_cross_between_children)
                 {
-                    firstTimeCrossBetweenChildren = false;
-                    children[next]->pChildren[i] = prevNeighbor;
+                    first_time_cross_between_children = false;
+                    children[next]->p_children[i] = prev_neighbor;
                 }
             }
             else
@@ -342,57 +342,57 @@ bool Box::split(double epsilon)
                 assert(0);
             }
 
-            prevNeighbor = neighbor;
-            neighbor = iter.Next();
+            prev_neighbor = neighbor;
+            neighbor = iter.next();
 
         } //end while
     }
 
-    //setup/update connections to pUp
-    if (this->pUp != nullptr)
+    //setup/update connections to p_up
+    if (this->p_up != nullptr)
     {
-        this->refine_pUp();
+        this->refine_p_up();
 
-        if (pUp->isLeaf)
+        if (p_up->is_leaf)
         {
             for (auto & i : children)
             {
-                i->pUp = pUp;
-                assert(i->pUp->in(i->x, i->y));
+                i->p_up = p_up;
+                assert(i->p_up->in(i->x, i->y));
             }
         }
         else
-        { //pUp is at the same depth as this current box
+        { //p_up is at the same depth as this current box
             for (int i = 0; i < 4; ++i)
             {
-                children[i]->pUp = pUp->pChildren[i];
-                pUp->pChildren[i]->pDown = children[i];
+                children[i]->p_up = p_up->p_children[i];
+                p_up->p_children[i]->p_down = children[i];
                 //note: to have complete updates we will have to dig into all the nodes in the
-                //subtree of pUp and update their pDown. This can be expensive. We resort
-                //to delay this until pUp is needed
+                //subtree of p_up and update their p_down. This can be expensive. We resort
+                //to delay this until p_up is needed
             }
         }
     }
 
-    //setup/update connections to pDown
-    if (this->pDown != nullptr)
+    //setup/update connections to p_down
+    if (this->p_down != nullptr)
     {
-        this->refine_pDown();
+        this->refine_p_down();
 
-        if (pDown->isLeaf)
+        if (p_down->is_leaf)
         {
-            for (auto & i : children) i->pDown = pDown;
+            for (auto & i : children) i->p_down = p_down;
         }
         else
         {
-            //pDown is at the same depth as this current box
+            //p_down is at the same depth as this current box
             for (int i = 0; i < 4; ++i)
             {
-                children[i]->pDown = pDown->pChildren[i];
-                pDown->pChildren[i]->pUp = children[i];
+                children[i]->p_down = p_down->p_children[i];
+                p_down->p_children[i]->p_up = children[i];
                 //note: to have complete updates we will have to dig into all the nodes in the
-                //subtree of pDown and update their pDown. This can be expensive. We resort
-                //to delay this until pDown is needed
+                //subtree of p_down and update their p_down. This can be expensive. We resort
+                //to delay this until p_down is needed
             }
         }
     }
@@ -400,32 +400,32 @@ bool Box::split(double epsilon)
     //setup the children/parent relation
     for (int i = 0; i < 4; ++i)
     {
-        this->pChildren[i] = children[i];
-        this->pChildren[i]->pParent = this;
+        this->p_children[i] = children[i];
+        this->p_children[i]->p_parent = this;
     }
 
-    this->isLeaf = false;
+    this->is_leaf = false;
 
     return true;
 }
 
 /*!
- * Refine pUp (this is called when pUp is at the level lower than the box but is not a leaf)
+ * Refine p_up (this is called when p_up is at the level lower than the box but is not a leaf)
  */
-bool Box::refine_pUp()
+bool Box::refine_p_up()
 {
-    return refine_pUpDown(&pUp);
+    return refine_p_up_down(&p_up);
 }
 
 /*!
- * Refine pDown (this is called when pUp is at the level lower than the box but is not a leaf)
+ * Refine p_down (this is called when p_up is at the level lower than the box but is not a leaf)
  */
-bool Box::refine_pDown()
+bool Box::refine_p_down()
 {
-    return refine_pUpDown(&pDown);
+    return refine_p_up_down(&p_down);
 }
 
-bool Box::refine_pUpDown(Box ** ppbox)
+bool Box::refine_p_up_down(Box ** ppbox)
 {
     if ((*ppbox) == nullptr) return true; //nothing to refine...
 
@@ -442,9 +442,9 @@ bool Box::refine_pUpDown(Box ** ppbox)
     }
     if ((*ppbox)->depth == this->depth) return true; //nothing to do
     //(*ppbox)->depth<this->depth
-    if ((*ppbox)->isLeaf) return true; //nothing to do
+    if ((*ppbox)->is_leaf) return true; //nothing to do
 
-    for (auto & i : (*ppbox)->pChildren)
+    for (auto & i : (*ppbox)->p_children)
     {
         if (i->in(x, y))
         {
@@ -453,17 +453,17 @@ bool Box::refine_pUpDown(Box ** ppbox)
         }
     }
 
-    return refine_pUpDown(ppbox);
+    return refine_p_up_down(ppbox);
 }
 
 /// find a leaf box containing a given point (qx,qy)
 Box * Box::find(double qx, double qy)
 {
-    if (isLeaf && in(qx, qy)) return this;
+    if (is_leaf && in(qx, qy)) return this;
 
-    assert(!isLeaf);
+    assert(!is_leaf);
 
-    for (auto & i : pChildren)
+    for (auto & i : p_children)
     {
         if (i->in(qx, qy)) return i->find(qx, qy);
     }
@@ -472,7 +472,7 @@ Box * Box::find(double qx, double qy)
                        to_string(qy) + ")");
 }
 
-void Box::rotateCtr(double cx, double cy, double rotation, double & rotated_x, double & rotated_y)
+void Box::rotate_ctr(double cx, double cy, double rotation, double & rotated_x, double & rotated_y)
 {
     rotated_x = cx + (x - cx) * cos(rotation) - (y - cy) * sin(rotation);
     rotated_y = cy + (y - cy) * cos(rotation) + (x - cx) * sin(rotation);

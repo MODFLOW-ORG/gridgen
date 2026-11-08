@@ -49,9 +49,9 @@ std::set<int> line_refined_cells(const std::vector<std::pair<double, double>> & 
     std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 3, 3, 100.0, 100.0);
     std::unique_ptr<QuadTree3D> qtree = std::make_unique<QuadTree3D>(mfgrid.get());
     Polyline arc;
-    arc.beginPoly();
-    for (const auto & pt : points) arc.addVertex(pt.first, pt.second);
-    arc.endPoly();
+    arc.begin_poly();
+    for (const auto & pt : points) arc.add_vertex(pt.first, pt.second);
+    arc.end_poly();
     qtree->refine(arc, 1, 0);
     arc.destroy();
     qtree->number_nodes();

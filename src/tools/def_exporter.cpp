@@ -25,9 +25,9 @@ bool DefinitionExporter::save(ostream & out, ModflowGridBlock & data)
 {
     assert(data.type == "modflow_grid");
     out << "BEGIN MODFLOW_GRID " << data.name << "\n";
-    out << "\tROTATION_ANGLE = " << round_trip(data.rotation_degrees) << "\n";
-    out << "\tX_OFFSET = " << round_trip(data.x_offset) << "\n";
-    out << "\tY_OFFSET = " << round_trip(data.y_offset) << "\n";
+    out << "\tROTATION_ANGLE = " << RoundTrip(data.rotation_degrees) << "\n";
+    out << "\tX_OFFSET = " << RoundTrip(data.x_offset) << "\n";
+    out << "\tY_OFFSET = " << RoundTrip(data.y_offset) << "\n";
     out << "\tLENGTH_UNIT = " << data.length_unit << "\n";
     out << "\tNLAY = " << data.nlay << "\n";
     out << "\tNROW = " << data.nrow << "\n";
@@ -48,7 +48,7 @@ bool DefinitionExporter::save(ostream & out, ModflowGridBlock & data)
 
 bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
 {
-    ModflowGrid * mflowgrid = grid->getModflowGrid();
+    ModflowGrid * modflow_grid = grid->get_modflow_grid();
     //filenames...
     const string & name = grid->name;
 
@@ -59,7 +59,7 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
 
     //start to generate the block
     out << "BEGIN QUADTREE " << name << "\n";
-    out << "\tMODFLOW_GRID = " << mflowgrid->name << "\n";
+    out << "\tMODFLOW_GRID = " << modflow_grid->name << "\n";
     out << "\tSTRUCTURE_File  = OPEN/CLOSE " << tree_structure_file << "\n";
 
     //save quadtree structure...
@@ -77,9 +77,9 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
 
     //output tops
     double * top_ptr = grid->top;
-    for (int i = 0; i < mflowgrid->nlay; i++)
+    for (int i = 0; i < modflow_grid->nlay; i++)
     {
-        int nsize_per_layer = grid->nodegroup.layer_cell_counts[i];
+        int nsize_per_layer = grid->node_group.layer_cell_counts[i];
         stringstream ss;
         ss << name << ".top" << i + 1 << ".dat";
         out << "\tTOP LAYER " << i + 1 << " = OPEN/CLOSE " << ss.str() << "\n";
@@ -89,9 +89,9 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
 
     //output bottoms
     double * bot_ptr = grid->bot;
-    for (int i = 0; i < mflowgrid->nlay; i++)
+    for (int i = 0; i < modflow_grid->nlay; i++)
     {
-        int nsize_per_layer = grid->nodegroup.layer_cell_counts[i];
+        int nsize_per_layer = grid->node_group.layer_cell_counts[i];
         stringstream ss;
         ss << name << ".bot" << i + 1 << ".dat";
         out << "\tBOTTOM LAYER " << i + 1 << " = OPEN/CLOSE " << ss.str() << "\n";
@@ -143,21 +143,21 @@ bool DefinitionExporter::save(ostream & out, QuadtreeBuilderBlock & data)
 
 bool DefinitionExporter::save(GridToUsgdataBlock & data)
 {
-    QuadTree3D * quadGrid = dynamic_cast<QuadTree3D *>(data.grid);
+    QuadTree3D * quad_grid = dynamic_cast<QuadTree3D *>(data.grid);
 
     //needed information about number of nodes per layer here
     int * nperlay = nullptr;
     vector<int> mf_nperlay; //nodes per layer of a MODFLOW grid
-    if (quadGrid != nullptr)
+    if (quad_grid != nullptr)
     {
-        nperlay = quadGrid->get_layer_cell_counts();
+        nperlay = quad_grid->get_layer_cell_counts();
     }
     else //get number of nodes per layer on the fly
     {
-        ModflowGrid * mflowgrid = dynamic_cast<ModflowGrid *>(data.grid);
-        if (mflowgrid != nullptr)
+        ModflowGrid * modflow_grid = dynamic_cast<ModflowGrid *>(data.grid);
+        if (modflow_grid != nullptr)
         {
-            mf_nperlay.assign(mflowgrid->nlay, mflowgrid->ncol * mflowgrid->nrow);
+            mf_nperlay.assign(modflow_grid->nlay, modflow_grid->ncol * modflow_grid->nrow);
             nperlay = mf_nperlay.data();
         }
     }
@@ -165,8 +165,8 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
     //vertical pass-through applies only to a quadtree grid
     if (data.vertical_pass_through)
     {
-        if (quadGrid != nullptr)
-            quadGrid->vertical_pass_through = true;
+        if (quad_grid != nullptr)
+            quad_grid->vertical_pass_through = true;
         else
             warn("Record VERTICAL_PASS_THROUGH in " + data.label() +
                  " is ignored; it applies only to a QUADTREE grid.");
@@ -178,16 +178,16 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
     save(data.usg_data_prefix, csr, nperlay);
 
     //save extra information for irregular map
-    if (quadGrid != nullptr)
+    if (quad_grid != nullptr)
     {
         // Save ghost nodes to file
         string ghostnode_name = data.usg_data_prefix + ".gnc.dat";
-        quadGrid->saveGhostNode(ghostnode_name);
+        quad_grid->save_ghost_node(ghostnode_name);
 
         // save nodes per layer
         string nodesperlay_data_name = data.usg_data_prefix + ".nodesperlay.dat";
-        ModflowGrid * mflowgrid = quadGrid->getModflowGrid();
-        save(nodesperlay_data_name, nperlay, mflowgrid->nlay);
+        ModflowGrid * modflow_grid = quad_grid->get_modflow_grid();
+        save(nodesperlay_data_name, nperlay, modflow_grid->nlay);
     }
 
     return true;
@@ -205,39 +205,39 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
     ModflowGrid * modflow_grid = dynamic_cast<ModflowGrid *>(grid);
 
     //count the total number of cells needed to be saved
-    int total = 0, conNum = 0;
-    for (auto b : grid->nodegroup)
+    int total = 0, connection_count = 0;
+    for (auto b : grid->node_group)
     {
-        if (b->active && b->isLeaf)
+        if (b->active && b->is_leaf)
         {
             total++;
             if (qtree_grid != nullptr)
             {
                 if (qtree_grid->vertical_pass_through)
                 {
-                    vector<double> conAreas;
-                    conNum +=
-                        qtree_grid->get_node_connections_with_pass_through(b, &conAreas).size();
+                    vector<double> con_areas;
+                    connection_count +=
+                        qtree_grid->get_node_connections_with_pass_through(b, &con_areas).size();
                 }
                 else
-                    conNum += qtree_grid->get_node_connections(b).size();
+                    connection_count += qtree_grid->get_node_connections(b).size();
             }
             else if (modflow_grid != nullptr)
             {
-                conNum += modflow_grid->get_node_connections(b->id).size();
+                connection_count += modflow_grid->get_node_connections(b->id).size();
             }
         }
     }
 
     //save the NACTIVECELLS and NCONNECTIONS  to the file
-    fout << total << "\t" << conNum << endl;
+    fout << total << "\t" << connection_count << endl;
 
     vector<pair<long, Box *>> sorted_boxes;
     sorted_boxes.reserve(total);
 
-    for (auto box : grid->nodegroup)
+    for (auto box : grid->node_group)
     {
-        if (box->active == false || box->isLeaf == false) continue;
+        if (box->active == false || box->is_leaf == false) continue;
         sorted_boxes.push_back(make_pair(box->number + id_offset, box));
     }
 
@@ -250,9 +250,9 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
     {
         Box * box = entry.second;
         const Point2d & center = gv.center(box);
-        fout << entry.first << " " << box->layer + id_offset << " " << round_trip(center[0]) << " "
-             << round_trip(center[1]) << " " << round_trip(box->z) << " " << round_trip(box->dx)
-             << " " << round_trip(box->dy) << " " << round_trip(box->dz) << "\n";
+        fout << entry.first << " " << box->layer + id_offset << " " << RoundTrip(center[0]) << " "
+             << RoundTrip(center[1]) << " " << RoundTrip(box->z) << " " << RoundTrip(box->dx) << " "
+             << RoundTrip(box->dy) << " " << RoundTrip(box->dz) << "\n";
     }
 
     fout.close();

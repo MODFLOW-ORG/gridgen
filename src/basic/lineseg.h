@@ -6,8 +6,8 @@
 */
 
 #pragma once
-#ifndef _CUSG_LINESEG_H_
-#define _CUSG_LINESEG_H_
+#ifndef CUSG_LINESEG_H
+#define CUSG_LINESEG_H
 
 #include "Point.h"
 
@@ -38,16 +38,16 @@ public:
     Point2d pt[2]; //!< end points of the line segment
 };
 
-class GIS_LineSeg2d : public LineSeg2d
+class GisLineSeg2d : public LineSeg2d
 {
 public:
-    GIS_LineSeg2d() : LineSeg2d()
+    GisLineSeg2d() : LineSeg2d()
     {
         m_seg_id = m_curve_id = 0;
         m_start_geo_dist = m_end_geo_dist = 0;
     }
 
-    GIS_LineSeg2d(const GIS_LineSeg2d & other) : LineSeg2d(other)
+    GisLineSeg2d(const GisLineSeg2d & other) : LineSeg2d(other)
     {
         m_seg_id = other.m_seg_id;
         m_curve_id = other.m_curve_id;
@@ -55,13 +55,13 @@ public:
         m_start_geo_dist = other.m_start_geo_dist;
     }
 
-    GIS_LineSeg2d(double p1x, double p1y, double p2x, double p2y) : LineSeg2d(p1x, p1y, p2x, p2y)
+    GisLineSeg2d(double p1x, double p1y, double p2x, double p2y) : LineSeg2d(p1x, p1y, p2x, p2y)
     {
         m_seg_id = m_curve_id = 0;
         m_start_geo_dist = m_end_geo_dist = 0;
     }
 
-    GIS_LineSeg2d(const Point2d & t1, const Point2d & t2) : LineSeg2d(t1, t2)
+    GisLineSeg2d(const Point2d & t1, const Point2d & t2) : LineSeg2d(t1, t2)
     {
         m_seg_id = m_curve_id = 0;
         m_start_geo_dist = m_end_geo_dist = 0;
@@ -81,4 +81,4 @@ public:
 
 } //namespace cusg
 
-#endif //_CUSG_LINESEG_H_
+#endif //CUSG_LINESEG_H

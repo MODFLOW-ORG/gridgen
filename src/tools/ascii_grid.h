@@ -19,20 +19,20 @@ using namespace std;
 namespace cusg
 {
 
-struct ascii_grid_cell
+struct AsciiGridCell
 {
     double x, y, dx, dy;
 };
 
 ///bare bones of an ASCII grid
-class ascii_grid
+class AsciiGrid
 {
 public:
-    ascii_grid()
+    AsciiGrid()
     {
-        ncols = nrows = 0;
-        nodata_value = -9999; //the ESRI default is -9999
-        values = nullptr;
+        m_ncols = m_nrows = 0;
+        m_nodata_value = -9999; //the ESRI default is -9999
+        m_values = nullptr;
     }
 
     //
@@ -41,71 +41,71 @@ public:
     //
     //
 
-    double * getvalues() { return values; }
-    double getvalue(unsigned int i, unsigned int j)
+    double * get_values() { return m_values; }
+    double get_value(unsigned int i, unsigned int j)
     {
-        if (i >= nrows || j >= ncols)
+        if (i >= m_nrows || j >= m_ncols)
         {
-            return nodata_value;
+            return m_nodata_value;
         }
 
-        unsigned int index = i * ncols + j;
-        return values[index];
+        unsigned int index = i * m_ncols + j;
+        return m_values[index];
     }
 
     //access other data members
-    unsigned int getncols() { return ncols; }
-    unsigned int getnrows() { return nrows; }
+    unsigned int getncols() { return m_ncols; }
+    unsigned int getnrows() { return m_nrows; }
 
     //check if the given value is valid or not
-    bool isvalid(double value) { return value != nodata_value; }
+    bool is_valid(double value) { return value != m_nodata_value; }
 
     //given a 2d point (x,y) returns the index of the point
-    virtual Index2d getIndex(double x, double y) = 0;
+    virtual Index2d get_index(double x, double y) = 0;
 
     //
-    virtual ascii_grid_cell getCell(unsigned int i, unsigned int j) = 0;
+    virtual AsciiGridCell get_cell(unsigned int i, unsigned int j) = 0;
 
-    double getNoDATA_value() const { return nodata_value; }
+    double get_nodata_value() const { return m_nodata_value; }
 
     // get X and get Y
-    virtual double getX(unsigned int col) = 0;
+    virtual double get_x(unsigned int col) = 0;
 
-    virtual double getY(unsigned int row) = 0;
+    virtual double get_y(unsigned int row) = 0;
 
 protected:
     //The origin of the grid is the upper left and terminus at the lower right.
-    unsigned int ncols; //ncols refers to the number of columns in the grid
-    unsigned int nrows; //nrows refers to the number of rows in the grid
+    unsigned int m_ncols; //ncols refers to the number of columns in the grid
+    unsigned int m_nrows; //nrows refers to the number of rows in the grid
 
-    double nodata_value; //nodata_value refers to the value that represents missing data
-                         //the ESRI default is -9999
+    double m_nodata_value; //nodata_value refers to the value that represents missing data
+                           //the ESRI default is -9999
 
-    double * values;
+    double * m_values;
 };
 
-class mf_ascii_grid : public ascii_grid
+class ModflowAsciiGrid : public AsciiGrid
 {
 public:
-    mf_ascii_grid(ModflowGrid * mfgrid, double * grid_values, unsigned int col, unsigned int row,
-                  double nodata = -9999)
-        : ascii_grid()
+    ModflowAsciiGrid(ModflowGrid * mfgrid, double * grid_values, unsigned int col, unsigned int row,
+                     double nodata = -9999)
+        : AsciiGrid()
     {
-        values = grid_values;
-        ncols = col;
-        nrows = row;
-        nodata_value = nodata;
+        m_values = grid_values;
+        m_ncols = col;
+        m_nrows = row;
+        m_nodata_value = nodata;
         m_mfgrid = mfgrid;
     }
 
     //get the index of the given point
-    Index2d getIndex(double x, double y) override { return m_mfgrid->getIndex(Point2d(x, y)); }
+    Index2d get_index(double x, double y) override { return m_mfgrid->get_index(Point2d(x, y)); }
 
     //create a cell and return it
-    ascii_grid_cell getCell(unsigned int i, unsigned int j) override
+    AsciiGridCell get_cell(unsigned int i, unsigned int j) override
     {
         Box * box = m_mfgrid->find_box(i, j);
-        ascii_grid_cell cell;
+        AsciiGridCell cell;
         cell.dx = box->dx;
         cell.dy = box->dy;
         cell.x = box->x;
@@ -114,12 +114,12 @@ public:
         return cell;
     }
 
-    double getX(unsigned int col) override
+    double get_x(unsigned int col) override
     {
         Box * box = m_mfgrid->find_box(col, 0);
         return box->x;
     }
-    double getY(unsigned int row) override
+    double get_y(unsigned int row) override
     {
         Box * box = m_mfgrid->find_box(0, row);
         return box->x;
@@ -129,15 +129,15 @@ private:
     ModflowGrid * m_mfgrid;
 };
 
-class arcinfo_ascii_grid : public ascii_grid
+class ArcinfoAsciiGrid : public AsciiGrid
 {
 public:
-    arcinfo_ascii_grid() : ascii_grid()
+    ArcinfoAsciiGrid() : AsciiGrid()
     {
-        cellsize = xllcorner = yllcorner = 0; //=yulcorner=0;
+        m_cellsize = m_xllcorner = m_yllcorner = 0; //=yulcorner=0;
     }
 
-    ~arcinfo_ascii_grid() { delete[] values; }
+    ~ArcinfoAsciiGrid() { delete[] m_values; }
 
     bool build(const string & filename)
     {
@@ -162,57 +162,57 @@ public:
     //
 
     //get the x coordinate of the CENTER of a cell
-    double getX(unsigned int i) override
+    double get_x(unsigned int i) override
     {
         //an index past the last column is taken as the last
-        if (i >= ncols) i = ncols - 1;
+        if (i >= m_ncols) i = m_ncols - 1;
 
-        return xllcorner + cellsize * (i + 0.5f);
+        return m_xllcorner + m_cellsize * (i + 0.5f);
     }
 
     //get the y coordinate of the CENTER of a cell
-    double getY(unsigned int i) override
+    double get_y(unsigned int i) override
     {
         //an index past the last row is taken as the last
-        if (i >= nrows) i = nrows - 1;
+        if (i >= m_nrows) i = m_nrows - 1;
 
-        return yllcorner + cellsize * ((nrows - i - 1) + 0.5f);
+        return m_yllcorner + m_cellsize * ((m_nrows - i - 1) + 0.5f);
     }
 
     //get the index of the given point
-    Index2d getIndex(double x, double y) override
+    Index2d get_index(double x, double y) override
     {
-        int i = nrows - 1 - floor((y - yllcorner) / cellsize);
-        int j = floor((x - xllcorner) / cellsize);
+        int i = m_nrows - 1 - floor((y - m_yllcorner) / m_cellsize);
+        int j = floor((x - m_xllcorner) / m_cellsize);
 
-        if (i < 0 || j < 0 || ((unsigned int)i) >= nrows || ((unsigned int)j) >= ncols)
+        if (i < 0 || j < 0 || ((unsigned int)i) >= m_nrows || ((unsigned int)j) >= m_ncols)
         {
             if (i < 0) i = 0;
             if (j < 0) j = 0;
-            if (i >= (int)nrows) i = (int)(nrows - 1);
-            if (j >= (int)ncols) j = (int)(ncols - 1);
+            if (i >= (int)m_nrows) i = (int)(m_nrows - 1);
+            if (j >= (int)m_ncols) j = (int)(m_ncols - 1);
         }
 
         return Index2d(i, j);
     }
 
     //create a cell and return it
-    ascii_grid_cell getCell(unsigned int i, unsigned int j) override
+    AsciiGridCell get_cell(unsigned int i, unsigned int j) override
     {
-        ascii_grid_cell cell;
-        cell.x = getX(j);
-        cell.y = getY(i);
-        cell.dx = cellsize;
-        cell.dy = cellsize;
+        AsciiGridCell cell;
+        cell.x = get_x(j);
+        cell.y = get_y(i);
+        cell.dx = m_cellsize;
+        cell.dy = m_cellsize;
 
         return cell;
     }
 
     //access other data members
 
-    double getxllcorner() { return xllcorner; }
-    double getyllcorner() { return yllcorner; }
-    double getcellsize() { return cellsize; }
+    double get_xllcorner() { return m_xllcorner; }
+    double get_yllcorner() { return m_yllcorner; }
+    double get_cellsize() { return m_cellsize; }
 
 protected:
     string tolower(const string & s)
@@ -229,18 +229,17 @@ protected:
     //The origin of the grid is the upper left and terminus at the lower right.
 
     //xllcorner and yllcorner are given as the EDGES of the grid, NOT the centers of the edge cells.
-    double xllcorner; //xllcorner refers to the western edge of the grid
-    double yllcorner; //yllcorner refers to the southern edge of the grid
+    double m_xllcorner; //xllcorner refers to the western edge of the grid
+    double m_yllcorner; //yllcorner refers to the southern edge of the grid
 
     //determined from the input values
     //double yulcorner;  //yllcorner refers to the north edge of the grid
 
-    double cellsize; //cellsize refers to the resolution of the grid
+    double m_cellsize; //cellsize refers to the resolution of the grid
 };
 
 //perform bilinear interpolation between (i,j), (i+1,j), (i,j+1), (i+1,j+1)
 //x and y must be between 0 and 1
-double bilinear_interpolation(ascii_grid * grid, unsigned int i, unsigned int j, double x,
-                              double y);
+double bilinear_interpolation(AsciiGrid * grid, unsigned int i, unsigned int j, double x, double y);
 
 } //end of namespace cusg

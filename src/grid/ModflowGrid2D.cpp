@@ -12,7 +12,7 @@
 #include "ModflowGrid2D.h"
 #include "GridgenError.h"
 #include <climits>
-#define IndexEPSILON 1e-10
+#define INDEX_EPSILON 1e-10
 
 namespace cusg
 {
@@ -57,7 +57,7 @@ ModflowGrid2D::ModflowGrid2D(int nrow, int ncol, double delr, double delc, doubl
     this->yoffset = yoffset;
     this->rotation = rotation;
 
-    init2D();
+    init_2d();
 }
 
 /*! \brief Instantiate a ModflowGrid2D object.
@@ -109,7 +109,7 @@ ModflowGrid2D::ModflowGrid2D(int nrow, int ncol, double * delr, double * delc, d
     this->yoffset = yoffset;
     this->rotation = rotation;
 
-    init2D();
+    init_2d();
 }
 
 ///x coords for the center of all cells
@@ -140,29 +140,29 @@ double * ModflowGrid2D::get_local_y_array()
 }
 
 /// x coord of all edges
-vector<double> ModflowGrid2D::get_local_Xe_array()
+vector<double> ModflowGrid2D::get_local_xe_array()
 {
     //The Xe array contains the edge coordinate for each cell
     int size = ncol + 1;
-    vector<double> Xe(size);
-    Xe[0] = 0;
-    for (int i = 1; i < size; i++) Xe[i] = Xe[i - 1] + delr[i - 1];
-    for (int i = 0; i < size; i++) Xe[i] += xoffset;
+    vector<double> xe(size);
+    xe[0] = 0;
+    for (int i = 1; i < size; i++) xe[i] = xe[i - 1] + delr[i - 1];
+    for (int i = 0; i < size; i++) xe[i] += xoffset;
 
-    return Xe;
+    return xe;
 }
 
 /// y coord of all edges
-vector<double> ModflowGrid2D::get_local_Ye_array()
+vector<double> ModflowGrid2D::get_local_ye_array()
 {
     //allocate space
     int size = nrow + 1;
-    vector<double> Ye(size);
-    Ye[size - 1] = 0;
-    for (int i = size - 2; i >= 0; i--) Ye[i] = Ye[i + 1] + delc[i];
-    for (int i = 0; i < size; i++) Ye[i] += yoffset;
+    vector<double> ye(size);
+    ye[size - 1] = 0;
+    for (int i = size - 2; i >= 0; i--) ye[i] = ye[i + 1] + delc[i];
+    for (int i = 0; i < size; i++) ye[i] += yoffset;
 
-    return Ye;
+    return ye;
 }
 
 /// Return a numpy array of size (nodes) that contains the area for all cells.
@@ -217,13 +217,13 @@ Box * ModflowGrid2D::find_box(int i, int j)
     //get the box
     int id = get_box_index(i, j);
 
-    if (nodegroup.empty() || id < 0 || ((unsigned)id) >= nodegroup.size())
+    if (node_group.empty() || id < 0 || ((unsigned)id) >= node_group.size())
     {
         throw GridgenError("internal error: row " + to_string(i + 1) + ", column " +
                            to_string(j + 1) + " is not in the grid");
     }
 
-    return nodegroup[id];
+    return node_group[id];
 }
 
 ///get box connections from id
@@ -283,7 +283,7 @@ void ModflowGrid2D::number_nodes()
         for (int c = 0; c < ncol; c++)
         {
             int bid = get_box_index(r, c);
-            Box * box = nodegroup[bid];
+            Box * box = node_group[bid];
             if (box->active)
                 box->number = number++;
             else
@@ -299,12 +299,12 @@ double ModflowGrid2D::botm(int layer, int row, int col)
     return bot[id];
 }
 
-void ModflowGrid2D::init2D()
+void ModflowGrid2D::init_2d()
 {
-    X = get_local_x_array();
-    Y = get_local_y_array();
-    Xe = get_local_Xe_array();
-    Ye = get_local_Ye_array();
+    x_centers = get_local_x_array();
+    y_centers = get_local_y_array();
+    xe = get_local_xe_array();
+    ye = get_local_ye_array();
 }
 
 ///add connection between boxes
@@ -318,14 +318,14 @@ void ModflowGrid2D::add_connections()
         {
             int box_index = get_box_index(i, j);
 
-            Box * nodeobj = nodegroup[box_index];
+            Box * nodeobj = node_group[box_index];
 
             if (i < nrow - 1)
             {
                 //make connection to front
                 int to_node = get_box_index(i + 1, j);
                 int fldir = -2;
-                nodeobj->addConnection(nodegroup[to_node], fldir);
+                nodeobj->add_connection(node_group[to_node], fldir);
             }
 
             if (i > 0)
@@ -333,21 +333,21 @@ void ModflowGrid2D::add_connections()
                 //make connection to back
                 int to_node = get_box_index(i - 1, j);
                 int fldir = 2;
-                nodeobj->addConnection(nodegroup[to_node], fldir);
+                nodeobj->add_connection(node_group[to_node], fldir);
             }
             if (j < ncol - 1)
             {
                 //make connection to right
                 int to_node = get_box_index(i, j + 1);
                 int fldir = 1;
-                nodeobj->addConnection(nodegroup[to_node], fldir);
+                nodeobj->add_connection(node_group[to_node], fldir);
             }
             if (j > 0)
             {
                 //make connection to left
                 int to_node = get_box_index(i, j - 1);
                 int fldir = -1;
-                nodeobj->addConnection(nodegroup[to_node], fldir);
+                nodeobj->add_connection(node_group[to_node], fldir);
             }
         } //end j
     } //end i
@@ -355,63 +355,63 @@ void ModflowGrid2D::add_connections()
 
 ///find the index of the box containing pt
 ///row major (row_id, col_id)
-Index2d ModflowGrid2D::getIndex(const Point2d & pt)
+Index2d ModflowGrid2D::get_index(const Point2d & pt)
 {
     int i_x = INT_MAX;
     int i_y = INT_MAX;
-    bool bContain = true;
+    bool contains = true;
 
-    double * Xe = this->Xe.data();
-    double * Ye = this->Ye.data();
+    double * xe = this->xe.data();
+    double * ye = this->ye.data();
 
-    bool xAsc = delr[0] > 0;
-    bool yAsc = delc[0] > 0;
+    bool x_asc = delr[0] > 0;
+    bool y_asc = delc[0] > 0;
 
-    if (xAsc && (pt[0] < Xe[0] - IndexEPSILON || pt[0] > Xe[ncol] + IndexEPSILON))
+    if (x_asc && (pt[0] < xe[0] - INDEX_EPSILON || pt[0] > xe[ncol] + INDEX_EPSILON))
     {
-        if (pt[0] < Xe[0] - IndexEPSILON)
+        if (pt[0] < xe[0] - INDEX_EPSILON)
             i_x = INT_MIN;
-        else if (pt[0] > Xe[ncol] + IndexEPSILON)
+        else if (pt[0] > xe[ncol] + INDEX_EPSILON)
             i_x = INT_MAX;
-        bContain = false;
+        contains = false;
     }
-    if ((!xAsc) && (pt[0] < Xe[ncol] - IndexEPSILON || pt[0] > Xe[0] + IndexEPSILON))
+    if ((!x_asc) && (pt[0] < xe[ncol] - INDEX_EPSILON || pt[0] > xe[0] + INDEX_EPSILON))
     {
-        if (pt[0] > Xe[0] + IndexEPSILON)
+        if (pt[0] > xe[0] + INDEX_EPSILON)
             i_x = INT_MIN;
-        else if (pt[0] < Xe[ncol] - IndexEPSILON)
+        else if (pt[0] < xe[ncol] - INDEX_EPSILON)
             i_x = INT_MAX;
-        bContain = false;
+        contains = false;
     }
-    if (yAsc && (pt[1] > Ye[0] + IndexEPSILON || pt[1] < Ye[nrow] - IndexEPSILON))
+    if (y_asc && (pt[1] > ye[0] + INDEX_EPSILON || pt[1] < ye[nrow] - INDEX_EPSILON))
     {
-        if (pt[1] > Ye[0] + IndexEPSILON)
+        if (pt[1] > ye[0] + INDEX_EPSILON)
             i_y = INT_MIN;
-        else if (pt[1] < Ye[nrow] - IndexEPSILON)
+        else if (pt[1] < ye[nrow] - INDEX_EPSILON)
             i_y = INT_MAX;
-        bContain = false;
+        contains = false;
     }
-    if ((!yAsc) && (pt[1] < Ye[0] - IndexEPSILON || pt[1] > Ye[nrow] + IndexEPSILON))
+    if ((!y_asc) && (pt[1] < ye[0] - INDEX_EPSILON || pt[1] > ye[nrow] + INDEX_EPSILON))
     {
-        if (pt[1] < Ye[0] - IndexEPSILON)
+        if (pt[1] < ye[0] - INDEX_EPSILON)
             i_y = INT_MIN;
-        else if (pt[1] > Ye[nrow] + IndexEPSILON)
+        else if (pt[1] > ye[nrow] + INDEX_EPSILON)
             i_y = INT_MAX;
-        bContain = false;
+        contains = false;
     }
 
-    if (!bContain)
+    if (!contains)
     {
         return Index2d(i_y, i_x);
     }
-    if (yAsc)
+    if (y_asc)
     {
-        assert(Ye[0] > Ye[nrow]);
+        assert(ye[0] > ye[nrow]);
     }
 
     //use the binary search
-    i_x = getXIndexByBinarySearch(pt, Xe, 0, this->ncol, xAsc);
-    i_y = getYIndexByBinarySearch(pt, Ye, 0, this->nrow, yAsc);
+    i_x = get_x_index_by_binary_search(pt, xe, 0, this->ncol, x_asc);
+    i_y = get_y_index_by_binary_search(pt, ye, 0, this->nrow, y_asc);
 
     ////find i_x
     ////find i_y
@@ -422,59 +422,59 @@ Index2d ModflowGrid2D::getIndex(const Point2d & pt)
     ////find i_y
 }
 
-int ModflowGrid2D::getXIndexByBinarySearch(const Point2d & pt, double * Xe, int left, int right,
-                                           bool ascending)
+int ModflowGrid2D::get_x_index_by_binary_search(const Point2d & pt, double * xe, int left,
+                                                int right, bool ascending)
 {
     if (left == right) return left;
     if (left + 1 == right) return left;
 
     int mid = (left + right) / 2;
-    if (Xe[mid] == pt[0])
+    if (xe[mid] == pt[0])
         return mid;
-    else if (Xe[mid] > pt[0])
+    else if (xe[mid] > pt[0])
     {
         if (ascending)
-            return getXIndexByBinarySearch(pt, Xe, left, mid, ascending);
+            return get_x_index_by_binary_search(pt, xe, left, mid, ascending);
         else
-            return getXIndexByBinarySearch(pt, Xe, mid, right, ascending);
+            return get_x_index_by_binary_search(pt, xe, mid, right, ascending);
     }
     else // if(Xe[mid] <pt[0])
     {
         //neither less, equal, nor greater, so the coordinate is not a number
-        if (!(Xe[mid] < pt[0]))
+        if (!(xe[mid] < pt[0]))
             throw GridgenError("a feature has a coordinate that is not a number");
         if (ascending)
-            return getXIndexByBinarySearch(pt, Xe, mid, right, ascending);
+            return get_x_index_by_binary_search(pt, xe, mid, right, ascending);
         else
-            return getXIndexByBinarySearch(pt, Xe, left, mid, ascending);
+            return get_x_index_by_binary_search(pt, xe, left, mid, ascending);
     }
 }
 
-int ModflowGrid2D::getYIndexByBinarySearch(const Point2d & pt, double * Ye, int left, int right,
-                                           bool ascending)
+int ModflowGrid2D::get_y_index_by_binary_search(const Point2d & pt, double * ye, int left,
+                                                int right, bool ascending)
 {
     if (left == right) return left;
     if (left + 1 == right) return left;
 
     int mid = (left + right) / 2;
-    if (Ye[mid] == pt[1])
+    if (ye[mid] == pt[1])
         return mid;
-    else if (Ye[mid] > pt[1])
+    else if (ye[mid] > pt[1])
     {
         if (ascending)
-            return getYIndexByBinarySearch(pt, Ye, mid, right, ascending);
+            return get_y_index_by_binary_search(pt, ye, mid, right, ascending);
         else
-            return getYIndexByBinarySearch(pt, Ye, left, mid, ascending);
+            return get_y_index_by_binary_search(pt, ye, left, mid, ascending);
     }
     else //if(Ye[mid] <pt[1])
     {
         //neither less, equal, nor greater, so the coordinate is not a number
-        if (!(Ye[mid] < pt[1]))
+        if (!(ye[mid] < pt[1]))
             throw GridgenError("a feature has a coordinate that is not a number");
         if (ascending)
-            return getYIndexByBinarySearch(pt, Ye, left, mid, ascending);
+            return get_y_index_by_binary_search(pt, ye, left, mid, ascending);
         else
-            return getYIndexByBinarySearch(pt, Ye, mid, right, ascending);
+            return get_y_index_by_binary_search(pt, ye, mid, right, ascending);
     }
 }
 

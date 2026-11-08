@@ -18,9 +18,9 @@ namespace
 void count_cells(QuadTree3D * qtree, int layer, int & active, int & total)
 {
     active = total = 0;
-    for (Box * b : qtree->nodegroup)
+    for (Box * b : qtree->node_group)
     {
-        if (b == nullptr || !b->isLeaf || b->layer != layer) continue;
+        if (b == nullptr || !b->is_leaf || b->layer != layer) continue;
         total++;
         if (b->active) active++;
     }
@@ -42,7 +42,7 @@ TEST(GridDomain, PolygonEnclosingGridActivatesEveryCell)
     domain.shapefile = std::string(GRIDGEN_TEST_DIR) + "/shapefiles/enclosing_domain";
     domain.feature_type = "polygon";
 
-    qtree->nodegroup.disable_nodes_in_layer(1);
+    qtree->node_group.disable_nodes_in_layer(1);
     int active = 0, total = 0;
     count_cells(qtree.get(), 1, active, total);
     ASSERT_EQ(active, 0);

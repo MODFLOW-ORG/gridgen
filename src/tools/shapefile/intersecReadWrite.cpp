@@ -5,24 +5,24 @@
 using namespace std;
 using namespace cusg;
 
-const string _IFO_DEL = ",";
+const string INTERSECTION_DELIMITER = ",";
 
 // signed area of a ring, positive when it runs counterclockwise
-static double ringArea(LinkedVertex * head)
+static double ring_area(LinkedVertex * head)
 {
     double area = 0.0;
     LinkedVertex * pv = head;
     do
     {
-        const Point2d & a = pv->getPos();
-        const Point2d & b = pv->getNext()->getPos();
+        const Point2d & a = pv->get_pos();
+        const Point2d & b = pv->get_next()->get_pos();
         area += a[0] * b[1] - b[0] * a[1];
-        pv = pv->getNext();
+        pv = pv->get_next();
     } while (pv != head);
     return 0.5 * area;
 }
 
-bool checkAttributesContain(const char * attribute_name, vector<string> & attributes)
+bool check_attributes_contain(const char * attribute_name, vector<string> & attributes)
 {
     for (auto & str : attributes)
     {
@@ -33,170 +33,176 @@ bool checkAttributesContain(const char * attribute_name, vector<string> & attrib
     }
     return false;
 }
-void checkShpAttrContain(GridIntersection * grid_intersection, vector<bool> & bIntFld,
-                         vector<bool> & bDBFld, vector<bool> & bStrFld, vector<bool> & bLogFld,
-                         vector<string> & iName, vector<string> & dName, vector<string> & sName,
-                         vector<string> & lName, vector<string> & attributes)
+void check_shp_attr_contain(GridIntersection * grid_intersection, vector<bool> & write_int_field,
+                            vector<bool> & write_double_field, vector<bool> & write_str_field,
+                            vector<bool> & write_logical_field, vector<string> & int_names,
+                            vector<string> & double_names, vector<string> & str_names,
+                            vector<string> & logical_names, vector<string> & attributes)
 {
-    vector<ShapeIntField> & m_intFlds = grid_intersection->m_shp_reader.getIntFields();
-    vector<ShapeDoubleField> & m_dbFlds = grid_intersection->m_shp_reader.getDBFields();
-    vector<ShapeStringField> & m_strFlds = grid_intersection->m_shp_reader.getStrFields();
-    vector<ShapeLogField> & m_logFlds = grid_intersection->m_shp_reader.getLogicalFields();
-    for (auto & fld : m_intFlds)
+    vector<ShapeIntField> & int_fields = grid_intersection->m_shp_reader.get_int_fields();
+    vector<ShapeDoubleField> & double_fields = grid_intersection->m_shp_reader.get_double_fields();
+    vector<ShapeStringField> & str_fields = grid_intersection->m_shp_reader.get_str_fields();
+    vector<ShapeLogField> & logical_fields = grid_intersection->m_shp_reader.get_logical_fields();
+    for (auto & fld : int_fields)
     {
-        if (checkAttributesContain(fld.name.c_str(), attributes))
+        if (check_attributes_contain(fld.name.c_str(), attributes))
         {
-            bIntFld.push_back(true);
-            iName.push_back(fld.name);
+            write_int_field.push_back(true);
+            int_names.push_back(fld.name);
         }
         else
-            bIntFld.push_back(false);
+            write_int_field.push_back(false);
     }
-    for (auto & fld : m_dbFlds)
+    for (auto & fld : double_fields)
     {
-        if (checkAttributesContain(fld.name.c_str(), attributes))
+        if (check_attributes_contain(fld.name.c_str(), attributes))
         {
-            bDBFld.push_back(true);
-            dName.push_back(fld.name);
+            write_double_field.push_back(true);
+            double_names.push_back(fld.name);
         }
         else
-            bDBFld.push_back(false);
+            write_double_field.push_back(false);
     }
-    for (auto & fld : m_strFlds)
+    for (auto & fld : str_fields)
     {
-        if (checkAttributesContain(fld.name.c_str(), attributes))
+        if (check_attributes_contain(fld.name.c_str(), attributes))
         {
-            bStrFld.push_back(true);
-            sName.push_back(fld.name);
+            write_str_field.push_back(true);
+            str_names.push_back(fld.name);
         }
         else
-            bStrFld.push_back(false);
+            write_str_field.push_back(false);
     }
-    for (auto & fld : m_logFlds)
+    for (auto & fld : logical_fields)
     {
-        if (checkAttributesContain(fld.name.c_str(), attributes))
+        if (check_attributes_contain(fld.name.c_str(), attributes))
         {
-            bLogFld.push_back(true);
-            lName.push_back(fld.name);
+            write_logical_field.push_back(true);
+            logical_names.push_back(fld.name);
         }
         else
-            bLogFld.push_back(false);
+            write_logical_field.push_back(false);
     }
 }
-void addShpAttrVal(int iShape, GridIntersection * grid_intersection, vector<bool> & bIntFld,
-                   vector<bool> & bDBFld, vector<bool> & bStrFld, vector<bool> & bLogFld,
-                   vector<int> & int_values, vector<double> & double_values,
-                   vector<string> & string_values, vector<string> & logical_values)
+void add_shp_attr_val(int shape_index, GridIntersection * grid_intersection,
+                      vector<bool> & write_int_field, vector<bool> & write_double_field,
+                      vector<bool> & write_str_field, vector<bool> & write_logical_field,
+                      vector<int> & int_values, vector<double> & double_values,
+                      vector<string> & string_values, vector<string> & logical_values)
 {
-    vector<ShapeIntField> & m_intFlds = grid_intersection->m_shp_reader.getIntFields();
-    vector<ShapeDoubleField> & m_dbFlds = grid_intersection->m_shp_reader.getDBFields();
-    vector<ShapeStringField> & m_strFlds = grid_intersection->m_shp_reader.getStrFields();
-    vector<ShapeLogField> & m_logFlds = grid_intersection->m_shp_reader.getLogicalFields();
-    vector<bool>::iterator ibit = bIntFld.begin();
-    for (vector<ShapeIntField>::iterator sit = m_intFlds.begin(); sit != m_intFlds.end();
+    vector<ShapeIntField> & int_fields = grid_intersection->m_shp_reader.get_int_fields();
+    vector<ShapeDoubleField> & double_fields = grid_intersection->m_shp_reader.get_double_fields();
+    vector<ShapeStringField> & str_fields = grid_intersection->m_shp_reader.get_str_fields();
+    vector<ShapeLogField> & logical_fields = grid_intersection->m_shp_reader.get_logical_fields();
+    vector<bool>::iterator ibit = write_int_field.begin();
+    for (vector<ShapeIntField>::iterator sit = int_fields.begin(); sit != int_fields.end();
          ++sit, ++ibit)
     {
-        if (*ibit) int_values.push_back(sit->values[iShape]);
+        if (*ibit) int_values.push_back(sit->values[shape_index]);
     }
-    vector<bool>::iterator idit = bDBFld.begin();
-    for (vector<ShapeDoubleField>::iterator sit = m_dbFlds.begin(); sit != m_dbFlds.end();
+    vector<bool>::iterator idit = write_double_field.begin();
+    for (vector<ShapeDoubleField>::iterator sit = double_fields.begin(); sit != double_fields.end();
          ++sit, ++idit)
     {
-        if (*idit) double_values.push_back(sit->values[iShape]);
+        if (*idit) double_values.push_back(sit->values[shape_index]);
     }
-    vector<bool>::iterator sbit = bStrFld.begin();
-    for (vector<ShapeStringField>::iterator sit = m_strFlds.begin(); sit != m_strFlds.end();
+    vector<bool>::iterator sbit = write_str_field.begin();
+    for (vector<ShapeStringField>::iterator sit = str_fields.begin(); sit != str_fields.end();
          ++sit, ++sbit)
     {
-        if (*sbit) string_values.push_back(sit->values[iShape]);
+        if (*sbit) string_values.push_back(sit->values[shape_index]);
     }
-    vector<bool>::iterator lbit = bLogFld.begin();
-    for (vector<ShapeLogField>::iterator sit = m_logFlds.begin(); sit != m_logFlds.end();
+    vector<bool>::iterator lbit = write_logical_field.begin();
+    for (vector<ShapeLogField>::iterator sit = logical_fields.begin(); sit != logical_fields.end();
          ++sit, ++lbit)
     {
-        if (*lbit) logical_values.push_back(sit->values[iShape]);
+        if (*lbit) logical_values.push_back(sit->values[shape_index]);
     }
 }
 
-void addDBHandleFields(DBFHandle & dbfHandle, int intFldNum, vector<string> & intFldNames,
-                       int doubleFldNum, vector<string> & dbFldNames, vector<int> & intFldIDs,
-                       vector<int> & dbFldIDs)
+void add_db_handle_fields(DBFHandle & dbf_handle, int int_field_count,
+                          vector<string> & int_field_names, int double_field_count,
+                          vector<string> & double_field_names, vector<int> & int_field_ids,
+                          vector<int> & double_field_ids)
 {
-    for (int i = 0; i < intFldNum; i++)
+    for (int i = 0; i < int_field_count; i++)
     {
-        int tid = DBFAddField(dbfHandle, intFldNames[i].c_str(), FTInteger, 20, 0);
-        intFldIDs.push_back(tid);
+        int tid = DBFAddField(dbf_handle, int_field_names[i].c_str(), FTInteger, 20, 0);
+        int_field_ids.push_back(tid);
     }
-    for (int i = 0; i < doubleFldNum; i++)
+    for (int i = 0; i < double_field_count; i++)
     {
-        int tid = DBFAddField(dbfHandle, dbFldNames[i].c_str(), FTDouble, 20, 8);
-        dbFldIDs.push_back(tid);
+        int tid = DBFAddField(dbf_handle, double_field_names[i].c_str(), FTDouble, 20, 8);
+        double_field_ids.push_back(tid);
     }
 }
-void addDBHandleStrFields(DBFHandle & dbfHandle, int strFldNum, vector<string> & strFldNames,
-                          vector<int> & strFldIDs)
+void add_db_handle_str_fields(DBFHandle & dbf_handle, int str_field_count,
+                              vector<string> & str_field_names, vector<int> & str_field_ids)
 {
-    for (int i = 0; i < strFldNum; i++)
+    for (int i = 0; i < str_field_count; i++)
     {
-        int tid = DBFAddField(dbfHandle, strFldNames[i].c_str(), FTString, 50, 0);
-        strFldIDs.push_back(tid);
+        int tid = DBFAddField(dbf_handle, str_field_names[i].c_str(), FTString, 50, 0);
+        str_field_ids.push_back(tid);
     }
 }
 //write int and double attributes
-void writeIntDBVal(DBFHandle & dbfHandle, int entity, vector<int> & intFldIDs,
-                   vector<int> & intVals, vector<int> & dbFldIDs, vector<double> & dbVals,
-                   vector<int> & strFldIDs, vector<string> & strVals, vector<int> & logFldIDs,
-                   vector<string> & logVals, ofstream & ofile, bool isTxt)
+void write_int_db_val(DBFHandle & dbf_handle, int entity, vector<int> & int_field_ids,
+                      vector<int> & int_values, vector<int> & double_field_ids,
+                      vector<double> & double_values, vector<int> & str_field_ids,
+                      vector<string> & str_values, vector<int> & logical_field_ids,
+                      vector<string> & logical_values, ofstream & ofile, bool is_txt)
 {
-    int intFldNum = intVals.size();
-    int dbFldNum = dbVals.size();
-    int strFldNum = strVals.size();
-    int logFldNum = logVals.size();
+    int int_field_count = int_values.size();
+    int double_field_count = double_values.size();
+    int str_field_count = str_values.size();
+    int logical_field_count = logical_values.size();
     //write integer fields
-    for (int i = 0; i < intFldNum; ++i)
+    for (int i = 0; i < int_field_count; ++i)
     {
-        if (!isTxt)
-            DBFWriteIntegerAttribute(dbfHandle, entity, intFldIDs[i], intVals[i]);
+        if (!is_txt)
+            DBFWriteIntegerAttribute(dbf_handle, entity, int_field_ids[i], int_values[i]);
         else
-            ofile << intVals[i] << _IFO_DEL;
+            ofile << int_values[i] << INTERSECTION_DELIMITER;
     }
-    for (int i = 0; i < dbFldNum; ++i)
+    for (int i = 0; i < double_field_count; ++i)
     {
-        if (!isTxt)
-            DBFWriteDoubleAttribute(dbfHandle, entity, dbFldIDs[i], dbVals[i]);
+        if (!is_txt)
+            DBFWriteDoubleAttribute(dbf_handle, entity, double_field_ids[i], double_values[i]);
         else
-            ofile << round_trip(dbVals[i]) << _IFO_DEL;
+            ofile << RoundTrip(double_values[i]) << INTERSECTION_DELIMITER;
     }
-    for (int i = 0; i < strFldNum; i++)
+    for (int i = 0; i < str_field_count; i++)
     {
-        if (!isTxt)
-            DBFWriteStringAttribute(dbfHandle, entity, strFldIDs[i], strVals[i].c_str());
+        if (!is_txt)
+            DBFWriteStringAttribute(dbf_handle, entity, str_field_ids[i], str_values[i].c_str());
         else
-            ofile << strVals[i].c_str() << _IFO_DEL;
+            ofile << str_values[i].c_str() << INTERSECTION_DELIMITER;
     }
-    for (int i = 0; i < logFldNum; i++)
+    for (int i = 0; i < logical_field_count; i++)
     {
-        if (!isTxt)
-            DBFWriteStringAttribute(dbfHandle, entity, logFldIDs[i], logVals[i].c_str());
+        if (!is_txt)
+            DBFWriteStringAttribute(dbf_handle, entity, logical_field_ids[i],
+                                    logical_values[i].c_str());
         else
-            ofile << logVals[i].c_str() << _IFO_DEL;
+            ofile << logical_values[i].c_str() << INTERSECTION_DELIMITER;
     }
     ofile << endl;
 }
-void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldVals,
-                       vector<string> & intFldNames, int doubleFldNum,
-                       vector<vector<double>> & dbfldVals, vector<string> & dbFldNames,
-                       int strFldNum, vector<vector<string>> & strfldVals,
-                       vector<string> & strFldNames, int logFldNum,
-                       vector<vector<string>> & logfldVals, vector<string> & logFldNames,
-                       GridIntersection * grid_intersection, WRITETYPE wtype, bool isTxt)
+void write_intersection(string file, int int_field_count, vector<vector<int>> & int_field_values,
+                        vector<string> & int_field_names, int double_field_count,
+                        vector<vector<double>> & double_field_values,
+                        vector<string> & double_field_names, int str_field_count,
+                        vector<vector<string>> & str_field_values, vector<string> & str_field_names,
+                        int logical_field_count, vector<vector<string>> & logical_field_values,
+                        vector<string> & logical_field_names, GridIntersection * grid_intersection,
+                        WRITETYPE wtype, bool is_txt)
 {
     //create a shape file
     ofstream ofile;
     SHPHandle handler = nullptr;
     if (wtype == WRITE_POINT)
     {
-        if (!isTxt)
+        if (!is_txt)
             handler = SHPCreate(file.c_str(), SHPT_POINT);
         else
         {
@@ -205,7 +211,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
     }
     else if (wtype == WRITE_POLYLINE)
     {
-        if (!isTxt)
+        if (!is_txt)
             handler = SHPCreate(file.c_str(), SHPT_ARC);
         else
         {
@@ -214,7 +220,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
     }
     else
     {
-        if (!isTxt)
+        if (!is_txt)
             handler = SHPCreate(file.c_str(), SHPT_POLYGON);
         else
         {
@@ -223,8 +229,8 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
     }
 
     //create a .dbf file
-    DBFHandle dbfHandle = nullptr;
-    if (!isTxt)
+    DBFHandle dbf_handle = nullptr;
+    if (!is_txt)
     {
         string dbf = file;
         if (file.find('.') != string::npos)
@@ -233,49 +239,50 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             dbf = file.substr(0, dot_index);
         }
         dbf += ".dbf";
-        dbfHandle = DBFCreate(dbf.c_str());
+        dbf_handle = DBFCreate(dbf.c_str());
     }
 
     //create cell field
     int node_field_id = -1;
-    if (!isTxt) node_field_id = DBFAddField(dbfHandle, "nodenumber", FTInteger, 12, 0);
-    vector<int> intFldIDs; //create integer fields
-    vector<int> dbFldIDs;  //create double fields
-    vector<int> strFldIDs; //create string fields
-    vector<int> logFldIDs; //log fields
-    if (!isTxt)
+    if (!is_txt) node_field_id = DBFAddField(dbf_handle, "nodenumber", FTInteger, 12, 0);
+    vector<int> int_field_ids;     //create integer fields
+    vector<int> double_field_ids;  //create double fields
+    vector<int> str_field_ids;     //create string fields
+    vector<int> logical_field_ids; //log fields
+    if (!is_txt)
     {
-        addDBHandleFields(dbfHandle, intFldNum, intFldNames, doubleFldNum, dbFldNames, intFldIDs,
-                          dbFldIDs);
-        addDBHandleStrFields(dbfHandle, strFldNum, strFldNames, strFldIDs);
-        addDBHandleStrFields(dbfHandle, logFldNum, logFldNames, logFldIDs);
+        add_db_handle_fields(dbf_handle, int_field_count, int_field_names, double_field_count,
+                             double_field_names, int_field_ids, double_field_ids);
+        add_db_handle_str_fields(dbf_handle, str_field_count, str_field_names, str_field_ids);
+        add_db_handle_str_fields(dbf_handle, logical_field_count, logical_field_names,
+                                 logical_field_ids);
     }
     else
     {
-        ofile << "nodenumber" << _IFO_DEL;
-        for (int i = 0; i < intFldNum; ++i)
+        ofile << "nodenumber" << INTERSECTION_DELIMITER;
+        for (int i = 0; i < int_field_count; ++i)
         {
-            ofile << intFldNames[i] << _IFO_DEL;
+            ofile << int_field_names[i] << INTERSECTION_DELIMITER;
         }
-        for (int i = 0; i < doubleFldNum; ++i)
+        for (int i = 0; i < double_field_count; ++i)
         {
-            ofile << dbFldNames[i] << _IFO_DEL;
+            ofile << double_field_names[i] << INTERSECTION_DELIMITER;
         }
-        for (int i = 0; i < strFldNum; i++)
+        for (int i = 0; i < str_field_count; i++)
         {
-            ofile << strFldNames[i].c_str() << _IFO_DEL;
+            ofile << str_field_names[i].c_str() << INTERSECTION_DELIMITER;
         }
-        for (int i = 0; i < logFldNum; i++)
+        for (int i = 0; i < logical_field_count; i++)
         {
-            ofile << logFldNames[i].c_str() << _IFO_DEL;
+            ofile << logical_field_names[i].c_str() << INTERSECTION_DELIMITER;
         }
         ofile << endl;
     }
 
-    vector<vector<int>>::iterator iit = intfldVals.begin();
-    vector<vector<double>>::iterator dit = dbfldVals.begin();
-    vector<vector<string>>::iterator sit = strfldVals.begin();
-    vector<vector<string>>::iterator lit = logfldVals.begin();
+    vector<vector<int>>::iterator iit = int_field_values.begin();
+    vector<vector<double>>::iterator dit = double_field_values.begin();
+    vector<vector<string>>::iterator sit = str_field_values.begin();
+    vector<vector<string>>::iterator lit = logical_field_values.begin();
     vector<double> xs, ys; //vertex coordinates of the shape being written
     double *x = nullptr, *y = nullptr;
     //write points
@@ -285,54 +292,56 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
         ys.assign(1, 0.0);
         x = xs.data();
         y = ys.data();
-        vector<PointCellIntersectionInfo> & pntInters =
-            grid_intersection->getPointIntersectionInfo();
-        vector<PointCellIntersectionInfo>::iterator pit = pntInters.begin();
-        for (; pit != pntInters.end(); ++pit, ++iit, ++dit, ++sit, ++lit)
+        vector<PointCellIntersectionInfo> & point_intersections =
+            grid_intersection->get_point_intersection_info();
+        vector<PointCellIntersectionInfo>::iterator pit = point_intersections.begin();
+        for (; pit != point_intersections.end(); ++pit, ++iit, ++dit, ++sit, ++lit)
         {
-            vector<int> & intVals = *iit;
-            vector<double> & dbVals = *dit;
-            vector<string> & strVals = *sit;
-            vector<string> & logVals = *lit;
+            vector<int> & int_values = *iit;
+            vector<double> & double_values = *dit;
+            vector<string> & str_values = *sit;
+            vector<string> & logical_values = *lit;
             x[0] = pit->point[0];
             y[0] = pit->point[1];
 
-            SHPObject * shpObj = nullptr;
+            SHPObject * shp_obj = nullptr;
             int entity = -1;
-            if (!isTxt)
+            if (!is_txt)
             {
-                shpObj = SHPCreateSimpleObject(SHPT_POINT, 1, x, y, nullptr);
-                entity = SHPWriteObject(handler, -1, shpObj);
+                shp_obj = SHPCreateSimpleObject(SHPT_POINT, 1, x, y, nullptr);
+                entity = SHPWriteObject(handler, -1, shp_obj);
             }
 
             //write cell
-            if (!isTxt)
-                DBFWriteIntegerAttribute(dbfHandle, entity, node_field_id,
+            if (!is_txt)
+                DBFWriteIntegerAttribute(dbf_handle, entity, node_field_id,
                                          pit->box->number == -1 ? -1 : pit->box->number + 1);
             else
-                ofile << (pit->box->number == -1 ? -1 : pit->box->number + 1) << _IFO_DEL;
-            writeIntDBVal(dbfHandle, entity, intFldIDs, intVals, dbFldIDs, dbVals, strFldIDs,
-                          strVals, logFldIDs, logVals, ofile, isTxt);
-            if (!isTxt) SHPDestroyObject(shpObj);
+                ofile << (pit->box->number == -1 ? -1 : pit->box->number + 1)
+                      << INTERSECTION_DELIMITER;
+            write_int_db_val(dbf_handle, entity, int_field_ids, int_values, double_field_ids,
+                             double_values, str_field_ids, str_values, logical_field_ids,
+                             logical_values, ofile, is_txt);
+            if (!is_txt) SHPDestroyObject(shp_obj);
         }
     }
     else if (wtype == WRITE_POLYLINE)
     {
-        vector<PolylineCellIntersectionInfo> & plineInters =
-            grid_intersection->getPolylineIntersectionInfo();
-        vector<PolylineCellIntersectionInfo>::iterator pit = plineInters.begin();
-        for (; pit != plineInters.end(); ++pit, ++iit, ++dit, ++sit, ++lit)
+        vector<PolylineCellIntersectionInfo> & polyline_intersections =
+            grid_intersection->get_polyline_intersection_info();
+        vector<PolylineCellIntersectionInfo>::iterator pit = polyline_intersections.begin();
+        for (; pit != polyline_intersections.end(); ++pit, ++iit, ++dit, ++sit, ++lit)
         {
-            PolylineCellIntersectionInfo & lineInfo = *pit;
-            vector<int> & intVals = *iit;
-            vector<double> & dbVals = *dit;
-            vector<string> & strVals = *sit;
-            vector<string> & logVals = *lit;
+            PolylineCellIntersectionInfo & line_info = *pit;
+            vector<int> & int_values = *iit;
+            vector<double> & double_values = *dit;
+            vector<string> & str_values = *sit;
+            vector<string> & logical_values = *lit;
 
-            int vertex_count = lineInfo.m_polyline->getSize();
+            int vertex_count = line_info.m_polyline->get_size();
             if (vertex_count == 1)
             {
-                warn("The part of a line feature in node " + to_string(lineInfo.box->number + 1) +
+                warn("The part of a line feature in node " + to_string(line_info.box->number + 1) +
                      " is a single point and is not written to " + file + ".");
                 continue;
             }
@@ -340,133 +349,138 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             ys.assign(vertex_count, 0.0);
             x = xs.data();
             y = ys.data();
-            LinkedVertex * pv = lineInfo.m_polyline->getHead();
-            x[0] = pv->getPos()[0];
-            y[0] = pv->getPos()[1];
+            LinkedVertex * pv = line_info.m_polyline->get_head();
+            x[0] = pv->get_pos()[0];
+            y[0] = pv->get_pos()[1];
             int vertex_index = 0;
             do
             {
-                pv = pv->getNext();
+                pv = pv->get_next();
                 vertex_index++;
-                x[vertex_index] = pv->getPos()[0];
-                y[vertex_index] = pv->getPos()[1];
-            } while (pv != lineInfo.m_polyline->getTail());
+                x[vertex_index] = pv->get_pos()[0];
+                y[vertex_index] = pv->get_pos()[1];
+            } while (pv != line_info.m_polyline->get_tail());
 
-            SHPObject * shpObj = nullptr;
+            SHPObject * shp_obj = nullptr;
             int entity = -1;
-            if (!isTxt)
+            if (!is_txt)
             {
-                shpObj = SHPCreateSimpleObject(SHPT_ARC, vertex_count, x, y, nullptr);
-                entity = SHPWriteObject(handler, -1, shpObj);
+                shp_obj = SHPCreateSimpleObject(SHPT_ARC, vertex_count, x, y, nullptr);
+                entity = SHPWriteObject(handler, -1, shp_obj);
             }
 
             //write cell
-            if (!isTxt)
-                DBFWriteIntegerAttribute(dbfHandle, entity, node_field_id,
+            if (!is_txt)
+                DBFWriteIntegerAttribute(dbf_handle, entity, node_field_id,
                                          pit->box->number == -1 ? -1 : pit->box->number + 1);
             else
-                ofile << (pit->box->number == -1 ? -1 : pit->box->number + 1) << _IFO_DEL;
-            writeIntDBVal(dbfHandle, entity, intFldIDs, intVals, dbFldIDs, dbVals, strFldIDs,
-                          strVals, logFldIDs, logVals, ofile, isTxt);
+                ofile << (pit->box->number == -1 ? -1 : pit->box->number + 1)
+                      << INTERSECTION_DELIMITER;
+            write_int_db_val(dbf_handle, entity, int_field_ids, int_values, double_field_ids,
+                             double_values, str_field_ids, str_values, logical_field_ids,
+                             logical_values, ofile, is_txt);
 
-            if (!isTxt) SHPDestroyObject(shpObj);
+            if (!is_txt) SHPDestroyObject(shp_obj);
         }
     }
     else if (wtype == WRITE_POLYGON)
     {
-        vector<PolygonCellIntersectionInfo> & pgonInters =
-            grid_intersection->getPolygonIntersectionInfo();
-        vector<PolygonCellIntersectionInfo>::iterator pit = pgonInters.begin();
-        for (int iShape = 0; pit != pgonInters.end(); ++pit, ++iit, ++dit, ++iShape, ++sit, ++lit)
+        vector<PolygonCellIntersectionInfo> & polygon_intersections =
+            grid_intersection->get_polygon_intersection_info();
+        vector<PolygonCellIntersectionInfo>::iterator pit = polygon_intersections.begin();
+        for (int shape_index = 0; pit != polygon_intersections.end();
+             ++pit, ++iit, ++dit, ++shape_index, ++sit, ++lit)
         {
-            PolygonCellIntersectionInfo & pgonInfo = *pit;
-            vector<int> & intVals = *iit;
-            vector<double> & dbVals = *dit;
-            vector<string> & strVals = *sit;
-            vector<string> & logVals = *lit;
+            PolygonCellIntersectionInfo & polygon_info = *pit;
+            vector<int> & int_values = *iit;
+            vector<double> & double_values = *dit;
+            vector<string> & str_values = *sit;
+            vector<string> & logical_values = *lit;
 
-            int partSize = pgonInfo.m_interPolygon->size();
-            int vsize = pgonInfo.m_interPolygon->getSize();
+            int part_size = polygon_info.m_inter_polygon->size();
+            int vsize = polygon_info.m_inter_polygon->get_size();
             if (vsize < 3)
             {
                 warn("The part of a polygon feature in node " +
-                     to_string(pgonInfo.box->number + 1) +
+                     to_string(polygon_info.box->number + 1) +
                      " has fewer than three vertices and is not written to " + file + ".");
                 continue;
             }
             // each ring repeats its first vertex at the end
-            vsize += partSize;
+            vsize += part_size;
             xs.assign(vsize, 0.0);
             ys.assign(vsize, 0.0);
             x = xs.data();
             y = ys.data();
 
             //make sure the out boundary
-            list<c_polygon::iterator> orderedPItrs;
-            for (c_polygon::iterator ring_it = pgonInfo.m_interPolygon->begin();
-                 ring_it != pgonInfo.m_interPolygon->end(); ++ring_it)
+            list<Polygon::iterator> ordered_p_itrs;
+            for (Polygon::iterator ring_it = polygon_info.m_inter_polygon->begin();
+                 ring_it != polygon_info.m_inter_polygon->end(); ++ring_it)
             {
-                if (ring_it->getType() == Ring::POUT)
-                    orderedPItrs.push_front(ring_it);
+                if (ring_it->get_type() == Ring::POUT)
+                    ordered_p_itrs.push_front(ring_it);
                 else
-                    orderedPItrs.push_back(ring_it);
+                    ordered_p_itrs.push_back(ring_it);
             }
 
             //part number
             int part_start = 0;
-            vector<int> parts(partSize, 0);
-            int * nParts = parts.data();
+            vector<int> parts(part_size, 0);
+            int * part_starts = parts.data();
             int k = 0, vid = 0;
-            for (list<c_polygon::iterator>::iterator lit = orderedPItrs.begin();
-                 lit != orderedPItrs.end(); ++lit, k++)
+            for (list<Polygon::iterator>::iterator lit = ordered_p_itrs.begin();
+                 lit != ordered_p_itrs.end(); ++lit, k++)
             {
-                c_polygon::iterator & ring_it = *lit;
-                nParts[k] = part_start;
-                part_start += ring_it->getSize() + 1;
+                Polygon::iterator & ring_it = *lit;
+                part_starts[k] = part_start;
+                part_start += ring_it->get_size() + 1;
 
                 // the shapefile specification orders the outer ring clockwise
                 // and holes counterclockwise
-                LinkedVertex * head = ring_it->getHead();
-                bool forward = (ringArea(head) < 0.0) == (ring_it->getType() == Ring::POUT);
+                LinkedVertex * head = ring_it->get_head();
+                bool forward = (ring_area(head) < 0.0) == (ring_it->get_type() == Ring::POUT);
                 LinkedVertex * pv = head;
                 do
                 {
-                    x[vid] = pv->getPos()[0];
-                    y[vid] = pv->getPos()[1];
-                    pv = forward ? pv->getNext() : pv->getPre();
+                    x[vid] = pv->get_pos()[0];
+                    y[vid] = pv->get_pos()[1];
+                    pv = forward ? pv->get_next() : pv->get_pre();
                     vid++;
                 } while (pv != head);
-                x[vid] = head->getPos()[0];
-                y[vid] = head->getPos()[1];
+                x[vid] = head->get_pos()[0];
+                y[vid] = head->get_pos()[1];
                 vid++;
             }
 
             //create a polygon shape here
-            //SHPObject * shpObj = SHPCreateObject(SHPT_POLYGON,vsize,x, y,NULL);
-            SHPObject * shpObj = nullptr;
+            //SHPObject * shp_obj = SHPCreateObject(SHPT_POLYGON,vsize,x, y,NULL);
+            SHPObject * shp_obj = nullptr;
             int entity = 0;
-            if (!isTxt)
+            if (!is_txt)
             {
-                shpObj = SHPCreateObject(SHPT_POLYGON, iShape, partSize, nParts, nullptr, vsize, x,
-                                         y, nullptr, nullptr);
-                entity = SHPWriteObject(handler, -1, shpObj);
+                shp_obj = SHPCreateObject(SHPT_POLYGON, shape_index, part_size, part_starts,
+                                          nullptr, vsize, x, y, nullptr, nullptr);
+                entity = SHPWriteObject(handler, -1, shp_obj);
             }
             //write cell
-            if (!isTxt)
-                DBFWriteIntegerAttribute(dbfHandle, entity, node_field_id,
+            if (!is_txt)
+                DBFWriteIntegerAttribute(dbf_handle, entity, node_field_id,
                                          pit->box->number == -1 ? -1 : pit->box->number + 1);
             else
-                ofile << (pit->box->number == -1 ? -1 : pit->box->number + 1) << _IFO_DEL;
-            writeIntDBVal(dbfHandle, entity, intFldIDs, intVals, dbFldIDs, dbVals, strFldIDs,
-                          strVals, logFldIDs, logVals, ofile, isTxt);
+                ofile << (pit->box->number == -1 ? -1 : pit->box->number + 1)
+                      << INTERSECTION_DELIMITER;
+            write_int_db_val(dbf_handle, entity, int_field_ids, int_values, double_field_ids,
+                             double_values, str_field_ids, str_values, logical_field_ids,
+                             logical_values, ofile, is_txt);
 
-            if (!isTxt) SHPDestroyObject(shpObj);
+            if (!is_txt) SHPDestroyObject(shp_obj);
         }
     }
 
-    if (!isTxt)
+    if (!is_txt)
     {
-        DBFClose(dbfHandle);
+        DBFClose(dbf_handle);
         SHPClose(handler);
     }
     else
@@ -474,37 +488,39 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
 }
 
 //write the grid and point intersection
-void writePntIntersect(GridIntersection * grid_intersection, string file,
-                       vector<string> & attributes, FILETYPE filetype)
+void write_pnt_intersect(GridIntersection * grid_intersection, string file,
+                         vector<string> & attributes, FILETYPE filetype)
 {
-    vector<PointCellIntersectionInfo> & pntInters = grid_intersection->getPointIntersectionInfo();
+    vector<PointCellIntersectionInfo> & point_intersections =
+        grid_intersection->get_point_intersection_info();
 
-    vector<string> intFldName, dbFldName, strFldName, logFldName;
+    vector<string> int_field_names, double_field_names, str_field_names, logical_field_names;
     vector<vector<int>> intflds;
     vector<vector<double>> dbflds;
     vector<vector<string>> strflds;
     vector<vector<string>> logflds;
     //to record whether each attribute needs to be written
-    vector<bool> bIntFld, bDBFld, bStrFld, bLogFld;
+    vector<bool> write_int_field, write_double_field, write_str_field, write_logical_field;
 
     //parse the attributes
     bool write_point_id =
-        true; // checkAttributesContain("pointid", attributes);//write shapefile_pointid
-    if (write_point_id) intFldName.push_back(string("pointid"));
+        true; // check_attributes_contain("pointid", attributes);//write shapefile_pointid
+    if (write_point_id) int_field_names.push_back(string("pointid"));
     //add the attributes in shape file
-    checkShpAttrContain(grid_intersection, bIntFld, bDBFld, bStrFld, bLogFld, intFldName, dbFldName,
-                        strFldName, logFldName, attributes);
+    check_shp_attr_contain(grid_intersection, write_int_field, write_double_field, write_str_field,
+                           write_logical_field, int_field_names, double_field_names,
+                           str_field_names, logical_field_names, attributes);
 
-    for (auto & info : pntInters)
+    for (auto & info : point_intersections)
     {
         vector<int> int_values;
         vector<double> dbs;
         vector<string> strs;
         vector<string> logs;
-        if (write_point_id) int_values.push_back(info.m_pointID);
+        if (write_point_id) int_values.push_back(info.m_point_id);
 
-        addShpAttrVal(info.m_pointID, grid_intersection, bIntFld, bDBFld, bStrFld, bLogFld,
-                      int_values, dbs, strs, logs);
+        add_shp_attr_val(info.m_point_id, grid_intersection, write_int_field, write_double_field,
+                         write_str_field, write_logical_field, int_values, dbs, strs, logs);
 
         intflds.push_back(int_values);
         dbflds.push_back(dbs);
@@ -514,10 +530,12 @@ void writePntIntersect(GridIntersection * grid_intersection, string file,
 
     if (filetype == WRITE_SHP || filetype == WRITE_TXT)
     {
-        bool isTxt = (filetype == WRITE_TXT);
-        writeIntersection(file, intFldName.size(), intflds, intFldName, dbFldName.size(), dbflds,
-                          dbFldName, strFldName.size(), strflds, strFldName, logFldName.size(),
-                          logflds, logFldName, grid_intersection, WRITE_POINT, isTxt);
+        bool is_txt = (filetype == WRITE_TXT);
+        write_intersection(file, int_field_names.size(), intflds, int_field_names,
+                           double_field_names.size(), dbflds, double_field_names,
+                           str_field_names.size(), strflds, str_field_names,
+                           logical_field_names.size(), logflds, logical_field_names,
+                           grid_intersection, WRITE_POINT, is_txt);
     }
     else
     {
@@ -525,34 +543,36 @@ void writePntIntersect(GridIntersection * grid_intersection, string file,
 }
 
 //write the line and grid intersection
-void writeLineIntersect(GridIntersection * grid_intersection, string file,
-                        vector<string> & attributes, FILETYPE filetype)
+void write_line_intersect(GridIntersection * grid_intersection, string file,
+                          vector<string> & attributes, FILETYPE filetype)
 {
     vector<PolylineCellIntersectionInfo> & polyline_infos =
-        grid_intersection->getPolylineIntersectionInfo();
+        grid_intersection->get_polyline_intersection_info();
 
-    vector<string> intFldName, dbFldName, strFldName, logFldName;
+    vector<string> int_field_names, double_field_names, str_field_names, logical_field_names;
     vector<vector<int>> intflds;
     vector<vector<double>> dbflds;
     vector<vector<string>> strflds;
     vector<vector<string>> logflds;
     //to record whether each attribute needs to be written
-    vector<bool> bIntFld, bDBFld, bStrFld, bLogFld;
+    vector<bool> write_int_field, write_double_field, write_str_field, write_logical_field;
 
-    bool write_arc_id = true; // checkAttributesContain("arcid", attributes);//write shapefile_arcid
-    bool write_length = true; //checkAttributesContain("length", attributes);//write length
+    bool write_arc_id =
+        true; // check_attributes_contain("arcid", attributes);//write shapefile_arcid
+    bool write_length = true; //check_attributes_contain("length", attributes);//write length
     bool write_start_distance =
-        true; //checkAttributesContain("starting_distance", attributes);//write starting_distance
+        true; //check_attributes_contain("starting_distance", attributes);//write starting_distance
     bool write_end_distance =
-        true; //checkAttributesContain("ending_distance", attributes);//write ending_distance
+        true; //check_attributes_contain("ending_distance", attributes);//write ending_distance
 
-    if (write_arc_id) intFldName.push_back(string("arcid"));
-    if (write_length) dbFldName.push_back(string("length"));
-    if (write_start_distance) dbFldName.push_back(string("starting_distance"));
-    if (write_end_distance) dbFldName.push_back(string("ending_distance"));
+    if (write_arc_id) int_field_names.push_back(string("arcid"));
+    if (write_length) double_field_names.push_back(string("length"));
+    if (write_start_distance) double_field_names.push_back(string("starting_distance"));
+    if (write_end_distance) double_field_names.push_back(string("ending_distance"));
     //add the shape file attributes
-    checkShpAttrContain(grid_intersection, bIntFld, bDBFld, bStrFld, bLogFld, intFldName, dbFldName,
-                        strFldName, logFldName, attributes);
+    check_shp_attr_contain(grid_intersection, write_int_field, write_double_field, write_str_field,
+                           write_logical_field, int_field_names, double_field_names,
+                           str_field_names, logical_field_names, attributes);
 
     for (auto & info : polyline_infos)
     {
@@ -561,13 +581,13 @@ void writeLineIntersect(GridIntersection * grid_intersection, string file,
         vector<string> strs;
         vector<string> logs;
 
-        if (write_arc_id) int_values.push_back(info.m_curveID);
+        if (write_arc_id) int_values.push_back(info.m_curve_id);
         if (write_length) dbs.push_back(info.m_len);
-        if (write_start_distance) dbs.push_back(info.m_startGeoDist);
-        if (write_end_distance) dbs.push_back(info.m_endGeoDist);
+        if (write_start_distance) dbs.push_back(info.m_start_geo_dist);
+        if (write_end_distance) dbs.push_back(info.m_end_geo_dist);
 
-        addShpAttrVal(info.m_curveID, grid_intersection, bIntFld, bDBFld, bStrFld, bLogFld,
-                      int_values, dbs, strs, logs);
+        add_shp_attr_val(info.m_curve_id, grid_intersection, write_int_field, write_double_field,
+                         write_str_field, write_logical_field, int_values, dbs, strs, logs);
 
         intflds.push_back(int_values);
         dbflds.push_back(dbs);
@@ -577,10 +597,12 @@ void writeLineIntersect(GridIntersection * grid_intersection, string file,
 
     if (filetype == WRITE_SHP || filetype == WRITE_TXT)
     {
-        bool isTxt = (filetype == WRITE_TXT);
-        writeIntersection(file, intFldName.size(), intflds, intFldName, dbFldName.size(), dbflds,
-                          dbFldName, strFldName.size(), strflds, strFldName, logFldName.size(),
-                          logflds, logFldName, grid_intersection, WRITE_POLYLINE, isTxt);
+        bool is_txt = (filetype == WRITE_TXT);
+        write_intersection(file, int_field_names.size(), intflds, int_field_names,
+                           double_field_names.size(), dbflds, double_field_names,
+                           str_field_names.size(), strflds, str_field_names,
+                           logical_field_names.size(), logflds, logical_field_names,
+                           grid_intersection, WRITE_POLYLINE, is_txt);
     }
     else
     {
@@ -588,27 +610,28 @@ void writeLineIntersect(GridIntersection * grid_intersection, string file,
 }
 
 //writhe the polygon and grid intersection
-void writePolyIntersect(GridIntersection * grid_intersection, string file,
-                        vector<string> & attributes, FILETYPE filetype)
+void write_poly_intersect(GridIntersection * grid_intersection, string file,
+                          vector<string> & attributes, FILETYPE filetype)
 {
-    vector<PolygonCellIntersectionInfo> & sci = grid_intersection->getPolygonIntersectionInfo();
+    vector<PolygonCellIntersectionInfo> & sci = grid_intersection->get_polygon_intersection_info();
 
-    vector<string> intFldName, dbFldName, strFldName, logFldName;
+    vector<string> int_field_names, double_field_names, str_field_names, logical_field_names;
     vector<vector<int>> intflds;
     vector<vector<double>> dbflds;
     vector<vector<string>> strflds;
     vector<vector<string>> logflds;
     //to record whether each attribute needs to be written
-    vector<bool> bIntFld, bDBFld, bStrFld, bLogFld;
+    vector<bool> write_int_field, write_double_field, write_str_field, write_logical_field;
 
     bool write_polygon_id =
-        true;               // checkAttributesContain("polyid", attributes);//write shapefile_polyid
-    bool write_area = true; //checkAttributesContain("totalarea", attributes);//write totalarea
-    if (write_polygon_id) intFldName.push_back(string("polyid"));
-    if (write_area) dbFldName.push_back(string("totalarea"));
+        true; // check_attributes_contain("polyid", attributes);//write shapefile_polyid
+    bool write_area = true; //check_attributes_contain("totalarea", attributes);//write totalarea
+    if (write_polygon_id) int_field_names.push_back(string("polyid"));
+    if (write_area) double_field_names.push_back(string("totalarea"));
 
-    checkShpAttrContain(grid_intersection, bIntFld, bDBFld, bStrFld, bLogFld, intFldName, dbFldName,
-                        strFldName, logFldName, attributes);
+    check_shp_attr_contain(grid_intersection, write_int_field, write_double_field, write_str_field,
+                           write_logical_field, int_field_names, double_field_names,
+                           str_field_names, logical_field_names, attributes);
 
     for (auto & info : sci)
     {
@@ -617,11 +640,11 @@ void writePolyIntersect(GridIntersection * grid_intersection, string file,
         vector<string> strs;
         vector<string> logs;
 
-        if (write_polygon_id) int_values.push_back(info.m_polyID);
+        if (write_polygon_id) int_values.push_back(info.m_poly_id);
         if (write_area) dbs.push_back(info.m_area);
 
-        addShpAttrVal(info.m_polyID, grid_intersection, bIntFld, bDBFld, bStrFld, bLogFld,
-                      int_values, dbs, strs, logs);
+        add_shp_attr_val(info.m_poly_id, grid_intersection, write_int_field, write_double_field,
+                         write_str_field, write_logical_field, int_values, dbs, strs, logs);
 
         intflds.push_back(int_values);
         dbflds.push_back(dbs);
@@ -631,10 +654,12 @@ void writePolyIntersect(GridIntersection * grid_intersection, string file,
 
     if (filetype == WRITE_SHP || filetype == WRITE_TXT)
     {
-        bool isTxt = (filetype == WRITE_TXT);
-        writeIntersection(file, intFldName.size(), intflds, intFldName, dbFldName.size(), dbflds,
-                          dbFldName, strFldName.size(), strflds, strFldName, logFldName.size(),
-                          logflds, logFldName, grid_intersection, WRITE_POLYGON, isTxt);
+        bool is_txt = (filetype == WRITE_TXT);
+        write_intersection(file, int_field_names.size(), intflds, int_field_names,
+                           double_field_names.size(), dbflds, double_field_names,
+                           str_field_names.size(), strflds, str_field_names,
+                           logical_field_names.size(), logflds, logical_field_names,
+                           grid_intersection, WRITE_POLYGON, is_txt);
     }
     else
     {

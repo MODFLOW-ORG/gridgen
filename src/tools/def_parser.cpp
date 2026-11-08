@@ -119,7 +119,7 @@ static list<string> unrecognized_records(const DefinitionBlock & block)
     return warnings;
 }
 
-//template<typename T> DefinitionBlock* createBlockType(DefinitionBlock& block) { return new T(block); }
+//template<typename T> DefinitionBlock* create_block_type(DefinitionBlock& block) { return new T(block); }
 
 //-----------------------------------------------------------------------------
 //
@@ -132,15 +132,15 @@ static list<string> unrecognized_records(const DefinitionBlock & block)
 //constructor
 DefinitionParser::DefinitionParser()
 {
-    m_block_type_map["modflow_grid"] = &createBlockType<ModflowGridBlock>;
-    m_block_type_map["quadtree"] = &createBlockType<QuadtreeBlock>;
-    m_block_type_map["quadtree_builder"] = &createBlockType<QuadtreeBuilderBlock>;
-    m_block_type_map["refinement_features"] = &createBlockType<RefinementFeaturesBlock>;
-    m_block_type_map["active_domain"] = &createBlockType<ActiveDomainBlock>;
-    m_block_type_map["grid_to_shapefile"] = &createBlockType<GridToShapefileBlock>;
-    m_block_type_map["grid_to_usgdata"] = &createBlockType<GridToUsgdataBlock>;
-    m_block_type_map["grid_intersection"] = &createBlockType<GridIntersectionBlock>;
-    m_block_type_map["grid_to_vtkfile"] = &createBlockType<GridToVtkfileBlock>;
+    m_block_type_map["modflow_grid"] = &create_block_type<ModflowGridBlock>;
+    m_block_type_map["quadtree"] = &create_block_type<QuadtreeBlock>;
+    m_block_type_map["quadtree_builder"] = &create_block_type<QuadtreeBuilderBlock>;
+    m_block_type_map["refinement_features"] = &create_block_type<RefinementFeaturesBlock>;
+    m_block_type_map["active_domain"] = &create_block_type<ActiveDomainBlock>;
+    m_block_type_map["grid_to_shapefile"] = &create_block_type<GridToShapefileBlock>;
+    m_block_type_map["grid_to_usgdata"] = &create_block_type<GridToUsgdataBlock>;
+    m_block_type_map["grid_intersection"] = &create_block_type<GridIntersectionBlock>;
+    m_block_type_map["grid_to_vtkfile"] = &create_block_type<GridToVtkfileBlock>;
 }
 
 //destructor
@@ -172,10 +172,10 @@ bool DefinitionParser::parse(istream & in, string folder)
     {
         //parse raw data
         DefinitionBlock block;
-        bool done = readBlock(in, block);
+        bool done = read_block(in, block);
         if (done == false) break;
 
-        block.folderPath = folder; //whether it is a relative path
+        block.folder_path = folder; //whether it is a relative path
 
         if (m_blocks.find(block.name) != m_blocks.end()) //name exists
         {
@@ -188,27 +188,27 @@ bool DefinitionParser::parse(istream & in, string folder)
         //load the related path's .dfn file
         if (block.type == "load")
         {
-            string dfnPath = folder;
-            dfnPath += "/";
-            if (folder.empty() || folder == "") dfnPath = "";
+            string dfn_path = folder;
+            dfn_path += "/";
+            if (folder.empty() || folder == "") dfn_path = "";
 
-            dfnPath += block.name;
+            dfn_path += block.name;
 
-            int pathsize = dfnPath.size();
+            int pathsize = dfn_path.size();
             for (int i = 0; i < pathsize; i++)
             {
-                if (dfnPath[i] == '\\') dfnPath[i] = '/';
+                if (dfn_path[i] == '\\') dfn_path[i] = '/';
             }
 
-            ifstream relfin(dfnPath.c_str());
+            ifstream relfin(dfn_path.c_str());
             if (!relfin.good())
-                throw GridgenError("cannot open included definition file " + dfnPath);
+                throw GridgenError("cannot open included definition file " + dfn_path);
 
-            int dotIdx = dfnPath.find_last_of('/');
-            string relFolder = "";
-            if (dotIdx != -1) relFolder = dfnPath.substr(0, dotIdx);
+            int dot_idx = dfn_path.find_last_of('/');
+            string rel_folder = "";
+            if (dot_idx != -1) rel_folder = dfn_path.substr(0, dot_idx);
 
-            parse(relfin, relFolder);
+            parse(relfin, rel_folder);
             relfin.close();
 
             continue;

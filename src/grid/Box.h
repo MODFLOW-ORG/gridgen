@@ -51,21 +51,21 @@ class BoxIter
 public:
     BoxIter(const Box * starting_node, int direction);
 
-    Box * First();
+    Box * first();
 
-    Box * Next();
+    Box * next();
 
-    Box * End();
+    Box * end();
 
 private:
-    const Box * b;
+    const Box * m_b;
 
-    int direction;
-    int prev;
-    int next;
-    int cross;
+    int m_direction;
+    int m_prev;
+    int m_next;
+    int m_cross;
 
-    Box * neighbor;
+    Box * m_neighbor;
 }; //class BoxIter
 
 /*!\class Box
@@ -80,14 +80,14 @@ private:
 class Box
 {
 public:
-    /*! \brief Check if the x coord or y coord of the center of a given box (nextBox) is outside the base box (base)
+    /*! \brief Check if the x coord or y coord of the center of a given box (next_box) is outside the base box (base)
 	 * Precondition: none
 	 * Postcondition: none
 	 * \param[in] base    The base box
-	 * \param[in] nextBox The box to be checked
+	 * \param[in] next_box The box to be checked
 	 * \return true if over limit */
 
-    static bool isOverLimit(const Box * base, const Box * nextBox);
+    static bool is_over_limit(const Box * base, const Box * next_box);
 
     /*!  \brief Constructor of the Box
      *
@@ -101,16 +101,16 @@ public:
      * \param h   height of the box
      */
     Box(double xx, double yy, double w, double h)
-        : depth(0), x(xx), y(yy), z(0), dx(w), dy(h), dz(0), isLeaf(true), pParent(nullptr),
+        : depth(0), x(xx), y(yy), z(0), dx(w), dy(h), dz(0), is_leaf(true), p_parent(nullptr),
           dirty(false), number(0), layer(0), locator(0), id(0),
           active(true) //, childmfgrid(NULL), bRegular(true)
     {
-        for (auto & i : pChildren)
+        for (auto & i : p_children)
         {
             i = nullptr;
         }
 
-        pUp = pDown = nullptr;
+        p_up = p_down = nullptr;
         priority = 0;
     }
 
@@ -124,7 +124,7 @@ public:
      * \param dims   A vector specifying the width and height of the box
      */
     Box(const Point3d & center, Vector3d & dims)
-        : depth(0), isLeaf(true), pParent(nullptr), dirty(false), number(0), layer(0), locator(0),
+        : depth(0), is_leaf(true), p_parent(nullptr), dirty(false), number(0), layer(0), locator(0),
           id(0), active(true) //, childmfgrid(NULL), bRegular(true)
     {
         x = center[0];
@@ -135,24 +135,24 @@ public:
         dy = dims[1];
         dz = dims[2];
 
-        for (auto & i : pChildren)
+        for (auto & i : p_children)
         {
             i = nullptr;
         }
 
-        pUp = pDown = nullptr;
+        p_up = p_down = nullptr;
         priority = 0;
     }
 
     /// get all neighbors in direction "dir"
     /// 0 = N, 1=E, 2=S, W=3 (for neighbors)
-    void getNeighbors(list<Box *> & neighbors, int dir);
+    void get_neighbors(list<Box *> & neighbors, int dir);
 
     /*!
 	 * determine the status of the box (ex: UNKNOWN, IN, OUT, ON)
 	 */
 
-    void updateStatus() {}
+    void update_status() {}
 
     /// This function is not implemented yet. see node.py for detail.
     void remove()
@@ -163,7 +163,7 @@ public:
                 '''
                 Remove the node.  It cannot be recovered once it is removed.
                 '''
-                self.nodegroup.remove_node(self)
+                self.node_group.remove_node(self)
                 return
 
                 We may implement this some place else...
@@ -197,7 +197,7 @@ public:
     }
 
     //Given the point is in box, test whether the point is on the boundaries of the box
-    bool onBound(double qx, double qy)
+    bool on_bound(double qx, double qy)
     {
         if (fabs(qx - (x - dx / 2)) < INEPSILON) return true;
         if (fabs(qx - (x + dx / 2)) < INEPSILON) return true;
@@ -219,15 +219,15 @@ public:
 
      */
 
-    void getLeaves(list<Box *> & leaves)
+    void get_leaves(list<Box *> & leaves)
     {
-        if (isLeaf)
+        if (is_leaf)
         {
             leaves.push_back(this);
             return;
         }
 
-        for (auto & i : pChildren) i->getLeaves(leaves);
+        for (auto & i : p_children) i->get_leaves(leaves);
     }
 
     /*! \brief Connects this box to another box.
@@ -240,35 +240,35 @@ public:
      *              -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z
      */
 
-    void addConnection(Box * nei, int dir)
+    void add_connection(Box * nei, int dir)
     {
-        //assert(isLeaf);//comment by Guilin
+        //assert(is_leaf);//comment by Guilin
         switch (dir)
         {
-            case -1: pChildren[3] = nei; break;
-            case 1: pChildren[1] = nei; break;
-            case -2: pChildren[2] = nei; break;
-            case 2: pChildren[0] = nei; break;
-            case -3: pDown = nei; break;
-            case 3: pUp = nei; break;
+            case -1: p_children[3] = nei; break;
+            case 1: p_children[1] = nei; break;
+            case -2: p_children[2] = nei; break;
+            case 2: p_children[0] = nei; break;
+            case -3: p_down = nei; break;
+            case 3: p_up = nei; break;
             default: assert(false); break;
         }
     }
 
     /*!
-	 * Refine pUp (this is called when pUp is at the level lower than the box but is not a leaf)
+	 * Refine p_up (this is called when p_up is at the level lower than the box but is not a leaf)
 	 * Don't confuse this with split (sometime it's called refine too...)
 	 */
-    bool refine_pUp();
+    bool refine_p_up();
 
     /*!
-     * Refine pDown (this is called when pUp is at the level lower than the box but is not a leaf)
+     * Refine p_down (this is called when p_up is at the level lower than the box but is not a leaf)
      * Don't confuse this with split (sometime it's called refine too...)
      */
-    bool refine_pDown();
+    bool refine_p_down();
 
-    ///this implements refine_pUp and refine_pDown
-    bool refine_pUpDown(Box ** ppbox);
+    ///this implements refine_p_up and refine_p_down
+    bool refine_p_up_down(Box ** ppbox);
 
     //-------------------------------------------------------------------------
     //
@@ -311,7 +311,7 @@ public:
     int priority;
 
     /// a flag indicating if this box is a leaf in the tree
-    bool isLeaf;
+    bool is_leaf;
 
     /// which layer this box is in
     int layer;
@@ -341,7 +341,7 @@ public:
 
     /*!
 
-        how pChildren points to the neighbors...
+        how p_children points to the neighbors...
 
             |----|
             | n0 |
@@ -358,29 +358,29 @@ public:
     /*! Pointers to children, but when no children (i.e., leaf),
      *  the pointers are used as neighbor pointers
      * where
-     *  0 = NW, 1 = NE, 2 = SE, 3 = SW (if pChildren are kids)
+     *  0 = NW, 1 = NE, 2 = SE, 3 = SW (if p_children are kids)
      *  0 = N, 1=E, 2=S, W=3 (for neighbors)
      */
-    Box * pChildren[4];
+    Box * p_children[4];
 
     /*! Pointer to an adjacent box in a higher layer
-     * pUp must be at the same depth or  at a lower depth of this box in the quadtree grid
+     * p_up must be at the same depth or  at a lower depth of this box in the quadtree grid
      *
-     * pUp does not need to be a leaf if pUp has the same depth as this box
-     * pUp must be a leaf if pUp is at a lower depth than this box
+     * p_up does not need to be a leaf if p_up has the same depth as this box
+     * p_up must be a leaf if p_up is at a lower depth than this box
      */
-    Box * pUp;
+    Box * p_up;
 
     /*! Pointer to an adjacent box in a lower layer
-     * pDown must be at the same depth or at a lower depth of this box in the quadtree grid
+     * p_down must be at the same depth or at a lower depth of this box in the quadtree grid
      *
-     * pDown does not need to be a leaf if pDown has the same depth as this box
-     * pDown must be a leaf if pDown is at a lower depth than this box
+     * p_down does not need to be a leaf if p_down has the same depth as this box
+     * p_down must be a leaf if p_down is at a lower depth than this box
      */
-    Box * pDown;
+    Box * p_down;
 
     /// Pointer to the box's parent in quadtree
-    Box * pParent;
+    Box * p_parent;
 
     //when this dirty flag is true, this box should be deleted
     bool dirty;
@@ -389,7 +389,7 @@ public:
     //ModflowGrid * childmfgrid;
 
     ///the coordinates of the center after rotation
-    void rotateCtr(double cx, double cy, double rotation, double & rotated_x, double & rotated_y);
+    void rotate_ctr(double cx, double cy, double rotation, double & rotated_x, double & rotated_y);
 };
 //end of class Box
 

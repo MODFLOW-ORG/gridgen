@@ -28,10 +28,11 @@ struct TreeStructNode
     string code;
 };
 
-//parse the parameters in the string nodeStr
-void parseNodeStr(string & nodeStr, TreeStructNode & node);
+//parse the parameters in the string node_str
+void parse_node_str(string & node_str, TreeStructNode & node);
 
 //this function is to parse the tree structure file into a quadtree instance
-void parseTreeStructFile(string fileName, vector<TreeStructNode> & tree, string folderPath = "");
+void parse_tree_struct_file(string file_name, vector<TreeStructNode> & tree,
+                            string folder_path = "");
 
 #endif

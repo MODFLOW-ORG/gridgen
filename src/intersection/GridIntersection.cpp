@@ -42,7 +42,7 @@ void GridIntersection::build(GridIntersectionBlock & data)
     ModflowGrid * rmfgrid = mfgrid;
     if (rmfgrid == nullptr)
     {
-        if (qtgrid != nullptr) rmfgrid = qtgrid->getModflowGrid();
+        if (qtgrid != nullptr) rmfgrid = qtgrid->get_modflow_grid();
     }
     if (rmfgrid == nullptr)
         throw GridgenError("the grid of " + data.label() +
@@ -62,19 +62,19 @@ void GridIntersection::build(GridIntersectionBlock & data)
     //only support
     if (data.feature_type == "line")
     {
-        vector<GIS_polyline> & arcs = m_shp_reader.getArcList();
+        vector<GisPolyline> & arcs = m_shp_reader.get_arc_list();
         //subdivide the qtree using the features
         nfeatures = arcs.size();
         for (int j = 0; j < nfeatures; j++)
         {
-            int previousSegInterNum = m_seg_interaction_info.size();
+            int previous_seg_inter_num = m_seg_interaction_info.size();
             //intersect returns true even for a segment outside the grid, so count the cells found
             size_t ncells = m_intersection.size();
 
-            int seg_size = arcs[j].getSize() - 1; //getSize returns the number of vertices
+            int seg_size = arcs[j].get_size() - 1; //get_size returns the number of vertices
             for (int is = 0; is < seg_size; is++)
             {
-                GIS_LineSeg2d line = arcs[j].getLineSegment(is);
+                GisLineSeg2d line = arcs[j].get_line_segment(is);
                 //rotate
                 if (angle != 0) line.rotate(cx, cy, -angle);
 
@@ -88,48 +88,48 @@ void GridIntersection::build(GridIntersectionBlock & data)
             if (m_intersection.size() == ncells) noutside++;
 
             //merge the intersection segments that are inside the same box
-            int afterSegInterNum = m_seg_interaction_info.size();
-            int k = previousSegInterNum;
-            while (k < afterSegInterNum)
+            int after_seg_inter_num = m_seg_interaction_info.size();
+            int k = previous_seg_inter_num;
+            while (k < after_seg_inter_num)
             {
                 PolylineCellIntersectionInfo polyline_info;
                 polyline_info.box = m_seg_interaction_info[k].box;
-                polyline_info.m_curveID = m_seg_interaction_info[k].m_curveID;
-                polyline_info.m_startGeoDist = m_seg_interaction_info[k].m_startGeoDist;
-                polyline_info.m_endGeoDist = m_seg_interaction_info[k].m_endGeoDist;
+                polyline_info.m_curve_id = m_seg_interaction_info[k].m_curve_id;
+                polyline_info.m_start_geo_dist = m_seg_interaction_info[k].m_start_geo_dist;
+                polyline_info.m_end_geo_dist = m_seg_interaction_info[k].m_end_geo_dist;
                 polyline_info.m_len = m_seg_interaction_info[k].m_len;
                 polyline_info.m_polyline = new Polyline();
-                polyline_info.m_polyline->beginPoly();
+                polyline_info.m_polyline->begin_poly();
 
-                Point2d & start_point = m_seg_interaction_info[k].m_startPoint;
-                Point2d & end_point = m_seg_interaction_info[k].m_endPoint;
+                Point2d & start_point = m_seg_interaction_info[k].m_start_point;
+                Point2d & end_point = m_seg_interaction_info[k].m_end_point;
                 if (angle != 0)
                 {
                     start_point.rotate(cx, cy, angle);
                     end_point.rotate(cx, cy, angle); //rotate back
                 }
-                polyline_info.m_polyline->addVertex(start_point[0], start_point[1]);
-                polyline_info.m_polyline->addVertex(end_point[0], end_point[1]);
+                polyline_info.m_polyline->add_vertex(start_point[0], start_point[1]);
+                polyline_info.m_polyline->add_vertex(end_point[0], end_point[1]);
 
-                while (k < (afterSegInterNum - 1) &&
-                       m_seg_interaction_info[k].m_curveID ==
-                           m_seg_interaction_info[k + 1].m_curveID &&
+                while (k < (after_seg_inter_num - 1) &&
+                       m_seg_interaction_info[k].m_curve_id ==
+                           m_seg_interaction_info[k + 1].m_curve_id &&
                        m_seg_interaction_info[k].box == m_seg_interaction_info[k + 1].box &&
-                       m_seg_interaction_info[k].m_endPoint.almost_equ(
-                           m_seg_interaction_info[k + 1].m_startPoint))
+                       m_seg_interaction_info[k].m_end_point.almost_equ(
+                           m_seg_interaction_info[k + 1].m_start_point))
                 {
-                    end_point = m_seg_interaction_info[k + 1].m_endPoint;
+                    end_point = m_seg_interaction_info[k + 1].m_end_point;
                     if (angle != 0)
                     {
                         end_point.rotate(cx, cy, angle); //rotate back
                     }
-                    polyline_info.m_polyline->addVertex(end_point[0], end_point[1]);
-                    polyline_info.m_endGeoDist = m_seg_interaction_info[k + 1].m_endGeoDist;
+                    polyline_info.m_polyline->add_vertex(end_point[0], end_point[1]);
+                    polyline_info.m_end_geo_dist = m_seg_interaction_info[k + 1].m_end_geo_dist;
                     polyline_info.m_len += m_seg_interaction_info[k + 1].m_len;
                     k++;
                 }
 
-                polyline_info.m_polyline->endPoly();
+                polyline_info.m_polyline->end_poly();
                 m_polyline_intersection_info.push_back(polyline_info);
 
                 k++;
@@ -140,7 +140,7 @@ void GridIntersection::build(GridIntersectionBlock & data)
     else if (data.feature_type == "polygon")
     {
         int previous_size = m_polygon_intersection_info.size();
-        vector<GIS_polygon> & polygons = m_shp_reader.getPolyList();
+        vector<GisPolygon> & polygons = m_shp_reader.get_poly_list();
         //subdivide the qtree using the features
         nfeatures = polygons.size();
         for (int j = 0; j < nfeatures; j++)
@@ -151,16 +151,16 @@ void GridIntersection::build(GridIntersectionBlock & data)
             //rotate
             if (angle != 0) polygons[j].rotate(cx, cy, -angle);
 
-            vector<GIS_polygon *> parts;
-            checkHole(polygons[j], parts);
+            vector<GisPolygon *> parts;
+            check_hole(polygons[j], parts);
 
             //loop over all the polygons
             bool intersects = false;
             for (auto & part : parts)
             {
-                GIS_polygon polygon_part = *part;
+                GisPolygon polygon_part = *part;
 
-                RingClipper * ring_clip = convertCPolygonToClip(*part);
+                RingClipper * ring_clip = convert_polygon_to_clip(*part);
 
                 if (qtgrid != nullptr)
                     intersects |= intersect(qtgrid, polygon_part, ring_clip); //polygons[j]);
@@ -176,19 +176,19 @@ void GridIntersection::build(GridIntersectionBlock & data)
             for (auto polygon_part : parts) delete polygon_part;
             if (!intersects) noutside++;
         }
-        int afterSize = m_polygon_intersection_info.size();
+        int after_size = m_polygon_intersection_info.size();
         if (angle != 0)
         {
-            for (int k = previous_size; k < afterSize; k++)
+            for (int k = previous_size; k < after_size; k++)
             {
-                m_polygon_intersection_info[k].m_interPolygon->rotate(cx, cy, angle);
+                m_polygon_intersection_info[k].m_inter_polygon->rotate(cx, cy, angle);
             }
         }
     }
     else if (data.feature_type == "point")
     {
         int previous_size = m_pt_interaction_info.size();
-        vector<GIS_Point2d> & pts = m_shp_reader.getPointList();
+        vector<GisPoint2d> & pts = m_shp_reader.get_point_list();
         //subdivide the qtree using the features
         nfeatures = pts.size();
         for (int j = 0; j < nfeatures; j++)
@@ -207,10 +207,10 @@ void GridIntersection::build(GridIntersectionBlock & data)
             if (!intersects) noutside++;
         }
         //rotate back
-        int afterSize = this->m_pt_interaction_info.size();
+        int after_size = this->m_pt_interaction_info.size();
         if (angle != 0)
         {
-            for (int k = previous_size; k < afterSize; k++)
+            for (int k = previous_size; k < after_size; k++)
             {
                 m_pt_interaction_info[k].point.rotate(cx, cy, angle);
             }
@@ -226,29 +226,29 @@ void GridIntersection::build(GridIntersectionBlock & data)
 }
 
 //shape file
-bool GridIntersection::saveShp(string & shpName, vector<string> & attributes)
+bool GridIntersection::save_shp(string & shp_name, vector<string> & attributes)
 {
-    if (shpName.size() != 0)
+    if (shp_name.size() != 0)
     {
 
         if (m_pt_interaction_info.size() != 0)
         {
-            writePntIntersect(this, shpName, attributes, WRITE_SHP);
+            write_pnt_intersect(this, shp_name, attributes, WRITE_SHP);
         }
         else if (m_seg_interaction_info.size() != 0)
         {
-            writeLineIntersect(this, shpName, attributes, WRITE_SHP);
+            write_line_intersect(this, shp_name, attributes, WRITE_SHP);
         }
         else if (m_polygon_intersection_info.size() != 0)
         {
-            writePolyIntersect(this, shpName, attributes, WRITE_SHP);
+            write_poly_intersect(this, shp_name, attributes, WRITE_SHP);
         }
         else
         {
-            warn("No feature intersects the grid, so " + shpName + " is not written.");
+            warn("No feature intersects the grid, so " + shp_name + " is not written.");
             return true;
         }
-        cout << "- Save shape data to file: " << shpName << endl;
+        cout << "- Save shape data to file: " << shp_name << endl;
     }
 
     return true;
@@ -262,15 +262,15 @@ bool GridIntersection::save(string & filename, vector<string> & attributes)
 
         if (m_pt_interaction_info.size() != 0)
         {
-            writePntIntersect(this, filename, attributes, WRITE_TXT);
+            write_pnt_intersect(this, filename, attributes, WRITE_TXT);
         }
         else if (m_seg_interaction_info.size() != 0)
         {
-            writeLineIntersect(this, filename, attributes, WRITE_TXT);
+            write_line_intersect(this, filename, attributes, WRITE_TXT);
         }
         else if (m_polygon_intersection_info.size() != 0)
         {
-            writePolyIntersect(this, filename, attributes, WRITE_TXT);
+            write_poly_intersect(this, filename, attributes, WRITE_TXT);
         }
         else
         {
@@ -295,14 +295,14 @@ bool GridIntersection::save(string & filename, vector<string> & attributes)
 
 bool GridIntersection::intersect(ModflowGrid2D * grid, const Point2d & pt)
 {
-    Index2d id2d = grid->getIndex(pt);
+    Index2d id2d = grid->get_index(pt);
 
     if (id2d[0] == INT_MAX || id2d[1] == INT_MAX || id2d[0] == INT_MIN || id2d[1] == INT_MIN)
         return false;
 
     //get the box and put it in m_intersection
     int id = grid->get_box_index(id2d[0], id2d[1]);
-    Box * box = grid->nodegroup[id];
+    Box * box = grid->node_group[id];
     m_intersection.push_back(box);
 
     ////shpPntId.insert(make_pair(box, m_cur_id));
@@ -321,7 +321,7 @@ bool GridIntersection::clip_line(ModflowGrid2D * grid, const LineSeg2d & line,
     bool found = intersect(&box, line);
     if (found == false) return false; //there is no intersection...
 
-    found = getIntersection(&box, line, clipped_line);
+    found = get_intersection(&box, line, clipped_line);
     if (found == false) return false; //there is no intersection...
 
     if (box.in(clipped_line.pt[0][0], clipped_line.pt[0][1]) == false)
@@ -348,7 +348,7 @@ bool GridIntersection::clip_line(ModflowGrid2D * grid, const LineSeg2d & line,
 bool GridIntersection::clip_line(QuadTree3D * grid, const LineSeg2d & line,
                                  LineSeg2d & clipped_line)
 {
-    return clip_line((ModflowGrid2D *)grid->getModflowGrid(), line, clipped_line);
+    return clip_line((ModflowGrid2D *)grid->get_modflow_grid(), line, clipped_line);
 }
 
 Point2d GridIntersection::grid_center(ModflowGrid2D * grid)
@@ -358,7 +358,7 @@ Point2d GridIntersection::grid_center(ModflowGrid2D * grid)
 
 Point2d GridIntersection::grid_center(QuadTree3D * grid)
 {
-    return grid_center((ModflowGrid2D *)grid->getModflowGrid());
+    return grid_center((ModflowGrid2D *)grid->get_modflow_grid());
 }
 
 void GridIntersection::bracket_to_box_boundary(Box & box, Point2d & out, Point2d & in) const
@@ -370,8 +370,8 @@ void GridIntersection::bracket_to_box_boundary(Box & box, Point2d & out, Point2d
     while (true)
     {
         Point2d mid((in[0] + out[0]) / 2, (in[1] + out[1]) / 2);
-        if (Equal(mid.get(), in.get())) break;
-        if (Equal(mid.get(), out.get())) break;
+        if (equal(mid.get(), in.get())) break;
+        if (equal(mid.get(), out.get())) break;
 
         if (box.in(mid[0], mid[1]))
         {
@@ -389,14 +389,14 @@ void GridIntersection::bracket_to_box_boundary(Box & box, Point2d & out, Point2d
 //
 bool GridIntersection::intersect(ModflowGrid * grid, const Point2d & pt) //, bool noBound)
 {
-    Index2d id2d = grid->getIndex(pt);
+    Index2d id2d = grid->get_index(pt);
     if (id2d[0] == INT_MAX || id2d[1] == INT_MAX || id2d[0] == INT_MIN || id2d[1] == INT_MIN)
         return false;
 
     //get the box and put it in m_intersection
     int id = grid->get_box_index(this->m_layer, id2d[0], id2d[1]);
 
-    Box * box = grid->nodegroup[id];
+    Box * box = grid->node_group[id];
     m_intersection.push_back(box);
 
     return true;
@@ -410,16 +410,16 @@ bool GridIntersection::intersect(ModflowGrid * grid, const Point2d & pt) //, boo
 
 bool GridIntersection::intersect(QuadTree3D * grid, const Point2d & pt) //, bool noBoud)
 {
-    ModflowGrid * mf = grid->getModflowGrid();
+    ModflowGrid * mf = grid->get_modflow_grid();
 
-    Index2d id2d = mf->getIndex(pt);
+    Index2d id2d = mf->get_index(pt);
 
     if (id2d[0] == INT_MAX || id2d[1] == INT_MAX || id2d[0] == INT_MIN || id2d[1] == INT_MIN)
         return false;
 
     //get the box and put it in m_intersection
     int id = mf->get_box_index(m_layer, id2d[0], id2d[1]);
-    Box * box = grid->nodegroup[id];
+    Box * box = grid->node_group[id];
 
     box = box->find(pt[0], pt[1]); //find a leave that contains pt
 
@@ -432,7 +432,7 @@ bool GridIntersection::intersect(QuadTree3D * grid, const Point2d & pt) //, bool
     ////shpPntId.insert(make_pair(box, m_cur_id));//add by guilin
 
     //remember the boxes that are exactly on the boundary of the polygon
-    if (box->onBound(pt[0], pt[1])) this->m_onBound.push_back(box);
+    if (box->on_bound(pt[0], pt[1])) this->m_on_bound.push_back(box);
 
     return true;
 }
@@ -455,62 +455,62 @@ bool GridIntersection::intersect(Box * b, const LineSeg2d & line)
     const double * end = line.pt[1].get();
 
     //now, check intersections between the line segment and the edges
-    if (SegSegInt(ul.get(), ur.get(), start, end)) return true;
-    if (SegSegInt(ur.get(), lr.get(), start, end)) return true;
-    if (SegSegInt(lr.get(), ll.get(), start, end)) return true;
-    if (SegSegInt(ll.get(), ul.get(), start, end)) return true;
+    if (seg_seg_int(ul.get(), ur.get(), start, end)) return true;
+    if (seg_seg_int(ur.get(), lr.get(), start, end)) return true;
+    if (seg_seg_int(lr.get(), ll.get(), start, end)) return true;
+    if (seg_seg_int(ll.get(), ul.get(), start, end)) return true;
 
     //JML: I am not sure if the code below is really necessary.
-    if (AreaSign(ul.get(), ur.get(), start) == 0)
-        if (Between(ul.get(), ur.get(), start)) return true;
-    if (AreaSign(ur.get(), lr.get(), start) == 0)
-        if (Between(ur.get(), lr.get(), start)) return true;
-    if (AreaSign(lr.get(), ll.get(), start) == 0)
-        if (Between(lr.get(), ll.get(), start)) return true;
-    if (AreaSign(ll.get(), ul.get(), start) == 0)
-        if (Between(ll.get(), ul.get(), start)) return true;
+    if (area_sign(ul.get(), ur.get(), start) == 0)
+        if (between(ul.get(), ur.get(), start)) return true;
+    if (area_sign(ur.get(), lr.get(), start) == 0)
+        if (between(ur.get(), lr.get(), start)) return true;
+    if (area_sign(lr.get(), ll.get(), start) == 0)
+        if (between(lr.get(), ll.get(), start)) return true;
+    if (area_sign(ll.get(), ul.get(), start) == 0)
+        if (between(ll.get(), ul.get(), start)) return true;
 
-    if (AreaSign(ul.get(), ur.get(), end) == 0)
-        if (Between(ul.get(), ur.get(), end)) return true;
-    if (AreaSign(ur.get(), lr.get(), end) == 0)
-        if (Between(ur.get(), lr.get(), end)) return true;
-    if (AreaSign(lr.get(), ll.get(), end) == 0)
-        if (Between(lr.get(), ll.get(), end)) return true;
-    if (AreaSign(ll.get(), ul.get(), end) == 0)
-        if (Between(ll.get(), ul.get(), end)) return true;
+    if (area_sign(ul.get(), ur.get(), end) == 0)
+        if (between(ul.get(), ur.get(), end)) return true;
+    if (area_sign(ur.get(), lr.get(), end) == 0)
+        if (between(ur.get(), lr.get(), end)) return true;
+    if (area_sign(lr.get(), ll.get(), end) == 0)
+        if (between(lr.get(), ll.get(), end)) return true;
+    if (area_sign(ll.get(), ul.get(), end) == 0)
+        if (between(ll.get(), ul.get(), end)) return true;
 
     //otherwise
     return false;
 }
 
-void GridIntersection::buildIntersectionInfo(Box * box, const GIS_polygon & polygon,
-                                             vector<PolygonCellIntersectionInfo> & infoResult,
-                                             RingClipper * ring_clip)
+void GridIntersection::build_intersection_info(Box * box, const GisPolygon & polygon,
+                                               vector<PolygonCellIntersectionInfo> & info_result,
+                                               RingClipper * ring_clip)
 {
-    vector<GIS_polygon *> result_polygons;
+    vector<GisPolygon *> result_polygons;
     intersect_polygon(box, polygon, result_polygons, ring_clip);
     for (auto polygon_part : result_polygons)
     {
         PolygonCellIntersectionInfo info;
-        info.m_interPolygon = polygon_part;
+        info.m_inter_polygon = polygon_part;
         info.box = box;
-        info.m_polyID = polygon.m_id;
-        info.m_area = info.m_interPolygon->getArea();
+        info.m_poly_id = polygon.m_id;
+        info.m_area = info.m_inter_polygon->get_area();
 
-        infoResult.push_back(info);
+        info_result.push_back(info);
     }
 }
 
-SegmentCellIntersectionInfo GridIntersection::buildIntersectionInfo(Box * box,
-                                                                    const GIS_LineSeg2d & line)
+SegmentCellIntersectionInfo GridIntersection::build_intersection_info(Box * box,
+                                                                      const GisLineSeg2d & line)
 {
     SegmentCellIntersectionInfo info;
     info.box = box;
-    info.m_segID = line.m_seg_id;
-    info.m_curveID = line.m_curve_id;
+    info.m_seg_id = line.m_seg_id;
+    info.m_curve_id = line.m_curve_id;
 
     LineSeg2d clipped_segment;
-    bool found = getIntersection(box, (LineSeg2d)line, clipped_segment);
+    bool found = get_intersection(box, (LineSeg2d)line, clipped_segment);
 
     if (found == false)
     {
@@ -520,34 +520,36 @@ SegmentCellIntersectionInfo GridIntersection::buildIntersectionInfo(Box * box,
     }
 
     info.m_len = (clipped_segment.pt[0] - clipped_segment.pt[1]).norm();
-    info.m_startGeoDist = (clipped_segment.pt[0] - line.pt[0]).norm() + line.m_start_geo_dist;
-    info.m_endGeoDist = (clipped_segment.pt[1] - line.pt[0]).norm() + line.m_start_geo_dist;
+    info.m_start_geo_dist = (clipped_segment.pt[0] - line.pt[0]).norm() + line.m_start_geo_dist;
+    info.m_end_geo_dist = (clipped_segment.pt[1] - line.pt[0]).norm() + line.m_start_geo_dist;
 
-    if (info.m_startGeoDist > info.m_endGeoDist)
+    if (info.m_start_geo_dist > info.m_end_geo_dist)
     {
-        swap(info.m_endGeoDist, info.m_startGeoDist);
-        info.m_startPoint = clipped_segment.pt[1];
-        info.m_endPoint = clipped_segment.pt[0];
+        swap(info.m_end_geo_dist, info.m_start_geo_dist);
+        info.m_start_point = clipped_segment.pt[1];
+        info.m_end_point = clipped_segment.pt[0];
     }
     else
     {
-        info.m_startPoint = clipped_segment.pt[0];
-        info.m_endPoint = clipped_segment.pt[1];
+        info.m_start_point = clipped_segment.pt[0];
+        info.m_end_point = clipped_segment.pt[1];
     }
 
     return info;
 }
 
-PointCellIntersectionInfo GridIntersection::buildIntersectionInfo(Box * box, const GIS_Point2d & pt)
+PointCellIntersectionInfo GridIntersection::build_intersection_info(Box * box,
+                                                                    const GisPoint2d & pt)
 {
     PointCellIntersectionInfo info;
     info.box = box;
-    info.m_pointID = pt.m_id;
+    info.m_point_id = pt.m_id;
     info.point = pt;
     return info;
 }
 
-bool GridIntersection::getIntersection(Box * b, const LineSeg2d & line, LineSeg2d & clipped_segment)
+bool GridIntersection::get_intersection(Box * b, const LineSeg2d & line,
+                                        LineSeg2d & clipped_segment)
 {
 
     //check if the end points are in
@@ -571,10 +573,10 @@ bool GridIntersection::getIntersection(Box * b, const LineSeg2d & line, LineSeg2
     char edge_code[4];
     Point2d p[4];
 
-    edge_code[0] = SegSegInt(ul.get(), ur.get(), line.pt[0].get(), line.pt[1].get(), p[0].get());
-    edge_code[1] = SegSegInt(ur.get(), lr.get(), line.pt[0].get(), line.pt[1].get(), p[1].get());
-    edge_code[2] = SegSegInt(lr.get(), ll.get(), line.pt[0].get(), line.pt[1].get(), p[2].get());
-    edge_code[3] = SegSegInt(ll.get(), ul.get(), line.pt[0].get(), line.pt[1].get(), p[3].get());
+    edge_code[0] = seg_seg_int(ul.get(), ur.get(), line.pt[0].get(), line.pt[1].get(), p[0].get());
+    edge_code[1] = seg_seg_int(ur.get(), lr.get(), line.pt[0].get(), line.pt[1].get(), p[1].get());
+    edge_code[2] = seg_seg_int(lr.get(), ll.get(), line.pt[0].get(), line.pt[1].get(), p[2].get());
+    edge_code[3] = seg_seg_int(ll.get(), ul.get(), line.pt[0].get(), line.pt[1].get(), p[3].get());
 
     //no intersection....
     if ((edge_code[0] || edge_code[1] || edge_code[2] || edge_code[3]) == false) return false;
@@ -611,8 +613,8 @@ bool GridIntersection::getIntersection(Box * b, const LineSeg2d & line, LineSeg2
                         break;
                 }
 
-                bool overlaps =
-                    Union(seg[0].get(), seg[1].get(), line.pt[0].get(), line.pt[1].get(), u);
+                bool overlaps = segment_union(seg[0].get(), seg[1].get(), line.pt[0].get(),
+                                              line.pt[1].get(), u);
                 if (overlaps)
                 {
                     clipped_segment.pt[0].set(u[0][0], u[0][1]);
@@ -670,7 +672,7 @@ double GridIntersection::intersection_length(Box * b, const LineSeg2d & line)
 {
     //check if the end points are in
     LineSeg2d clipped_segment;
-    bool found = getIntersection(b, line, clipped_segment);
+    bool found = get_intersection(b, line, clipped_segment);
     if (found) return (clipped_segment.pt[0] - clipped_segment.pt[1]).norm();
     return 0; //no intersection...
 }
@@ -684,8 +686,8 @@ bool GridIntersection::intersect(const Point2d & pt, const Ring & ring)
 
     int max_trial = 200;
 
-    Vector2d offset(ring.getHead()->getPos().get());
-    float ray_length = ring.getRadius() * 4;
+    Vector2d offset(ring.get_head()->get_pos().get());
+    float ray_length = ring.get_radius() * 4;
     Point2d near = pt - offset;
     Point2d far = near;
 
@@ -698,18 +700,18 @@ bool GridIntersection::intersect(const Point2d & pt, const Ring & ring)
         far = pt - offset + vec.normalize() * ray_length;
 
         //
-        LinkedVertex * ptr = ring.getHead();
+        LinkedVertex * ptr = ring.get_head();
         bool degenerate = false;
         int int_count = 0;
 
         do
         {
-            LinkedVertex * next = ptr->getNext();
+            LinkedVertex * next = ptr->get_next();
             double x[2];
-            Point2d edge_start = ptr->getPos() - offset;
-            Point2d edge_end = next->getPos() - offset;
+            Point2d edge_start = ptr->get_pos() - offset;
+            Point2d edge_end = next->get_pos() - offset;
 
-            char code = SegSegInt(near.get(), far.get(), edge_start.get(), edge_end.get(), x);
+            char code = seg_seg_int(near.get(), far.get(), edge_start.get(), edge_end.get(), x);
 
             if (code == '1')
                 int_count++;
@@ -720,7 +722,7 @@ bool GridIntersection::intersect(const Point2d & pt, const Ring & ring)
             }
 
             ptr = next;
-        } while (ptr != ring.getHead());
+        } while (ptr != ring.get_head());
 
         if (degenerate)
         {
@@ -737,13 +739,13 @@ bool GridIntersection::intersect(const Point2d & pt, const Ring & ring)
 // check if a point is inside a polygon
 // ray shooting is slow. Can be improved.
 //
-bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
+bool GridIntersection::intersect(const Point2d & pt, const Polygon & pgon)
 {
 
     int max_trial = 200;
 
-    Vector2d offset(pgon.front().getHead()->getPos().get());
-    const double * pgon_box = pgon.getBBox();
+    Vector2d offset(pgon.front().get_head()->get_pos().get());
+    const double * pgon_box = pgon.get_bounding_box();
     float ray_length = max(pgon_box[1] - pgon_box[0], pgon_box[3] - pgon_box[2]) * 4;
 
     Point2d near = pt - offset;
@@ -764,16 +766,16 @@ bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
         //loop through each ring
         for (const auto & ring : pgon)
         {
-            LinkedVertex * ptr = ring.getHead();
+            LinkedVertex * ptr = ring.get_head();
 
             do
             {
-                LinkedVertex * next = ptr->getNext();
+                LinkedVertex * next = ptr->get_next();
                 double x[2];
-                Point2d edge_start = ptr->getPos() - offset;
-                Point2d edge_end = next->getPos() - offset;
+                Point2d edge_start = ptr->get_pos() - offset;
+                Point2d edge_end = next->get_pos() - offset;
 
-                char code = SegSegInt(near.get(), far.get(), edge_start.get(), edge_end.get(), x);
+                char code = seg_seg_int(near.get(), far.get(), edge_start.get(), edge_end.get(), x);
 
                 if (code == '1')
                     int_count++;
@@ -784,7 +786,7 @@ bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
                 }
 
                 ptr = next;
-            } while (ptr != ring.getHead());
+            } while (ptr != ring.get_head());
 
             if (degenerate) break; //something is wrong
         }
@@ -801,9 +803,9 @@ bool GridIntersection::intersect(const Point2d & pt, const c_polygon & pgon)
     return false;
 }
 
-//void GridIntersection::intersect_polygon(Box* b, const GIS_polygon& polygon, vector<GIS_polygon*>& result_polygons)
-void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & polygon,
-                                         vector<GIS_polygon *> & result_polygons,
+//void GridIntersection::intersect_polygon(Box* b, const GisPolygon& polygon, vector<GisPolygon*>& result_polygons)
+void GridIntersection::intersect_polygon(Box * b, const GisPolygon & polygon,
+                                         vector<GisPolygon *> & result_polygons,
                                          RingClipper * initial_clip)
 {
 
@@ -816,7 +818,7 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & polygon,
     RingClipper * ring_clip = initial_clip;
     if (initial_clip == nullptr)
     {
-        ring_clip = convertCPolygonToClip(polygon);
+        ring_clip = convert_polygon_to_clip(polygon);
     }
 
     list<RingClipper *> clips;
@@ -824,15 +826,15 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & polygon,
 
     for (auto & clip_part : clips)
     {
-        GIS_polygon * npolygons = new GIS_polygon();
-        convertClipToPolygon(clip_part, npolygons);
+        GisPolygon * npolygons = new GisPolygon();
+        convert_clip_to_polygon(clip_part, npolygons);
         result_polygons.push_back(npolygons);
 
         clip_part->destroy();
         delete clip_part;
     }
 
-    ring_clip->resetStatus();
+    ring_clip->reset_status();
 
     if (initial_clip == nullptr)
     {
@@ -841,7 +843,7 @@ void GridIntersection::intersect_polygon(Box * b, const GIS_polygon & polygon,
     }
     else
     {
-        ring_clip->resetStatus();
+        ring_clip->reset_status();
     }
 }
 
@@ -851,7 +853,7 @@ int GridIntersection::shared_edge_side(Box * box, Box * other)
     for (int i = 0; i < 4; i++)
     {
         list<Box *> neighbors;
-        box->getNeighbors(neighbors, i);
+        box->get_neighbors(neighbors, i);
         if (std::find(neighbors.begin(), neighbors.end(), other) != neighbors.end()) return i;
     }
 
@@ -895,13 +897,13 @@ bool GridIntersection::line_runs_along_edge(Box * box, int dir, const LineSeg2d 
         edge_end[1] = box->y - box->dy / 2;
     }
     //check collinear
-    if (SegSegInt(edge_start, edge_end, line_start, line_end, p) == 'e') return true;
+    if (seg_seg_int(edge_start, edge_end, line_start, line_end, p) == 'e') return true;
 
     return false;
 }
 
 ///collect all cells in the grid from b
-void GridIntersection::floodGrid(Box * start_box, set<Box *> & visited, list<Box *> & flooded)
+void GridIntersection::flood_grid(Box * start_box, set<Box *> & visited, list<Box *> & flooded)
 {
     list<Box *> open;
     open.push_back(start_box);
@@ -917,7 +919,7 @@ void GridIntersection::floodGrid(Box * start_box, set<Box *> & visited, list<Box
 
         for (int i = 0; i < 4; i++)
         {
-            b->getNeighbors(neighbors[i], i);
+            b->get_neighbors(neighbors[i], i);
         }
 
         //get all unvisited cells
@@ -933,5 +935,5 @@ void GridIntersection::floodGrid(Box * start_box, set<Box *> & visited, list<Box
         } //end for i
     } //end while
 
-} //end GridIntersection::floodGrid
+} //end GridIntersection::flood_grid
 }

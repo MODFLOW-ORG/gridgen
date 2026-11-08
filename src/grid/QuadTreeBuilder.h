@@ -18,7 +18,7 @@
 namespace cusg
 {
 
-class Quadtree_Builder
+class QuadtreeBuilder
 {
 public:
     ///build quadtree from QuadtreeBuilderBlock

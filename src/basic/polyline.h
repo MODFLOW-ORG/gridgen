@@ -1,7 +1,7 @@
 
 #pragma once
-#ifndef _POLYLINE_H_
-#define _POLYLINE_H_
+#ifndef POLYLINE_H
+#define POLYLINE_H
 
 #include "polygon.h"
 #include "lineseg.h"
@@ -17,37 +17,37 @@ class Polyline
 
 public:
     ///////////////////////////////////////////////////////////////////////////
-    Polyline() { head = tail = nullptr; }
+    Polyline() { m_head = m_tail = nullptr; }
 
     void destroy();
 
     ///////////////////////////////////////////////////////////////////////////
     // create Ring
-    void beginPoly();
-    void addVertex(double x, double y, bool remove_duplicate = false);
-    void endPoly();
+    void begin_poly();
+    void add_vertex(double x, double y, bool remove_duplicate = false);
+    void end_poly();
 
     ///////////////////////////////////////////////////////////////////////////
     // Access
-    LinkedVertex * getHead() const { return head; }
-    LinkedVertex * getTail() const { return tail; }
+    LinkedVertex * get_head() const { return m_head; }
+    LinkedVertex * get_tail() const { return m_tail; }
 
-    int getSize()
+    int get_size()
     {
-        if (all.empty()) build_all();
-        return all.size();
+        if (m_all.empty()) build_all();
+        return m_all.size();
     }
 
     LinkedVertex * operator[](unsigned int id)
     {
-        if (all.empty()) build_all();
-        return all[id];
+        if (m_all.empty()) build_all();
+        return m_all[id];
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Operator
     //check if give poly line is the same as this
-    bool operator==(const Polyline & other) { return other.head == head; }
+    bool operator==(const Polyline & other) { return other.m_head == m_head; }
     friend istream & operator>>(istream &, Polyline &);
 
     //rotate function
@@ -55,28 +55,28 @@ public:
 
 protected:
     ///////////////////////////////////////////////////////////////////////////
-    void doInit(); /*return # of vertices in this poly*/
+    void do_init(); /*return # of vertices in this poly*/
 
     //build elements in vector<LinkedVertex*> all
     void build_all();
 
-    LinkedVertex * head; //the head of vertex list
-    LinkedVertex * tail; //end of the vertex list
+    LinkedVertex * m_head; //the head of vertex list
+    LinkedVertex * m_tail; //end of the vertex list
 
-    vector<LinkedVertex *> all; //all vertices
+    vector<LinkedVertex *> m_all; //all vertices
 };
 
-class GIS_polyline : public Polyline
+class GisPolyline : public Polyline
 {
 public:
-    GIS_polyline() : Polyline() { m_id = 0; }
-    GIS_polyline(const GIS_polyline & other) : Polyline((Polyline &)other) { m_id = other.m_id; }
+    GisPolyline() : Polyline() { m_id = 0; }
+    GisPolyline(const GisPolyline & other) : Polyline((Polyline &)other) { m_id = other.m_id; }
 
     //return the i-th line segment from this polyline
-    GIS_LineSeg2d getLineSegment(int i);
+    GisLineSeg2d get_line_segment(int i);
 
     //compute distance for geodesic_dist
-    void computeGeodesicDist();
+    void compute_geodesic_dist();
 
     //store attributes from GIS
     int m_id;
@@ -85,4 +85,4 @@ public:
 
 } //end of namespace cusg
 
-#endif //_POLYLINE_H_
+#endif //POLYLINE_H

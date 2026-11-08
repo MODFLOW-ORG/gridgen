@@ -14,7 +14,7 @@ bool between(double a, double b, double c)
     else
         return false;
 }
-void computeGN(Box * small_cell, Box * large_cell, int direction, vector<GhostNode> & ghost_nodes)
+void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostNode> & ghost_nodes)
 { //decide the node j first
 
     GhostNode ghost_node;
@@ -27,11 +27,11 @@ void computeGN(Box * small_cell, Box * large_cell, int direction, vector<GhostNo
         list<Box *> neighbors;
         if (between(large_cell->x - large_cell->dx, large_cell->x, small_cell->x))
         { //search the 3 direction(west)
-            large_cell->getNeighbors(neighbors, 3);
+            large_cell->get_neighbors(neighbors, 3);
         }
         else if (between(large_cell->x, large_cell->x + large_cell->dx, small_cell->x))
         { //search for the 1 direction
-            large_cell->getNeighbors(neighbors, 1);
+            large_cell->get_neighbors(neighbors, 1);
         }
 
         if (neighbors.empty()) return;
@@ -68,9 +68,9 @@ void computeGN(Box * small_cell, Box * large_cell, int direction, vector<GhostNo
     {
         list<Box *> neighbors;
         if (between(large_cell->y + large_cell->dy, large_cell->y, small_cell->y))
-            large_cell->getNeighbors(neighbors, 0);
+            large_cell->get_neighbors(neighbors, 0);
         else if (between(large_cell->y, large_cell->y - large_cell->dy, small_cell->y))
-            large_cell->getNeighbors(neighbors, 2);
+            large_cell->get_neighbors(neighbors, 2);
 
         if (neighbors.empty()) return;
 
@@ -107,8 +107,8 @@ void computeGN(Box * small_cell, Box * large_cell, int direction, vector<GhostNo
 
     ghost_nodes.push_back(ghost_node);
 }
-void computeGNNeigh(Box * small_cell, list<Box *> & neighbors, int direction,
-                    vector<GhostNode> & ghost_nodes)
+void compute_gn_neigh(Box * small_cell, list<Box *> & neighbors, int direction,
+                      vector<GhostNode> & ghost_nodes)
 {
     //neighbors
     for (auto neighbor : neighbors)
@@ -118,39 +118,39 @@ void computeGNNeigh(Box * small_cell, list<Box *> & neighbors, int direction,
         if (neighbor->depth >= small_cell->depth) continue;
 
         //the node should be considered
-        computeGN(small_cell, neighbor, direction, ghost_nodes);
+        compute_gn(small_cell, neighbor, direction, ghost_nodes);
     }
 }
 
 void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes)
 {
     //loop over all the leaf node
-    for (auto b : qtree->nodegroup)
+    for (auto b : qtree->node_group)
     {
-        if (!b->isLeaf || b->number == -1) continue;
+        if (!b->is_leaf || b->number == -1) continue;
 
         list<Box *> nei[4];
         for (int i = 0; i < 4; i++)
         {
-            b->getNeighbors(nei[i], i);
+            b->get_neighbors(nei[i], i);
         }
 
         for (int j = 0; j < 4; j++)
         {
-            computeGNNeigh(b, nei[j], j, ghost_nodes);
+            compute_gn_neigh(b, nei[j], j, ghost_nodes);
         }
     }
 }
 
-void writeGhostNode(string filePath, vector<GhostNode> & ghost_nodes, int offset = 1)
+void write_ghost_node(string file_path, vector<GhostNode> & ghost_nodes, int offset = 1)
 {
     ofstream ofile;
-    ofile.open(filePath.c_str(), std::ofstream::out | std::ofstream::trunc);
+    ofile.open(file_path.c_str(), std::ofstream::out | std::ofstream::trunc);
     for (auto & ghost_node : ghost_nodes)
     {
         ofile << ghost_node.large_node + offset << "\t" << ghost_node.small_node + offset << "\t"
               << ghost_node.j1 + offset << "\t" << ghost_node.j2 + offset << "\t"
-              << round_trip(ghost_node.alpha1) << "\t" << round_trip(ghost_node.alpha2) << endl;
+              << RoundTrip(ghost_node.alpha1) << "\t" << RoundTrip(ghost_node.alpha2) << endl;
     }
     ofile.close();
 }

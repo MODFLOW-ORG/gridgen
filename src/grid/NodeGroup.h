@@ -31,7 +31,7 @@ class Grid; //defined in Grid.h
         reference to them in the nodearray, which is a numpy array.
 
         Added a removed nodes capability so that when a node is removed,
-        the space in the nodegroup array can be reused.  The add_node
+        the space in the node_group array can be reused.  The add_node
         method first checks to see if there are any removed node spaces
         that can be used and it uses them if possible.
     
@@ -50,7 +50,7 @@ public:
     NodeGroup(NodeGroup &&) = default;
     NodeGroup & operator=(NodeGroup &&) = default;
 
-    ///add a box, which this group then owns, and return its node id
+    ///add a box, which this group then owns, and return its box index
     int add(Box * box);
 
     ///refer to the boxes of another group, which keeps ownership of them
@@ -89,22 +89,22 @@ public:
     //
     //
     Grid * grid;                   //the hosting Grid
-    vector<int> box_index_array;   //node ids (mapping node number to node id)
+    vector<int> box_index_array;   //box index of each cell
     vector<int> layer_cell_counts; //number of nodes per layer
     int nlay;                      //total number of layers
 
-    bool rebuild_box_index_array; //rebuild node id
+    bool rebuild_box_index_array; //rebuild box_index_array
 
-    int nextnodenumber;
+    int next_node_number;
 
-    int chunksize; ///what is a chunk size??
+    int chunk_size; ///what is a chunk size??
     list<int> removed_nodes;
 
 protected:
-    vector<unique_ptr<Box>> owned_boxes; //the boxes added to this group
+    vector<unique_ptr<Box>> m_owned_boxes; //the boxes added to this group
 
-    int total_leaf_number;  //number of leaves store in this group (total number of leaves)
-    int active_leaf_number; //number of leaves store in this group (active nodes only)
+    int m_total_leaf_number;  //number of leaves store in this group (total number of leaves)
+    int m_active_leaf_number; //number of leaves store in this group (active nodes only)
 
     /*!
          * build information of layer_cell_counts and box_index_array

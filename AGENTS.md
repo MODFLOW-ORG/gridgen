@@ -152,6 +152,14 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   in a private sense (`ply` for a closed ring). Keep the conventional short
   names: loop indices, coordinates (`x`, `dx`, `cx`), the MODFLOW and CSR
   names (`nlay`, `delr`, `ia`, `ja`), and shapelib's own names.
+  Classes, structs, enums, and type aliases are PascalCase; functions,
+  methods, variables, parameters, and members are snake_case, with `m_` for
+  private and protected members; constants, enumerators, and macros are
+  UPPER_CASE. clang-tidy checks the case (`.clang-tidy`, run by
+  `pixi run check-format` through `scripts/clang_tidy.py`, which configures
+  `builddir-lint/` on its first run) but not whole words, and does not rename
+  for you: rename by hand, and check that a renamed member is not now hidden
+  by a local of the same name.
 - **Comments and documentation:** keep code comments and docstrings short,
   stating what a function does; put the reason, when one is needed, in an
   inline comment. Write the release notes for groundwater modelers rather
@@ -186,9 +194,10 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   starts a run whose jobs are skipped and which cancels nothing. Judge a pull
   request by its latest full run (`gh run list -b <branch>`), not by the
   skipped or cancelled jobs `gh pr checks` reports. The build and sanitizer
-  jobs cache the GoogleTest download (`subprojects/packagecache`, keyed on
-  the wraps) and retry it when the cache is empty. `lint.yml` runs
-  `pixi run check-format` on every push and on pull requests to `main`.
+  jobs, and the lint job for clang-tidy, cache the GoogleTest download
+  (`subprojects/packagecache`, keyed on the wraps) and retry it when the
+  cache is empty. `lint.yml` runs `pixi run check-format` on every push and
+  on pull requests to `main`.
   `release-notes.yml` builds the release notes on Ubuntu when
   `doc/ReleaseNotes/` changes and attaches the PDF to each GitHub release.
   It installs only the TeX Live packages the release notes read, and caches

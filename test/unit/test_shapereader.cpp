@@ -86,11 +86,11 @@ void write_polygon(const std::string & path, const std::vector<Part> & rings)
 // the lower left corner of a ring
 std::pair<double, double> lower_left(Ring & ring)
 {
-    double x = ring[0]->getPos()[0], y = ring[0]->getPos()[1];
-    for (int i = 1; i < ring.getSize(); i++)
+    double x = ring[0]->get_pos()[0], y = ring[0]->get_pos()[1];
+    for (int i = 1; i < ring.get_size(); i++)
     {
-        x = std::min(x, ring[i]->getPos()[0]);
-        y = std::min(y, ring[i]->getPos()[1]);
+        x = std::min(x, ring[i]->get_pos()[0]);
+        y = std::min(y, ring[i]->get_pos()[1]);
     }
     return {x, y};
 }
@@ -116,7 +116,7 @@ TEST(ShapeReader, MultipatchRingsAreReadAsPolygonsWithHoles)
 
     ShapeReader reader;
     ASSERT_TRUE(reader.read(path));
-    std::vector<GIS_polygon> & polygons = reader.getPolyList();
+    std::vector<GisPolygon> & polygons = reader.get_poly_list();
     ASSERT_EQ(polygons.size(), 7u);
 
     // the shape each polygon is from, and its rings
@@ -126,10 +126,10 @@ TEST(ShapeReader, MultipatchRingsAreReadAsPolygonsWithHoles)
     {
         EXPECT_EQ(polygons[i].m_id, shapes[i]);
         ASSERT_EQ(polygons[i].size(), rings[i]) << "polygon " << i;
-        EXPECT_EQ(polygons[i].front().getType(), Ring::POUT) << "polygon " << i;
-        if (rings[i] == 2) EXPECT_EQ(polygons[i].back().getType(), Ring::PIN) << "polygon " << i;
+        EXPECT_EQ(polygons[i].front().get_type(), Ring::POUT) << "polygon " << i;
+        if (rings[i] == 2) EXPECT_EQ(polygons[i].back().get_type(), Ring::PIN) << "polygon " << i;
     }
-    EXPECT_TRUE(reader.getArcList().empty());
+    EXPECT_TRUE(reader.get_arc_list().empty());
 }
 
 TEST(ShapeReader, PolygonWithManyRingsFindsEachHole)
@@ -165,15 +165,15 @@ TEST(ShapeReader, PolygonWithManyRingsFindsEachHole)
 
     ShapeReader reader;
     ASSERT_TRUE(reader.read(path));
-    std::vector<GIS_polygon> & polygons = reader.getPolyList();
+    std::vector<GisPolygon> & polygons = reader.get_poly_list();
     ASSERT_EQ(polygons.size(), static_cast<size_t>(side * side) + islands.size());
     size_t nholes = 0, nislands = 0;
     for (size_t i = 0; i < polygons.size(); i++)
     {
-        GIS_polygon & polygon = polygons[i];
+        GisPolygon & polygon = polygons[i];
         auto corner = lower_left(polygon.front());
         EXPECT_EQ(corner, polygon_order[i]) << "polygon " << i;
-        EXPECT_EQ(polygon.front().getType(), Ring::POUT);
+        EXPECT_EQ(polygon.front().get_type(), Ring::POUT);
         if (islands.count(corner))
         {
             EXPECT_EQ(polygon.size(), 1u);
@@ -187,7 +187,7 @@ TEST(ShapeReader, PolygonWithManyRingsFindsEachHole)
             continue;
         }
         ASSERT_EQ(polygon.size(), 2u);
-        EXPECT_EQ(polygon.back().getType(), Ring::PIN);
+        EXPECT_EQ(polygon.back().get_type(), Ring::PIN);
         EXPECT_EQ(lower_left(polygon.back()), hole->second);
         nholes++;
     }

@@ -11,11 +11,11 @@ using namespace std;
 using namespace cusg;
 
 //write a quadtree to a shape file
-void write_shapefile(QuadTree3D * qtree, string shpName, string feature_type,
+void write_shapefile(QuadTree3D * qtree, string shp_name, string feature_type,
                      bool close_polygons = true);
 
 //write a modflow grid to a shape file
-void write_shapefile(ModflowGrid * modflow, string gridShpName, string feature_type,
+void write_shapefile(ModflowGrid * modflow, string grid_shp_name, string feature_type,
                      bool without_inactive = true, bool one_based_numbering = true,
                      bool close_polygons = true);
 
@@ -29,9 +29,9 @@ void write_shapefile(ModflowGrid * modflow, string gridShpName, string feature_t
 template <class T> void sort(std::vector<T> & unsorted, std::vector<size_t> & index_map);
 
 // Comparison struct used by sort
-template <class T> struct index_cmp
+template <class T> struct IndexCompare
 {
-    index_cmp(const T arr) : arr(arr) {}
+    IndexCompare(const T arr) : arr(arr) {}
     bool operator()(const size_t a, const size_t b) const { return arr[a] < arr[b]; }
     const T arr;
 };
@@ -45,7 +45,7 @@ template <class T> void sort(std::vector<T> & unsorted, std::vector<size_t> & in
         index_map[i] = i;
     }
     // Sort the index map, using unsorted for comparison
-    sort(index_map.begin(), index_map.end(), index_cmp<std::vector<T> &>(unsorted));
+    sort(index_map.begin(), index_map.end(), IndexCompare<std::vector<T> &>(unsorted));
 }
 
 #endif

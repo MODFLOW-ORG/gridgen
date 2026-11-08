@@ -71,14 +71,14 @@ TEST(QuadTree, RefineReportsFeatureOutsideGrid)
     EXPECT_FALSE(qtree->refine(outside, 1));
 
     Polyline line_in, line_out;
-    line_in.beginPoly();
-    line_in.addVertex(10.0, 10.0);
-    line_in.addVertex(290.0, 10.0);
-    line_in.endPoly();
-    line_out.beginPoly();
-    line_out.addVertex(400.0, 10.0);
-    line_out.addVertex(500.0, 10.0);
-    line_out.endPoly();
+    line_in.begin_poly();
+    line_in.add_vertex(10.0, 10.0);
+    line_in.add_vertex(290.0, 10.0);
+    line_in.end_poly();
+    line_out.begin_poly();
+    line_out.add_vertex(400.0, 10.0);
+    line_out.add_vertex(500.0, 10.0);
+    line_out.end_poly();
     EXPECT_TRUE(qtree->refine(line_in, 1));
     EXPECT_FALSE(qtree->refine(line_out, 1));
     line_in.destroy();
@@ -89,10 +89,10 @@ TEST(QuadTree, RefineReportsFeatureOutsideGrid)
 
     // a line that crosses the grid with both ends outside intersects it
     Polyline line_across;
-    line_across.beginPoly();
-    line_across.addVertex(-50.0, 250.0);
-    line_across.addVertex(350.0, 250.0);
-    line_across.endPoly();
+    line_across.begin_poly();
+    line_across.add_vertex(-50.0, 250.0);
+    line_across.add_vertex(350.0, 250.0);
+    line_across.end_poly();
     EXPECT_TRUE(qtree->refine(line_across, 1));
     line_across.destroy();
 }
@@ -213,7 +213,7 @@ TEST(ShapeReader, ShapefileWithoutFieldsIsRead)
                              {square(0.0, 0.0, 10.0), square(20.0, 0.0, 10.0)}, false);
     ShapeReader reader;
     ASSERT_TRUE(reader.read(path));
-    EXPECT_EQ(reader.getPolyList().size(), 2u);
+    EXPECT_EQ(reader.get_poly_list().size(), 2u);
 }
 
 TEST(DefinitionParser, FeatureTypeIsCheckedAndCaseInsensitive)
@@ -225,7 +225,7 @@ TEST(DefinitionParser, FeatureTypeIsCheckedAndCaseInsensitive)
         std::istringstream dfn(block + "Polygon\n  INCLUDE_BOUNDARY = True\nEND ACTIVE_DOMAIN\n");
         DefinitionParser parser;
         ASSERT_TRUE(parser.parse(dfn));
-        auto * data = dynamic_cast<ActiveDomainBlock *>(parser.getBlockData("domain"));
+        auto * data = dynamic_cast<ActiveDomainBlock *>(parser.get_block_data("domain"));
         ASSERT_NE(data, nullptr);
         EXPECT_EQ(data->feature_type, "polygon");
     }
@@ -246,7 +246,7 @@ bool close_polygons(const std::string & records)
                            records + "END GRID_TO_SHAPEFILE\n");
     DefinitionParser parser;
     EXPECT_TRUE(parser.parse(dfn));
-    auto * data = dynamic_cast<GridToShapefileBlock *>(parser.getBlockData("shp"));
+    auto * data = dynamic_cast<GridToShapefileBlock *>(parser.get_block_data("shp"));
     EXPECT_NE(data, nullptr);
     return data != nullptr && data->close_polygons;
 }
@@ -339,9 +339,9 @@ TEST(DefinitionParser, ShortArrayFileIsAnError)
                            "END MODFLOW_GRID\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
-    DefinitionBlock * data = parser.getBlockData("mfg");
+    DefinitionBlock * data = parser.get_block_data("mfg");
     ASSERT_NE(data, nullptr);
-    EXPECT_THROW(data->initialize(parser.getBlockData()), GridgenError);
+    EXPECT_THROW(data->initialize(parser.get_block_data()), GridgenError);
 }
 
 // the cell with the largest negative thickness comes before a thinner one

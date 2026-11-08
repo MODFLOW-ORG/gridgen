@@ -70,61 +70,61 @@ public:
     ~BoxQueue(void) {}
 };
 
-/*! \class seqQueue
+/*! \class SeqQueue
  *  \brief "Normal" (not randomized) priority queue of `Box` nodes
  */
-class seqQueue : public BoxQueue
+class SeqQueue : public BoxQueue
 {
 private:
-    priority_queue<Box *, vector<Box *>, PQCmp> PQ;
+    priority_queue<Box *, vector<Box *>, PQCmp> m_pq;
 
 public:
-    void push(Box * b) override { PQ.push(b); }
+    void push(Box * b) override { m_pq.push(b); }
 
     /** Pops off the item at the front of the queue and returns it */
     Box * extract() override
     {
-        Box * r = PQ.top();
-        PQ.pop();
+        Box * r = m_pq.top();
+        m_pq.pop();
         return r;
     }
 
-    bool empty() override { return PQ.empty(); }
+    bool empty() override { return m_pq.empty(); }
 
-    int size() override { return PQ.size(); }
+    int size() override { return m_pq.size(); }
 };
 
-/*! \class randQueue
+/*! \class RandQueue
  *  \brief List of `Box` nodes with randomization
  *
  *  A list of `Box` nodes, where list extraction
  *  returns a random node.
  */
-class randQueue : public BoxQueue
+class RandQueue : public BoxQueue
 {
 private:
-    list<Box *> L;
-    int Qseed;
+    list<Box *> m_l;
+    int m_qseed;
 
 public:
-    randQueue(int s) : Qseed(s) { srand(Qseed); }
+    RandQueue(int s) : m_qseed(s) { srand(m_qseed); }
 
-    void push(Box * b) override { L.push_back(b); }
+    void push(Box * b) override { m_l.push_back(b); }
 
     /** Removes and returns a random item from the list */
     Box * extract() override
     {
-        int i = rand() % L.size();
-        list<Box *>::iterator iter = L.begin();
+        int i = rand() % m_l.size();
+        list<Box *>::iterator iter = m_l.begin();
         advance(iter, i);
         Box * r = *iter;
-        L.erase(iter);
+        m_l.erase(iter);
         return r;
     }
 
-    bool empty() override { return L.empty(); }
+    bool empty() override { return m_l.empty(); }
 
-    int size() override { return L.size(); }
+    int size() override { return m_l.size(); }
 };
 
 } //end namespace cusg

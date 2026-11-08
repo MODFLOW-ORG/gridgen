@@ -32,18 +32,18 @@ namespace cusg
 class Grid
 {
 public:
-    Grid() : nodegroup(this)
+    Grid() : node_group(this)
     {
         is3d = false;
-        sortconnections = true;
-        X = Y = top = bot = nullptr;
+        sort_connections = true;
+        x_centers = y_centers = top = bot = nullptr;
         name = "anonymous-grid";
     }
 
     virtual ~Grid()
     {
-        if (X != nullptr) delete[] X;
-        if (Y != nullptr) delete[] Y;
+        if (x_centers != nullptr) delete[] x_centers;
+        if (y_centers != nullptr) delete[] y_centers;
         if (bot != nullptr) delete[] bot;
         if (top != nullptr) delete[] top;
     }
@@ -70,7 +70,7 @@ public:
     ///this is supposed to return number of nodes in CSR/COO data
     ///so for grids such as quadtree/octrees, this returns the number
     ///of leaves
-    virtual int nodes() { return nodegroup.node_size(); }
+    virtual int nodes() { return node_group.node_size(); }
 
     ///number the nodes (i.e. leaves) in the grid
     virtual void number_nodes() = 0;
@@ -95,10 +95,10 @@ public:
     bool is3d;
 
     ///should the connection be sorted (used in get_usg_csr_data functions)
-    bool sortconnections;
+    bool sort_connections;
 
     ///all boxes in the grid
-    NodeGroup nodegroup;
+    NodeGroup node_group;
 
     ///top layer (this is the first of bottom layer...)
     double * top;
@@ -107,8 +107,8 @@ public:
     double * bot;
 
     ///centers of all boxes
-    double * X;
-    double * Y;
+    double * x_centers;
+    double * y_centers;
 };
 
 } //namespace cusg

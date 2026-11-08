@@ -36,7 +36,7 @@ GridVertices::GridVertices(Grid * grid)
 {
     QuadTree3D * qtree = dynamic_cast<QuadTree3D *>(grid);
     ModflowGrid * mfgrid =
-        (qtree != nullptr) ? qtree->getModflowGrid() : dynamic_cast<ModflowGrid *>(grid);
+        (qtree != nullptr) ? qtree->get_modflow_grid() : dynamic_cast<ModflowGrid *>(grid);
     assert(mfgrid);
 
     int nrow = mfgrid->nrow;
@@ -60,7 +60,7 @@ GridVertices::GridVertices(Grid * grid)
         for (int r = 0; r < nrow; r++)
             for (int c = 0; c < ncol; c++)
             {
-                Box * root = grid->nodegroup[mfgrid->get_box_index(k, r, c)];
+                Box * root = grid->node_group[mfgrid->get_box_index(k, r, c)];
                 add_box(root, c, nrow - 1 - r, 0, 0, 0);
             }
 }
@@ -68,13 +68,13 @@ GridVertices::GridVertices(Grid * grid)
 void GridVertices::add_box(const Box * box, int col, int srow, long long ix, long long iy,
                            int depth)
 {
-    if (!box->isLeaf)
+    if (!box->is_leaf)
     {
         // children are NW, NE, SE, SW
         const int east[4] = {0, 1, 1, 0};
         const int north[4] = {1, 1, 0, 0};
         for (int i = 0; i < 4; i++)
-            add_box(box->pChildren[i], col, srow, 2 * ix + east[i], 2 * iy + north[i], depth + 1);
+            add_box(box->p_children[i], col, srow, 2 * ix + east[i], 2 * iy + north[i], depth + 1);
     }
 
     EdgeKey west = reduce(col, ix, depth);

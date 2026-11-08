@@ -31,9 +31,9 @@ static set<int> named_layers(map<string, list<string>> & name_value_map)
 static list<string> layer_record(map<string, list<string>> & name_value_map, const char * name,
                                  int i)
 {
-    char layername[64];
-    sprintf(layername, "%s layer %d", name, i + 1);
-    map<string, list<string>>::iterator found = name_value_map.find(layername);
+    char layer_name[64];
+    sprintf(layer_name, "%s layer %d", name, i + 1);
+    map<string, list<string>>::iterator found = name_value_map.find(layer_name);
     if (found == name_value_map.end()) return list<string>();
     return found->second;
 }
@@ -107,7 +107,7 @@ inline int skip_backslash_new_line(std::istream & in)
 //
 //-----------------------------------------------------------------------------
 
-bool BaseParser::readBlock(istream & in, DefinitionBlock & block)
+bool BaseParser::read_block(istream & in, DefinitionBlock & block)
 {
     const int size = 1024;
     const char * ignore = " \t[]()<>,!{}\r\n";
@@ -265,7 +265,7 @@ bool ModflowGridBlock::parse()
     }
     else
     {
-        throw missingRecord("rotation_angle");
+        throw missing_record("rotation_angle");
     }
 
     value = name_value_map["x_offset"];
@@ -273,7 +273,7 @@ bool ModflowGridBlock::parse()
         x_offset = atof(value.front().c_str());
     else
     {
-        throw missingRecord("x_offset");
+        throw missing_record("x_offset");
     }
 
     value = name_value_map["y_offset"];
@@ -281,7 +281,7 @@ bool ModflowGridBlock::parse()
         y_offset = atof(value.front().c_str());
     else
     {
-        throw missingRecord("y_offset");
+        throw missing_record("y_offset");
     }
 
     value = name_value_map["length_unit"];
@@ -296,7 +296,7 @@ bool ModflowGridBlock::parse()
         nlay = atoi(value.front().c_str());
     else
     {
-        throw missingRecord("nlay");
+        throw missing_record("nlay");
     }
 
     value = name_value_map["nrow"];
@@ -304,7 +304,7 @@ bool ModflowGridBlock::parse()
         nrow = atoi(value.front().c_str());
     else
     {
-        throw missingRecord("nrow");
+        throw missing_record("nrow");
     }
 
     value = name_value_map["ncol"];
@@ -312,7 +312,7 @@ bool ModflowGridBlock::parse()
         ncol = atoi(value.front().c_str());
     else
     {
-        throw missingRecord("ncol");
+        throw missing_record("ncol");
     }
 
     value = name_value_map["delr"];
@@ -322,7 +322,7 @@ bool ModflowGridBlock::parse()
     }
     else
     {
-        throw missingRecord("delr");
+        throw missing_record("delr");
     }
 
     value = name_value_map["delc"];
@@ -332,7 +332,7 @@ bool ModflowGridBlock::parse()
     }
     else
     {
-        throw missingRecord("delc");
+        throw missing_record("delc");
     }
 
     value = name_value_map["top"];
@@ -342,14 +342,14 @@ bool ModflowGridBlock::parse()
     }
     else
     {
-        throw missingRecord("top");
+        throw missing_record("top");
     }
 
     for (int i = 0; i < nlay; i++)
     {
-        char layername[36];
-        sprintf(layername, "bottom layer %d", i + 1);
-        value = name_value_map[layername];
+        char layer_name[36];
+        sprintf(layer_name, "bottom layer %d", i + 1);
+        value = name_value_map[layer_name];
         if (!value.empty())
         {
             bot_str[i] = value;
@@ -357,7 +357,7 @@ bool ModflowGridBlock::parse()
         }
         else
         {
-            throw missingRecord(layername);
+            throw missing_record(layer_name);
         }
     }
 
@@ -378,13 +378,13 @@ bool ModflowGridBlock::initialize(map<string, DefinitionBlock *> & blocks)
     if (m_initialized) return true;
 
     //kept only when every array is read, so an error leaves none
-    unique_ptr<REAL[]> r(createArray<REAL>(delr_str, ncol, getFolderPath()));
-    unique_ptr<REAL[]> c(createArray<REAL>(delc_str, nrow, getFolderPath()));
+    unique_ptr<REAL[]> r(create_array<REAL>(delr_str, ncol, get_folder_path()));
+    unique_ptr<REAL[]> c(create_array<REAL>(delc_str, nrow, get_folder_path()));
     vector<unique_ptr<REAL[]>> b;
-    b.emplace_back(createArray<REAL>(top_str, ncol * nrow, getFolderPath()));
+    b.emplace_back(create_array<REAL>(top_str, ncol * nrow, get_folder_path()));
     for (int i = 0; i < nlay; i++)
     {
-        b.emplace_back(createArray<REAL>(bot_str[i], ncol * nrow, getFolderPath()));
+        b.emplace_back(create_array<REAL>(bot_str[i], ncol * nrow, get_folder_path()));
     }
 
     delr = r.release();
@@ -439,7 +439,7 @@ bool QuadtreeBlock::parse()
         modflow_grid = value.front();
     else
     {
-        throw missingRecord("modflow_grid");
+        throw missing_record("modflow_grid");
     }
 
     value = name_value_map["structure_file"];
@@ -447,7 +447,7 @@ bool QuadtreeBlock::parse()
         tree_structure_file = value.back(); //value.front();
     else
     {
-        throw missingRecord("structure_file");
+        throw missing_record("structure_file");
     }
 
     //read the surfaces of each layer named, independently of the other layers
@@ -467,10 +467,10 @@ bool QuadtreeBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
-    this->modflow_data = findModflowGrid(blocks, modflow_grid);
+    this->modflow_data = find_modflow_grid(blocks, modflow_grid);
 
     //read/open this->tree_structure_file here
-    parseTreeStructFile(tree_structure_file, allNodes, getFolderPath());
+    parse_tree_struct_file(tree_structure_file, all_nodes, get_folder_path());
 
     m_initialized = true;
     return true;
@@ -489,10 +489,10 @@ Grid * QuadtreeBlock::build()
 
     if (qtree_grid == nullptr) //if it's not already built
     {
-        ModflowGrid * modflowGrid = dynamic_cast<ModflowGrid *>(modflow_data->build());
-        assert(modflowGrid);
+        ModflowGrid * base_grid = dynamic_cast<ModflowGrid *>(modflow_data->build());
+        assert(base_grid);
 
-        qtree_grid = new QuadTree3D(modflowGrid);
+        qtree_grid = new QuadTree3D(base_grid);
         try
         {
             //fill the QuadTree3d
@@ -505,16 +505,16 @@ Grid * QuadtreeBlock::build()
             qtree_grid->top = new double[nodesize];
             qtree_grid->bot = new double[nodesize];
             int index = 0;
-            for (int layer = 0; layer < modflowGrid->nlay; layer++)
+            for (int layer = 0; layer < base_grid->nlay; layer++)
             {
-                int node_per_layer = qtree_grid->nodegroup.layer_cell_counts[layer];
+                int node_per_layer = qtree_grid->node_group.layer_cell_counts[layer];
 
                 unique_ptr<REAL[]> top_tmp(
-                    createArray<REAL>(top_str[layer], node_per_layer, getFolderPath()));
+                    create_array<REAL>(top_str[layer], node_per_layer, get_folder_path()));
                 memcpy(&qtree_grid->top[index], top_tmp.get(), sizeof(double) * node_per_layer);
 
                 unique_ptr<REAL[]> bot_tmp(
-                    createArray<REAL>(bot_str[layer], node_per_layer, getFolderPath()));
+                    create_array<REAL>(bot_str[layer], node_per_layer, get_folder_path()));
                 memcpy(&qtree_grid->bot[index], bot_tmp.get(), sizeof(double) * node_per_layer);
 
                 index += node_per_layer;
@@ -539,24 +539,24 @@ void QuadtreeBlock::build_from_structure()
 {
     int count = 0;
     bool zero_based = false;
-    for (vector<TreeStructNode>::iterator nite = allNodes.begin(); nite != allNodes.end();
+    for (vector<TreeStructNode>::iterator nite = all_nodes.begin(); nite != all_nodes.end();
          ++nite, count++)
     {
 
         TreeStructNode & tree_node = *nite;
         //an active cell numbered 0 means the grid was built with zero-based numbering
         if (tree_node.number == 0) zero_based = true;
-        int layerNum = tree_node.layer - 1;
+        int layer_num = tree_node.layer - 1;
         int row = tree_node.row - 1;
         int col = tree_node.col - 1;
 
-        int box_index = qtree_grid->getModflowGrid()->get_box_index(layerNum, row, col);
-        Box * nodeobj = qtree_grid->nodegroup[box_index];
+        int box_index = qtree_grid->get_modflow_grid()->get_box_index(layer_num, row, col);
+        Box * nodeobj = qtree_grid->node_group[box_index];
 
         if ((strcmp(tree_node.code.c_str(), "") == 0) || tree_node.code.empty())
         {
             nodeobj->number = tree_node.number;
-            nodeobj->isLeaf = true;
+            nodeobj->is_leaf = true;
             if (nodeobj->number == -1) nodeobj->active = false;
         }
         else
@@ -566,7 +566,7 @@ void QuadtreeBlock::build_from_structure()
             int depth_index = 0;
             while (depth_index < code_depth)
             {
-                if (node_box->isLeaf)
+                if (node_box->is_leaf)
                 {
                     bool was_split = node_box->split(0);
                     assert(was_split);
@@ -576,33 +576,33 @@ void QuadtreeBlock::build_from_structure()
                         int id = c;
                         if (c == 3) id = 2;
                         if (c == 2) id = 3;
-                        node_box->pChildren[id]->isLeaf = true;
-                        node_box->pChildren[id]->updateStatus();
-                        qtree_grid->nodegroup.add(node_box->pChildren[id]);
+                        node_box->p_children[id]->is_leaf = true;
+                        node_box->p_children[id]->update_status();
+                        qtree_grid->node_group.add(node_box->p_children[id]);
                     }
-                    node_box->isLeaf = false;
+                    node_box->is_leaf = false;
                 }
                 char t = tree_node.code[depth_index];
                 switch (t)
                 {
                     case '1':
                     {
-                        node_box = node_box->pChildren[0];
+                        node_box = node_box->p_children[0];
                         break;
                     }
                     case '2':
                     {
-                        node_box = node_box->pChildren[1];
+                        node_box = node_box->p_children[1];
                         break;
                     }
                     case '3':
                     {
-                        node_box = node_box->pChildren[3];
+                        node_box = node_box->p_children[3];
                         break;
                     }
                     case '4':
                     {
-                        node_box = node_box->pChildren[2];
+                        node_box = node_box->p_children[2];
                         break;
                     }
                     default:
@@ -616,7 +616,7 @@ void QuadtreeBlock::build_from_structure()
             }
 
             node_box->number = tree_node.number;
-            node_box->isLeaf = true;
+            node_box->is_leaf = true;
             if (node_box->number == -1) node_box->active = false;
         }
     }
@@ -669,7 +669,7 @@ bool QuadtreeBuilderBlock::parse()
         modflow_grid = value.front();
     else
     {
-        throw missingRecord("modflow_grid");
+        throw missing_record("modflow_grid");
     }
 
     value = name_value_map["grid_definition_file"];
@@ -677,7 +677,7 @@ bool QuadtreeBuilderBlock::parse()
         grid_definition_file = value.front();
     else
     {
-        throw missingRecord("grid_definition_file");
+        throw missing_record("grid_definition_file");
     }
 
     value = name_value_map["smoothing"];
@@ -720,7 +720,7 @@ bool QuadtreeBuilderBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
-    this->modflow_data = findModflowGrid(blocks, modflow_grid);
+    this->modflow_data = find_modflow_grid(blocks, modflow_grid);
 
     active_domain_data.reserve(modflow_data->nlay);
     for (int i = 0; i < modflow_data->nlay; i++)
@@ -730,9 +730,9 @@ bool QuadtreeBuilderBlock::initialize(map<string, DefinitionBlock *> & blocks)
         string rname = "active_domain layer " + to_string(i + 1);
         for (auto & domain_name : domain_names)
         {
-            DefinitionBlock * block = findBlock(blocks, rname, domain_name);
+            DefinitionBlock * block = find_block(blocks, rname, domain_name);
             auto * domain = dynamic_cast<ActiveDomainBlock *>(block);
-            if (domain == nullptr) throw wrongBlockType(rname, block, "an ACTIVE_DOMAIN block");
+            if (domain == nullptr) throw wrong_block_type(rname, block, "an ACTIVE_DOMAIN block");
             domain->initialize(blocks);
             domains.push_back(domain);
         } // end for domain_name
@@ -768,10 +768,10 @@ bool QuadtreeBuilderBlock::initialize(map<string, DefinitionBlock *> & blocks)
         string rname = "refinement_features layer " + to_string(i + 1);
         for (auto & refinement_name : refinement_names)
         {
-            DefinitionBlock * block = findBlock(blocks, rname, refinement_name);
+            DefinitionBlock * block = find_block(blocks, rname, refinement_name);
             auto * refinement = dynamic_cast<RefinementFeaturesBlock *>(block);
             if (refinement == nullptr)
-                throw wrongBlockType(rname, block, "a REFINEMENT_FEATURES block");
+                throw wrong_block_type(rname, block, "a REFINEMENT_FEATURES block");
             refinements.push_back(refinement);
         }
 
@@ -817,9 +817,9 @@ Grid * QuadtreeBuilderBlock::build()
 
     if (qtree_grid == nullptr) //if it's not already built
     {
-        Grid * modflowGrid = modflow_data->build();
+        Grid * base_grid = modflow_data->build();
 
-        qtree_grid = new QuadTree3D((ModflowGrid *)modflowGrid);
+        qtree_grid = new QuadTree3D((ModflowGrid *)base_grid);
         assert(qtree_grid);
         if (this->grid_definition_file.empty()) //no name defined...
             qtree_grid->name = this->name;
@@ -829,7 +829,7 @@ Grid * QuadtreeBuilderBlock::build()
             qtree_grid->name = this->grid_definition_file.substr(0, pos);
         }
 
-        Quadtree_Builder builder;
+        QuadtreeBuilder builder;
         try
         {
             builder.build(qtree_grid, *this);
@@ -883,7 +883,7 @@ bool GridIntersectionBlock::parse()
         grid_name = value.front();
     else
     {
-        throw missingRecord("grid");
+        throw missing_record("grid");
     }
 
     value = name_value_map["shapefile"];
@@ -891,7 +891,7 @@ bool GridIntersectionBlock::parse()
     {
         shapefile = value.front();
         //replace the '\\'
-        string fullpath = getFolderPath();
+        string fullpath = get_folder_path();
         fullpath += shapefile;
         shapefile = fullpath;
 
@@ -903,7 +903,7 @@ bool GridIntersectionBlock::parse()
     }
     else
     {
-        throw missingRecord("shapefile");
+        throw missing_record("shapefile");
     }
 
     value = name_value_map["feature_type"];
@@ -911,7 +911,7 @@ bool GridIntersectionBlock::parse()
         feature_type = tolower(value.front());
     else
     {
-        throw missingRecord("feature_type");
+        throw missing_record("feature_type");
     }
     if (feature_type != "line" && feature_type != "polygon" && feature_type != "point")
         throw GridgenError("FEATURE_TYPE " + value.front() + " (GRID_INTERSECTION " + name +
@@ -921,7 +921,7 @@ bool GridIntersectionBlock::parse()
     if (!value.empty())
     {
         output_file = value.front();
-        string fullpath = getFolderPath();
+        string fullpath = get_folder_path();
         fullpath += output_file;
         output_file = fullpath;
 
@@ -933,14 +933,14 @@ bool GridIntersectionBlock::parse()
     }
     else
     {
-        throw missingRecord("output_file");
+        throw missing_record("output_file");
     }
 
     value = name_value_map["output_shapefile"];
     if (!value.empty())
     {
         output_shapefile = value.front();
-        string fullpath = getFolderPath();
+        string fullpath = get_folder_path();
         fullpath += output_shapefile;
 
         output_shapefile = fullpath;
@@ -956,7 +956,7 @@ bool GridIntersectionBlock::parse()
         layer = atoi(value.front().c_str()) - 1;
     else
     {
-        throw missingRecord("layer");
+        throw missing_record("layer");
     }
 
     value = name_value_map["attributes"];
@@ -976,7 +976,7 @@ bool GridIntersectionBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
-    this->grid = buildReferencedGrid(blocks, "grid", grid_name);
+    this->grid = build_referenced_grid(blocks, "grid", grid_name);
 
     m_initialized = true;
 
@@ -1011,7 +1011,7 @@ bool ActiveDomainBlock::parse()
         shapefile = value.front();
     else
     {
-        throw missingRecord("shapefile");
+        throw missing_record("shapefile");
     }
 
     value = name_value_map["feature_type"];
@@ -1019,7 +1019,7 @@ bool ActiveDomainBlock::parse()
         feature_type = tolower(value.front());
     else
     {
-        throw missingRecord("feature_type");
+        throw missing_record("feature_type");
     }
     if (feature_type != "line" && feature_type != "polygon" && feature_type != "point")
         throw GridgenError("FEATURE_TYPE " + value.front() + " (ACTIVE_DOMAIN " + name +
@@ -1069,15 +1069,15 @@ bool RefinementFeaturesBlock::parse()
         shapefile = value.front();
     else
     {
-        throw missingRecord("shapefile");
+        throw missing_record("shapefile");
     }
 
     value = name_value_map["feature_type"];
     if (!value.empty())
-        featuretype = value.front();
+        feature_type = value.front();
     else
     {
-        throw missingRecord("feature_type");
+        throw missing_record("feature_type");
     }
 
     //a level from a shapefile attribute overrides refinement_level
@@ -1124,7 +1124,7 @@ bool GridToUsgdataBlock::parse()
         grid_name = value.front();
     else
     {
-        throw missingRecord("grid");
+        throw missing_record("grid");
     }
 
     value = name_value_map["usg_data_prefix"];
@@ -1132,7 +1132,7 @@ bool GridToUsgdataBlock::parse()
         usg_data_prefix = value.front();
     else
     {
-        throw missingRecord("usg_data_prefix");
+        throw missing_record("usg_data_prefix");
     }
 
     value = name_value_map["vertical_pass_through"];
@@ -1149,7 +1149,7 @@ bool GridToUsgdataBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
-    this->grid = buildReferencedGrid(blocks, "grid", grid_name);
+    this->grid = build_referenced_grid(blocks, "grid", grid_name);
 
     m_initialized = true;
 
@@ -1185,14 +1185,14 @@ bool GridToShapefileBlock::parse()
         grid_name = value.front();
     else
     {
-        throw missingRecord("grid");
+        throw missing_record("grid");
     }
 
     value = name_value_map["shapefile"];
     if (!value.empty())
     {
         shapefile = value.back(); //value.front();
-        string fullpath = getFolderPath();
+        string fullpath = get_folder_path();
         fullpath += shapefile;
         shapefile = fullpath;
 
@@ -1204,7 +1204,7 @@ bool GridToShapefileBlock::parse()
     }
     else
     {
-        throw missingRecord("shapefile");
+        throw missing_record("shapefile");
     }
 
     value = name_value_map["node_numbering"];
@@ -1234,7 +1234,7 @@ bool GridToShapefileBlock::parse()
         feature_type = tolower(value.front());
     else
     {
-        throw missingRecord("feature_type");
+        throw missing_record("feature_type");
     }
     if (feature_type != "line" && feature_type != "polygon" && feature_type != "point")
         throw GridgenError("FEATURE_TYPE " + value.front() + " (GRID_TO_SHAPEFILE " + name +
@@ -1246,63 +1246,63 @@ bool GridToShapefileBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
-    this->grid = buildReferencedGrid(blocks, "grid", grid_name);
+    this->grid = build_referenced_grid(blocks, "grid", grid_name);
 
-    warnQuadtreeExportRecords(this->grid);
+    warn_quadtree_export_records(this->grid);
 
     m_initialized = true;
     return true;
 }
 
-void DefinitionBlock::warnIfNotAction()
+void DefinitionBlock::warn_if_not_action()
 {
-    if (isAction()) return;
+    if (is_action()) return;
     warn(label() + " is not an action, so running it writes nothing; run a QUADTREE_BUILDER, "
                    "GRID_TO_SHAPEFILE, GRID_TO_USGDATA, GRID_TO_VTKFILE, or GRID_INTERSECTION "
                    "block to write output");
 }
 
-DefinitionBlock * DefinitionBlock::findBlock(map<string, DefinitionBlock *> & blocks,
-                                             const string & rname, const string & block_name)
+DefinitionBlock * DefinitionBlock::find_block(map<string, DefinitionBlock *> & blocks,
+                                              const string & rname, const string & block_name)
 {
     auto found = blocks.find(block_name);
-    if (found == blocks.end() || found->second == nullptr) throw undefinedBlock(rname, block_name);
+    if (found == blocks.end() || found->second == nullptr) throw undefined_block(rname, block_name);
     return found->second;
 }
 
-ModflowGridBlock * DefinitionBlock::findModflowGrid(map<string, DefinitionBlock *> & blocks,
-                                                    const string & grid_name)
+ModflowGridBlock * DefinitionBlock::find_modflow_grid(map<string, DefinitionBlock *> & blocks,
+                                                      const string & grid_name)
 {
-    DefinitionBlock * block = findBlock(blocks, "modflow_grid", grid_name);
+    DefinitionBlock * block = find_block(blocks, "modflow_grid", grid_name);
     auto * modflow_data = dynamic_cast<ModflowGridBlock *>(block);
     if (modflow_data == nullptr)
-        throw wrongBlockType("modflow_grid", block, "a MODFLOW_GRID block");
+        throw wrong_block_type("modflow_grid", block, "a MODFLOW_GRID block");
     modflow_data->initialize(blocks);
     return modflow_data;
 }
 
-Grid * DefinitionBlock::buildReferencedGrid(map<string, DefinitionBlock *> & blocks,
-                                            const string & rname, const string & grid_name)
+Grid * DefinitionBlock::build_referenced_grid(map<string, DefinitionBlock *> & blocks,
+                                              const string & rname, const string & grid_name)
 {
-    DefinitionBlock * block = findBlock(blocks, rname, grid_name);
+    DefinitionBlock * block = find_block(blocks, rname, grid_name);
     GridBlock * grid = dynamic_cast<GridBlock *>(block);
     if (grid == nullptr)
-        throw wrongBlockType(rname, block, "a MODFLOW_GRID, QUADTREE, or QUADTREE_BUILDER block");
+        throw wrong_block_type(rname, block, "a MODFLOW_GRID, QUADTREE, or QUADTREE_BUILDER block");
 
     grid->initialize(blocks);
     return grid->build();
 }
 
 //records that do not change any output of a quadtree grid
-void DefinitionBlock::warnQuadtreeExportRecords(Grid * grid)
+void DefinitionBlock::warn_quadtree_export_records(Grid * grid)
 {
     if (dynamic_cast<QuadTree3D *>(grid) == nullptr) return;
-    if (hasRecord("node_numbering"))
-        warnIgnored("node_numbering",
-                    "it has no effect on a QUADTREE grid, which keeps the node numbering "
-                    "it was built with; set NODE_NUMBERING in the QUADTREE_BUILDER block");
-    if (hasRecord("without_inactive"))
-        warnIgnored("without_inactive", "it has no effect on a QUADTREE grid");
+    if (has_record("node_numbering"))
+        warn_ignored("node_numbering",
+                     "it has no effect on a QUADTREE grid, which keeps the node numbering "
+                     "it was built with; set NODE_NUMBERING in the QUADTREE_BUILDER block");
+    if (has_record("without_inactive"))
+        warn_ignored("without_inactive", "it has no effect on a QUADTREE grid");
 }
 
 //-----------------------------------------------------------------------------
@@ -1334,14 +1334,14 @@ bool GridToVtkfileBlock::parse()
         grid_name = value.front();
     else
     {
-        throw missingRecord("grid");
+        throw missing_record("grid");
     }
 
     value = name_value_map["vtkfile"];
     if (!value.empty())
     {
         vtkfile = value.back(); //value.front();
-        string fullpath = getFolderPath();
+        string fullpath = get_folder_path();
         fullpath += vtkfile;
         vtkfile = fullpath;
 
@@ -1353,7 +1353,7 @@ bool GridToVtkfileBlock::parse()
     }
     else
     {
-        throw missingRecord("vtkfile");
+        throw missing_record("vtkfile");
     }
 
     value = name_value_map["without_inactive"];
@@ -1377,9 +1377,9 @@ bool GridToVtkfileBlock::initialize(map<string, DefinitionBlock *> & blocks)
 {
     if (m_initialized) return true;
 
-    this->grid = buildReferencedGrid(blocks, "grid", grid_name);
+    this->grid = build_referenced_grid(blocks, "grid", grid_name);
 
-    warnQuadtreeExportRecords(this->grid);
+    warn_quadtree_export_records(this->grid);
 
     m_initialized = true;
     return true;

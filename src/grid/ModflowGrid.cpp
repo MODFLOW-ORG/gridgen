@@ -87,7 +87,7 @@ Index3d ModflowGrid::get_indices(int box_index)
 
 Box * ModflowGrid::get_cell_box(int cell)
 {
-    return nodegroup[cell];
+    return node_group[cell];
 }
 
 Box * ModflowGrid::get_cell_box(int k, int i, int j)
@@ -161,7 +161,7 @@ CSRData ModflowGrid::get_usg_csr_data()
 
     //a MODFLOW grid numbers its cells as its boxes, so a box index is a cell
 
-    int box_size = nodegroup.size();
+    int box_size = node_group.size();
 
     //go through each cell and count diagonal position and connections
     int nja = (2 * (ncol - 1) * nrow * nlay + //x connections
@@ -309,7 +309,7 @@ void ModflowGrid::number_nodes()
             for (int c = 0; c < ncol; c++)
             {
                 int bid = get_box_index(l, r, c);
-                Box * box = nodegroup[bid];
+                Box * box = node_group[bid];
                 if (box->active) box->number = number++;
             } //end c
         } //end r
@@ -344,22 +344,22 @@ void ModflowGrid::init(int nlay, int nrow, int ncol, const vector<double *> & bo
     create_nodes();
 }
 
-///create nodes and add them to nodegroup
+///create nodes and add them to node_group
 void ModflowGrid::create_nodes()
 {
-    // Create the nodegroup.
-    nodegroup = NodeGroup(this);
-    nodegroup.nlay = nlay;
+    // Create the node_group.
+    node_group = NodeGroup(this);
+    node_group.nlay = nlay;
 
     for (int k = 0; k < nlay; k++)
     {
         for (int i = 0; i < nrow; i++)
         {
-            double y = Y[i];
+            double y = y_centers[i];
 
             for (int j = 0; j < ncol; j++)
             {
-                double x = X[j];
+                double x = x_centers[j];
 
                 Point3d position;
                 Vector3d dxdydz;
@@ -382,7 +382,7 @@ void ModflowGrid::create_nodes()
                 nodeobj->layer = k;
 
                 //TODO: add nodeobj to something?
-                nodegroup.add(nodeobj);
+                node_group.add(nodeobj);
 
             } //end i
         } //end j
@@ -394,7 +394,7 @@ void ModflowGrid::create_nodes()
     else
         add_connections();
 
-    nodegroup.get_box_index_array(); //this forces to build node number/id
+    node_group.get_box_index_array(); //this builds the box index and cell arrays
 }
 
 ///add connection between boxes
@@ -413,14 +413,14 @@ void ModflowGrid::add_connections_3d()
             {
                 int box_index = get_box_index(k, i, j);
 
-                Box * nodeobj = nodegroup[box_index];
+                Box * nodeobj = node_group[box_index];
 
                 if (i < last_row)
                 {
                     //make connection to front
                     int tonode = get_box_index(k, i + 1, j);
                     int fldir = -2;
-                    nodeobj->addConnection(nodegroup[tonode], fldir);
+                    nodeobj->add_connection(node_group[tonode], fldir);
                 }
 
                 if (i > 0)
@@ -428,7 +428,7 @@ void ModflowGrid::add_connections_3d()
                     //make connection to back
                     int tonode = get_box_index(k, i - 1, j);
                     int fldir = 2;
-                    nodeobj->addConnection(nodegroup[tonode], fldir);
+                    nodeobj->add_connection(node_group[tonode], fldir);
                 }
 
                 if (j < last_col)
@@ -436,7 +436,7 @@ void ModflowGrid::add_connections_3d()
                     //make connection to right
                     int tonode = get_box_index(k, i, j + 1);
                     int fldir = 1;
-                    nodeobj->addConnection(nodegroup[tonode], fldir);
+                    nodeobj->add_connection(node_group[tonode], fldir);
                 }
 
                 if (j > 0)
@@ -444,7 +444,7 @@ void ModflowGrid::add_connections_3d()
                     //make connection to left
                     int tonode = get_box_index(k, i, j - 1);
                     int fldir = -1;
-                    nodeobj->addConnection(nodegroup[tonode], fldir);
+                    nodeobj->add_connection(node_group[tonode], fldir);
                 }
 
                 if (k < last_lay)
@@ -452,7 +452,7 @@ void ModflowGrid::add_connections_3d()
                     //make connection down
                     int tonode = get_box_index(k + 1, i, j);
                     int fldir = -3;
-                    nodeobj->addConnection(nodegroup[tonode], fldir);
+                    nodeobj->add_connection(node_group[tonode], fldir);
                 }
 
                 if (k > 0)
@@ -460,7 +460,7 @@ void ModflowGrid::add_connections_3d()
                     //make connection up
                     int tonode = get_box_index(k - 1, i, j);
                     int fldir = 3;
-                    nodeobj->addConnection(nodegroup[tonode], fldir);
+                    nodeobj->add_connection(node_group[tonode], fldir);
                 }
 
             } //end j
