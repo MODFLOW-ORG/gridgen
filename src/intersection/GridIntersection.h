@@ -220,7 +220,7 @@ public:
     template <typename T> bool intersect(T * grid, /*const*/ GIS_Point2d & pt);
     template <typename T> bool intersect_segment(T * grid, /*const*/ GIS_LineSeg2d & line);
     template <typename T>
-    bool intersect(T * grid, /*const*/ GIS_polygon & ring, RingClipper * ring_clip = nullptr);
+    bool intersect(T * grid, /*const*/ GIS_polygon & polygon, RingClipper * ring_clip = nullptr);
 
     /// clip off a line segment if its end points are out side of the grid
     /// return false when the entire segment is outside of the grid
@@ -251,7 +251,7 @@ protected:
 
     //create information for intersection
     //the given box should be intersecting with the given geometry already
-    void buildIntersectionInfo(Box * box, const GIS_polygon & ring,
+    void buildIntersectionInfo(Box * box, const GIS_polygon & polygon,
                                vector<PolygonCellIntersectionInfo> & infoResult,
                                RingClipper * ring_clip = nullptr);
 
@@ -707,13 +707,13 @@ bool GridIntersection::intersect_segment(T * grid, /*const*/ GIS_LineSeg2d & lin
 }
 
 template <typename T>
-bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ring, RingClipper * ring_clip)
+bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & polygon, RingClipper * ring_clip)
 {
 
     list<Box *> bd_intersection;
     list<Box *> enclosed_intersection;
     bool found =
-        intersect(grid, (const Ring &)ring.front(), bd_intersection, enclosed_intersection);
+        intersect(grid, (const Ring &)polygon.front(), bd_intersection, enclosed_intersection);
 
     if (found)
     {
@@ -729,7 +729,7 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ring, RingCli
             {
                 //store intersection info here...
                 vector<PolygonCellIntersectionInfo> infos;
-                buildIntersectionInfo(box, ring, infos, ring_clip);
+                buildIntersectionInfo(box, polygon, infos, ring_clip);
                 m_polygon_intersection_info.insert(m_polygon_intersection_info.end(), infos.begin(),
                                                    infos.end());
             }
@@ -749,7 +749,7 @@ bool GridIntersection::intersect(T * grid, /*const*/ GIS_polygon & ring, RingCli
 
                     //store intersection info here...
                     vector<PolygonCellIntersectionInfo> infos;
-                    buildIntersectionInfo(i, ring, infos, ring_clip);
+                    buildIntersectionInfo(i, polygon, infos, ring_clip);
                     m_polygon_intersection_info.insert(m_polygon_intersection_info.end(),
                                                        infos.begin(), infos.end());
                 }

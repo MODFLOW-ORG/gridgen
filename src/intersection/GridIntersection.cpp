@@ -483,18 +483,18 @@ bool GridIntersection::intersect(Box * b, const LineSeg2d & line)
     return false;
 }
 
-void GridIntersection::buildIntersectionInfo(Box * box, const GIS_polygon & ring,
+void GridIntersection::buildIntersectionInfo(Box * box, const GIS_polygon & polygon,
                                              vector<PolygonCellIntersectionInfo> & infoResult,
                                              RingClipper * ring_clip)
 {
     vector<GIS_polygon *> result_polygons;
-    intersect_polygon(box, ring, result_polygons, ring_clip);
+    intersect_polygon(box, polygon, result_polygons, ring_clip);
     for (auto polygon_part : result_polygons)
     {
         PolygonCellIntersectionInfo info;
         info.m_interPolygon = polygon_part;
         info.box = box;
-        info.m_polyID = ring.m_id;
+        info.m_polyID = polygon.m_id;
         info.m_area = info.m_interPolygon->getArea();
 
         infoResult.push_back(info);

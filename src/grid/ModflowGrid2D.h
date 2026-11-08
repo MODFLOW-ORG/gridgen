@@ -90,8 +90,8 @@ public:
     int getYIndexByBinarySearch(const Point2d & pt, double * Ye, int left, int right,
                                 bool ascending);
 
-    /// return the box containing the given id
-    Box * find_nodeobj(int i, int j);
+    /// the box in row i, column j
+    Box * find_box(int i, int j);
 
     ///get box connections from id
     ///Return a sorted list of connections, where a connection is

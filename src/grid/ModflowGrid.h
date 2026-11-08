@@ -55,7 +55,8 @@ public:
     //a MODFLOW grid numbers its cells as its boxes
     Box * get_cell_box(int cell) override;
 
-    virtual Box * get_cell_box(int i, int j, int k);
+    //the box in layer k, row i, column j
+    virtual Box * get_cell_box(int k, int i, int j);
 
     ///get box connections from id
     ///Return a sorted list of connections, where a connection is

@@ -18,7 +18,7 @@ using uint = unsigned int;
 
 void ShapeReader::destroy()
 {
-    for (auto & ring : m_polygon_list) ring.destroy();
+    for (auto & polygon : m_polygon_list) polygon.destroy();
     for (auto & arc : m_arc_list) arc.destroy();
     m_polygon_list.clear();
     m_arc_list.clear();
@@ -514,7 +514,7 @@ void ShapeReader::readArc(SHPObject * psShape, int iShape)
             arc.computeGeodesicDist();
             m_arc_list.push_back(arc);
 
-            //create a new ring
+            //start a new polyline
             arc = GIS_polyline();
             arc.beginPoly();
         }

@@ -109,7 +109,7 @@ int * NodeGroup::get_box_index_array()
 }
 
 /*!
- * return a layer_cell_counts, which contains the number of
+ * return layer_cell_counts, which contains the number of
     nodes per layer:
     layer_cell_counts[layer] = nodes in layer
     This method numbers the nodes by layer, starting with the

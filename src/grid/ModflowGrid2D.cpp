@@ -211,8 +211,8 @@ Index2d ModflowGrid2D::get_indices(int box_index)
     return Index2d(i, j);
 }
 
-/// return the box containing the given id
-Box * ModflowGrid2D::find_nodeobj(int i, int j)
+/// the box in row i, column j
+Box * ModflowGrid2D::find_box(int i, int j)
 {
     //get the box
     int id = get_box_index(i, j);

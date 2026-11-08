@@ -90,9 +90,9 @@ Box * ModflowGrid::get_cell_box(int cell)
     return nodegroup[cell];
 }
 
-Box * ModflowGrid::get_cell_box(int i, int j, int k)
+Box * ModflowGrid::get_cell_box(int k, int i, int j)
 {
-    int id = get_box_index(i, j, k);
+    int id = get_box_index(k, i, j);
     return get_cell_box(id);
 }
 
@@ -158,6 +158,8 @@ list<pair<int, int>> ModflowGrid::get_node_connections(int box_index)
 CSRData ModflowGrid::get_usg_csr_data()
 {
     cout << "- Compute the cell connections" << endl;
+
+    //a MODFLOW grid numbers its cells as its boxes, so a box index is a cell
 
     int box_size = nodegroup.size();
 

@@ -104,7 +104,7 @@ public:
     //create a cell and return it
     ascii_grid_cell getCell(unsigned int i, unsigned int j) override
     {
-        Box * box = m_mfgrid->find_nodeobj(i, j);
+        Box * box = m_mfgrid->find_box(i, j);
         ascii_grid_cell cell;
         cell.dx = box->dx;
         cell.dy = box->dy;
@@ -116,12 +116,12 @@ public:
 
     double getX(unsigned int col) override
     {
-        Box * box = m_mfgrid->find_nodeobj(col, 0);
+        Box * box = m_mfgrid->find_box(col, 0);
         return box->x;
     }
     double getY(unsigned int row) override
     {
-        Box * box = m_mfgrid->find_nodeobj(0, row);
+        Box * box = m_mfgrid->find_box(0, row);
         return box->x;
     }
 

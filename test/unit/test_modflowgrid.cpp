@@ -147,7 +147,7 @@ TEST(ModflowGrid, NodeConnectionsMatchCsr)
 TEST(ModflowGrid, CellOutsideGridIsAnError)
 {
     std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 3, 4, 10.0, 10.0);
-    EXPECT_NE(mfgrid->find_nodeobj(2, 3), nullptr);
-    EXPECT_THROW(mfgrid->find_nodeobj(-1, 0), GridgenError);
-    EXPECT_THROW(mfgrid->find_nodeobj(3, 0), GridgenError);
+    EXPECT_NE(mfgrid->find_box(2, 3), nullptr);
+    EXPECT_THROW(mfgrid->find_box(-1, 0), GridgenError);
+    EXPECT_THROW(mfgrid->find_box(3, 0), GridgenError);
 }

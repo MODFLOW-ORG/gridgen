@@ -566,7 +566,7 @@ int * QuadTree3D::get_layer_cell_counts()
 /*!
 	\brief Create a cell_array of size nodegroup with the following:
 
-	node number is the id of the node in CSR or Coo array
+	a cell is the number of a node in the CSR or COO arrays
 
 	cell_array[box_index] = cell
 	*/

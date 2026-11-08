@@ -77,7 +77,7 @@ public:
     vector<ShapeLogField> & getLogicalFields() { return m_logFlds; }
 
 private:
-    void add_polygon(Ring & rings, int iShape);
+    void add_polygon(Ring & ring, int iShape);
 
     void read_polygon(SHPObject * psShape, int iShape);
     void readArc(SHPObject * psShape, int iShape);
