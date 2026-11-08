@@ -2,12 +2,16 @@
 #include <cmath>
 #include <functional>
 #include <list>
+#include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <gtest/gtest.h>
 
 #include "GridgenError.h"
+#include "Warnings.h"
 #include "def_parser.h"
 #include "def_struct.h"
 
@@ -497,4 +501,42 @@ TEST(DefinitionParser, QuadtreeExportWithoutTheRecordsIsNotReported)
     ASSERT_NE(data, nullptr);
     ASSERT_TRUE(data->initialize(parser.getBlockData()));
     EXPECT_TRUE(data->getWarnings().empty());
+}
+
+// a block of type T, named after its type, with no records
+template <typename T> std::unique_ptr<block_raw_data> empty_block(const std::string & type)
+{
+    block_raw_data block;
+    block.type = type;
+    block.name = type;
+    return std::make_unique<T>(block);
+}
+
+TEST(DefinitionParser, RunningABlockThatIsNotAnActionWarns)
+{
+    // running an object block writes nothing (#151); running an action does
+    std::vector<std::pair<std::unique_ptr<block_raw_data>, bool>> blocks;
+    blocks.emplace_back(empty_block<modflow_grid_raw_data>("modflow_grid"), false);
+    blocks.emplace_back(empty_block<quadtree_grid_raw_data>("quadtree"), false);
+    blocks.emplace_back(empty_block<refinement_raw_data>("refinement_features"), false);
+    blocks.emplace_back(empty_block<active_domain_raw_data>("active_domain"), false);
+    blocks.emplace_back(empty_block<quadtree_builder_raw_data>("quadtree_builder"), true);
+    blocks.emplace_back(empty_block<gridtoshape_raw_data>("grid_to_shapefile"), true);
+    blocks.emplace_back(empty_block<grid_to_usgdata_raw_data>("grid_to_usgdata"), true);
+    blocks.emplace_back(empty_block<gridtovtk_raw_data>("grid_to_vtkfile"), true);
+    blocks.emplace_back(empty_block<grid_intersection_raw_data>("grid_intersection"), true);
+    for (auto & [block, is_action] : blocks)
+    {
+        clear_warnings();
+        block->warnIfNotAction();
+        if (is_action)
+        {
+            EXPECT_TRUE(get_warnings().empty()) << block->label();
+            continue;
+        }
+        ASSERT_EQ(get_warnings().size(), 1u) << block->label();
+        EXPECT_EQ(get_warnings()[0].rfind(block->label() + " is not an action", 0), 0u)
+            << get_warnings()[0];
+    }
+    clear_warnings();
 }
