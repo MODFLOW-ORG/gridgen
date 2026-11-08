@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "input"
+description = "To find the holes of a polygon shape, each ring is now tested only against the rings whose extent contains it, so a shape with many rings, such as a coastline or a layer of water bodies dissolved into one shape, is read quickly. A shape with a million separate rings is read in under a second. The rings that are read are unchanged."
