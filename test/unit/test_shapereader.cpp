@@ -136,7 +136,8 @@ TEST(ShapeReader, PolygonWithManyRingsFindsEachHole)
 {
     // a 30 by 30 block of outer rings, two of every three with a hole and an
     // island in the hole, written in scrambled order, so each outer ring is a
-    // polygon with its own hole and each island is a polygon
+    // polygon with its own hole and each island is a polygon, in the order
+    // they were written
     const int side = 30;
     std::vector<Part> rings;
     std::map<std::pair<double, double>, std::pair<double, double>> hole_of;
@@ -152,7 +153,13 @@ TEST(ShapeReader, PolygonWithManyRingsFindsEachHole)
         islands.insert({x0 + 4, y0 + 4});
     }
     std::vector<Part> scrambled;
-    for (size_t i = 0; i < rings.size(); i++) scrambled.push_back(rings[(i * 7919) % rings.size()]);
+    std::vector<std::pair<double, double>> polygon_order; // outer rings and islands, as written
+    for (size_t i = 0; i < rings.size(); i++)
+    {
+        scrambled.push_back(rings[(i * 7919) % rings.size()]);
+        const Part & ring = scrambled.back();
+        if (ring.x[2] - ring.x[0] != 5) polygon_order.push_back({ring.x[0], ring.y[0]});
+    }
     std::string path = testing::TempDir() + "gridgen_unit_many_rings";
     write_polygon(path, scrambled);
 
@@ -161,9 +168,11 @@ TEST(ShapeReader, PolygonWithManyRingsFindsEachHole)
     std::vector<GIS_polygon> & polygons = reader.getPolyList();
     ASSERT_EQ(polygons.size(), static_cast<size_t>(side * side) + islands.size());
     size_t nholes = 0, nislands = 0;
-    for (GIS_polygon & polygon : polygons)
+    for (size_t i = 0; i < polygons.size(); i++)
     {
+        GIS_polygon & polygon = polygons[i];
         auto corner = lower_left(polygon.front());
+        EXPECT_EQ(corner, polygon_order[i]) << "polygon " << i;
         EXPECT_EQ(polygon.front().getType(), c_ply::POUT);
         if (islands.count(corner))
         {

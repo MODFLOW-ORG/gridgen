@@ -325,12 +325,14 @@ private:
     //add the node bounding the boxes order[begin, end) and the nodes below it
     int build(size_t begin, size_t end)
     {
-        Box bounds = boxes[order[begin]];
-        for (size_t j = begin + 1; j < end; j++)
+        //fmin and fmax skip a coordinate that is not a number, so such a box
+        //does not hide the boxes beside it
+        Box bounds = {HUGE_VAL, -HUGE_VAL, HUGE_VAL, -HUGE_VAL};
+        for (size_t j = begin; j < end; j++)
         {
             const Box & box = boxes[order[j]];
-            bounds = {min(bounds[0], box[0]), max(bounds[1], box[1]), min(bounds[2], box[2]),
-                      max(bounds[3], box[3])};
+            bounds = {fmin(bounds[0], box[0]), fmax(bounds[1], box[1]), fmin(bounds[2], box[2]),
+                      fmax(bounds[3], box[3])};
         }
         int index = static_cast<int>(nodes.size());
         nodes.push_back({bounds, begin, end, -1, -1});
