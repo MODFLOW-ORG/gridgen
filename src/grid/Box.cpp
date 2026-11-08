@@ -77,7 +77,7 @@ BoxIter::BoxIter(const Box * starting_node, int direction)
 {
     m_prev = (direction + 3) % 4;
     m_next = (direction + 1) % 4;
-    m_cross = (direction + 2) % 4;
+    m_opposite = (direction + 2) % 4;
 }
 
 /*! \brief Returns the first box in the node walk.
@@ -143,11 +143,11 @@ Box * BoxIter::first()
         while (true)
         {
             assert(n != nullptr);
-            if (n->p_children[m_cross] == m_start_box)
+            if (n->p_children[m_opposite] == m_start_box)
             {
                 break;
             }
-            n = n->p_children[m_cross];
+            n = n->p_children[m_opposite];
         }
     }
 

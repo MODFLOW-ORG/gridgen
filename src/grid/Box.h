@@ -63,7 +63,7 @@ private:
     int m_direction;
     int m_prev;
     int m_next;
-    int m_cross;
+    int m_opposite;
 
     Box * m_neighbor;
 }; //class BoxIter
