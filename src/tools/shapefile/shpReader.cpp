@@ -8,6 +8,7 @@
 #include <array>
 #include <cmath>
 #include <cassert>
+#include <numeric>
 using namespace std;
 
 namespace cusg
@@ -261,6 +262,100 @@ static bool ringInRing(const vector<Point2d> & a, const vector<Point2d> & b)
     return false; //a lies on b
 }
 
+using Box = array<double, 4>; //xmin, xmax, ymin, ymax
+
+//whether box outer holds box inner
+static bool boxHolds(const Box & outer, const Box & inner)
+{
+    return outer[0] <= inner[0] && inner[1] <= outer[1] && outer[2] <= inner[2] &&
+           inner[3] <= outer[3];
+}
+
+//a tree of boxes that finds the boxes holding a given box without testing
+//every box; each node bounds a run of the boxes, split in two at the median
+//center along its longer side
+class BoxTree
+{
+public:
+    explicit BoxTree(const vector<Box> & boxes) : boxes(boxes), order(boxes.size())
+    {
+        iota(order.begin(), order.end(), 0);
+        if (!boxes.empty()) build(0, order.size());
+    }
+
+    //the indices of the boxes that hold box query, in ascending order
+    vector<size_t> holding(const Box & query) const
+    {
+        vector<size_t> found, stack;
+        if (!nodes.empty()) stack.push_back(0);
+        while (!stack.empty())
+        {
+            const Node & node = nodes[stack.back()];
+            stack.pop_back();
+            //no box in a node can hold a box its bounds do not
+            if (!boxHolds(node.bounds, query)) continue;
+            if (node.left < 0)
+            {
+                for (size_t j = node.begin; j < node.end; j++)
+                    if (boxHolds(boxes[order[j]], query)) found.push_back(order[j]);
+            }
+            else
+            {
+                stack.push_back(node.left);
+                stack.push_back(node.right);
+            }
+        }
+        sort(found.begin(), found.end());
+        return found;
+    }
+
+private:
+    struct Node
+    {
+        Box bounds;
+        size_t begin, end; //the run of order the node bounds
+        int left, right;   //the child nodes, or -1 for a leaf
+    };
+
+    static const size_t leaf_size = 8;
+    const vector<Box> & boxes;
+    vector<size_t> order;
+    vector<Node> nodes;
+
+    //add the node bounding the boxes order[begin, end) and the nodes below it
+    int build(size_t begin, size_t end)
+    {
+        //fmin and fmax skip a coordinate that is not a number, so such a box
+        //does not hide the boxes beside it
+        Box bounds = {HUGE_VAL, -HUGE_VAL, HUGE_VAL, -HUGE_VAL};
+        for (size_t j = begin; j < end; j++)
+        {
+            const Box & box = boxes[order[j]];
+            bounds = {fmin(bounds[0], box[0]), fmax(bounds[1], box[1]), fmin(bounds[2], box[2]),
+                      fmax(bounds[3], box[3])};
+        }
+        int index = static_cast<int>(nodes.size());
+        nodes.push_back({bounds, begin, end, -1, -1});
+        if (end - begin <= leaf_size) return index;
+
+        int axis = bounds[1] - bounds[0] >= bounds[3] - bounds[2] ? 0 : 2;
+        size_t middle = begin + (end - begin) / 2;
+        //a coordinate that is not a number sorts first, so the order is strict
+        auto center = [&](size_t i)
+        {
+            double sum = boxes[i][axis] + boxes[i][axis + 1];
+            return isnan(sum) ? -HUGE_VAL : sum;
+        };
+        nth_element(order.begin() + begin, order.begin() + middle, order.begin() + end,
+                    [&](size_t a, size_t b) { return center(a) < center(b); });
+        int left = build(begin, middle);
+        int right = build(middle, end);
+        nodes[index].left = left;
+        nodes[index].right = right;
+        return index;
+    }
+};
+
 void ShapeReader::readPly(SHPObject * psShape, int iShape)
 {
     //the vertices of each part
@@ -293,7 +388,7 @@ void ShapeReader::readPly(SHPObject * psShape, int iShape)
     //order and orientation of the rings
     size_t nrings = rings.size();
     vector<int> depth(nrings, 0), parent(nrings, -1);
-    vector<array<double, 4>> box(nrings); //xmin, xmax, ymin, ymax
+    vector<Box> box(nrings);
     for (size_t i = 0; i < nrings; i++)
     {
         box[i] = {rings[i][0][0], rings[i][0][0], rings[i][0][1], rings[i][0][1]};
@@ -306,15 +401,13 @@ void ShapeReader::readPly(SHPObject * psShape, int iShape)
         }
     }
     auto extent = [&](size_t i) { return (box[i][1] - box[i][0]) * (box[i][3] - box[i][2]); };
+    BoxTree tree(box);
     for (size_t i = 0; i < nrings; i++)
     {
-        for (size_t k = 0; k < nrings; k++)
+        //ring k can contain ring i only if its box holds the box of ring i
+        for (size_t k : tree.holding(box[i]))
         {
-            //ring k can contain ring i only if its box holds the box of ring i
-            if (k == i || box[i][0] < box[k][0] || box[i][1] > box[k][1] || box[i][2] < box[k][2] ||
-                box[i][3] > box[k][3])
-                continue;
-            if (!ringInRing(rings[i], rings[k])) continue;
+            if (k == i || !ringInRing(rings[i], rings[k])) continue;
             depth[i]++;
             if (parent[i] < 0 || extent(k) < extent(parent[i])) parent[i] = static_cast<int>(k);
         }
