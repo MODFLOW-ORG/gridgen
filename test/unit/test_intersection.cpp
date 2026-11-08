@@ -35,11 +35,11 @@ c_polygon make_polygon(const std::vector<XY> & outer,
     c_polygon polygon;
     for (std::size_t r = 0; r <= holes.size(); r++)
     {
-        c_ply ply(r == 0 ? c_ply::POUT : c_ply::PIN);
-        ply.beginPoly();
-        for (const XY & v : (r == 0 ? outer : holes[r - 1])) ply.addVertex(v.x, v.y);
-        ply.endPoly();
-        polygon.push_back(ply);
+        Ring ring(r == 0 ? Ring::POUT : Ring::PIN);
+        ring.beginPoly();
+        for (const XY & v : (r == 0 ? outer : holes[r - 1])) ring.addVertex(v.x, v.y);
+        ring.endPoly();
+        polygon.push_back(ring);
     }
     polygon.buildBoxAndCenter();
     return polygon;
@@ -155,11 +155,11 @@ std::map<Box *, double> polygon_areas(T * grid, const std::vector<XY> & outer,
 {
     GIS_polygon polygon;
     static_cast<c_polygon &>(polygon) = make_polygon(outer, holes);
-    BoxPlyClip * ply_clip = convertCPolygonToClip(polygon);
+    RingClipper * ring_clip = convertCPolygonToClip(polygon);
 
     GridIntersection gi(0, 0);
     gi.set_save_intersection_info(true);
-    gi.intersect(grid, polygon, ply_clip);
+    gi.intersect(grid, polygon, ring_clip);
 
     std::map<Box *, double> areas;
     for (const PolygonCellIntersectionInfo & info : gi.getPolygonIntersectionInfo())
@@ -169,8 +169,8 @@ std::map<Box *, double> polygon_areas(T * grid, const std::vector<XY> & outer,
                 << "cell at " << info.box->x << ", " << info.box->y;
         areas[info.box] += info.m_area;
     }
-    ply_clip->destroy();
-    delete ply_clip;
+    ring_clip->destroy();
+    delete ring_clip;
     polygon.destroy();
     return areas;
 }
@@ -311,7 +311,7 @@ TEST(GridIntersection, LineAlongGridLine)
     // on both sides of it (#109)
     std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 10, 10, 10.0, 10.0);
     GridIntersection gi(0, 0);
-    gi.intersect(mfgrid.get(), LineSeg2d(95.0, 60.0, 30.0, 60.0));
+    gi.intersect_segment(mfgrid.get(), LineSeg2d(95.0, 60.0, 30.0, 60.0));
     expect_each_cell_once(gi.getIntersections(), 14);
 }
 
@@ -326,16 +326,16 @@ TEST(GridIntersection, OutputShapefileRingsAreClosedAndOriented)
     std::reverse(hole.begin(), hole.end());
     GIS_polygon polygon;
     static_cast<c_polygon &>(polygon) = make_polygon(square(5.0, 95.0), {hole});
-    BoxPlyClip * ply_clip = convertCPolygonToClip(polygon);
+    RingClipper * ring_clip = convertCPolygonToClip(polygon);
     GridIntersection gi(0, 0);
     gi.set_save_intersection_info(true);
-    gi.intersect(mfgrid.get(), polygon, ply_clip);
+    gi.intersect(mfgrid.get(), polygon, ring_clip);
 
     std::string path = testing::TempDir() + "gridgen_unit_rings";
     std::vector<std::string> attributes;
     writePolyIntersect(&gi, path, attributes, WRITE_SHP);
-    ply_clip->destroy();
-    delete ply_clip;
+    ring_clip->destroy();
+    delete ring_clip;
     polygon.destroy();
 
     SHPHandle shp = SHPOpen(path.c_str(), "rb");

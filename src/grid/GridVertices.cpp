@@ -60,7 +60,7 @@ GridVertices::GridVertices(Grid * grid)
         for (int r = 0; r < nrow; r++)
             for (int c = 0; c < ncol; c++)
             {
-                Box * root = grid->nodegroup[mfgrid->get_nodeid(k, r, c)];
+                Box * root = grid->nodegroup[mfgrid->get_box_index(k, r, c)];
                 add_box(root, c, nrow - 1 - r, 0, 0, 0);
             }
 }

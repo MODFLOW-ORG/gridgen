@@ -1,5 +1,5 @@
 intersection_sources = files(
-    'BoxPlyClip.cpp',
+    'RingClipper.cpp',
     'GridIntersection.cpp',
     'PolygonChecker.cpp',
     'intersection.h',

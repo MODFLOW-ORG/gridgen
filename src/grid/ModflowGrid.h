@@ -35,7 +35,7 @@ namespace cusg
 class ModflowGrid : public ModflowGrid2D
 {
 public:
-    ModflowGrid(const modflow_grid_raw_data & rawdata);
+    ModflowGrid(const ModflowGridBlock & rawdata);
 
     ModflowGrid(int lay, int row, int col, double delr, double delc, vector<double *> & bot,
                 double xoffset, double yoffset, double angle);
@@ -45,23 +45,22 @@ public:
     /// Return a numpy array of size (nodes) that contains the area for all cells.
     vector<double> get_cell_areas() override;
 
-    ///Return the nodeid for the modflow grid.
-    virtual int get_nodeid(int k, int i, int j);
+    ///Return the box_index for the modflow grid.
+    virtual int get_box_index(int k, int i, int j);
 
-    virtual int getFirstNLayer();
-
-    ///Return the 3D indices for the specified nodeid.
-    Index3d get_indices(int nodeid);
+    ///Return the 3D indices for the specified box_index.
+    Index3d get_indices(int box_index);
 
     ///get box from id
-    Box * get_nodeobj(int nodeid) override;
+    //a MODFLOW grid numbers its cells as its boxes
+    Box * get_cell_box(int cell) override;
 
-    virtual Box * get_nodeobj(int i, int j, int k);
+    virtual Box * get_cell_box(int i, int j, int k);
 
     ///get box connections from id
     ///Return a sorted list of connections, where a connection is
-    ///a list [tonodeid, fldir].  fldir is -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z.
-    list<pair<int, int>> get_node_connections(int nodeid) override;
+    ///a list [to_box_index, fldir].  fldir is -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z.
+    list<pair<int, int>> get_node_connections(int cell) override;
 
     /*! \brief Obtain CSRData
 
@@ -76,7 +75,7 @@ public:
     void number_nodes() override;
 
     ////rotate all the boxes
-    void getRotatePara(double & cx, double & cy, double & angle)
+    void get_rotation(double & cx, double & cy, double & angle)
     {
         cx = this->X[0] - 0.5 * delr[0];
         cy = this->Y[nrow - 1] - 0.5 * delc[nrow - 1];

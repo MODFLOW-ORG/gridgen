@@ -84,7 +84,7 @@ void write_polygon(const std::string & path, const std::vector<Part> & rings)
 }
 
 // the lower left corner of a ring
-std::pair<double, double> lower_left(c_ply & ring)
+std::pair<double, double> lower_left(Ring & ring)
 {
     double x = ring[0]->getPos()[0], y = ring[0]->getPos()[1];
     for (int i = 1; i < ring.getSize(); i++)
@@ -126,8 +126,8 @@ TEST(ShapeReader, MultipatchRingsAreReadAsPolygonsWithHoles)
     {
         EXPECT_EQ(polygons[i].m_id, shapes[i]);
         ASSERT_EQ(polygons[i].size(), rings[i]) << "polygon " << i;
-        EXPECT_EQ(polygons[i].front().getType(), c_ply::POUT) << "polygon " << i;
-        if (rings[i] == 2) EXPECT_EQ(polygons[i].back().getType(), c_ply::PIN) << "polygon " << i;
+        EXPECT_EQ(polygons[i].front().getType(), Ring::POUT) << "polygon " << i;
+        if (rings[i] == 2) EXPECT_EQ(polygons[i].back().getType(), Ring::PIN) << "polygon " << i;
     }
     EXPECT_TRUE(reader.getArcList().empty());
 }
@@ -173,7 +173,7 @@ TEST(ShapeReader, PolygonWithManyRingsFindsEachHole)
         GIS_polygon & polygon = polygons[i];
         auto corner = lower_left(polygon.front());
         EXPECT_EQ(corner, polygon_order[i]) << "polygon " << i;
-        EXPECT_EQ(polygon.front().getType(), c_ply::POUT);
+        EXPECT_EQ(polygon.front().getType(), Ring::POUT);
         if (islands.count(corner))
         {
             EXPECT_EQ(polygon.size(), 1u);
@@ -187,7 +187,7 @@ TEST(ShapeReader, PolygonWithManyRingsFindsEachHole)
             continue;
         }
         ASSERT_EQ(polygon.size(), 2u);
-        EXPECT_EQ(polygon.back().getType(), c_ply::PIN);
+        EXPECT_EQ(polygon.back().getType(), Ring::PIN);
         EXPECT_EQ(lower_left(polygon.back()), hole->second);
         nholes++;
     }

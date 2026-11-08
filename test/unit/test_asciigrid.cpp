@@ -39,7 +39,7 @@ std::string write_asc(const std::string & name, int r0, int r1, int c0, int c1)
 std::unique_ptr<QuadTree3D> qtree_over(const std::string & path)
 {
     std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 4, 4, 15.0, 15.0), {});
-    qtree->setBotOperators(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
+    qtree->set_bottom_operator(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
     qtree->setBotSource(0, path);
     return qtree;
 }
@@ -86,7 +86,7 @@ TEST(AsciiGrid, NodataAreaIsLeftOutOfAverage)
     }
     std::unique_ptr<QuadTree3D> qtree = qtree_over(path);
     double * bot = qtree->get_bot();
-    Box * b = qtree->get_nodeobj(0);
+    Box * b = qtree->get_cell_box(0);
     ASSERT_DOUBLE_EQ(b->x, 7.5);
     ASSERT_DOUBLE_EQ(b->y, 52.5);
     EXPECT_DOUBLE_EQ(bot[0], 1.25);
@@ -161,12 +161,12 @@ TEST(AsciiGrid, AverageCoversCellThatIsNotSquare)
         SCOPED_TRACE("delr " + std::to_string(s.delr) + ", delc " + std::to_string(s.delc));
         std::unique_ptr<QuadTree3D> qtree =
             make_qtree(make_mfgrid(1, s.nrow, s.ncol, s.delr, s.delc), {});
-        qtree->setBotOperators(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
+        qtree->set_bottom_operator(0, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
         qtree->setBotSource(0, path);
         double * bot = qtree->get_bot();
         for (int n = 0; n < qtree->nodes(); n++)
         {
-            Box * b = qtree->get_nodeobj(n);
+            Box * b = qtree->get_cell_box(n);
             EXPECT_NEAR(bot[n], b->x / 10.0 + 55.5 - b->y, 1e-9) << "cell " << n;
         }
     }

@@ -29,7 +29,7 @@ namespace cusg
     
 */
 
-ModflowGrid::ModflowGrid(const modflow_grid_raw_data & rawdata)
+ModflowGrid::ModflowGrid(const ModflowGridBlock & rawdata)
     : ModflowGrid2D(rawdata.nrow, rawdata.ncol, rawdata.delr, rawdata.delc, rawdata.x_offset,
                     rawdata.y_offset, rawdata.rotation_angle)
 {
@@ -54,8 +54,8 @@ vector<double> ModflowGrid::get_cell_areas()
         {
             for (int j = 0; j < ncol; j++)
             {
-                int nodeid = get_nodeid(k, i, j);
-                area[nodeid] = delr[j] * delc[i];
+                int box_index = get_box_index(k, i, j);
+                area[box_index] = delr[j] * delc[i];
             } //end j
         } //end i
     } //end k
@@ -63,52 +63,46 @@ vector<double> ModflowGrid::get_cell_areas()
     return area;
 }
 
-///Return the nodeid for the modflow grid.
-int ModflowGrid::get_nodeid(int k, int i, int j)
+///Return the box_index for the modflow grid.
+int ModflowGrid::get_box_index(int k, int i, int j)
 {
     return k * nrow * ncol + i * ncol + j;
 }
 
-int ModflowGrid::getFirstNLayer()
-{
-    return 0;
-}
-
-///Return the 3D indices for the specified nodeid.
-Index3d ModflowGrid::get_indices(int nodeid)
+///Return the 3D indices for the specified box_index.
+Index3d ModflowGrid::get_indices(int box_index)
 {
 
-    if (nodeid >= (nlay * nrow * ncol))
+    if (box_index >= (nlay * nrow * ncol))
     {
-        throw GridgenError("internal error: cell " + to_string(nodeid) + " is not in the grid");
+        throw GridgenError("internal error: cell " + to_string(box_index) + " is not in the grid");
     }
 
-    int k = int(nodeid / nrow / ncol);
-    int i = int((nodeid - k * nrow * ncol) / ncol);
-    int j = nodeid - k * nrow * ncol - i * ncol;
+    int k = int(box_index / nrow / ncol);
+    int i = int((box_index - k * nrow * ncol) / ncol);
+    int j = box_index - k * nrow * ncol - i * ncol;
 
     return Index3d(k, i, j);
 }
 
-///get box from id
-Box * ModflowGrid::get_nodeobj(int nodeid)
+Box * ModflowGrid::get_cell_box(int cell)
 {
-    return nodegroup[nodeid];
+    return nodegroup[cell];
 }
 
-Box * ModflowGrid::get_nodeobj(int i, int j, int k)
+Box * ModflowGrid::get_cell_box(int i, int j, int k)
 {
-    int id = get_nodeid(i, j, k);
-    return get_nodeobj(id);
+    int id = get_box_index(i, j, k);
+    return get_cell_box(id);
 }
 
 ///get box connections from id
 ///Return a sorted list of connections, where a connection is
-///a list [tonodeid, fldir].  fldir is -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z.
-list<pair<int, int>> ModflowGrid::get_node_connections(int nodeid)
+///a list [to_box_index, fldir].  fldir is -1, +1, -2, +2, -3, +3 for -x, +x, -y, +y, -z, +z.
+list<pair<int, int>> ModflowGrid::get_node_connections(int box_index)
 {
     list<pair<int, int>> connections;
-    Index3d kij = get_indices(nodeid);
+    Index3d kij = get_indices(box_index);
     int k = kij[0];
     int i = kij[1];
     int j = kij[2];
@@ -116,38 +110,38 @@ list<pair<int, int>> ModflowGrid::get_node_connections(int nodeid)
     //up
     if (k > 0)
     {
-        int nn = get_nodeid(k - 1, i, j);
+        int nn = get_box_index(k - 1, i, j);
         connections.push_back(make_pair(nn, 3));
     }
 
     //back
     if (i > 0)
     {
-        int nn = get_nodeid(k, i - 1, j);
+        int nn = get_box_index(k, i - 1, j);
         connections.push_back(make_pair(nn, 2));
     }
     //left
     if (j > 0)
     {
-        int nn = get_nodeid(k, i, j - 1);
+        int nn = get_box_index(k, i, j - 1);
         connections.push_back(make_pair(nn, -1));
     }
     //right
     if (j < ncol - 1)
     {
-        int nn = get_nodeid(k, i, j + 1);
+        int nn = get_box_index(k, i, j + 1);
         connections.push_back(make_pair(nn, 1));
     }
     //front
     if (i < nrow - 1)
     {
-        int nn = get_nodeid(k, i + 1, j);
+        int nn = get_box_index(k, i + 1, j);
         connections.push_back(make_pair(nn, -2));
     }
     //down
     if (k < nlay - 1)
     {
-        int nn = get_nodeid(k + 1, i, j);
+        int nn = get_box_index(k + 1, i, j);
         connections.push_back(make_pair(nn, -3));
     }
 
@@ -184,7 +178,7 @@ CSRData ModflowGrid::get_usg_csr_data()
 
     //Go through each connection and fill the arrays.
     int japos = 0;
-    int nodenumber = 0;
+    int cell = 0;
     double dz = 1.0;
 
     for (int k = 0; k < nlay; k++)
@@ -194,13 +188,13 @@ CSRData ModflowGrid::get_usg_csr_data()
             for (int j = 0; j < ncol; j++)
             {
                 //diagonal position
-                ia[nodenumber] = japos + 1;
-                ja[japos] = nodenumber + 1;
+                ia[cell] = japos + 1;
+                ja[japos] = cell + 1;
                 cl1[japos] = 0;
                 cl2[japos] = 0;
                 fahl[japos] = 0;
                 fldr[japos] = 0;
-                iac[nodenumber] = 1;
+                iac[cell] = 1;
                 japos += 1;
 
                 double dzkij = 0;
@@ -212,91 +206,91 @@ CSRData ModflowGrid::get_usg_csr_data()
 
                 if (k > 0) //up
                 {
-                    int tonodenumber = get_nodeid(k - 1, i, j);
-                    ja[japos] = tonodenumber + 1;
+                    int to_cell = get_box_index(k - 1, i, j);
+                    ja[japos] = to_cell + 1;
                     fldr[japos] = +3;
                     cl1[japos] = 0.5 * (botm(k, i, j) - botm(k + 1, i, j));
                     cl2[japos] = 0.5 * (botm(k - 1, i, j) - botm(k, i, j));
                     fahl[japos] = delr[j] * delc[i];
-                    iac[nodenumber]++;
+                    iac[cell]++;
                     japos += 1;
                 }
 
                 if (i > 0) //back
                 {
-                    int tonodenumber = get_nodeid(k, i - 1, j);
-                    ja[japos] = tonodenumber + 1;
+                    int to_cell = get_box_index(k, i - 1, j);
+                    ja[japos] = to_cell + 1;
                     fldr[japos] = +2;
                     cl1[japos] = 0.5 * (delc[i]);
                     cl2[japos] = 0.5 * (delc[i - 1]);
                     if (is3d) dz = 0.5 * (botm(k, i - 1, j) - botm(k + 1, i - 1, j) + dzkij);
 
                     fahl[japos] = delr[j] * dz;
-                    iac[nodenumber]++;
+                    iac[cell]++;
                     japos += 1;
                 }
 
                 if (j > 0) //left
                 {
-                    int tonodenumber = get_nodeid(k, i, j - 1);
-                    ja[japos] = tonodenumber + 1;
+                    int to_cell = get_box_index(k, i, j - 1);
+                    ja[japos] = to_cell + 1;
                     fldr[japos] = -1;
                     cl1[japos] = 0.5 * (delr[j]);
                     cl2[japos] = 0.5 * (delr[j - 1]);
                     if (is3d) dz = 0.5 * (botm(k, i, j - 1) - botm(k + 1, i, j - 1) + dzkij);
 
                     fahl[japos] = delc[i] * dz;
-                    iac[nodenumber]++;
+                    iac[cell]++;
                     japos += 1;
                 }
 
                 if (j < ncol - 1) //right
                 {
-                    int tonodenumber = get_nodeid(k, i, j + 1);
-                    ja[japos] = tonodenumber + 1;
+                    int to_cell = get_box_index(k, i, j + 1);
+                    ja[japos] = to_cell + 1;
                     fldr[japos] = +1;
                     cl1[japos] = 0.5 * (delr[j]);
                     cl2[japos] = 0.5 * (delr[j + 1]);
                     if (is3d) dz = 0.5 * (botm(k, i, j + 1) - botm(k + 1, i, j + 1) + dzkij);
 
                     fahl[japos] = delc[i] * dz;
-                    iac[nodenumber]++;
+                    iac[cell]++;
                     japos += 1;
                 }
 
                 if (i < nrow - 1) //front
                 {
-                    int tonodenumber = get_nodeid(k, i + 1, j);
-                    ja[japos] = tonodenumber + 1;
+                    int to_cell = get_box_index(k, i + 1, j);
+                    ja[japos] = to_cell + 1;
                     fldr[japos] = -2;
                     cl1[japos] = 0.5 * (delc[i]);
                     cl2[japos] = 0.5 * (delc[i + 1]);
                     if (is3d) dz = 0.5 * (botm(k, i + 1, j) - botm(k + 1, i + 1, j) + dzkij);
 
                     fahl[japos] = delr[j] * dz;
-                    iac[nodenumber]++;
+                    iac[cell]++;
                     japos += 1;
                 }
 
                 if (k < nlay - 1) //down
                 {
-                    int tonodenumber = get_nodeid(k + 1, i, j);
-                    ja[japos] = tonodenumber + 1;
+                    int to_cell = get_box_index(k + 1, i, j);
+                    ja[japos] = to_cell + 1;
                     fldr[japos] = -3;
                     cl1[japos] = 0.5 * (botm(k, i, j) - botm(k + 1, i, j));
                     cl2[japos] = 0.5 * (botm(k + 1, i, j) - botm(k + 2, i, j));
                     fahl[japos] = delr[j] * delc[i];
-                    iac[nodenumber]++;
+                    iac[cell]++;
                     japos += 1;
                 }
 
-                nodenumber += 1;
+                cell += 1;
 
             } //end for j
         } //end for i
     } //end for k
 
-    ia[nodenumber] = japos + 1;
+    ia[cell] = japos + 1;
 
     return CSRData(nodes, nja, std::move(area), std::move(ia), std::move(ja), std::move(cl1),
                    std::move(cl2), std::move(fahl), std::move(fldr), std::move(iac));
@@ -312,7 +306,7 @@ void ModflowGrid::number_nodes()
         {
             for (int c = 0; c < ncol; c++)
             {
-                int bid = get_nodeid(l, r, c);
+                int bid = get_box_index(l, r, c);
                 Box * box = nodegroup[bid];
                 if (box->active) box->number = number++;
             } //end c
@@ -398,7 +392,7 @@ void ModflowGrid::create_nodes()
     else
         add_connections();
 
-    nodegroup.get_nodeid_array(); //this forces to build node number/id
+    nodegroup.get_box_index_array(); //this forces to build node number/id
 }
 
 ///add connection between boxes
@@ -415,14 +409,14 @@ void ModflowGrid::add_connections_3d()
         {
             for (int j = 0; j < ncol; j++)
             {
-                int nodeid = get_nodeid(k, i, j);
+                int box_index = get_box_index(k, i, j);
 
-                Box * nodeobj = nodegroup[nodeid];
+                Box * nodeobj = nodegroup[box_index];
 
                 if (i < last_row)
                 {
                     //make connection to front
-                    int tonode = get_nodeid(k, i + 1, j);
+                    int tonode = get_box_index(k, i + 1, j);
                     int fldir = -2;
                     nodeobj->addConnection(nodegroup[tonode], fldir);
                 }
@@ -430,7 +424,7 @@ void ModflowGrid::add_connections_3d()
                 if (i > 0)
                 {
                     //make connection to back
-                    int tonode = get_nodeid(k, i - 1, j);
+                    int tonode = get_box_index(k, i - 1, j);
                     int fldir = 2;
                     nodeobj->addConnection(nodegroup[tonode], fldir);
                 }
@@ -438,7 +432,7 @@ void ModflowGrid::add_connections_3d()
                 if (j < last_col)
                 {
                     //make connection to right
-                    int tonode = get_nodeid(k, i, j + 1);
+                    int tonode = get_box_index(k, i, j + 1);
                     int fldir = 1;
                     nodeobj->addConnection(nodegroup[tonode], fldir);
                 }
@@ -446,7 +440,7 @@ void ModflowGrid::add_connections_3d()
                 if (j > 0)
                 {
                     //make connection to left
-                    int tonode = get_nodeid(k, i, j - 1);
+                    int tonode = get_box_index(k, i, j - 1);
                     int fldir = -1;
                     nodeobj->addConnection(nodegroup[tonode], fldir);
                 }
@@ -454,7 +448,7 @@ void ModflowGrid::add_connections_3d()
                 if (k < last_lay)
                 {
                     //make connection down
-                    int tonode = get_nodeid(k + 1, i, j);
+                    int tonode = get_box_index(k + 1, i, j);
                     int fldir = -3;
                     nodeobj->addConnection(nodegroup[tonode], fldir);
                 }
@@ -462,7 +456,7 @@ void ModflowGrid::add_connections_3d()
                 if (k > 0)
                 {
                     //make connection up
-                    int tonode = get_nodeid(k - 1, i, j);
+                    int tonode = get_box_index(k - 1, i, j);
                     int fldir = 3;
                     nodeobj->addConnection(nodegroup[tonode], fldir);
                 }

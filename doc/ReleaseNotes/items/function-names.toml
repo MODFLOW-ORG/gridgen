@@ -1,0 +1,3 @@
+section = "internal"
+subsection = ""
+description = "Functions and classes in the C++ source are named for what they do. The two cell numberings have one name each, a closed ring of a polygon is called a ring rather than a ply, the classes that hold a block of the definition file are named after the block, and the shapefile and VTK writers are one function each for both grid types. The program and its output are unchanged."

@@ -37,8 +37,8 @@ TEST(GridDomain, PolygonEnclosingGridActivatesEveryCell)
         make_qtree(make_mfgrid(2, 100, 58, 800.0, 800.0, 10.0, 543750.0, 2792250.0),
                    {{567000.0, 2830000.0, 2, 1}}, true);
 
-    block_raw_data block;
-    active_domain_raw_data domain(block);
+    DefinitionBlock block;
+    ActiveDomainBlock domain(block);
     domain.shapefile = std::string(GRIDGEN_TEST_DIR) + "/shapefiles/enclosing_domain";
     domain.feature_type = "polygon";
 

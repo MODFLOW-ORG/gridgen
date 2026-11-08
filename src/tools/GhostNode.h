@@ -23,7 +23,7 @@ struct GhostNode
 };
 
 //compute the ghost node for QuadTree3D grid
-void computeGNC(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes);
+void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes);
 
 //write ghost node
 void writeGhostNode(string filePath, vector<GhostNode> & ghost_nodes, int offset);

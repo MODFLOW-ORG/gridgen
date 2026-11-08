@@ -64,7 +64,7 @@ inline void refine_qtree(QuadTree3D * qtree, const std::vector<RefinePoint> & po
     // allocate the elevation arrays before computing them
     qtree->get_top();
     qtree->get_bot();
-    qtree->recompute_z_of_cells();
+    qtree->set_cell_elevations();
 }
 
 // a refined quadtree that owns mfgrid; the quadtree modifies mfgrid, so each

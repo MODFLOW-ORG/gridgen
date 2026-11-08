@@ -21,7 +21,7 @@ inline ostream & operator<<(ostream & out, list<string> & strlist)
     return out;
 }
 
-bool DefinitionExporter::save(ostream & out, modflow_grid_raw_data & data)
+bool DefinitionExporter::save(ostream & out, ModflowGridBlock & data)
 {
     assert(data.type == "modflow_grid");
     out << "BEGIN MODFLOW_GRID " << data.name << "\n";
@@ -79,7 +79,7 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
     double * top_ptr = grid->top;
     for (int i = 0; i < mflowgrid->nlay; i++)
     {
-        int nsize_per_layer = grid->nodegroup.nodelay_array[i];
+        int nsize_per_layer = grid->nodegroup.layer_cell_counts[i];
         stringstream ss;
         ss << name << ".top" << i + 1 << ".dat";
         out << "\tTOP LAYER " << i + 1 << " = OPEN/CLOSE " << ss.str() << "\n";
@@ -91,7 +91,7 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
     double * bot_ptr = grid->bot;
     for (int i = 0; i < mflowgrid->nlay; i++)
     {
-        int nsize_per_layer = grid->nodegroup.nodelay_array[i];
+        int nsize_per_layer = grid->nodegroup.layer_cell_counts[i];
         stringstream ss;
         ss << name << ".bot" << i + 1 << ".dat";
         out << "\tBOTTOM LAYER " << i + 1 << " = OPEN/CLOSE " << ss.str() << "\n";
@@ -133,7 +133,7 @@ bool DefinitionExporter::save(const string & prefix, CSRData & csr, int * nperla
     return true;
 }
 
-bool DefinitionExporter::save(ostream & out, quadtree_builder_raw_data & data)
+bool DefinitionExporter::save(ostream & out, QuadtreeBuilderBlock & data)
 {
     bool r = save(out, *data.modflow_data);
     if (r == false) return false;
@@ -141,7 +141,7 @@ bool DefinitionExporter::save(ostream & out, quadtree_builder_raw_data & data)
     return save(out, data.qtree_grid);
 }
 
-bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
+bool DefinitionExporter::save(GridToUsgdataBlock & data)
 {
     QuadTree3D * quadGrid = dynamic_cast<QuadTree3D *>(data.grid);
 
@@ -150,7 +150,7 @@ bool DefinitionExporter::save(grid_to_usgdata_raw_data & data)
     vector<int> mf_nperlay; //nodes per layer of a MODFLOW grid
     if (quadGrid != nullptr)
     {
-        nperlay = quadGrid->get_nodelay();
+        nperlay = quadGrid->get_layer_cell_counts();
     }
     else //get number of nodes per layer on the fly
     {
@@ -216,7 +216,8 @@ bool DefinitionExporter::save_node_coordinate(const string & prefix, Grid * grid
                 if (qtree_grid->vertical_pass_through)
                 {
                     vector<double> conAreas;
-                    conNum += qtree_grid->get_node_connections_vp(b, &conAreas).size();
+                    conNum +=
+                        qtree_grid->get_node_connections_with_pass_through(b, &conAreas).size();
                 }
                 else
                     conNum += qtree_grid->get_node_connections(b).size();

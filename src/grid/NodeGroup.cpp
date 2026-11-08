@@ -31,7 +31,7 @@ namespace cusg
     method first checks to see if there are any removed node spaces
     that can be used and it uses them if possible.
 
-    Whenever nodes are added or removed, the rebuild_nodeid_array flag
+    Whenever nodes are added or removed, the rebuild_box_index_array flag
     is set to true indicating that the nodes need to be renumbered.
 
 */
@@ -41,7 +41,7 @@ NodeGroup::NodeGroup(Grid * g)
 {
     grid = g;
     nlay = 1; //number of layers (? why is this here)
-    rebuild_nodeid_array = true;
+    rebuild_box_index_array = true;
     nextnodenumber = 0;
     chunksize = 10;
     total_leaf_number = 0;
@@ -50,24 +50,24 @@ NodeGroup::NodeGroup(Grid * g)
 
 int NodeGroup::add(Box * box)
 {
-    int nodeid = 0;
+    int box_index = 0;
 
     if (removed_nodes.empty() == false)
     {
-        nodeid = removed_nodes.front();
+        box_index = removed_nodes.front();
         removed_nodes.pop_front();
-        (*this)[nodeid] = box;
+        (*this)[box_index] = box;
     }
     else
     {
-        nodeid = size();
+        box_index = size();
         push_back(box);
     }
 
     owned_boxes.emplace_back(box);
-    box->id = nodeid; //nodeid is the position of the box in the array (group)
+    box->id = box_index; //box_index is the position of the box in the array (group)
 
-    rebuild_nodeid_array = true;
+    rebuild_box_index_array = true;
 
     if (box->isLeaf)
     {
@@ -77,7 +77,7 @@ int NodeGroup::add(Box * box)
 
     if (box->layer > nlay) nlay = box->layer;
 
-    return nodeid;
+    return box_index;
 }
 
 void NodeGroup::share(const NodeGroup & other)
@@ -85,10 +85,10 @@ void NodeGroup::share(const NodeGroup & other)
     vector<Box *>::operator=(other);
     owned_boxes.clear();
     grid = other.grid;
-    nodeid_array = other.nodeid_array;
-    nodelay_array = other.nodelay_array;
+    box_index_array = other.box_index_array;
+    layer_cell_counts = other.layer_cell_counts;
     nlay = other.nlay;
-    rebuild_nodeid_array = other.rebuild_nodeid_array;
+    rebuild_box_index_array = other.rebuild_box_index_array;
     nextnodenumber = other.nextnodenumber;
     chunksize = other.chunksize;
     removed_nodes = other.removed_nodes;
@@ -98,41 +98,41 @@ void NodeGroup::share(const NodeGroup & other)
 
 /*!
     Return an array of size of the number of active leaf nodes
-    and include in the array the nodeid.
+    and include in the array the box_index.
 
-    nodeid_array[nodenumber] = nodeid
+    box_index_array[cell] = box_index
 */
-int * NodeGroup::get_nodeid_array()
+int * NodeGroup::get_box_index_array()
 {
-    if (rebuild_nodeid_array) build_node_info();
-    return nodeid_array.data();
+    if (rebuild_box_index_array) build_node_info();
+    return box_index_array.data();
 }
 
 /*!
- * return a nodelay_array, which contains the number of
+ * return a layer_cell_counts, which contains the number of
     nodes per layer:
-    nodelay_array[layer] = nodes in layer
+    layer_cell_counts[layer] = nodes in layer
     This method numbers the nodes by layer, starting with the
     lowest layer number.
  *
  */
-int * NodeGroup::get_nodelay_array()
+int * NodeGroup::get_layer_cell_counts()
 {
-    if (rebuild_nodeid_array) build_node_info();
-    return nodelay_array.data();
+    if (rebuild_box_index_array) build_node_info();
+    return layer_cell_counts.data();
 }
 
 ///number of (active) leaf nodes in this group
 NodeGroup::size_type NodeGroup::node_size()
 {
-    if (rebuild_nodeid_array) build_node_info();
+    if (rebuild_box_index_array) build_node_info();
     return active_leaf_number;
 }
 
 ///get the total number of leaf size including inactive leaves
 NodeGroup::size_type NodeGroup::get_total_leaf_size()
 {
-    if (rebuild_nodeid_array) build_node_info();
+    if (rebuild_box_index_array) build_node_info();
     return total_leaf_number;
 }
 
@@ -147,7 +147,7 @@ void NodeGroup::disable_nodes_in_layer(int layer)
 }
 
 /*!
- * build information of nodelay_array and nodeid_array
+ * build information of layer_cell_counts and box_index_array
  *
  */
 void NodeGroup::build_node_info()
@@ -167,8 +167,8 @@ void NodeGroup::build_node_info()
     }
 
     //reset things...
-    nodeid_array.assign(this->active_leaf_number, 0);
-    nodelay_array.assign(nlay, 0); // number of nodes per layer
+    box_index_array.assign(this->active_leaf_number, 0);
+    layer_cell_counts.assign(nlay, 0); // number of nodes per layer
 
     //number the nodes, starting with the lowest layer number
     //this is the id of the node in CSR/COO
@@ -185,13 +185,13 @@ void NodeGroup::build_node_info()
         {
             if (box->active)
             {
-                nodeid_array[box->number] = box->id;
-                nodelay_array[box->layer] += 1;
+                box_index_array[box->number] = box->id;
+                layer_cell_counts[box->layer] += 1;
             }
         }
     } //end i
 
-    rebuild_nodeid_array = false; //set the flag since the array was just built
+    rebuild_box_index_array = false; //set the flag since the array was just built
 }
 
 } // end namespace cusg

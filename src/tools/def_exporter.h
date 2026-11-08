@@ -61,11 +61,11 @@ public:
     //
 
     bool save(ostream & out, QuadTree3D * grid);
-    bool save(ostream & out, modflow_grid_raw_data & data);
-    bool save(ostream & out, quadtree_builder_raw_data & data);
+    bool save(ostream & out, ModflowGridBlock & data);
+    bool save(ostream & out, QuadtreeBuilderBlock & data);
 
     //
-    bool save(grid_to_usgdata_raw_data & data);
+    bool save(GridToUsgdataBlock & data);
 
     //save csr data into a set of files with "prefix"
     bool save(const string & prefix, CSRData & csr, int * nperlay);

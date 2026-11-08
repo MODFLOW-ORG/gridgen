@@ -73,7 +73,7 @@ void expect_one_coordinate_per_corner(double angle, const std::string & name)
 {
     std::unique_ptr<QuadTree3D> qtree = make_refined(angle);
     std::string shp = ::testing::TempDir() + name + ".shp";
-    writeQuadtree2Shp(qtree.get(), shp, "polygon");
+    write_shapefile(qtree.get(), shp, "polygon");
 
     std::vector<std::pair<double, double>> xy = read_shp_vertices(shp);
     ASSERT_FALSE(xy.empty());
@@ -116,12 +116,11 @@ std::vector<std::pair<double, double>> read_vtu_xy(const std::string & path)
     return xy;
 }
 
-modflow_grid_raw_data * parse_grid(DefinitionParser & parser, const std::string & block)
+ModflowGridBlock * parse_grid(DefinitionParser & parser, const std::string & block)
 {
     std::istringstream dfn(block);
     if (!parser.parse(dfn)) return NULL;
-    modflow_grid_raw_data * data =
-        dynamic_cast<modflow_grid_raw_data *>(parser.getBlockData("mfg"));
+    ModflowGridBlock * data = dynamic_cast<ModflowGridBlock *>(parser.getBlockData("mfg"));
     if (data == NULL || !data->initialize(parser.getBlockData())) return NULL;
     return data;
 }
@@ -163,7 +162,7 @@ TEST(SharedVertices, AdjacentCellsShareVertexIndex)
         std::map<std::pair<long long, long long>, std::set<int>> groups;
         for (int n = 0; n < qtree->nodes(); n++)
         {
-            Box * b = qtree->get_nodeobj(n);
+            Box * b = qtree->get_cell_box(n);
             const int * ids = gv.corners(b);
             for (int i = 0; i < 4; i++)
             {
@@ -179,14 +178,14 @@ TEST(SharedVertices, AdjacentCellsShareVertexIndex)
         // corner they meet at
         for (int n = 0; n < qtree->nodes(); n++)
         {
-            Box * b = qtree->get_nodeobj(n);
+            Box * b = qtree->get_cell_box(n);
             const int * ids = gv.corners(b);
             for (int i = 0; i < 4; i++)
             {
                 const Point2d & p = gv.vertices()[ids[i]];
                 for (int m = 0; m < qtree->nodes(); m++)
                 {
-                    Box * o = qtree->get_nodeobj(m);
+                    Box * o = qtree->get_cell_box(m);
                     int j = nearest_corner(gv, o, p[0], p[1]);
                     const Point2d & q = gv.vertices()[j];
                     if (std::hypot(q[0] - p[0], q[1] - p[1]) < 1e-3) EXPECT_EQ(j, ids[i]);
@@ -229,7 +228,7 @@ TEST(SharedVertices, UnrotatedCornersAreEdges)
     for (int c = 0; c < mfgrid->ncol; c++) xe += mfgrid->delr[c];
     double ye = 0.0;
     for (int r = 0; r < mfgrid->nrow; r++) ye += mfgrid->delc[r];
-    Box * ne = qtree->nodegroup[mfgrid->get_nodeid(0, 0, mfgrid->ncol - 1)];
+    Box * ne = qtree->nodegroup[mfgrid->get_box_index(0, 0, mfgrid->ncol - 1)];
     while (!ne->isLeaf) ne = ne->pChildren[1];
     const Point2d & p = gv.vertices()[gv.corners(ne)[1]];
     EXPECT_EQ(p[0], XOFF + xe);
@@ -239,14 +238,14 @@ TEST(SharedVertices, UnrotatedCornersAreEdges)
 TEST(SharedVertices, RotationUsesExactPi)
 {
     DefinitionParser parser;
-    modflow_grid_raw_data * data = parse_grid(parser, LONG_GRID);
+    ModflowGridBlock * data = parse_grid(parser, LONG_GRID);
     ASSERT_NE(data, nullptr);
     EXPECT_DOUBLE_EQ(data->rotation_angle, 17.3 * PI_DOUBLE / 180.0);
 
     ModflowGrid * mfgrid = dynamic_cast<ModflowGrid *>(data->build());
     ASSERT_NE(mfgrid, nullptr);
     std::string shp = ::testing::TempDir() + "gridgen_long_rotated.shp";
-    writeModflowGrid2Shp(mfgrid, shp, "polygon");
+    write_shapefile(mfgrid, shp, "polygon");
     std::vector<std::pair<double, double>> xy = read_shp_vertices(shp);
     ASSERT_GE(xy.size(), 4u);
 
@@ -263,7 +262,7 @@ TEST(SharedVertices, RotationUsesExactPi)
 TEST(SharedVertices, RotationAngleRoundTrips)
 {
     DefinitionParser parser;
-    modflow_grid_raw_data * data = parse_grid(parser, LONG_GRID);
+    ModflowGridBlock * data = parse_grid(parser, LONG_GRID);
     ASSERT_NE(data, nullptr);
 
     std::ostringstream out;
@@ -339,7 +338,7 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
                         "  BOTTOM LAYER 1 = CONSTANT -1.\n"
                         "END MODFLOW_GRID\n";
     DefinitionParser parser;
-    modflow_grid_raw_data * data = parse_grid(parser, block);
+    ModflowGridBlock * data = parse_grid(parser, block);
     ASSERT_NE(data, nullptr);
     ModflowGrid * mfgrid = dynamic_cast<ModflowGrid *>(data->build());
     ASSERT_NE(mfgrid, nullptr);
@@ -362,7 +361,7 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
     for (int c = 0; c < 4; c++) xl += delr[c];
     for (int r = 2; r >= 0; r--) yl += delc[r];
     double t = 17.3 * PI_DOUBLE / 180.0;
-    Box * ne = qtree->nodegroup[mfgrid->get_nodeid(0, 0, 3)];
+    Box * ne = qtree->nodegroup[mfgrid->get_box_index(0, 0, 3)];
     ASSERT_FALSE(ne->isLeaf);
     while (!ne->isLeaf) ne = ne->pChildren[1];
     const Point2d & p = gv.vertices()[gv.corners(ne)[1]];
@@ -373,7 +372,7 @@ TEST(SharedVertices, VaryingCellSizesRefinedAtGridCorner)
     std::map<std::pair<long long, long long>, std::set<int>> groups;
     for (int n = 0; n < qtree->nodes(); n++)
     {
-        const int * ids = gv.corners(qtree->get_nodeobj(n));
+        const int * ids = gv.corners(qtree->get_cell_box(n));
         for (int i = 0; i < 4; i++)
         {
             const Point2d & q = gv.vertices()[ids[i]];
@@ -393,7 +392,7 @@ TEST(SharedVertices, LineShapefileEndsAreGridCorners)
     for (const Point2d & p : gv.vertices()) corners.insert(std::make_pair(p[0], p[1]));
 
     std::string shp = ::testing::TempDir() + "gridgen_lines.shp";
-    writeQuadtree2Shp(qtree.get(), shp, "line");
+    write_shapefile(qtree.get(), shp, "line");
     std::vector<std::pair<double, double>> xy = read_shp_vertices(shp);
     ASSERT_FALSE(xy.empty());
     for (const std::pair<double, double> & p : xy)
@@ -407,7 +406,7 @@ TEST(Precision, PassThroughAreasAreDouble)
     std::unique_ptr<QuadTree3D> qtree =
         make_qtree(make_mfgrid(3, 3, 3, 812.7 / 16, 793.3 / 16), {});
     ModflowGrid * mfgrid = qtree->getModflowGrid();
-    qtree->nodegroup[mfgrid->get_nodeid(1, 1, 1)]->active = false;
+    qtree->nodegroup[mfgrid->get_box_index(1, 1, 1)]->active = false;
     qtree->number_nodes();
     qtree->refresh();
     qtree->vertical_pass_through = true;
@@ -435,13 +434,13 @@ TEST(Precision, VtkPointsAreGridCorners)
         // every x and y written, with and without shared vertices, is a grid
         // corner
         std::string name = ::testing::TempDir() + "gridgen_vtk_precision";
-        writeQuadtreeGrid2VTK(qtree.get(), name);
+        write_vtk(qtree.get(), name, false);
         std::vector<std::pair<double, double>> xy = read_vtu_xy(name + ".vtu");
         EXPECT_EQ(xy.size(), 8u * qtree->nodes());
         for (const std::pair<double, double> & p : xy)
             EXPECT_EQ(corners.count(p), 1u) << "point (" << p.first << ", " << p.second << ")";
 
-        writeQuadtreeGrid2VTK_shareV(qtree.get(), name + "_sv");
+        write_vtk(qtree.get(), name + "_sv", true);
         xy = read_vtu_xy(name + "_sv.vtu");
         EXPECT_FALSE(xy.empty());
         for (const std::pair<double, double> & p : xy)

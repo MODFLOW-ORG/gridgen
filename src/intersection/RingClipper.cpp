@@ -1,4 +1,4 @@
-#include "BoxPlyClip.h"
+#include "RingClipper.h"
 #include "intersection.h"
 #include <map>
 #include <fstream>
@@ -97,7 +97,7 @@ void getXYBound(VNode * first, double & xmin, double & xmax, double & ymin, doub
     } while (node != first);
 }
 
-VNode * copyOnePly(VNode * head, bool bSetVisited)
+VNode * copy_ring(VNode * head, bool bSetVisited)
 {
     if (head == nullptr) return nullptr;
 
@@ -120,27 +120,27 @@ VNode * copyOnePly(VNode * head, bool bSetVisited)
 
     return new_head;
 }
-BoxPlyClip * copyBoxPlyClip(BoxPlyClip * ply_clip, bool bSetVisited = false)
+RingClipper * copy_ring_clipper(RingClipper * ring_clip, bool bSetVisited = false)
 {
-    BoxPlyClip * clip_copy = new BoxPlyClip();
+    RingClipper * clip_copy = new RingClipper();
 
-    VNode * new_head = copyOnePly(ply_clip->first, bSetVisited);
+    VNode * new_head = copy_ring(ring_clip->first, bSetVisited);
     clip_copy->first = new_head;
-    clip_copy->plys.push_back(new_head);
+    clip_copy->rings.push_back(new_head);
 
-    if (ply_clip->plys.size() > 1)
+    if (ring_clip->rings.size() > 1)
     {
-        list<VNode *>::iterator vit = ply_clip->plys.begin();
+        list<VNode *>::iterator vit = ring_clip->rings.begin();
         ++vit;
-        for (; vit != ply_clip->plys.end(); ++vit)
+        for (; vit != ring_clip->rings.end(); ++vit)
         {
-            VNode * ply_copy = copyOnePly(*vit, bSetVisited);
-            clip_copy->plys.push_back(ply_copy);
+            VNode * ring_copy = copy_ring(*vit, bSetVisited);
+            clip_copy->rings.push_back(ring_copy);
         }
     }
     return clip_copy;
 }
-void BoxPlyClip::resetStatus()
+void RingClipper::resetStatus()
 {
     //delete the new added
     for (auto added : added_vertices)
@@ -185,7 +185,7 @@ double getRotAngle(Vector2d & v1, Vector2d & v2)
     }
 }
 //test enclosing
-bool ClipPlyEnclose(VNode * head, const Point2d & p2d)
+bool clip_ring_encloses(VNode * head, const Point2d & p2d)
 {
     if (head == nullptr || head->next == head) return false;
     //count the edges crossing a ray from the point; summing the angles they turn through
@@ -336,24 +336,24 @@ bool checkAllIndirect(double line_coordinate, bool isX, bool isBigger, VNode * h
         return (isBigger == (p2d[1] > line_coordinate));
     }
 }
-BoxPlyClip::BoxPlyClip()
+RingClipper::RingClipper()
 {
     first = nullptr;
 }
-BoxPlyClip::~BoxPlyClip()
+RingClipper::~RingClipper()
 {
     destroy();
 }
-void BoxPlyClip::destroy()
+void RingClipper::destroy()
 {
-    for (auto & ply : plys)
+    for (auto & ring : rings)
     {
-        destroy(ply);
+        destroy(ring);
     }
-    plys.clear();
+    rings.clear();
     first = nullptr;
 }
-void BoxPlyClip::destroy(VNode * head)
+void RingClipper::destroy(VNode * head)
 {
     if (head == nullptr) return;
     VNode * node = head->next;
@@ -367,7 +367,7 @@ void BoxPlyClip::destroy(VNode * head)
     head = nullptr;
 }
 
-void BoxPlyClip::add(VNode * v)
+void RingClipper::add(VNode * v)
 {
     //a repeated vertex is left out and freed
     if (first != nullptr && fabs(v->x - first->x) < SMALLNUMBER &&
@@ -399,7 +399,7 @@ void BoxPlyClip::add(VNode * v)
         prev->next = v;
     }
 }
-void BoxPlyClip::insert(VNode * before, VNode * after, VNode * v)
+void RingClipper::insert(VNode * before, VNode * after, VNode * v)
 {
 
     before->next = v;
@@ -407,7 +407,7 @@ void BoxPlyClip::insert(VNode * before, VNode * after, VNode * v)
     v->next = after;
     after->prev = v;
 }
-VNode * BoxPlyClip::collectAlongWay(vector<VNode *> & vertices, VNode * start, bool forward)
+VNode * RingClipper::collectAlongWay(vector<VNode *> & vertices, VNode * start, bool forward)
 {
     assert(start->isInDirect && start->isScanPoint);
     VNode * previous = start;
@@ -439,8 +439,8 @@ bool touchesKeptSide(VNode * v)
 }
 
 //set intersection
-int BoxPlyClip::setIntersection(VNode * start_vertex, double line_coordinate, bool isX,
-                                bool isBigger, vector<VNode *> & line_vertices)
+int RingClipper::setIntersection(VNode * start_vertex, double line_coordinate, bool isX,
+                                 bool isBigger, vector<VNode *> & line_vertices)
 {
     double xmin = 0, ymin = 0, xmax = 0, ymax = 0;
     getXYBound(start_vertex, xmin, xmax, ymin, ymax);
@@ -651,10 +651,10 @@ int BoxPlyClip::setIntersection(VNode * start_vertex, double line_coordinate, bo
     return onNum;
 }
 
-void BoxPlyClip::collectSecondPart(vector<VNode *> & line_vertices, int start_index, int end_index,
-                                   VNode * start_node, VNode * end_node, bool forward,
-                                   int vertex_count, list<BoxPlyClip *> & clip_results, bool isX,
-                                   bool isBigger, vector<VNode *> & secondHalf)
+void RingClipper::collectSecondPart(vector<VNode *> & line_vertices, int start_index, int end_index,
+                                    VNode * start_node, VNode * end_node, bool forward,
+                                    int vertex_count, list<RingClipper *> & clip_results, bool isX,
+                                    bool isBigger, vector<VNode *> & secondHalf)
 {
 
     //collect these vertices
@@ -751,42 +751,42 @@ void BoxPlyClip::collectSecondPart(vector<VNode *> & line_vertices, int start_in
     /*********************************************************************************************/
 }
 
-void BoxPlyClip::constructClipPly(vector<VNode *> & firstHalf, vector<VNode *> & secondHalf,
-                                  list<BoxPlyClip *> & clip_results)
+void RingClipper::construct_clip_rings(vector<VNode *> & firstHalf, vector<VNode *> & secondHalf,
+                                       list<RingClipper *> & clip_results)
 {
     if (firstHalf.size() + secondHalf.size() < 3)
         return;
     else
     {
-        BoxPlyClip * ply_clip = new BoxPlyClip();
+        RingClipper * ring_clip = new RingClipper();
         for (auto & vit : firstHalf)
         {
-            ply_clip->add(copy(vit));
+            ring_clip->add(copy(vit));
         }
         for (vector<VNode *>::reverse_iterator rvit = secondHalf.rbegin();
              rvit != secondHalf.rend(); ++rvit)
         {
-            ply_clip->add(copy(*rvit));
+            ring_clip->add(copy(*rvit));
         }
-        ply_clip->plys.push_back(ply_clip->first);
+        ring_clip->rings.push_back(ring_clip->first);
 
-        c_ply ply;
-        convertClipToPly(ply_clip->first, ply);
-        if (fabs(ply.getArea()) < SMALLAREA) //SMALLNUMBER
+        Ring ring;
+        convert_clip_to_ring(ring_clip->first, ring);
+        if (fabs(ring.getArea()) < SMALLAREA) //SMALLNUMBER
         {
-            ply.destroy();
-            delete ply_clip;
+            ring.destroy();
+            delete ring_clip;
             return;
         }
         else
         {
-            ply.destroy();
-            clip_results.push_back(ply_clip);
+            ring.destroy();
+            clip_results.push_back(ring_clip);
         }
     }
 }
-void BoxPlyClip::collectOnePly(vector<VNode *> & line_vertices, int start_index, int end_index,
-                               bool isNextOrder, list<BoxPlyClip *> & clip_results, bool isX,
+void RingClipper::collect_ring(vector<VNode *> & line_vertices, int start_index, int end_index,
+                               bool isNextOrder, list<RingClipper *> & clip_results, bool isX,
                                bool isBigger)
 {
     int vsize = line_vertices.size();
@@ -838,12 +838,13 @@ void BoxPlyClip::collectOnePly(vector<VNode *> & line_vertices, int start_index,
     }
 
     //combine two lists to get a new polygon
-    constructClipPly(firstHalf, secondHalf, clip_results);
+    construct_clip_rings(firstHalf, secondHalf, clip_results);
 }
 
-void BoxPlyClip::collectPolygonsInInterval(bool isX, bool isBigger, vector<VNode *> & line_vertices,
-                                           list<BoxPlyClip *> & clips, int from, int to,
-                                           bool start_forward)
+void RingClipper::collectPolygonsInInterval(bool isX, bool isBigger,
+                                            vector<VNode *> & line_vertices,
+                                            list<RingClipper *> & clips, int from, int to,
+                                            bool start_forward)
 {
     int size = line_vertices.size();
     bool forward = start_forward;
@@ -860,8 +861,8 @@ void BoxPlyClip::collectPolygonsInInterval(bool isX, bool isBigger, vector<VNode
 
         assert(endId != -1);
 
-        collectOnePly(line_vertices, startId, endId, forward, clips, isX,
-                      isBigger); //note here or not, may have bugs here
+        collect_ring(line_vertices, startId, endId, forward, clips, isX,
+                     isBigger); //note here or not, may have bugs here
 
         if (endId >= to)
         {
@@ -882,16 +883,16 @@ void BoxPlyClip::collectPolygonsInInterval(bool isX, bool isBigger, vector<VNode
     }
 }
 
-void BoxPlyClip::collectPolygons(double line_coordinate, bool isX, bool isBigger,
-                                 vector<int> & line_vertex_counts, vector<VNode *> & line_vertices,
-                                 list<BoxPlyClip *> & clips)
+void RingClipper::collectPolygons(double line_coordinate, bool isX, bool isBigger,
+                                  vector<int> & line_vertex_counts, vector<VNode *> & line_vertices,
+                                  list<RingClipper *> & clips)
 {
     int size = line_vertices.size();
     if (size <= 1)
     {
         if (checkAllIndirect(line_coordinate, isX, isBigger, first))
         {
-            clips.push_back(copyBoxPlyClip(this, true));
+            clips.push_back(copy_ring_clipper(this, true));
         }
         //set visited
         //for(list<VNode*>::iterator )
@@ -906,14 +907,15 @@ void BoxPlyClip::collectPolygons(double line_coordinate, bool isX, bool isBigger
     collectPolygonsInInterval(isX, isBigger, line_vertices, clips, 0, size - 1, isNextO);
 }
 
-void BoxPlyClip::clip(double line_coordinate, bool isX, bool isBigger, list<BoxPlyClip *> & clips)
+void RingClipper::clip(double line_coordinate, bool isX, bool isBigger, list<RingClipper *> & clips)
 {
     vector<int> line_vertex_counts;
     vector<VNode *> line_vertices;
     //set intersections for holes
-    for (auto ply : plys)
+    for (auto ring : rings)
     {
-        int line_vertex_count = setIntersection(ply, line_coordinate, isX, isBigger, line_vertices);
+        int line_vertex_count =
+            setIntersection(ring, line_coordinate, isX, isBigger, line_vertices);
         line_vertex_counts.push_back(line_vertex_count);
     }
 
@@ -921,12 +923,12 @@ void BoxPlyClip::clip(double line_coordinate, bool isX, bool isBigger, list<BoxP
     collectPolygons(line_coordinate, isX, isBigger, line_vertex_counts, line_vertices, clips);
 
     /**********************************************/
-    if (plys.size() == 0 || line_vertex_counts.size() == 0) return;
+    if (rings.size() == 0 || line_vertex_counts.size() == 0) return;
 
-    list<VNode *>::iterator pit = plys.begin();
+    list<VNode *>::iterator pit = rings.begin();
     vector<int>::iterator iit = line_vertex_counts.begin();
     //++pit; ++iit; //discard the out boundary
-    for (; pit != plys.end(); ++pit, ++iit)
+    for (; pit != rings.end(); ++pit, ++iit)
     {
 
         if (*iit == 0 && ((*pit)->isVisited == false) && (*pit)->isInDirect)
@@ -941,72 +943,72 @@ void BoxPlyClip::clip(double line_coordinate, bool isX, bool isBigger, list<BoxP
 
             bool haveAdded = false;
             VNode * new_vertex = *pit;
-            c_ply nply(c_ply::PIN);
-            convertClipToPly(new_vertex, nply);
-            const Point2d & center = nply.getCenter();
+            Ring nrings(Ring::PIN);
+            convert_clip_to_ring(new_vertex, nrings);
+            const Point2d & center = nrings.getCenter();
             for (auto & clip_part : clips)
             {
-                if (ClipPlyEnclose(clip_part->first, center))
+                if (clip_ring_encloses(clip_part->first, center))
                 {
-                    clip_part->plys.push_back(copyOnePly(new_vertex));
+                    clip_part->rings.push_back(copy_ring(new_vertex));
                     haveAdded = true;
                     break;
                 }
             }
             if (!haveAdded)
             {
-                BoxPlyClip * ply_clip = convertPlyToClip(nply);
-                ply_clip->plys.push_back(ply_clip->first);
-                clips.push_back(ply_clip);
+                RingClipper * ring_clip = convert_ring_to_clip(nrings);
+                ring_clip->rings.push_back(ring_clip->first);
+                clips.push_back(ring_clip);
             }
-            nply.destroy(); //clear memory
+            nrings.destroy(); //clear memory
         }
     }
 }
-void BoxPlyClip::clip(double xmin, double xmax, double ymin, double ymax,
-                      list<BoxPlyClip *> & clips)
+void RingClipper::clip(double xmin, double xmax, double ymin, double ymax,
+                       list<RingClipper *> & clips)
 {
     //pre-processing
-    list<BoxPlyClip *> inside_xmin, inside_xmax, inside_ymin;
+    list<RingClipper *> inside_xmin, inside_xmax, inside_ymin;
     this->clip(xmin, true, true, inside_xmin);
 
-    for (auto ply_clip : inside_xmin)
+    for (auto ring_clip : inside_xmin)
     {
-        ply_clip->clip(xmax, true, false, inside_xmax);
+        ring_clip->clip(xmax, true, false, inside_xmax);
 
-        ply_clip->destroy();
-        delete ply_clip;
+        ring_clip->destroy();
+        delete ring_clip;
     }
 
-    for (auto ply_clip : inside_xmax)
+    for (auto ring_clip : inside_xmax)
     {
-        ply_clip->clip(ymin, false, true, inside_ymin);
+        ring_clip->clip(ymin, false, true, inside_ymin);
 
-        ply_clip->destroy();
-        delete ply_clip;
+        ring_clip->destroy();
+        delete ring_clip;
     }
 
-    for (auto ply_clip : inside_ymin)
+    for (auto ring_clip : inside_ymin)
     {
-        ply_clip->clip(ymax, false, false, clips);
+        ring_clip->clip(ymax, false, false, clips);
 
-        ply_clip->destroy();
-        delete ply_clip;
+        ring_clip->destroy();
+        delete ring_clip;
     }
 }
 
-VNode * BoxPlyClip::copy(const VNode * v)
+VNode * RingClipper::copy(const VNode * v)
 {
     VNode * new_vertex = new VNode(v->x, v->y);
     return new_vertex;
 }
 
-VNode * convertPlyToVN(const c_ply & ply)
+VNode * convert_ring_to_vertex_nodes(const Ring & ring)
 {
-    ply_vertex * head = ply.getHead();
+    LinkedVertex * head = ring.getHead();
     VNode * new_head = new VNode(head->getPos()[0], head->getPos()[1]);
     new_head->next = new_head->prev = new_head;
-    ply_vertex * vertex = head->getNext();
+    LinkedVertex * vertex = head->getNext();
     while (vertex != head)
     {
         VNode * node_copy = new VNode(vertex->getPos()[0], vertex->getPos()[1]);
@@ -1028,102 +1030,102 @@ VNode * convertPlyToVN(const c_ply & ply)
     return new_head;
 }
 
-//convert the ply to BoxPlyClip
-BoxPlyClip * convertPlyToClip(const c_ply & ply)
+//convert the ring to RingClipper
+RingClipper * convert_ring_to_clip(const Ring & ring)
 {
-    BoxPlyClip * ply_clip = new BoxPlyClip();
-    ply_vertex * head = ply.getHead();
-    ply_vertex * vertex = head;
+    RingClipper * ring_clip = new RingClipper();
+    LinkedVertex * head = ring.getHead();
+    LinkedVertex * vertex = head;
     do
     {
         VNode * node = new VNode(vertex->getPos()[0], vertex->getPos()[1]);
-        ply_clip->add(node);
+        ring_clip->add(node);
 
         vertex = vertex->getNext();
     } while (vertex != head);
-    return ply_clip;
+    return ring_clip;
 }
 
 //convert
-void convertClipToPly(VNode * first_vertex, c_ply & ply)
+void convert_clip_to_ring(VNode * first_vertex, Ring & ring)
 {
-    ply.beginPoly();
+    ring.beginPoly();
     VNode * vertex = first_vertex;
     do
     {
-        ply.addVertex(vertex->x, vertex->y, true);
+        ring.addVertex(vertex->x, vertex->y, true);
         vertex = vertex->next;
     } while (vertex != first_vertex);
 
-    ply.endPoly(false);
+    ring.endPoly(false);
 }
 
 //convert
-BoxPlyClip * convertCPolygonToClip(const GIS_polygon & polygon)
+RingClipper * convertCPolygonToClip(const GIS_polygon & polygon)
 {
-    BoxPlyClip * ply_clip = new BoxPlyClip();
+    RingClipper * ring_clip = new RingClipper();
     for (const auto & part : polygon)
     {
-        if (part.getType() == c_ply::POUT)
+        if (part.getType() == Ring::POUT)
         {
-            VNode * part_vertices = convertPlyToVN(part);
-            ply_clip->first = part_vertices;
-            ply_clip->plys.push_front(part_vertices);
+            VNode * part_vertices = convert_ring_to_vertex_nodes(part);
+            ring_clip->first = part_vertices;
+            ring_clip->rings.push_front(part_vertices);
         }
         else
         {
-            VNode * part_vertices = convertPlyToVN(part);
+            VNode * part_vertices = convert_ring_to_vertex_nodes(part);
             //a hole with fewer than three distinct vertices has no area
             if (part_vertices->next == part_vertices || part_vertices->next->next == part_vertices)
-                ply_clip->destroy(part_vertices);
+                ring_clip->destroy(part_vertices);
             else
-                ply_clip->plys.push_back(part_vertices);
+                ring_clip->rings.push_back(part_vertices);
         }
     }
-    return ply_clip;
+    return ring_clip;
 }
 //convert
-void convertClipToPolygon(BoxPlyClip * ply_clip, GIS_polygon * polygon)
+void convertClipToPolygon(RingClipper * ring_clip, GIS_polygon * polygon)
 {
-    if (ply_clip == nullptr || ply_clip->first == nullptr) return;
+    if (ring_clip == nullptr || ring_clip->first == nullptr) return;
     //loop over
-    c_ply outply(c_ply::POUT);
-    convertClipToPly(ply_clip->first, outply);
-    polygon->push_back(outply);
+    Ring outer_ring(Ring::POUT);
+    convert_clip_to_ring(ring_clip->first, outer_ring);
+    polygon->push_back(outer_ring);
 
-    if (ply_clip->plys.size() == 1) return;
-    list<VNode *>::iterator vit = ply_clip->plys.begin();
+    if (ring_clip->rings.size() == 1) return;
+    list<VNode *>::iterator vit = ring_clip->rings.begin();
     ++vit;
-    for (; vit != ply_clip->plys.end(); ++vit)
+    for (; vit != ring_clip->rings.end(); ++vit)
     {
-        c_ply hole(c_ply::PIN);
-        convertClipToPly(*vit, hole);
+        Ring hole(Ring::PIN);
+        convert_clip_to_ring(*vit, hole);
         polygon->push_back(hole);
     }
 }
 
-BoxPlyClip * convertSimplePolygonToClip(const c_polygon & polygon)
+RingClipper * convertSimplePolygonToClip(const c_polygon & polygon)
 {
-    BoxPlyClip * ply_clip = new BoxPlyClip();
+    RingClipper * ring_clip = new RingClipper();
     for (const auto & part : polygon)
     {
-        if (part.getType() == c_ply::POUT)
+        if (part.getType() == Ring::POUT)
         {
-            VNode * part_vertices = convertPlyToVN(part);
-            ply_clip->first = part_vertices;
-            ply_clip->plys.push_front(part_vertices);
+            VNode * part_vertices = convert_ring_to_vertex_nodes(part);
+            ring_clip->first = part_vertices;
+            ring_clip->rings.push_front(part_vertices);
         }
         else
         {
-            VNode * part_vertices = convertPlyToVN(part);
+            VNode * part_vertices = convert_ring_to_vertex_nodes(part);
             //a hole with fewer than three distinct vertices has no area
             if (part_vertices->next == part_vertices || part_vertices->next->next == part_vertices)
-                ply_clip->destroy(part_vertices);
+                ring_clip->destroy(part_vertices);
             else
-                ply_clip->plys.push_back(part_vertices);
+                ring_clip->rings.push_back(part_vertices);
         }
     }
-    return ply_clip;
+    return ring_clip;
 }
 
 VNode * convertBoxToClip(Point2d lower_left, Point2d lower_right, Point2d upper_right,
@@ -1149,13 +1151,13 @@ VNode * convertBoxToClip(Point2d lower_left, Point2d lower_right, Point2d upper_
     return head;
 }
 
-double getOutBdArea(BoxPlyClip * ply_clip)
+double getOutBdArea(RingClipper * ring_clip)
 {
-    c_ply outply(c_ply::POUT);
-    convertClipToPly(ply_clip->first, outply);
+    Ring outer_ring(Ring::POUT);
+    convert_clip_to_ring(ring_clip->first, outer_ring);
 
-    double area = outply.getArea();
-    outply.destroy();
+    double area = outer_ring.getArea();
+    outer_ring.destroy();
     return area;
 }
 
@@ -1166,13 +1168,13 @@ double intersectTwoBox(Point2d lower_left, Point2d lower_right, Point2d upper_ri
     double area(0.0);
 
     //build a BoxClip
-    BoxPlyClip ply_clip;
+    RingClipper ring_clip;
     VNode * head = convertBoxToClip(lower_left, lower_right, upper_right, upper_left);
-    ply_clip.first = head;
-    ply_clip.plys.push_back(head);
+    ring_clip.first = head;
+    ring_clip.rings.push_back(head);
 
-    list<BoxPlyClip *> clips;
-    ply_clip.clip(xmin2, xmax2, ymin2, ymax2, clips);
+    list<RingClipper *> clips;
+    ring_clip.clip(xmin2, xmax2, ymin2, ymax2, clips);
 
     for (auto & clip_part : clips)
     {
@@ -1183,7 +1185,7 @@ double intersectTwoBox(Point2d lower_left, Point2d lower_right, Point2d upper_ri
         delete clip_part;
     }
 
-    ply_clip.destroy();
+    ring_clip.destroy();
     return area;
 }
 

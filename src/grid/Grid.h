@@ -56,16 +56,16 @@ public:
     virtual CSRData get_usg_csr_data() = 0;
 
     ///
-    /// Return a sorted list of connections, where a connection is
-    /// a pair (tonodeid, fldir).  fldir is -1, +1, -2, +2 for -x, +x, -y, +y.
+    /// Return a sorted list of the connections of cell, where a connection is
+    /// a pair (to_box_index, fldir).  fldir is -1, +1, -2, +2 for -x, +x, -y, +y.
     ///
-    virtual list<pair<int, int>> get_node_connections(int nodeid) = 0;
+    virtual list<pair<int, int>> get_node_connections(int cell) = 0;
 
     //
     virtual vector<double> get_cell_areas() = 0;
 
-    //get the box of this grid by node id
-    virtual Box * get_nodeobj(int nodeid) = 0;
+    //the box of cell, numbered as in the output
+    virtual Box * get_cell_box(int cell) = 0;
 
     ///this is supposed to return number of nodes in CSR/COO data
     ///so for grids such as quadtree/octrees, this returns the number

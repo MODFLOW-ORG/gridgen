@@ -58,8 +58,8 @@ void writeOneMFGrid(cusg::Grid * grid, cusg::ModflowGrid * mfgrid, const GridVer
         for (int i = 0; i <= ncol; i++)
         {
             int c = min(i, ncol - 1);
-            Box * top = grid->nodegroup[mfgrid->get_nodeid(k, 0, c)];
-            Box * bot = grid->nodegroup[mfgrid->get_nodeid(k, nrow - 1, c)];
+            Box * top = grid->nodegroup[mfgrid->get_box_index(k, 0, c)];
+            Box * bot = grid->nodegroup[mfgrid->get_box_index(k, nrow - 1, c)];
             cornerPoint(gv, top, (i < ncol) ? 0 : 1, line_x[0], line_y[0]);
             cornerPoint(gv, bot, (i < ncol) ? 3 : 2, line_x[1], line_y[1]);
 
@@ -70,8 +70,8 @@ void writeOneMFGrid(cusg::Grid * grid, cusg::ModflowGrid * mfgrid, const GridVer
         for (int i = 0; i <= nrow; i++)
         {
             int r = min(i, nrow - 1);
-            Box * west = grid->nodegroup[mfgrid->get_nodeid(k, r, 0)];
-            Box * east = grid->nodegroup[mfgrid->get_nodeid(k, r, ncol - 1)];
+            Box * west = grid->nodegroup[mfgrid->get_box_index(k, r, 0)];
+            Box * east = grid->nodegroup[mfgrid->get_box_index(k, r, ncol - 1)];
             cornerPoint(gv, west, (i < nrow) ? 0 : 3, line_x[0], line_y[0]);
             cornerPoint(gv, east, (i < nrow) ? 1 : 2, line_x[1], line_y[1]);
 
@@ -79,7 +79,7 @@ void writeOneMFGrid(cusg::Grid * grid, cusg::ModflowGrid * mfgrid, const GridVer
         }
     }
 }
-void writeQuadtree2ShpLine(cusg::QuadTree3D * qtree, string gridShpName)
+void write_line_shapefile(cusg::QuadTree3D * qtree, string gridShpName)
 {
     SHPHandle handler;
     DBFHandle dbfHandle;
@@ -116,7 +116,7 @@ void writeQuadtree2ShpLine(cusg::QuadTree3D * qtree, string gridShpName)
     SHPClose(handler);
 }
 
-void writeModflowGrid2ShpLine(cusg::ModflowGrid * mfgrid, string gridShpName)
+void write_line_shapefile(cusg::ModflowGrid * mfgrid, string gridShpName)
 {
     SHPHandle handler;
     DBFHandle dbfHandle;

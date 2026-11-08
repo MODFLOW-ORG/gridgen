@@ -174,8 +174,8 @@ vector<double> ModflowGrid2D::get_cell_areas()
     {
         for (int c = 0; c < ncol; c++)
         {
-            int nodeid = get_nodeid(r, c);
-            area[nodeid] = delr[c] * delc[r];
+            int box_index = get_box_index(r, c);
+            area[box_index] = delr[c] * delc[r];
         }
     }
 
@@ -183,7 +183,7 @@ vector<double> ModflowGrid2D::get_cell_areas()
 }
 
 /*!
-        \brief Return the four vertices for the specified nodeid.
+        \brief Return the four vertices for the specified box_index.
 
         3-------2
         |       |
@@ -191,23 +191,23 @@ vector<double> ModflowGrid2D::get_cell_areas()
         0-------1
     */
 
-///Return the nodeid for the modflow grid.
-int ModflowGrid2D::get_nodeid(int i, int j)
+///Return the box_index for the modflow grid.
+int ModflowGrid2D::get_box_index(int i, int j)
 {
     return i * ncol + j;
 }
 
-///Return the indices for the specified nodeid.
-Index2d ModflowGrid2D::get_indices(int nodeid)
+///Return the indices for the specified box_index.
+Index2d ModflowGrid2D::get_indices(int box_index)
 {
 
-    if (nodeid >= nrow * ncol)
+    if (box_index >= nrow * ncol)
     {
-        throw GridgenError("internal error: cell " + to_string(nodeid) + " is not in the grid");
+        throw GridgenError("internal error: cell " + to_string(box_index) + " is not in the grid");
     }
 
-    int i = int(nodeid / this->ncol);
-    int j = nodeid - i * this->ncol;
+    int i = int(box_index / this->ncol);
+    int j = box_index - i * this->ncol;
     return Index2d(i, j);
 }
 
@@ -215,7 +215,7 @@ Index2d ModflowGrid2D::get_indices(int nodeid)
 Box * ModflowGrid2D::find_nodeobj(int i, int j)
 {
     //get the box
-    int id = get_nodeid(i, j);
+    int id = get_box_index(i, j);
 
     if (nodegroup.empty() || id < 0 || ((unsigned)id) >= nodegroup.size())
     {
@@ -228,36 +228,36 @@ Box * ModflowGrid2D::find_nodeobj(int i, int j)
 
 ///get box connections from id
 ///Return a sorted list of connections, where a connection is
-///a list [tonodeid, fldir].  fldir is -1, +1, -2, +2 for -x, +x, -y, +y.
-list<pair<int, int>> ModflowGrid2D::get_node_connections(int nodeid)
+///a list [to_box_index, fldir].  fldir is -1, +1, -2, +2 for -x, +x, -y, +y.
+list<pair<int, int>> ModflowGrid2D::get_node_connections(int box_index)
 {
     list<pair<int, int>> connections;
-    Index2d ij = get_indices(nodeid);
+    Index2d ij = get_indices(box_index);
     int i = ij[0];
     int j = ij[1];
 
     //back
     if (i > 0)
     {
-        int neighbor = get_nodeid(i - 1, j);
+        int neighbor = get_box_index(i - 1, j);
         connections.push_back(make_pair(neighbor, 2));
     }
     //left
     if (j > 0)
     {
-        int neighbor = get_nodeid(i, j - 1);
+        int neighbor = get_box_index(i, j - 1);
         connections.push_back(make_pair(neighbor, -1));
     }
     //right
     if (j < ncol - 1)
     {
-        int neighbor = get_nodeid(i, j + 1);
+        int neighbor = get_box_index(i, j + 1);
         connections.push_back(make_pair(neighbor, 1));
     }
     //front
     if (i < nrow - 1)
     {
-        int neighbor = get_nodeid(i + 1, j);
+        int neighbor = get_box_index(i + 1, j);
         connections.push_back(make_pair(neighbor, -2));
     }
 
@@ -282,7 +282,7 @@ void ModflowGrid2D::number_nodes()
     {
         for (int c = 0; c < ncol; c++)
         {
-            int bid = get_nodeid(r, c);
+            int bid = get_box_index(r, c);
             Box * box = nodegroup[bid];
             if (box->active)
                 box->number = number++;
@@ -316,14 +316,14 @@ void ModflowGrid2D::add_connections()
     {
         for (int j = 0; j < ncol; j++)
         {
-            int nodeid = get_nodeid(i, j);
+            int box_index = get_box_index(i, j);
 
-            Box * nodeobj = nodegroup[nodeid];
+            Box * nodeobj = nodegroup[box_index];
 
             if (i < nrow - 1)
             {
                 //make connection to front
-                int to_node = get_nodeid(i + 1, j);
+                int to_node = get_box_index(i + 1, j);
                 int fldir = -2;
                 nodeobj->addConnection(nodegroup[to_node], fldir);
             }
@@ -331,21 +331,21 @@ void ModflowGrid2D::add_connections()
             if (i > 0)
             {
                 //make connection to back
-                int to_node = get_nodeid(i - 1, j);
+                int to_node = get_box_index(i - 1, j);
                 int fldir = 2;
                 nodeobj->addConnection(nodegroup[to_node], fldir);
             }
             if (j < ncol - 1)
             {
                 //make connection to right
-                int to_node = get_nodeid(i, j + 1);
+                int to_node = get_box_index(i, j + 1);
                 int fldir = 1;
                 nodeobj->addConnection(nodegroup[to_node], fldir);
             }
             if (j > 0)
             {
                 //make connection to left
-                int to_node = get_nodeid(i, j - 1);
+                int to_node = get_box_index(i, j - 1);
                 int fldir = -1;
                 nodeobj->addConnection(nodegroup[to_node], fldir);
             }

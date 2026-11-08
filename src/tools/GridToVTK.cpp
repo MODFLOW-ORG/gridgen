@@ -7,6 +7,30 @@
 #include <sstream>
 using namespace std;
 
+static void write_vtk_separate_vertices(ModflowGrid * modflow, string vtkName,
+                                        bool without_inactive, bool one_based_numbering);
+static void write_vtk_separate_vertices(QuadTree3D * qtree, string vtkName);
+static void write_vtk_shared_vertices(ModflowGrid * mfgrid, string vtkName, bool without_inactive,
+                                      bool one_based_numbering);
+static void write_vtk_shared_vertices(QuadTree3D * qtree, string vtkName);
+
+void write_vtk(ModflowGrid * modflow, string vtkName, bool share_vertices, bool without_inactive,
+               bool one_based_numbering)
+{
+    if (share_vertices)
+        write_vtk_shared_vertices(modflow, vtkName, without_inactive, one_based_numbering);
+    else
+        write_vtk_separate_vertices(modflow, vtkName, without_inactive, one_based_numbering);
+}
+
+void write_vtk(QuadTree3D * qtree, string vtkName, bool share_vertices)
+{
+    if (share_vertices)
+        write_vtk_shared_vertices(qtree, vtkName);
+    else
+        write_vtk_separate_vertices(qtree, vtkName);
+}
+
 //reverse interpolate the z coordinates for all boxes
 //void reverseInterpolate(QuadTree3D* qtree);
 
@@ -86,8 +110,8 @@ void writeDataArray(ofstream & ofile, string type, string name, const vector<Dty
 }
 
 //export modflow grid to a paraview vtk file
-void writeModflowGrid2VTK(ModflowGrid * modflow, string vtkName, bool without_inactive,
-                          bool one_based_numbering)
+static void write_vtk_separate_vertices(ModflowGrid * modflow, string vtkName,
+                                        bool without_inactive, bool one_based_numbering)
 {
     GridVertices gv(modflow);
     //write the points, loop over each layer
@@ -122,7 +146,7 @@ void writeModflowGrid2VTK(ModflowGrid * modflow, string vtkName, bool without_in
         {
             for (int c = 0; c < ncol; c++)
             {
-                int bid = modflow->get_nodeid(l, r, c);
+                int bid = modflow->get_box_index(l, r, c);
                 Box * box = modflow->nodegroup[bid];
 
                 //if(box->isLeaf && box->active)
@@ -264,7 +288,7 @@ void DFSWriteQDT2VTK(QuadTree3D * qtree, ofstream & ofile, int & point_count, Bo
 }
 
 //write the Quadtree grid
-void writeQuadtreeGrid2VTK(QuadTree3D * qtree, string vtkName)
+static void write_vtk_separate_vertices(QuadTree3D * qtree, string vtkName)
 {
     //make sure the number of the nodes are correct
     qtree->number_nodes();
@@ -285,7 +309,7 @@ void writeQuadtreeGrid2VTK(QuadTree3D * qtree, string vtkName)
           << "\" >";
 
     vector<string> intNames, dbNames;
-    vector<int> int_values[6]; // nodeid, nodeNums, layers, rows, cols, vtkid;
+    vector<int> int_values[6]; // box_index, nodeNums, layers, rows, cols, vtkid;
     intNames.push_back("nodeid");
     intNames.push_back("nodenumber");
     intNames.push_back("layer");
@@ -309,7 +333,7 @@ void writeQuadtreeGrid2VTK(QuadTree3D * qtree, string vtkName)
         {
             for (int c = 0; c < mfgrid->ncol; c++)
             {
-                int bid = mfgrid->get_nodeid(l, r, c);
+                int bid = mfgrid->get_box_index(l, r, c);
                 Box * box = qtree->nodegroup[bid];
 
                 if (box->active)
@@ -428,8 +452,8 @@ void buildSharingVertices_mfgrid(ModflowGrid * mfgrid, vector<Vertex *> & vdata,
                 z = QuadTree3D::bilinear_interpolation(pos, &ag);
 
                 //the corner of the cell to the southeast, or of the last row or column
-                Box * box = mfgrid->nodegroup[mfgrid->get_nodeid(0, min(r, mfgrid->nrow - 1),
-                                                                 min(c, mfgrid->ncol - 1))];
+                Box * box = mfgrid->nodegroup[mfgrid->get_box_index(0, min(r, mfgrid->nrow - 1),
+                                                                    min(c, mfgrid->ncol - 1))];
                 int corner = (r < mfgrid->nrow) ? ((c < mfgrid->ncol) ? 0 : 1)
                                                 : ((c < mfgrid->ncol) ? 3 : 2);
                 const Point2d & xy = gv.vertices()[gv.corners(box)[corner]];
@@ -449,7 +473,7 @@ void buildSharingVertices_mfgrid(ModflowGrid * mfgrid, vector<Vertex *> & vdata,
         {
             for (int c = 0; c < mfgrid->ncol; c++)
             {
-                int bid = mfgrid->get_nodeid(k, r, c);
+                int bid = mfgrid->get_box_index(k, r, c);
                 Box * box = mfgrid->nodegroup[bid];
                 box_vertices[box->id].vertices[0] = vdata[k * mfgrid_esize + r * perrow_esize + c];
                 box_vertices[box->id].vertices[1] =
@@ -482,7 +506,7 @@ int collectCell_share(ModflowGrid * mfgrid, vector<Box *> & allBoxes, vector<int
         {
             for (int c = 0; c < mfgrid->ncol; c++)
             {
-                int bid = mfgrid->get_nodeid(k, r, c);
+                int bid = mfgrid->get_box_index(k, r, c);
                 Box * b = mfgrid->nodegroup[bid];
                 if (b->isLeaf)
                 {
@@ -526,8 +550,8 @@ int collectCell_share(ModflowGrid * mfgrid, vector<Box *> & allBoxes, vector<int
     return cellNum;
 }
 
-void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool without_inactive,
-                                 bool one_based_numbering)
+static void write_vtk_shared_vertices(ModflowGrid * mfgrid, string vtkName, bool without_inactive,
+                                      bool one_based_numbering)
 {
     int nboxes = mfgrid->nodegroup.size();
     vector<BoxVtx> box_vertex_data(nboxes);
@@ -541,7 +565,7 @@ void writeModflowGrid2VTK_shareV(ModflowGrid * mfgrid, string vtkName, bool with
     vector<Box *> allBoxes;
 
     vector<string> intNames, dbNames;
-    vector<int> int_values[6]; // nodeid, nodeNums, layers, rows, cols, vtkid;
+    vector<int> int_values[6]; // box_index, nodeNums, layers, rows, cols, vtkid;
     intNames.push_back("nodeid");
     intNames.push_back("nodenumber");
     intNames.push_back("layer");
@@ -677,7 +701,7 @@ int collectCell_share(QuadTree3D * qtree, vector<Box *> & allBoxes, vector<int> 
         {
             for (int c = 0; c < mfgrid->ncol; c++)
             {
-                int bid = mfgrid->get_nodeid(k, r, c);
+                int bid = mfgrid->get_box_index(k, r, c);
                 Box * box = qtree->nodegroup[bid];
                 if (box->active)
                     DFScollectCell_share(box, k, r, c, qtree, allBoxes, cellNum, int_values,
@@ -988,7 +1012,7 @@ void buildBox(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> & eda
         {
             for (int c = 0; c < mfgrid->ncol; c++)
             {
-                int bid = mfgrid->get_nodeid(k, r, c);
+                int bid = mfgrid->get_box_index(k, r, c);
                 Box * box = qtree->nodegroup[bid];
 
                 for (int t = 0; t < 2; t++)
@@ -1017,7 +1041,7 @@ void buildBox(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *> & eda
         {
             for (int c = 0; c < mfgrid->ncol; c++)
             {
-                int bid = mfgrid->get_nodeid(k, r, c);
+                int bid = mfgrid->get_box_index(k, r, c);
                 Box * box = qtree->nodegroup[bid];
 
                 DFSbuildBox(box, vdata, edata, boxdata);
@@ -1333,12 +1357,12 @@ void write_vtu_file(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *>
     ModflowGrid * mfgrid = qtree->getModflowGrid();
     //begin to write
     double cx, cy, rotation;
-    mfgrid->getRotatePara(cx, cy, rotation);
+    mfgrid->get_rotation(cx, cy, rotation);
 
     vector<Box *> allBoxes;
 
     vector<string> intNames, dbNames;
-    vector<int> int_values[6]; // nodeid, nodeNums, layers, rows, cols, vtkid;
+    vector<int> int_values[6]; // box_index, nodeNums, layers, rows, cols, vtkid;
     intNames.push_back("nodeid");
     intNames.push_back("nodenumber");
     intNames.push_back("layer");
@@ -1443,7 +1467,7 @@ void write_vtu_file(QuadTree3D * qtree, vector<VTK_V *> & vdata, vector<VTK_E *>
 }
 
 //
-void writeQuadtreeGrid2VTK_shareV(QuadTree3D * qtree, string vtkName)
+static void write_vtk_shared_vertices(QuadTree3D * qtree, string vtkName)
 {
     qtree->number_nodes();
 

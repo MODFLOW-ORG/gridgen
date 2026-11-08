@@ -45,12 +45,12 @@ inline int getField(string field_name, ShapeReader & shpReader)
     return -1;
 }
 
-void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & rawdata)
+void Quadtree_Builder::build(QuadTree3D * qtree, QuadtreeBuilderBlock & rawdata)
 {
     //rotate qtree
     ModflowGrid * rmfgrid = qtree->getModflowGrid();
     double cx, cy, angle;
-    rmfgrid->getRotatePara(cx, cy, angle);
+    rmfgrid->get_rotation(cx, cy, angle);
 
     //set z-value interpolation methods
     for (int i = 0; i < rawdata.modflow_data->nlay; i++)
@@ -58,12 +58,12 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
         string operation_top = tolower(rawdata.top[i].first);
 
         if (operation_top == "replicate")
-            qtree->setTopOperators(i, QuadTree3D::Z_VALUE_REPLICATE_OPERATOR);
+            qtree->set_top_operator(i, QuadTree3D::Z_VALUE_REPLICATE_OPERATOR);
         else if (operation_top == "interpolate")
-            qtree->setTopOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
+            qtree->set_top_operator(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
         else if (operation_top == "asciigrid") //ASCII file
         {
-            qtree->setTopOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
+            qtree->set_top_operator(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
             qtree->setTopSource(i, rawdata.top[i].second);
 
             if (rawdata.top_area_weighted.find(i) != rawdata.top_area_weighted.end())
@@ -80,12 +80,12 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
 
         string operation_bot = tolower(rawdata.bot[i].first);
         if (operation_bot == "replicate")
-            qtree->setBotOperators(i, QuadTree3D::Z_VALUE_REPLICATE_OPERATOR);
+            qtree->set_bottom_operator(i, QuadTree3D::Z_VALUE_REPLICATE_OPERATOR);
         else if (operation_bot == "interpolate")
-            qtree->setBotOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
+            qtree->set_bottom_operator(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
         else if (operation_bot == "asciigrid") //ASCII file
         {
-            qtree->setBotOperators(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
+            qtree->set_bottom_operator(i, QuadTree3D::Z_VALUE_LINEAR_INTERPOLATION_OPERATOR);
             qtree->setBotSource(i, rawdata.bot[i].second);
 
             if (rawdata.bot_area_weighted.find(i) != rawdata.bot_area_weighted.end())
@@ -107,7 +107,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
     {
         cout << "  * Refine grid at layer " << i + 1 << endl;
 
-        list<refinement_raw_data *> & refinements = rawdata.refine_by_features[i];
+        list<RefinementFeaturesBlock *> & refinements = rawdata.refine_by_features[i];
         for (auto refinement : refinements)
         {
             string block = "REFINEMENT_FEATURES " + refinement->name;
@@ -136,7 +136,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
             int nfeatures = 0, noutside = 0;
             if (feature_type == "line")
             {
-                vector<GIS_plyline> & arcs = shp_reader.getArcList();
+                vector<GIS_polyline> & arcs = shp_reader.getArcList();
                 //subdivide the qtree using the features
                 nfeatures = arcs.size();
                 for (int j = 0; j < nfeatures; j++)
@@ -146,7 +146,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
 
                     int level = (bByAttribute) ? int_fields[field_index].values[arcs[j].m_id]
                                                : refinement->refinement_level;
-                    if (!qtree->refine((c_plyline &)arcs[j], level, i)) noutside++;
+                    if (!qtree->refine((Polyline &)arcs[j], level, i)) noutside++;
 
                     //rotate back
                     if (angle != 0) arcs[j].rotate(cx, cy, angle);
@@ -219,7 +219,7 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
     GridDomain gd;
     for (int i = 0; i < rawdata.modflow_data->nlay; i++)
     {
-        list<active_domain_raw_data *> & refinements = rawdata.active_domain_data[i];
+        list<ActiveDomainBlock *> & refinements = rawdata.active_domain_data[i];
         if (refinements.empty()) continue;
 
         cout << "  * Determine the active domain for layer " << i + 1 << endl;
@@ -245,12 +245,12 @@ void Quadtree_Builder::build(QuadTree3D * qtree, quadtree_builder_raw_data & raw
     cout << "  * Build surface elevation" << endl;
     double * top_elev = qtree->get_top();
     double * bot_elev = qtree->get_bot();
-    qtree->recompute_z_of_cells();
+    qtree->set_cell_elevations();
 
     if (rawdata.auto_alignment)
     {
         //perform auto alignment here
-        qtree->align_elev();
+        qtree->align_shared_elevations();
     }
 
     // count number of active cells with negative thickness
@@ -266,29 +266,29 @@ void Quadtree_Builder::analyze_elevation(QuadTree3D * qtree, double * top_elev, 
     double max_negative_thickness = -FLT_MAX;
 
     //for each leaf node
-    for (int nodenumber = 0; nodenumber < nodesize; nodenumber++)
+    for (int cell = 0; cell < nodesize; cell++)
     {
-        Box * box = qtree->get_nodeobj(nodenumber);
+        Box * box = qtree->get_cell_box(cell);
         assert(box->isLeaf);                //make sure this node is a leaf node...
         if (box->active == false) continue; //disabled...
 
         //check to top and bottom
-        if (top_elev[nodenumber] < bot_elev[nodenumber]) //negative thickness..
+        if (top_elev[cell] < bot_elev[cell]) //negative thickness..
         {
-            double negative_thickness = bot_elev[nodenumber] - top_elev[nodenumber];
+            double negative_thickness = bot_elev[cell] - top_elev[cell];
             negative_count++;
             if (negative_thickness > max_negative_thickness)
             {
                 max_negative_thickness = negative_thickness;
-                max_negative_node = nodenumber;
+                max_negative_node = cell;
             }
         }
-    } //end for nodenumber
+    } //end for cell
 
     if (negative_count > 0)
     {
         //the node as numbered in the output, with its layer
-        Box * box = qtree->get_nodeobj(max_negative_node);
+        Box * box = qtree->get_cell_box(max_negative_node);
         int offset = qtree->get_one_based_node_numbering() ? 1 : 0;
         stringstream msg;
         msg << "There are " << negative_count << " cells with negative thickness. Node "

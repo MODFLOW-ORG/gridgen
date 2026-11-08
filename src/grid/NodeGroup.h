@@ -35,7 +35,7 @@ class Grid; //defined in Grid.h
         method first checks to see if there are any removed node spaces
         that can be used and it uses them if possible.
     
-        Whenever nodes are added or removed, the rebuild_nodeid_array flag
+        Whenever nodes are added or removed, the rebuild_box_index_array flag
         is set to true indicating that the nodes need to be renumbered.
 
     */
@@ -58,21 +58,21 @@ public:
 
     /*!
             Return an array of size of the number of active leaf nodes
-            and include in the array the nodeid.
+            and include in the array the box_index.
 
-            nodeid_array[nodenumber] = nodeid
+            box_index_array[cell] = box_index
         */
-    int * get_nodeid_array();
+    int * get_box_index_array();
 
     /*!
-         * return a nodelay_array, which contains the number of
+         * return a layer_cell_counts, which contains the number of
             nodes per layer:
-            nodelay_array[layer] = nodes in layer
+            layer_cell_counts[layer] = nodes in layer
             This method numbers the nodes by layer, starting with the
             lowest layer number.
          *
          */
-    int * get_nodelay_array();
+    int * get_layer_cell_counts();
 
     ///make all nodes in the given layer as disabled
     void disable_nodes_in_layer(int layer);
@@ -88,12 +88,12 @@ public:
     // Data (TODO: move these to protected section)
     //
     //
-    Grid * grid;               //the hosting Grid
-    vector<int> nodeid_array;  //node ids (mapping node number to node id)
-    vector<int> nodelay_array; //number of nodes per layer
-    int nlay;                  //total number of layers
+    Grid * grid;                   //the hosting Grid
+    vector<int> box_index_array;   //node ids (mapping node number to node id)
+    vector<int> layer_cell_counts; //number of nodes per layer
+    int nlay;                      //total number of layers
 
-    bool rebuild_nodeid_array; //rebuild node id
+    bool rebuild_box_index_array; //rebuild node id
 
     int nextnodenumber;
 
@@ -107,7 +107,7 @@ protected:
     int active_leaf_number; //number of leaves store in this group (active nodes only)
 
     /*!
-         * build information of nodelay_array and nodeid_array
+         * build information of layer_cell_counts and box_index_array
          *
          */
     void build_node_info();

@@ -18,9 +18,9 @@ using uint = unsigned int;
 
 void ShapeReader::destroy()
 {
-    for (auto & ply : m_ply_list) ply.destroy();
+    for (auto & ring : m_polygon_list) ring.destroy();
     for (auto & arc : m_arc_list) arc.destroy();
-    m_ply_list.clear();
+    m_polygon_list.clear();
     m_arc_list.clear();
     m_pt_list.clear();
 
@@ -136,7 +136,7 @@ bool ShapeReader::read(const string & filename)
     SHPGetInfo(hSHP, &nEntities, &nShapeType, adfMinBound, adfMaxBound);
 
     //reserve space
-    m_ply_list.reserve(nEntities);
+    m_polygon_list.reserve(nEntities);
 
     //	Skim over the list of shapes, printing all the vertices
     int nunsupported = 0;
@@ -171,7 +171,7 @@ bool ShapeReader::read(const string & filename)
             case SHPT_POLYGONZ:
             case SHPT_POLYGONM:
             {
-                readPly(psShape, i);
+                read_polygon(psShape, i);
                 break;
             }
             case SHPT_ARC:
@@ -356,7 +356,7 @@ private:
     }
 };
 
-void ShapeReader::readPly(SHPObject * psShape, int iShape)
+void ShapeReader::read_polygon(SHPObject * psShape, int iShape)
 {
     //the vertices of each part
     vector<vector<Point2d>> rings;
@@ -423,16 +423,16 @@ void ShapeReader::readPly(SHPObject * psShape, int iShape)
         {
             if (depth[i] % 2 != hole) continue;
             int owner = hole && parent[i] >= 0 ? polygon_of[parent[i]] : -1;
-            c_ply ply(owner >= 0 ? c_ply::PIN : c_ply::POUT);
-            ply.beginPoly();
-            for (const Point2d & p : rings[i]) ply.addVertex(p[0], p[1]);
-            ply.endPoly();
+            Ring ring(owner >= 0 ? Ring::PIN : Ring::POUT);
+            ring.beginPoly();
+            for (const Point2d & p : rings[i]) ring.addVertex(p[0], p[1]);
+            ring.endPoly();
             if (owner >= 0)
-                m_ply_list[owner].push_back(ply);
+                m_polygon_list[owner].push_back(ring);
             else
             {
-                polygon_of[i] = static_cast<int>(m_ply_list.size());
-                add_ply(ply, iShape);
+                polygon_of[i] = static_cast<int>(m_polygon_list.size());
+                add_polygon(ring, iShape);
             }
         }
     }
@@ -469,22 +469,22 @@ void ShapeReader::readMultiPatch(SHPObject * psShape, int iShape)
         }
 
         bool outer = !started || type == SHPP_OUTERRING || type == SHPP_FIRSTRING;
-        c_ply ply(outer ? c_ply::POUT : c_ply::PIN);
-        ply.beginPoly();
+        Ring ring(outer ? Ring::POUT : Ring::PIN);
+        ring.beginPoly();
         for (int j = stId; j <= endId; j++)
         {
             //Points may duplicate....
             double & x = psShape->padfX[j];
             double & y = psShape->padfY[j];
-            ply.addVertex(x, y);
+            ring.addVertex(x, y);
 
             if (x < bbox[0]) bbox[0] = x;
             if (x > bbox[1]) bbox[1] = x;
             if (y < bbox[2]) bbox[2] = y;
             if (y > bbox[3]) bbox[3] = y;
         }
-        ply.endPoly();
-        add_ply(ply, iShape);
+        ring.endPoly();
+        add_polygon(ring, iShape);
         started = true;
     }
 }
@@ -495,7 +495,7 @@ void ShapeReader::readArc(SHPObject * psShape, int iShape)
     int iPart = 1;
 
     //
-    GIS_plyline arc;
+    GIS_polyline arc;
     arc.beginPoly();
 
     for (int j = 0; j < psShape->nVertices; j++)
@@ -514,8 +514,8 @@ void ShapeReader::readArc(SHPObject * psShape, int iShape)
             arc.computeGeodesicDist();
             m_arc_list.push_back(arc);
 
-            //create a new ply
-            arc = GIS_plyline();
+            //create a new ring
+            arc = GIS_polyline();
             arc.beginPoly();
         }
 
@@ -555,20 +555,20 @@ void ShapeReader::readPts(SHPObject * psShape, int iShape)
     }
 }
 
-void ShapeReader::add_ply(c_ply & ply, int iShape)
+void ShapeReader::add_polygon(Ring & ring, int iShape)
 {
-    if (ply.getType() == c_ply::POUT)
+    if (ring.getType() == Ring::POUT)
     {
         //create a new polygon
         GIS_polygon polygon;
         polygon.m_id = iShape;
-        polygon.push_back(ply);
-        m_ply_list.push_back(polygon);
+        polygon.push_back(ring);
+        m_polygon_list.push_back(polygon);
     }
     else
-    { //c_ply::PIN
+    { //Ring::PIN
         //add to the last polygon
-        m_ply_list.back().push_back(ply);
+        m_polygon_list.back().push_back(ring);
     }
 }
 

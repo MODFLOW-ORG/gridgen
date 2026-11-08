@@ -22,12 +22,12 @@ namespace cusg
 {
 
 //-----------------------------------------------------------------------------
-class block_raw_data;         //defined later
-class active_domain_raw_data; //defined later in this file
-class modflow_grid_raw_data;  //defined later in this file
-class Grid;                   //defined in Grid.h
-class ModflowGrid;            //defined in ModflowGrid.h
-class QuadTree3D;             //defined in QuadTree3D.h
+class DefinitionBlock;   //defined later
+class ActiveDomainBlock; //defined later in this file
+class ModflowGridBlock;  //defined later in this file
+class Grid;              //defined in Grid.h
+class ModflowGrid;       //defined in ModflowGrid.h
+class QuadTree3D;        //defined in QuadTree3D.h
 class LGR_Child_Grid;
 class LGR_Grid;
 
@@ -41,7 +41,7 @@ protected:
     virtual ~BaseParser() {}
 
     //read a block
-    virtual bool readBlock(istream & in, block_raw_data & block);
+    virtual bool readBlock(istream & in, DefinitionBlock & block);
 
     //convert a string to a list of tokens
     virtual list<string> tokenize(char * line, const char * ignore);
@@ -121,29 +121,29 @@ protected:
 };
 
 //-----------------------------------------------------------------------------
-struct entry_raw_data
+struct BlockRecord
 {
     string name;
     list<string> value;
 };
 
 //-----------------------------------------------------------------------------
-class block_raw_data : public list<entry_raw_data>, public BaseParser
+class DefinitionBlock : public list<BlockRecord>, public BaseParser
 {
 public:
-    block_raw_data()
+    DefinitionBlock()
     {
         folderPath = "";
         m_initialized = false;
     }
 
-    block_raw_data(string fpath)
+    DefinitionBlock(string fpath)
     {
         folderPath = fpath;
         m_initialized = false;
     }
 
-    block_raw_data(block_raw_data & other) : BaseParser(), list<entry_raw_data>()
+    DefinitionBlock(DefinitionBlock & other) : BaseParser(), list<BlockRecord>()
     {
         m_initialized = false;
         assign(other.begin(), other.end());
@@ -152,10 +152,10 @@ public:
         folderPath = other.folderPath;
     }
 
-    ~block_raw_data() override {}
+    ~DefinitionBlock() override {}
 
     virtual bool parse() { return true; } //do nothing by default
-    virtual bool initialize(map<string, block_raw_data *> & blocks)
+    virtual bool initialize(map<string, DefinitionBlock *> & blocks)
     {
         return true;
     } //do nothing by default
@@ -219,11 +219,11 @@ protected:
     }
 
     //the block named by record rname of this block
-    block_raw_data * findBlock(map<string, block_raw_data *> & blocks, const string & rname,
-                               const string & block_name);
+    DefinitionBlock * findBlock(map<string, DefinitionBlock *> & blocks, const string & rname,
+                                const string & block_name);
 
     //the error for a record that names a block of the wrong type
-    GridgenError wrongBlockType(const string & rname, block_raw_data * block,
+    GridgenError wrongBlockType(const string & rname, DefinitionBlock * block,
                                 const string & expected)
     {
         return GridgenError("record " + toupper(rname) + " in " + label() + " names " +
@@ -231,11 +231,11 @@ protected:
     }
 
     //the MODFLOW_GRID block named by record MODFLOW_GRID of this block, initialized
-    modflow_grid_raw_data * findModflowGrid(map<string, block_raw_data *> & blocks,
-                                            const string & grid_name);
+    ModflowGridBlock * findModflowGrid(map<string, DefinitionBlock *> & blocks,
+                                       const string & grid_name);
 
     //the grid named by record rname of this block, initialized and built
-    Grid * buildReferencedGrid(map<string, block_raw_data *> & blocks, const string & rname,
+    Grid * buildReferencedGrid(map<string, DefinitionBlock *> & blocks, const string & rname,
                                const string & grid_name);
 
     //report NODE_NUMBERING and WITHOUT_INACTIVE as ignored for a quadtree grid
@@ -247,19 +247,19 @@ protected:
 
 //-----------------------------------------------------------------------------
 
-class grid_raw_data : public block_raw_data
+class GridBlock : public DefinitionBlock
 {
 public:
-    grid_raw_data() {}
-    grid_raw_data(block_raw_data & block) : block_raw_data(block) {}
+    GridBlock() {}
+    GridBlock(DefinitionBlock & block) : DefinitionBlock(block) {}
     virtual Grid * build() = 0;
 };
 
 //-----------------------------------------------------------------------------
-class modflow_grid_raw_data : public grid_raw_data
+class ModflowGridBlock : public GridBlock
 {
 public:
-    modflow_grid_raw_data(block_raw_data & block) : grid_raw_data(block)
+    ModflowGridBlock(DefinitionBlock & block) : GridBlock(block)
     {
         rotation_angle = rotation_degrees = x_offset = y_offset = 0;
         nlay = nrow = ncol = 0;
@@ -269,10 +269,10 @@ public:
         length_unit = "undefined";
     }
 
-    ~modflow_grid_raw_data() override;
+    ~ModflowGridBlock() override;
 
     bool parse() override;
-    bool initialize(map<string, block_raw_data *> & blocks) override;
+    bool initialize(map<string, DefinitionBlock *> & blocks) override;
     Grid * build() override;
 
     REAL rotation_angle;   //radians
@@ -303,19 +303,19 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-class quadtree_grid_raw_data : public grid_raw_data
+class QuadtreeBlock : public GridBlock
 {
 public:
-    quadtree_grid_raw_data(block_raw_data & block) : grid_raw_data(block)
+    QuadtreeBlock(DefinitionBlock & block) : GridBlock(block)
     {
         modflow_data = nullptr;
         qtree_grid = nullptr;
     }
 
-    ~quadtree_grid_raw_data() override;
+    ~QuadtreeBlock() override;
 
     bool parse() override;
-    bool initialize(map<string, block_raw_data *> & blocks) override;
+    bool initialize(map<string, DefinitionBlock *> & blocks) override;
     Grid * build() override;
 
     string modflow_grid;
@@ -326,23 +326,23 @@ public:
     map<int, list<string>> bot_str;
 
     //numerical data
-    modflow_grid_raw_data * modflow_data;
+    ModflowGridBlock * modflow_data;
     QuadTree3D * qtree_grid; //the quadtree built by this raw data
 
     //add by Guilin
     vector<TreeStructNode> allNodes;
     //use the allNodes to fill the QuadTree qtree_grid
-    void fillQuadTree3D();
+    void build_from_structure();
 };
 
 //-----------------------------------------------------------------------------
-class refinement_raw_data; //defined below
-class quadtree_builder_raw_data : public grid_raw_data
+class RefinementFeaturesBlock; //defined below
+class QuadtreeBuilderBlock : public GridBlock
 {
 public:
     bool isAction() const override { return true; }
 
-    quadtree_builder_raw_data(block_raw_data & block) : grid_raw_data(block)
+    QuadtreeBuilderBlock(DefinitionBlock & block) : GridBlock(block)
     {
         smoothing_level_horizontal = smoothing_level_vertical = 1;
         modflow_data = nullptr;
@@ -352,10 +352,10 @@ public:
         auto_alignment = true;
     }
 
-    ~quadtree_builder_raw_data() override;
+    ~QuadtreeBuilderBlock() override;
 
     bool parse() override;
-    bool initialize(map<string, block_raw_data *> & blocks) override;
+    bool initialize(map<string, DefinitionBlock *> & blocks) override;
     Grid * build() override;
 
     int smoothing_level_horizontal;
@@ -375,15 +375,15 @@ public:
     map<int, list<string>> bot_str;
 
     //numerical data
-    modflow_grid_raw_data * modflow_data;
+    ModflowGridBlock * modflow_data;
 
     //
-    vector<list<active_domain_raw_data *>> active_domain_data;
+    vector<list<ActiveDomainBlock *>> active_domain_data;
 
     //the quadtree created by this class
     QuadTree3D * qtree_grid;
 
-    vector<list<refinement_raw_data *>> refine_by_features;
+    vector<list<RefinementFeaturesBlock *>> refine_by_features;
     vector<pair<string, string>>
         top; //first string is the operation and the second string is the source name
              //the operation can be "REPLICATE", "INTERPOLATE" or "ASCIIGRID"
@@ -396,10 +396,13 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-class refinement_raw_data : public block_raw_data
+class RefinementFeaturesBlock : public DefinitionBlock
 {
 public:
-    refinement_raw_data(block_raw_data & block) : block_raw_data(block) { refinement_level = 1; }
+    RefinementFeaturesBlock(DefinitionBlock & block) : DefinitionBlock(block)
+    {
+        refinement_level = 1;
+    }
 
     bool parse() override;
 
@@ -411,10 +414,10 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class surface_interpolation_raw_data : public block_raw_data
+class SurfaceInterpolationBlock : public DefinitionBlock
 {
 public:
-    surface_interpolation_raw_data(block_raw_data & block) : block_raw_data(block) {}
+    SurfaceInterpolationBlock(DefinitionBlock & block) : DefinitionBlock(block) {}
 
     string filename;
     string surface_type;
@@ -424,19 +427,19 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class grid_intersection_raw_data : public block_raw_data
+class GridIntersectionBlock : public DefinitionBlock
 {
 public:
     bool isAction() const override { return true; }
 
-    grid_intersection_raw_data(block_raw_data & block) : block_raw_data(block)
+    GridIntersectionBlock(DefinitionBlock & block) : DefinitionBlock(block)
     {
         grid = nullptr;
         layer = 0;
     }
 
     bool parse() override;
-    bool initialize(map<string, block_raw_data *> & blocks) override;
+    bool initialize(map<string, DefinitionBlock *> & blocks) override;
 
     string grid_name; //name of the grid to convert usg_data from
     string shapefile;
@@ -452,19 +455,19 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class grid_to_usgdata_raw_data : public block_raw_data
+class GridToUsgdataBlock : public DefinitionBlock
 {
 public:
     bool isAction() const override { return true; }
 
-    grid_to_usgdata_raw_data(block_raw_data & block) : block_raw_data(block)
+    GridToUsgdataBlock(DefinitionBlock & block) : DefinitionBlock(block)
     {
         grid = nullptr;
         vertical_pass_through = false;
     }
 
     bool parse() override;
-    bool initialize(map<string, block_raw_data *> & blocks) override;
+    bool initialize(map<string, DefinitionBlock *> & blocks) override;
 
     string grid_name;       //name of the grid to convert usg_data from
     string usg_data_prefix; //name of the usg_data file
@@ -475,12 +478,12 @@ public:
 };
 
 //----------------------------------------------------------------------------
-class gridtoshape_raw_data : public block_raw_data
+class GridToShapefileBlock : public DefinitionBlock
 {
 public:
     bool isAction() const override { return true; }
 
-    gridtoshape_raw_data(block_raw_data & block) : block_raw_data(block)
+    GridToShapefileBlock(DefinitionBlock & block) : DefinitionBlock(block)
     {
         grid = nullptr;
         feature_type = "polygon";
@@ -490,7 +493,7 @@ public:
     }
 
     bool parse() override;
-    bool initialize(map<string, block_raw_data *> & blocks) override;
+    bool initialize(map<string, DefinitionBlock *> & blocks) override;
 
     string grid_name;
     string feature_type;
@@ -507,16 +510,13 @@ public:
 };
 
 //----------------------------------------------------------------------------
-class active_domain_raw_data : public block_raw_data
+class ActiveDomainBlock : public DefinitionBlock
 {
 public:
-    active_domain_raw_data(block_raw_data & block) : block_raw_data(block)
-    {
-        include_boundary = true;
-    }
+    ActiveDomainBlock(DefinitionBlock & block) : DefinitionBlock(block) { include_boundary = true; }
 
     bool parse() override;
-    bool initialize(map<string, block_raw_data *> & blocks) override;
+    bool initialize(map<string, DefinitionBlock *> & blocks) override;
 
     string feature_type;
     string shapefile;
@@ -527,12 +527,12 @@ public:
 
 //----------------------------------------------------------------------------
 //added on Aug. 21st
-class gridtovtk_raw_data : public block_raw_data
+class GridToVtkfileBlock : public DefinitionBlock
 {
 public:
     bool isAction() const override { return true; }
 
-    gridtovtk_raw_data(block_raw_data & block) : block_raw_data(block)
+    GridToVtkfileBlock(DefinitionBlock & block) : DefinitionBlock(block)
     {
         grid = nullptr;
         b_share_vertex = true;
@@ -541,7 +541,7 @@ public:
     }
 
     bool parse() override;
-    bool initialize(map<string, block_raw_data *> & blocks) override;
+    bool initialize(map<string, DefinitionBlock *> & blocks) override;
 
     string grid_name;
 

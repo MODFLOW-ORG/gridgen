@@ -8,10 +8,10 @@ using namespace cusg;
 const string _IFO_DEL = ",";
 
 // signed area of a ring, positive when it runs counterclockwise
-static double ringArea(ply_vertex * head)
+static double ringArea(LinkedVertex * head)
 {
     double area = 0.0;
-    ply_vertex * pv = head;
+    LinkedVertex * pv = head;
     do
     {
         const Point2d & a = pv->getPos();
@@ -236,7 +236,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
         dbfHandle = DBFCreate(dbf.c_str());
     }
 
-    //create nodenumber field
+    //create cell field
     int node_field_id = -1;
     if (!isTxt) node_field_id = DBFAddField(dbfHandle, "nodenumber", FTInteger, 12, 0);
     vector<int> intFldIDs; //create integer fields
@@ -305,7 +305,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
 
-            //write nodenumber
+            //write cell
             if (!isTxt)
                 DBFWriteIntegerAttribute(dbfHandle, entity, node_field_id,
                                          pit->box->number == -1 ? -1 : pit->box->number + 1);
@@ -329,7 +329,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             vector<string> & strVals = *sit;
             vector<string> & logVals = *lit;
 
-            int vertex_count = lineInfo.m_plyline->getSize();
+            int vertex_count = lineInfo.m_polyline->getSize();
             if (vertex_count == 1)
             {
                 warn("The part of a line feature in node " + to_string(lineInfo.box->number + 1) +
@@ -340,7 +340,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             ys.assign(vertex_count, 0.0);
             x = xs.data();
             y = ys.data();
-            ply_vertex * pv = lineInfo.m_plyline->getHead();
+            LinkedVertex * pv = lineInfo.m_polyline->getHead();
             x[0] = pv->getPos()[0];
             y[0] = pv->getPos()[1];
             int vertex_index = 0;
@@ -350,7 +350,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                 vertex_index++;
                 x[vertex_index] = pv->getPos()[0];
                 y[vertex_index] = pv->getPos()[1];
-            } while (pv != lineInfo.m_plyline->getTail());
+            } while (pv != lineInfo.m_polyline->getTail());
 
             SHPObject * shpObj = nullptr;
             int entity = -1;
@@ -360,7 +360,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
 
-            //write nodenumber
+            //write cell
             if (!isTxt)
                 DBFWriteIntegerAttribute(dbfHandle, entity, node_field_id,
                                          pit->box->number == -1 ? -1 : pit->box->number + 1);
@@ -403,13 +403,13 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
 
             //make sure the out boundary
             list<c_polygon::iterator> orderedPItrs;
-            for (c_polygon::iterator plyit = pgonInfo.m_interPolygon->begin();
-                 plyit != pgonInfo.m_interPolygon->end(); ++plyit)
+            for (c_polygon::iterator ring_it = pgonInfo.m_interPolygon->begin();
+                 ring_it != pgonInfo.m_interPolygon->end(); ++ring_it)
             {
-                if (plyit->getType() == c_ply::POUT)
-                    orderedPItrs.push_front(plyit);
+                if (ring_it->getType() == Ring::POUT)
+                    orderedPItrs.push_front(ring_it);
                 else
-                    orderedPItrs.push_back(plyit);
+                    orderedPItrs.push_back(ring_it);
             }
 
             //part number
@@ -420,15 +420,15 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
             for (list<c_polygon::iterator>::iterator lit = orderedPItrs.begin();
                  lit != orderedPItrs.end(); ++lit, k++)
             {
-                c_polygon::iterator & plyit = *lit;
+                c_polygon::iterator & ring_it = *lit;
                 nParts[k] = part_start;
-                part_start += plyit->getSize() + 1;
+                part_start += ring_it->getSize() + 1;
 
                 // the shapefile specification orders the outer ring clockwise
                 // and holes counterclockwise
-                ply_vertex * head = plyit->getHead();
-                bool forward = (ringArea(head) < 0.0) == (plyit->getType() == c_ply::POUT);
-                ply_vertex * pv = head;
+                LinkedVertex * head = ring_it->getHead();
+                bool forward = (ringArea(head) < 0.0) == (ring_it->getType() == Ring::POUT);
+                LinkedVertex * pv = head;
                 do
                 {
                     x[vid] = pv->getPos()[0];
@@ -451,7 +451,7 @@ void writeIntersection(string file, int intFldNum, vector<vector<int>> & intfldV
                                          y, nullptr, nullptr);
                 entity = SHPWriteObject(handler, -1, shpObj);
             }
-            //write nodenumber
+            //write cell
             if (!isTxt)
                 DBFWriteIntegerAttribute(dbfHandle, entity, node_field_id,
                                          pit->box->number == -1 ? -1 : pit->box->number + 1);
