@@ -58,7 +58,7 @@ public:
     Box * end();
 
 private:
-    const Box * m_b;
+    const Box * m_start_box;
 
     int m_direction;
     int m_prev;

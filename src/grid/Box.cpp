@@ -73,7 +73,7 @@ namespace cusg
  *                           - 3: West
  */
 BoxIter::BoxIter(const Box * starting_node, int direction)
-    : m_b(starting_node), m_direction(direction), m_neighbor(nullptr)
+    : m_start_box(starting_node), m_direction(direction), m_neighbor(nullptr)
 {
     m_prev = (direction + 3) % 4;
     m_next = (direction + 1) % 4;
@@ -99,7 +99,7 @@ Box * BoxIter::first()
     // If 'b' is an internal node, then p_children, as the name implies,
     // holds pointers to the child nodes. For p_children: 0 = NW, 1 = NE,
     // 2 = SE, 3 = SW.
-    Box * n = m_b->p_children[m_direction];
+    Box * n = m_start_box->p_children[m_direction];
     if (!n)
     {
         // There's no nodes when we walk in this direction,
@@ -111,10 +111,10 @@ Box * BoxIter::first()
     // node from p_children, since p_children is holding neighbor nodes.
     // In that case, we're done; n points to the neighbor node in
     // the direction to walk, and we'll return n.
-    if (n->depth > m_b->depth)
+    if (n->depth > m_start_box->depth)
     {
         // If 'n' is outside the start box 'b', something's wrong.
-        assert(!Box::is_over_limit(m_b, n));
+        assert(!Box::is_over_limit(m_start_box, n));
 
         //get the next-most box whose x or y coord is still within the box b
 
@@ -124,13 +124,14 @@ Box * BoxIter::first()
             assert(n != nullptr);
 
             //when the n->p_children[next] is out of bound of b
-            if (n->p_children[m_next] == nullptr || Box::is_over_limit(m_b, n->p_children[m_next]))
+            if (n->p_children[m_next] == nullptr ||
+                Box::is_over_limit(m_start_box, n->p_children[m_next]))
             {
                 break;
             }
 
             //when the n->p_children[next] is bigger...
-            if (n->p_children[m_next]->depth < m_b->depth)
+            if (n->p_children[m_next]->depth < m_start_box->depth)
             {
                 break;
             }
@@ -142,7 +143,7 @@ Box * BoxIter::first()
         while (true)
         {
             assert(n != nullptr);
-            if (n->p_children[m_cross] == m_b)
+            if (n->p_children[m_cross] == m_start_box)
             {
                 break;
             }
@@ -160,9 +161,9 @@ Box * BoxIter::first()
  */
 Box * BoxIter::end()
 {
-    if (m_b->p_children[m_direction] != nullptr)
+    if (m_start_box->p_children[m_direction] != nullptr)
     {
-        return m_b->p_children[m_direction]->p_children[m_prev];
+        return m_start_box->p_children[m_direction]->p_children[m_prev];
     }
 
     return nullptr;

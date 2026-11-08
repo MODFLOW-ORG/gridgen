@@ -154,12 +154,13 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   names (`nlay`, `delr`, `ia`, `ja`), and shapelib's own names.
   Classes, structs, enums, and type aliases are PascalCase; functions,
   methods, variables, parameters, and members are snake_case, with `m_` for
-  private and protected members; constants, enumerators, and macros are
-  UPPER_CASE. clang-tidy checks the case (`.clang-tidy`, run by
+  private and protected members; `constexpr`, global, and static constants,
+  enumerators, and macros are UPPER_CASE (a local or member `const` is
+  snake_case). clang-tidy checks the case (`.clang-tidy`, run by
   `pixi run check-format` through `scripts/clang_tidy.py`, which configures
-  `builddir-lint/` on its first run) but not whole words, and does not rename
-  for you: rename by hand, and check that a renamed member is not now hidden
-  by a local of the same name.
+  `builddir-lint/` and downloads GoogleTest on its first run) but not whole
+  words, and does not rename for you: rename by hand, and check that a
+  renamed member is not now hidden by a local of the same name.
 - **Comments and documentation:** keep code comments and docstrings short,
   stating what a function does; put the reason, when one is needed, in an
   inline comment. Write the release notes for groundwater modelers rather
