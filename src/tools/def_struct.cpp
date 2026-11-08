@@ -1254,6 +1254,14 @@ bool gridtoshape_raw_data::initialize(map<string, block_raw_data *> & blocks)
     return true;
 }
 
+void block_raw_data::warnIfNotAction()
+{
+    if (isAction()) return;
+    warn(label() + " is not an action, so running it writes nothing; run a QUADTREE_BUILDER, "
+                   "GRID_TO_SHAPEFILE, GRID_TO_USGDATA, GRID_TO_VTKFILE, or GRID_INTERSECTION "
+                   "block to write output");
+}
+
 block_raw_data * block_raw_data::findBlock(map<string, block_raw_data *> & blocks,
                                            const string & rname, const string & block_name)
 {

@@ -190,6 +190,12 @@ public:
     //the block as it is written in the definition file, e.g. "MODFLOW_GRID block mfgrid"
     string label() { return toupper(type) + " block " + name; }
 
+    //whether running the block writes output, as an action block does
+    virtual bool isAction() const { return false; }
+
+    //warn that running the block writes nothing, unless it is an action
+    void warnIfNotAction();
+
 protected:
     //report that a record given in this block is ignored, and why
     void warnIgnored(const string & rname, const string & reason)
@@ -334,6 +340,8 @@ class refinement_raw_data; //defined below
 class quadtree_builder_raw_data : public grid_raw_data
 {
 public:
+    bool isAction() const override { return true; }
+
     quadtree_builder_raw_data(block_raw_data & block) : grid_raw_data(block)
     {
         smoothing_level_horizontal = smoothing_level_vertical = 1;
@@ -419,6 +427,8 @@ public:
 class grid_intersection_raw_data : public block_raw_data
 {
 public:
+    bool isAction() const override { return true; }
+
     grid_intersection_raw_data(block_raw_data & block) : block_raw_data(block)
     {
         grid = nullptr;
@@ -445,6 +455,8 @@ public:
 class grid_to_usgdata_raw_data : public block_raw_data
 {
 public:
+    bool isAction() const override { return true; }
+
     grid_to_usgdata_raw_data(block_raw_data & block) : block_raw_data(block)
     {
         grid = nullptr;
@@ -466,6 +478,8 @@ public:
 class gridtoshape_raw_data : public block_raw_data
 {
 public:
+    bool isAction() const override { return true; }
+
     gridtoshape_raw_data(block_raw_data & block) : block_raw_data(block)
     {
         grid = nullptr;
@@ -516,6 +530,8 @@ public:
 class gridtovtk_raw_data : public block_raw_data
 {
 public:
+    bool isAction() const override { return true; }
+
     gridtovtk_raw_data(block_raw_data & block) : block_raw_data(block)
     {
         grid = nullptr;

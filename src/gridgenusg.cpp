@@ -33,6 +33,7 @@ static int run(const string & action, const string & dfn_file)
 
     bool initialized = data->initialize(def_parser.getBlockData());
     if (initialized == false) throw GridgenError(data->label() + " cannot be read");
+    data->warnIfNotAction();
 
     Grid * grid = nullptr;
 

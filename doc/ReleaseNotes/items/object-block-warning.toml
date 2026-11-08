@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "input"
+description = "Running GRIDGEN with a block that is not an action, such as a MODFLOW_GRID, QUADTREE, REFINEMENT_FEATURES, or ACTIVE_DOMAIN block, wrote nothing and gave no message, as if the run had succeeded. As the GRIDGEN report describes, such a run still writes no output, but GRIDGEN now warns that the block is not an action and names the block types that write output: QUADTREE_BUILDER, GRID_TO_SHAPEFILE, GRID_TO_USGDATA, GRID_TO_VTKFILE, and GRID_INTERSECTION."
