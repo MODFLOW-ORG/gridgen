@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include "GridVertices.h"
+#include "GridgenError.h"
 #include "VertexExport.h"
 #include "grid_helpers.h"
 
@@ -227,4 +228,13 @@ TEST(VertexExport, Cell2dListsHangingVertices)
         }
         expect_points(listed, expected);
     }
+}
+
+TEST(VertexExport, UnwritableFileIsAnError)
+{
+    std::unique_ptr<QuadTree3D> qtree = make_northwest_refined(1);
+    std::string missing = ::testing::TempDir() + "gridgen_no_such_folder/grid";
+    EXPECT_THROW(write_gsf(qtree.get(), missing + ".gsf", false), GridgenError);
+    EXPECT_THROW(write_node_data_table(qtree.get(), missing + ".ndt"), GridgenError);
+    EXPECT_THROW(write_vertices_cell2d(qtree.get(), missing), GridgenError);
 }

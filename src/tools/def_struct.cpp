@@ -1440,7 +1440,7 @@ bool GridToGsfBlock::initialize(map<string, DefinitionBlock *> & blocks)
 
     this->grid = build_referenced_grid(blocks, "grid", grid_name);
 
-    if (has_record("hanging_vertices") && dynamic_cast<QuadTree3D *>(this->grid) == nullptr)
+    if (hanging_vertices && dynamic_cast<QuadTree3D *>(this->grid) == nullptr)
         warn_ignored("hanging_vertices",
                      "the cells of a MODFLOW_GRID are all the same size, so no cell has "
                      "hanging vertices");

@@ -549,6 +549,11 @@ TEST(DefinitionParser, GridToGsfBlock)
                                                     "BEGIN GRID_TO_GSF defaults\n"
                                                     "  GRID = mfg\n"
                                                     "  GSF_FILE = mfg.gsf\n"
+                                                    "END GRID_TO_GSF\n"
+                                                    "BEGIN GRID_TO_GSF corners\n"
+                                                    "  GRID = mfg\n"
+                                                    "  GSF_FILE = mfg.gsf\n"
+                                                    "  HANGING_VERTICES = FALSE\n"
                                                     "END GRID_TO_GSF\n");
     DefinitionParser parser;
     ASSERT_TRUE(parser.parse(dfn));
@@ -570,6 +575,13 @@ TEST(DefinitionParser, GridToGsfBlock)
     EXPECT_FALSE(defaults->hanging_vertices);
     EXPECT_TRUE(defaults->node_data_table_file.empty());
     EXPECT_TRUE(defaults->get_warnings().empty());
+
+    // asking for no hanging vertices asks for nothing the grid ignores
+    auto * corners = dynamic_cast<GridToGsfBlock *>(parser.get_block_data("corners"));
+    ASSERT_NE(corners, nullptr);
+    ASSERT_TRUE(corners->initialize(parser.get_block_data()));
+    EXPECT_FALSE(corners->hanging_vertices);
+    EXPECT_TRUE(corners->get_warnings().empty());
 }
 
 TEST(DefinitionParser, GridToGsfHangingVerticesOfQuadtreeIsNotReported)
