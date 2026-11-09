@@ -69,6 +69,7 @@ test/output_intersection/gridlines_*
 test/output_intersection/holeincell_*
 test/output_shapefiles/grid*
 test/output_vtkfiles/grid*
+test/output_gsf/grid*
 
 # meson subproject downloads
 subprojects/*

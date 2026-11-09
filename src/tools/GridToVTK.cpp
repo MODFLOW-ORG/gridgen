@@ -1505,3 +1505,83 @@ static void write_vtk_shared_vertices(QuadTree3D * qtree, string vtk_name)
         delete eit;
     }
 }
+
+//the corner of box nearest a point, as an index into the grid vertices
+static int nearest_corner(const GridVertices & gv, const Box * box, double x, double y)
+{
+    const int * ids = gv.corners(box);
+    int nearest = ids[0];
+    double dmin = DBL_MAX;
+    for (int j = 0; j < 4; j++)
+    {
+        const Point2d & p = gv.vertices()[ids[j]];
+        double d = (p[0] - x) * (p[0] - x) + (p[1] - y) * (p[1] - y);
+        if (d < dmin)
+        {
+            dmin = d;
+            nearest = ids[j];
+        }
+    }
+    return nearest;
+}
+
+map<pair<int, int>, double> vertex_elevations(Grid * grid, const GridVertices & gv)
+{
+    map<pair<int, int>, double> elevations;
+    QuadTree3D * qtree = dynamic_cast<QuadTree3D *>(grid);
+    if (qtree != nullptr)
+    {
+        qtree->number_nodes();
+        int nboxes = qtree->node_group.size();
+        vector<VtkVertex *> vdata;
+        vector<VtkEdge *> edata;
+        vector<VtkBox> boxes(nboxes);
+        VtkBox * boxdata = boxes.data();
+        build_sharing(qtree, vdata, edata, boxdata);
+        determine_vto_box(qtree, vdata, edata, boxdata);
+        vector<VtkVertex *> vtk_vertices;
+        number_share_vtk_v(qtree, vdata, boxdata, vtk_vertices);
+        interpolate_z(qtree, vdata, edata, boxdata, vtk_vertices);
+
+        double cx, cy, rotation;
+        qtree->get_modflow_grid()->get_rotation(cx, cy, rotation);
+        for (auto box : qtree->node_group)
+        {
+            if (!(box->is_leaf && box->active)) continue;
+            VtkBox & vtk_box = boxdata[box->id];
+            VtkVertex * vids[8] = {vtk_box.e[0]->v[0], vtk_box.e[0]->v[1], vtk_box.e[1]->v[1],
+                                   vtk_box.e[2]->v[0], vtk_box.e[4]->v[0], vtk_box.e[4]->v[1],
+                                   vtk_box.e[5]->v[1], vtk_box.e[6]->v[0]};
+            for (int i = 0; i < 8; i++)
+            {
+                double rotated_x, rotated_y;
+                rotate_one_pnt(vids[i]->pos[0], vids[i]->pos[1], cx, cy, rotation, rotated_x,
+                               rotated_y);
+                int vertex = nearest_corner(gv, box, rotated_x, rotated_y);
+                elevations[make_pair(vertex, box->layer + i / 4)] = vids[i]->pos[2];
+            }
+        }
+
+        for (auto & vit : vdata) delete vit;
+        for (auto & eit : edata) delete eit;
+        return elevations;
+    }
+
+    ModflowGrid * mfgrid = dynamic_cast<ModflowGrid *>(grid);
+    assert(mfgrid);
+    vector<BoxVtx> box_vertex_data(mfgrid->node_group.size());
+    vector<Vertex *> vdata;
+    build_sharing_vertices_mfgrid(mfgrid, vdata, box_vertex_data.data());
+    for (auto box : mfgrid->node_group)
+    {
+        if (!(box->is_leaf && box->active)) continue;
+        for (int i = 0; i < 8; i++)
+        {
+            Vertex * v = box_vertex_data[box->id].vertices[i];
+            int vertex = nearest_corner(gv, box, v->pos[0], v->pos[1]);
+            elevations[make_pair(vertex, box->layer + i / 4)] = v->pos[2];
+        }
+    }
+    for (auto & vit : vdata) delete vit;
+    return elevations;
+}

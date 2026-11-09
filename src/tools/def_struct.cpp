@@ -1258,8 +1258,8 @@ void DefinitionBlock::warn_if_not_action()
 {
     if (is_action()) return;
     warn(label() + " is not an action, so running it writes nothing; run a QUADTREE_BUILDER, "
-                   "GRID_TO_SHAPEFILE, GRID_TO_USGDATA, GRID_TO_VTKFILE, or GRID_INTERSECTION "
-                   "block to write output");
+                   "GRID_TO_SHAPEFILE, GRID_TO_USGDATA, GRID_TO_VTKFILE, GRID_TO_GSF, or "
+                   "GRID_INTERSECTION block to write output");
 }
 
 DefinitionBlock * DefinitionBlock::find_block(map<string, DefinitionBlock *> & blocks,
@@ -1380,6 +1380,70 @@ bool GridToVtkfileBlock::initialize(map<string, DefinitionBlock *> & blocks)
     this->grid = build_referenced_grid(blocks, "grid", grid_name);
 
     warn_quadtree_export_records(this->grid);
+
+    m_initialized = true;
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+//
+//
+// GridToGsfBlock
+//
+//
+//-----------------------------------------------------------------------------
+
+//a file name relative to the folder of the definition file, with forward slashes
+static string output_path(const string & folder, const string & name)
+{
+    string path = folder + name;
+    for (char & c : path)
+        if (c == '\\') c = '/';
+    return path;
+}
+
+bool GridToGsfBlock::parse()
+{
+    map<string, list<string>> name_value_map;
+
+    for (auto & i : *this)
+    {
+        string & name = i.name;
+        list<string> & value = i.value;
+
+        if (name.empty() || value.empty())
+            throw GridgenError("a record in " + label() + " has no name or no value");
+
+        name_value_map[name] = value;
+    }
+
+    list<string> & value = name_value_map["grid"];
+    if (value.empty()) throw missing_record("grid");
+    grid_name = value.front();
+
+    value = name_value_map["gsf_file"];
+    if (value.empty()) throw missing_record("gsf_file");
+    gsf_file = output_path(get_folder_path(), value.back());
+
+    value = name_value_map["node_data_table_file"];
+    if (!value.empty()) node_data_table_file = output_path(get_folder_path(), value.back());
+
+    value = name_value_map["hanging_vertices"];
+    if (!value.empty()) hanging_vertices = (tolower(value.front()) == "true");
+
+    return true;
+}
+
+bool GridToGsfBlock::initialize(map<string, DefinitionBlock *> & blocks)
+{
+    if (m_initialized) return true;
+
+    this->grid = build_referenced_grid(blocks, "grid", grid_name);
+
+    if (has_record("hanging_vertices") && dynamic_cast<QuadTree3D *>(this->grid) == nullptr)
+        warn_ignored("hanging_vertices",
+                     "the cells of a MODFLOW_GRID are all the same size, so no cell has "
+                     "hanging vertices");
 
     m_initialized = true;
     return true;

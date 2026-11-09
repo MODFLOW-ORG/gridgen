@@ -89,6 +89,13 @@ CASES = (
     ("buildqtg_hole", "action18_buildqtg_hole.dfn"),
     # the same polygon from a multipatch shapefile
     ("buildqtg_multipatch", "action19_buildqtg_multipatch.dfn"),
+    # grid specification files and node data tables, with and without hanging
+    # vertices, of the base, Biscayne, three-layer, and rotated grids
+    ("grid01mfg-to-gsf", "action20_gsf.dfn"),
+    ("grid02qtg-to-gsf", "action20_gsf.dfn"),
+    ("grid02qtg-to-gsf-hanging", "action20_gsf.dfn"),
+    ("grid03qtg-to-gsf", "action20_gsf.dfn"),
+    ("grid04qtg-to-gsf", "action20_gsf.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
@@ -116,6 +123,7 @@ SKIP_PATTERNS = (
 KNOWN_UNSTABLE = ()
 
 OUTPUT_DIRS = (
+    "output_gsf",
     "output_intersection",
     "output_shapefiles",
     "output_usgdata",

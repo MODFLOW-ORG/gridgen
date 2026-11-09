@@ -1,0 +1,3 @@
+section = "features"
+subsection = "export"
+description = "A new GRID_TO_GSF block writes a MODFLOW-USG grid specification file, and optionally a table of the base grid cell that contains each node, from the vertices that neighboring cells share, at full precision, with or without the corners of smaller neighbors on cell edges; the GRIDGEN2GSF program of the PEST Groundwater Utilities is no longer needed. A GRID_TO_USGDATA block now also writes the vertices of the grid and the CELL2D records of each cell for MODFLOW 6 DISU and DISV input. Both are described in the Tips and Recommendations section."

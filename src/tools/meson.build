@@ -2,6 +2,7 @@ tools_sources = files(
     'ascii_grid.cpp',
     'def_struct.cpp',
     'GridToVTK.cpp',
+    'VertexExport.cpp',
     'def_exporter.cpp',
     'GhostNode.cpp',
     'reader_treestruct.cpp',
