@@ -38,6 +38,7 @@ CASES = (
     ("grid03qtg-to-usgdata", "action07_multilayer.dfn"),
     ("grid03qtg-to-usgdata-vp", "action07_multilayer.dfn"),
     ("grid03qtg-to-usgdata-gncv", "action07_multilayer.dfn"),
+    ("grid03qtg-to-usgdata-vp-gncv", "action07_multilayer.dfn"),
     ("grid03qtg-to-polyshapefile", "action07_multilayer.dfn"),
     ("wells_grid03qtg_lay3_intersect", "action07_multilayer.dfn"),
     ("buffer_grid03qtg_lay2_intersect", "action07_multilayer.dfn"),

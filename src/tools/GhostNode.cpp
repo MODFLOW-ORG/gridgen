@@ -161,6 +161,10 @@ Box * side_neighbor(Box * cell, int direction, double transverse_offset)
 //small_cell in x and y
 void compute_vertical_gn(Box * small_cell, Box * large_cell, vector<GhostNode> & ghost_nodes)
 {
+    //a vertical pass-through connection can join cells that do not overlap (#163),
+    //and a ghost node outside large_cell would extrapolate
+    if (!large_cell->in(small_cell->x, small_cell->y)) return;
+
     double dx = small_cell->x - large_cell->x;
     double dy = small_cell->y - large_cell->y;
 
@@ -201,24 +205,6 @@ void compute_vertical_gn(Box * small_cell, Box * large_cell, vector<GhostNode> &
     ghost_nodes.push_back(ghost_node);
 }
 
-//the active leaves above (or below) box
-list<Box *> vertical_neighbors(Box * box, bool above)
-{
-    list<Box *> leaves;
-    if (above ? box->p_up == nullptr : box->p_down == nullptr) return leaves;
-    if (above)
-    {
-        box->refine_p_up();
-        box->p_up->get_leaves(leaves);
-    }
-    else
-    {
-        box->refine_p_down();
-        box->p_down->get_leaves(leaves);
-    }
-    return leaves;
-}
-
 void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes, bool vertical)
 {
     //loop over all the leaf node
@@ -240,18 +226,23 @@ void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes, bo
 
     if (!vertical) return;
 
-    //after the horizontal ghost nodes, so they are written as without
+    //after the horizontal ghost nodes, so they are written as without; the
+    //vertical connections are those of the CSR data, including the vertical
+    //pass-through connections across inactive cells
     for (auto b : qtree->node_group)
     {
         if (!b->is_leaf || b->number == -1) continue;
 
-        for (bool above : {true, false})
+        list<pair<int, int>> connections =
+            qtree->vertical_pass_through ? qtree->get_node_connections_with_pass_through(b, nullptr)
+                                         : qtree->get_node_connections(b);
+        for (const pair<int, int> & connection : connections)
         {
-            for (Box * neighbor : vertical_neighbors(b, above))
-            {
-                if (neighbor->number == -1 || neighbor->depth <= b->depth) continue;
-                compute_vertical_gn(neighbor, b, ghost_nodes);
-            }
+            //fldir is +3 for up and -3 for down
+            if (abs(connection.second) != 3) continue;
+            Box * neighbor = qtree->node_group[connection.first];
+            if (neighbor->number == -1 || neighbor->depth <= b->depth) continue;
+            compute_vertical_gn(neighbor, b, ghost_nodes);
         }
     }
 }

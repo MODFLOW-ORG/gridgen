@@ -322,3 +322,68 @@ TEST(GhostNode, VerticalCorrectionSkipsInactiveNeighbor)
         EXPECT_EQ(j->x, 150.0);
     }
 }
+
+TEST(GhostNode, VerticalCorrectionAcrossPassThrough)
+{
+    // 3 layers of 3 x 3 cells with the center cell of layer 3 refined and the
+    // center cell of layer 2 inactive; with pass-through the center cell of
+    // layer 1 connects to the four fine cells of layer 3 and gets their ghost
+    // nodes, and without it there are none
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(3, 3, 3, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{150.0, 150.0, 1, 2}});
+    qtree->node_group[mfgrid->get_box_index(1, 1, 1)]->active = false;
+    qtree->number_nodes();
+    qtree->refresh();
+
+    std::vector<GhostNode> vertical = vertical_ghost_nodes(qtree.get());
+    EXPECT_TRUE(vertical.empty());
+
+    qtree->vertical_pass_through = true;
+    std::set<std::pair<int, int>> connected = connections(qtree.get());
+    vertical = vertical_ghost_nodes(qtree.get());
+    ASSERT_EQ(vertical.size(), 4u);
+    for (const GhostNode & ghost_node : vertical)
+    {
+        Box * n = qtree->get_cell_box(ghost_node.large_node);
+        Box * m = qtree->get_cell_box(ghost_node.small_node);
+        EXPECT_EQ(n->layer, 0);
+        EXPECT_EQ(m->layer, 2);
+        int n_index = (int)ghost_node.large_node;
+        EXPECT_TRUE(connected.count(std::make_pair(n_index, (int)ghost_node.small_node)));
+        EXPECT_TRUE(connected.count(std::make_pair(n_index, (int)ghost_node.j1)));
+        EXPECT_TRUE(connected.count(std::make_pair(n_index, (int)ghost_node.j2)));
+        expect_linear_head_reproduced(qtree.get(), ghost_node);
+    }
+}
+
+TEST(GhostNode, NoVerticalCorrectionBetweenCellsThatDoNotOverlap)
+{
+    // 2 x 2 cells of 100 in 3 layers: the northwest cell of layer 1 refined
+    // once, the northwest cell of layer 2 inactive, and layer 3 refined twice;
+    // pass-through connects each fine cell of layer 1 to all 16 cells of layer
+    // 3 below the inactive cell (#163), but only the 4 below it get ghost nodes
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(3, 2, 2, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{50.0, 150.0, 1, 0},
+                                                                  {50.0, 150.0, 2, 2},
+                                                                  {150.0, 150.0, 2, 2},
+                                                                  {50.0, 50.0, 2, 2},
+                                                                  {150.0, 50.0, 2, 2}});
+    qtree->node_group[mfgrid->get_box_index(1, 0, 0)]->active = false;
+    qtree->number_nodes();
+    qtree->refresh();
+    qtree->vertical_pass_through = true;
+
+    int across = 0;
+    for (const GhostNode & ghost_node : vertical_ghost_nodes(qtree.get()))
+    {
+        Box * n = qtree->get_cell_box(ghost_node.large_node);
+        Box * m = qtree->get_cell_box(ghost_node.small_node);
+        EXPECT_TRUE(n->in(m->x, m->y))
+            << "n " << ghost_node.large_node << " m " << ghost_node.small_node;
+        EXPECT_LT(ghost_node.alpha1 + ghost_node.alpha2, 1.0);
+        if (n->layer == 0) across++;
+    }
+    // each fine cell of layer 1 is above 4 cells of layer 3, one of which is
+    // at the outer corner of the grid with no neighbor in x or y
+    EXPECT_EQ(across, 15);
+}
