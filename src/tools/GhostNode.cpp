@@ -161,10 +161,6 @@ Box * side_neighbor(Box * cell, int direction, double transverse_offset)
 //small_cell in x and y
 void compute_vertical_gn(Box * small_cell, Box * large_cell, vector<GhostNode> & ghost_nodes)
 {
-    //a vertical pass-through connection can join cells that do not overlap (#163),
-    //and a ghost node outside large_cell would extrapolate
-    if (!large_cell->in(small_cell->x, small_cell->y)) return;
-
     double dx = small_cell->x - large_cell->x;
     double dy = small_cell->y - large_cell->y;
 

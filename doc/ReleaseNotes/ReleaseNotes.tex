@@ -162,7 +162,6 @@ The following defects are known in this version. Each is tracked as an issue on 
 
 \begin{itemize}
   \item A horizontal ghost node in the .gnc.dat file does not reproduce a head that varies linearly when the only cell it is interpolated from is larger than the cell that contains the ghost node and offset along the connection, so the flow between the two connected cells is slightly in error. In a three-layer test grid this was the case for about 4 percent of the horizontal ghost nodes (\ghissue{161}).
-  \item With VERTICAL\_PASS\_THROUGH = True, a cell above or below an inactive cell that is larger than it is connected to every active cell on the other side of the inactive cell, including cells that are not below or above it, and each of these connections is given the area of the smallest cell in the column rather than the area the cells share. No ghost node is written for a connection between cells that do not overlap (\ghissue{163}).
 \end{itemize}
 
 \section{Documentation}
