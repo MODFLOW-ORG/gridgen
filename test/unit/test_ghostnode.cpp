@@ -2,12 +2,14 @@
 #include <cmath>
 #include <functional>
 #include <set>
+#include <string>
 #include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
 
 #include "GhostNode.h"
+#include "GridgenError.h"
 #include "grid_helpers.h"
 
 using namespace cusg;
@@ -386,4 +388,27 @@ TEST(GhostNode, NoVerticalCorrectionBetweenCellsThatDoNotOverlap)
     // each fine cell of layer 1 is above 4 cells of layer 3, one of which is
     // at the outer corner of the grid with no neighbor in x or y
     EXPECT_EQ(across, 15);
+}
+
+TEST(GhostNode, VerticalCorrectionWithMoreThanTwoNeighborsOnASideThrows)
+{
+    // layer 1: the east cell refined twice, so the center cell has four
+    // neighbors on its east side; layer 2: the center cell refined once. The
+    // horizontal ghost nodes do not use that side, the vertical ones do
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(2, 3, 3, 100.0, 100.0),
+                                                   {{250.0, 150.0, 2, 0}, {150.0, 150.0, 1, 1}});
+    std::vector<GhostNode> ghost_nodes;
+    EXPECT_NO_THROW(compute_ghost_nodes(qtree.get(), ghost_nodes));
+    ghost_nodes.clear();
+    try
+    {
+        compute_ghost_nodes(qtree.get(), ghost_nodes, true);
+        ADD_FAILURE() << "no error";
+    }
+    catch (const GridgenError & error)
+    {
+        EXPECT_NE(std::string(error.what()).find("more than two neighbors on one side"),
+                  std::string::npos)
+            << error.what();
+    }
 }
