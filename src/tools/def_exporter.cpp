@@ -184,7 +184,7 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
     {
         // Save ghost nodes to file
         string ghostnode_name = data.usg_data_prefix + ".gnc.dat";
-        quad_grid->save_ghost_node(ghostnode_name);
+        quad_grid->save_ghost_node(ghostnode_name, data.gnc_vertical);
 
         // save nodes per layer
         string nodesperlay_data_name = data.usg_data_prefix + ".nodesperlay.dat";

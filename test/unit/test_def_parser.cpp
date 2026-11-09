@@ -603,6 +603,68 @@ TEST(DefinitionParser, GridToGsfHangingVerticesOfQuadtreeIsNotReported)
     EXPECT_TRUE(data->get_warnings().empty());
 }
 
+namespace
+{
+
+// a GRID_TO_USGDATA block with GNC_VERTICAL = True, and other records
+std::string usgdata_block(const std::string & grid, const std::string & records = "")
+{
+    return "BEGIN GRID_TO_USGDATA usg\n"
+           "  GRID = " +
+           grid +
+           "\n"
+           "  USG_DATA_PREFIX = usg\n"
+           "  GNC_VERTICAL = True\n" +
+           records + "END GRID_TO_USGDATA\n";
+}
+
+const char * qtb_block = "BEGIN QUADTREE_BUILDER qtb\n"
+                         "  MODFLOW_GRID = mfg\n"
+                         "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                         "END QUADTREE_BUILDER\n";
+
+} // namespace
+
+TEST(DefinitionParser, GridToUsgdataGncVertical)
+{
+    std::istringstream dfn(std::string(mfg_block) + qtb_block + usgdata_block("qtb"));
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    auto * usg = dynamic_cast<GridToUsgdataBlock *>(parser.get_block_data("usg"));
+    ASSERT_NE(usg, nullptr);
+    EXPECT_TRUE(usg->gnc_vertical);
+    ASSERT_TRUE(usg->initialize(parser.get_block_data()));
+    EXPECT_TRUE(usg->gnc_vertical);
+    EXPECT_TRUE(usg->get_warnings().empty());
+}
+
+TEST(DefinitionParser, GridToUsgdataGncVerticalOfModflowGridIsIgnored)
+{
+    std::istringstream dfn(std::string(mfg_block) + usgdata_block("mfg"));
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    auto * usg = dynamic_cast<GridToUsgdataBlock *>(parser.get_block_data("usg"));
+    ASSERT_NE(usg, nullptr);
+    ASSERT_TRUE(usg->initialize(parser.get_block_data()));
+    EXPECT_FALSE(usg->gnc_vertical);
+    ASSERT_EQ(usg->get_warnings().size(), 1u);
+    EXPECT_NE(usg->get_warnings().front().find("GNC_VERTICAL"), std::string::npos);
+}
+
+TEST(DefinitionParser, GridToUsgdataGncVerticalWithPassThroughIsIgnored)
+{
+    std::istringstream dfn(std::string(mfg_block) + qtb_block +
+                           usgdata_block("qtb", "  VERTICAL_PASS_THROUGH = True\n"));
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    auto * usg = dynamic_cast<GridToUsgdataBlock *>(parser.get_block_data("usg"));
+    ASSERT_NE(usg, nullptr);
+    ASSERT_TRUE(usg->initialize(parser.get_block_data()));
+    EXPECT_FALSE(usg->gnc_vertical);
+    ASSERT_EQ(usg->get_warnings().size(), 1u);
+    EXPECT_NE(usg->get_warnings().front().find("VERTICAL_PASS_THROUGH"), std::string::npos);
+}
+
 TEST(DefinitionParser, GridToGsfWithoutFileIsAnError)
 {
     std::istringstream dfn(std::string(mfg_block) + "BEGIN GRID_TO_GSF gsf\n"

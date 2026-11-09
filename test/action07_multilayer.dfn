@@ -11,6 +11,12 @@ BEGIN GRID_TO_USGDATA grid03qtg-to-usgdata-vp
   VERTICAL_PASS_THROUGH = True
 END GRID_TO_USGDATA
 
+BEGIN GRID_TO_USGDATA grid03qtg-to-usgdata-gncv
+  GRID = grid03qtg
+  USG_DATA_PREFIX = output_usgdata/grid03qtg_gncv
+  GNC_VERTICAL = True
+END GRID_TO_USGDATA
+
 BEGIN GRID_TO_SHAPEFILE grid03qtg-to-polyshapefile
   GRID = grid03qtg
   SHAPEFILE = output_shapefiles/grid03qtg

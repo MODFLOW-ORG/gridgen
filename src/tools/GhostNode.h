@@ -8,10 +8,10 @@ namespace cusg
 //	small_node (node number of the small cell),
 //	j1 (neighbor in the direction of the ghost node),
 //	j2 (neighbor in the direction of the ghost node),
-//	alpha1 (parameterized distance to the ghost node from j1),
-//	alpha2 (parameterized distance to the ghost node from j2)
-//	(if j1 and j2 are defined then alpha1 and alpha2 are
-//	half of the case of only j1 is defined)
+//	alpha1 (contributing factor of j1),
+//	alpha2 (contributing factor of j2)
+//	(when only one cell contributes, j1 and j2 are that cell and
+//	alpha1 and alpha2 are each half its factor)
 struct GhostNode
 {
     long large_node;
@@ -22,8 +22,10 @@ struct GhostNode
     double alpha2;
 };
 
-//compute the ghost node for QuadTree3D grid
-void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes);
+//compute the ghost nodes of the horizontal connections between cells of
+//different size, and of the vertical connections too if vertical is true
+void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes,
+                         bool vertical = false);
 
 //write ghost node
 void write_ghost_node(string file_path, vector<GhostNode> & ghost_nodes, int offset);

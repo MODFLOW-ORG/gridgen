@@ -464,6 +464,7 @@ public:
     {
         grid = nullptr;
         vertical_pass_through = false;
+        gnc_vertical = false;
     }
 
     bool parse() override;
@@ -472,6 +473,7 @@ public:
     string grid_name;       //name of the grid to convert usg_data from
     string usg_data_prefix; //name of the usg_data file
     bool vertical_pass_through;
+    bool gnc_vertical; //write ghost nodes for vertical connections too
 
     //actual data...
     Grid * grid;

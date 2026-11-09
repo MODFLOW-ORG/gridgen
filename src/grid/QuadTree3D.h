@@ -161,8 +161,8 @@ public:
     ///number the nodes (i.e. leaves) in the grid
     void number_nodes() override;
 
-    ///save the Ghost Node to file
-    void save_ghost_node(string file_path);
+    ///save the ghost nodes to file, including those of vertical connections if vertical is true
+    void save_ghost_node(string file_path, bool vertical = false);
 
     ///refresh the tree to get the new box index and cell arrays
     void refresh();
@@ -211,8 +211,6 @@ protected:
     bool m_rebuild_box_index_array;
 
     bool m_one_based_node_numbering;
-
-    vector<GhostNode> m_gns; //store the ghost nodes
 
 public:
     enum LayerZValueOperator

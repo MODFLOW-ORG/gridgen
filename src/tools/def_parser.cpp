@@ -46,7 +46,8 @@ static const map<string, set<string>> & block_records()
     const char * grid_to_shapefile[] = {
         "grid",           "shapefile", "feature_type", "node_numbering", "without_inactive",
         "close_polygons", "concide",   nullptr};
-    const char * grid_to_usgdata[] = {"grid", "usg_data_prefix", "vertical_pass_through", nullptr};
+    const char * grid_to_usgdata[] = {"grid", "usg_data_prefix", "vertical_pass_through",
+                                      "gnc_vertical", nullptr};
     const char * grid_to_vtkfile[] = {"grid",           "vtkfile",          "share_vertex",
                                       "node_numbering", "without_inactive", nullptr};
     const char * grid_to_gsf[] = {"grid", "gsf_file", "hanging_vertices", "node_data_table_file",
