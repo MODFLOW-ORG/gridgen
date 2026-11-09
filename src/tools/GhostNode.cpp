@@ -14,12 +14,74 @@ bool between(double a, double b, double c)
     else
         return false;
 }
+//the barycentric weights of the point offset by (dx, dy) from the center of
+//cell in the triangle of the centers of cell, first, and second, so a head
+//that varies linearly is reproduced; false if the triangle has no area
+bool barycentric_weights(Box * cell, Box * first, Box * second, double dx, double dy,
+                         double & alpha1, double & alpha2)
+{
+    double x1 = first->x - cell->x;
+    double y1 = first->y - cell->y;
+    double x2 = second->x - cell->x;
+    double y2 = second->y - cell->y;
+    double determinant = x1 * y2 - x2 * y1;
+    if (fabs(determinant) <= 1.0e-9 * fabs(cell->dx * cell->dy)) return false;
+    alpha1 = (dx * y2 - dy * x2) / determinant;
+    alpha2 = (x1 * dy - y1 * dx) / determinant;
+    return true;
+}
+
+//interpolate the ghost node, offset by (dx, dy) from the center of
+//large_cell, from contributor and a second neighbor of large_cell when
+//contributor is offset along the connection, as a coarser neighbor is; of
+//the neighbors that give weights that are not negative, the one whose
+//weights sum least. Unchanged if contributor is aligned or there is none
+void add_second_contributor(Box * small_cell, Box * large_cell, Box * contributor, double dx,
+                            double dy, GhostNode & ghost_node)
+{
+    double offset_x = contributor->x - large_cell->x;
+    double offset_y = contributor->y - large_cell->y;
+    double cross = dx * offset_y - dy * offset_x;
+    if (fabs(cross) <= 1.0e-9 * fabs(large_cell->dx * large_cell->dy)) return;
+
+    Box * best = nullptr;
+    double best_alpha1 = 0.0, best_alpha2 = 0.0;
+    for (int side = 0; side < 4; side++)
+    {
+        list<Box *> neighbors;
+        large_cell->get_neighbors(neighbors, side);
+        for (Box * candidate : neighbors)
+        {
+            if (candidate->number == -1 || candidate == small_cell || candidate == contributor)
+                continue;
+            double alpha1, alpha2;
+            if (!barycentric_weights(large_cell, contributor, candidate, dx, dy, alpha1, alpha2))
+                continue;
+            if (alpha1 < 0 || alpha2 < 0 || alpha1 + alpha2 >= 1) continue;
+            if (best == nullptr || alpha1 + alpha2 < best_alpha1 + best_alpha2)
+            {
+                best = candidate;
+                best_alpha1 = alpha1;
+                best_alpha2 = alpha2;
+            }
+        }
+    }
+    if (best == nullptr) return;
+
+    ghost_node.j1 = contributor->number;
+    ghost_node.j2 = best->number;
+    ghost_node.alpha1 = best_alpha1;
+    ghost_node.alpha2 = best_alpha2;
+}
+
 void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostNode> & ghost_nodes)
 { //decide the node j first
 
     GhostNode ghost_node;
     ghost_node.small_node = small_cell->number;
     ghost_node.large_node = large_cell->number;
+    //the cell the ghost node is interpolated from when there is one
+    Box * contributor = nullptr;
 
     //if it is in north or south
     if (direction == 0 || direction == 2)
@@ -46,6 +108,7 @@ void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostN
 
         if (neighbors.size() == 1)
         {
+            contributor = neighbors.front();
             ghost_node.j1 = ghost_node.j2 = neighbors.front()->number;
             ghost_node.alpha1 =
                 ((large_cell->x - small_cell->x) / (large_cell->x - neighbors.front()->x)) /
@@ -84,6 +147,7 @@ void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostN
 
         if (neighbors.size() == 1)
         {
+            contributor = neighbors.front();
             ghost_node.j1 = ghost_node.j2 = neighbors.front()->number;
             ghost_node.alpha1 = ghost_node.alpha2 =
                 ((large_cell->y - small_cell->y) / (large_cell->y - neighbors.front()->y)) /
@@ -104,6 +168,16 @@ void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostN
 
     if (ghost_node.j1 == -1 || ghost_node.j2 == -1)
         return; //don't add it to ghost_nodes if j1 or j2 is inactive...
+
+    if (contributor != nullptr)
+    {
+        //the ghost node is level with the center of large_cell across the
+        //connection and with the center of small_cell along it
+        bool north_south = (direction == 0 || direction == 2);
+        double dx = north_south ? small_cell->x - large_cell->x : 0.0;
+        double dy = north_south ? 0.0 : small_cell->y - large_cell->y;
+        add_second_contributor(small_cell, large_cell, contributor, dx, dy, ghost_node);
+    }
 
     ghost_nodes.push_back(ghost_node);
 }
@@ -175,17 +249,11 @@ void compute_vertical_gn(Box * small_cell, Box * large_cell, vector<GhostNode> &
 
     if (x_neighbor != nullptr && y_neighbor != nullptr)
     {
-        //barycentric weights of the ghost node in the triangle of the three
-        //cell centers, so a head that varies linearly is reproduced
-        double x1 = x_neighbor->x - large_cell->x;
-        double y1 = x_neighbor->y - large_cell->y;
-        double x2 = y_neighbor->x - large_cell->x;
-        double y2 = y_neighbor->y - large_cell->y;
-        double determinant = x1 * y2 - x2 * y1;
+        //neighbors in x and y are never in line with large_cell
         ghost_node.j1 = x_neighbor->number;
         ghost_node.j2 = y_neighbor->number;
-        ghost_node.alpha1 = (dx * y2 - dy * x2) / determinant;
-        ghost_node.alpha2 = (x1 * dy - y1 * dx) / determinant;
+        barycentric_weights(large_cell, x_neighbor, y_neighbor, dx, dy, ghost_node.alpha1,
+                            ghost_node.alpha2);
     }
     else
     {
