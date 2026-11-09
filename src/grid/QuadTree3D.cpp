@@ -574,9 +574,8 @@ int * QuadTree3D::get_layer_cell_counts()
 int * QuadTree3D::create_cell_array()
 {
     int nsize = node_group.size();
-    m_cell_array.resize(nsize);
-    //fill every byte with that of -INT_MAX, as memset did
-    memset(m_cell_array.data(), (int)-INT_MAX, sizeof(int) * nsize);
+    //a box that is not an active leaf has no cell
+    m_cell_array.assign(nsize, -1);
 
     int leaf_size = nodes();
 
@@ -622,7 +621,8 @@ int QuadTree3D::get_cell(int box_index)
     int cell = m_cell_array[box_index];
     if (cell == -1)
     {
-        throw GridgenError("internal error: cell " + to_string(box_index) + " has no node number");
+        throw GridgenError("internal error: box " + to_string(box_index) +
+                           " is not an active cell and has no cell number");
     }
 
     return cell;
