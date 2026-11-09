@@ -227,6 +227,31 @@ TEST(GhostNode, CoarserNeighborOffsetAwayFromSmallCell)
     EXPECT_TRUE(connected.count(std::make_pair((int)ghost_node->large_node, (int)ghost_node->j2)));
 }
 
+TEST(GhostNode, CoarserNeighborWithoutSecondCellKeepsOneCell)
+{
+    // the grid of CoarserNeighborOffsetTowardSmallCell with the west cell
+    // inactive; the other neighbors of the northwest quarter give a negative
+    // weight, so the ghost node is interpolated from the coarse cell alone
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 3, 3, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{162.5, 187.5, 2, 0}});
+    qtree->node_group[mfgrid->get_box_index(0, 1, 0)]->active = false;
+    qtree->number_nodes();
+    qtree->refresh();
+    std::vector<GhostNode> ghost_nodes;
+    compute_ghost_nodes(qtree.get(), ghost_nodes);
+
+    const GhostNode * ghost_node =
+        find_ghost_node(qtree.get(), ghost_nodes, {125.0, 175.0}, {162.5, 187.5});
+    ASSERT_NE(ghost_node, nullptr);
+    EXPECT_EQ(ghost_node->j1, ghost_node->j2);
+    Box * j1 = qtree->get_cell_box(ghost_node->j1);
+    EXPECT_EQ(j1->x, 150.0);
+    EXPECT_EQ(j1->y, 250.0);
+    // the distance across the connection over that to the coarse cell, halved
+    EXPECT_DOUBLE_EQ(ghost_node->alpha1, (12.5 / 75.0) / 2);
+    EXPECT_DOUBLE_EQ(ghost_node->alpha2, ghost_node->alpha1);
+}
+
 TEST(GhostNode, EveryHorizontalGhostNodeReproducesLinearHead)
 {
     // 6 x 6 cells of 100 refined by up to three levels at scattered points and

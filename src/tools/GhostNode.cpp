@@ -34,8 +34,9 @@ bool barycentric_weights(Box * cell, Box * first, Box * second, double dx, doubl
 //interpolate the ghost node, offset by (dx, dy) from the center of
 //large_cell, from contributor and a second neighbor of large_cell when
 //contributor is offset along the connection, as a coarser neighbor is; of
-//the neighbors that give weights that are not negative, the one whose
-//weights sum least. Unchanged if contributor is aligned or there is none
+//the neighbors that give weights that are not negative and sum to less than
+//one, the one whose weights sum least. Unchanged if contributor is aligned or
+//there is none
 void add_second_contributor(Box * small_cell, Box * large_cell, Box * contributor, double dx,
                             double dy, GhostNode & ghost_node)
 {
