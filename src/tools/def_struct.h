@@ -554,6 +554,32 @@ public:
     Grid * grid;
 };
 
+//----------------------------------------------------------------------------
+class GridToGsfBlock : public DefinitionBlock
+{
+public:
+    bool is_action() const override { return true; }
+
+    GridToGsfBlock(DefinitionBlock & block) : DefinitionBlock(block)
+    {
+        grid = nullptr;
+        hanging_vertices = false;
+    }
+
+    bool parse() override;
+    bool initialize(map<string, DefinitionBlock *> & blocks) override;
+
+    string grid_name;
+    string gsf_file;
+    string node_data_table_file; //empty if no node data table is written
+
+    //list the vertices of finer neighbors on the edges of each cell
+    bool hanging_vertices;
+
+    //actual data...
+    Grid * grid;
+};
+
 } //end namespace
 
 #endif //CUSG_DEF_STRUCT_H

@@ -4,6 +4,7 @@
 #include "QuadTree3D.h"
 #include "QuadTreeBuilder.h"
 #include "GridVertices.h"
+#include "VertexExport.h"
 #include "Warnings.h"
 #include <sstream>
 #include <algorithm>
@@ -176,6 +177,7 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
     assert(data.grid);
     CSRData csr = data.grid->get_usg_csr_data();
     save(data.usg_data_prefix, csr, nperlay);
+    write_vertices_cell2d(data.grid, data.usg_data_prefix);
 
     //save extra information for irregular map
     if (quad_grid != nullptr)

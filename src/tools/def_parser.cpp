@@ -49,6 +49,8 @@ static const map<string, set<string>> & block_records()
     const char * grid_to_usgdata[] = {"grid", "usg_data_prefix", "vertical_pass_through", nullptr};
     const char * grid_to_vtkfile[] = {"grid",           "vtkfile",          "share_vertex",
                                       "node_numbering", "without_inactive", nullptr};
+    const char * grid_to_gsf[] = {"grid", "gsf_file", "hanging_vertices", "node_data_table_file",
+                                  nullptr};
     const char * grid_intersection[] = {"grid",         "layer",       "shapefile",
                                         "feature_type", "output_file", "output_shapefile",
                                         "attributes",   nullptr};
@@ -58,11 +60,11 @@ static const map<string, set<string>> & block_records()
         const char * type;
         const char ** names;
     } blocks[] = {
-        {"modflow_grid", modflow_grid},          {"quadtree", quadtree},
-        {"quadtree_builder", quadtree_builder},  {"refinement_features", refinement_features},
-        {"active_domain", active_domain},        {"grid_to_shapefile", grid_to_shapefile},
-        {"grid_to_usgdata", grid_to_usgdata},    {"grid_to_vtkfile", grid_to_vtkfile},
-        {"grid_intersection", grid_intersection}};
+        {"modflow_grid", modflow_grid},         {"quadtree", quadtree},
+        {"quadtree_builder", quadtree_builder}, {"refinement_features", refinement_features},
+        {"active_domain", active_domain},       {"grid_to_shapefile", grid_to_shapefile},
+        {"grid_to_usgdata", grid_to_usgdata},   {"grid_to_vtkfile", grid_to_vtkfile},
+        {"grid_to_gsf", grid_to_gsf},           {"grid_intersection", grid_intersection}};
     for (auto & block : blocks)
     {
         set<string> & known = records[block.type];
@@ -141,6 +143,7 @@ DefinitionParser::DefinitionParser()
     m_block_type_map["grid_to_usgdata"] = &create_block_type<GridToUsgdataBlock>;
     m_block_type_map["grid_intersection"] = &create_block_type<GridIntersectionBlock>;
     m_block_type_map["grid_to_vtkfile"] = &create_block_type<GridToVtkfileBlock>;
+    m_block_type_map["grid_to_gsf"] = &create_block_type<GridToGsfBlock>;
 }
 
 //destructor

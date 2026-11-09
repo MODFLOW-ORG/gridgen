@@ -1,0 +1,38 @@
+# grid specification files of the base grid, the quadtree grid with and
+# without hanging vertices and with a node data table, the three-layer grid
+# with different refinement in each layer, and the rotated grid
+
+LOAD grid02qtg.dfn
+LOAD grid03qtg.dfn
+LOAD grid04qtg.dfn
+
+BEGIN GRID_TO_GSF grid01mfg-to-gsf
+  GRID = grid01mfg
+  GSF_FILE = output_gsf/grid01mfg.gsf
+  NODE_DATA_TABLE_FILE = output_gsf/grid01mfg.ndt
+END GRID_TO_GSF
+
+BEGIN GRID_TO_GSF grid02qtg-to-gsf
+  GRID = grid02qtg
+  GSF_FILE = output_gsf/grid02qtg.gsf
+  NODE_DATA_TABLE_FILE = output_gsf/grid02qtg.ndt
+END GRID_TO_GSF
+
+BEGIN GRID_TO_GSF grid02qtg-to-gsf-hanging
+  GRID = grid02qtg
+  GSF_FILE = output_gsf/grid02qtg_hanging.gsf
+  HANGING_VERTICES = True
+END GRID_TO_GSF
+
+BEGIN GRID_TO_GSF grid03qtg-to-gsf
+  GRID = grid03qtg
+  GSF_FILE = output_gsf/grid03qtg.gsf
+  HANGING_VERTICES = True
+  NODE_DATA_TABLE_FILE = output_gsf/grid03qtg.ndt
+END GRID_TO_GSF
+
+BEGIN GRID_TO_GSF grid04qtg-to-gsf
+  GRID = grid04qtg
+  GSF_FILE = output_gsf/grid04qtg.gsf
+  HANGING_VERTICES = True
+END GRID_TO_GSF

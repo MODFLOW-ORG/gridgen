@@ -1,7 +1,9 @@
 #include "GridVertices.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <list>
 
 #include "ModflowGrid.h"
 #include "QuadTree3D.h"
@@ -123,6 +125,47 @@ Point2d GridVertices::to_world(double xl, double yl) const
 const int * GridVertices::corners(const Box * box) const
 {
     return m_cells.at(box).corner;
+}
+
+vector<int> GridVertices::outline(Box * box) const
+{
+    const int * corner = corners(box);
+    // the corners a neighbor to the north, east, south, or west shares with box
+    const int shared[4][2] = {{3, 2}, {0, 3}, {1, 0}, {2, 1}};
+    vector<int> ids;
+    for (int side = 0; side < 4; side++)
+    {
+        int start = corner[side];
+        int end = corner[(side + 1) % 4];
+        ids.push_back(start);
+
+        const Point2d & a = m_vertices[start];
+        const Point2d & b = m_vertices[end];
+        double ex = b[0] - a[0];
+        double ey = b[1] - a[1];
+        double length_squared = ex * ex + ey * ey;
+
+        // vertices between the ends of the edge, by fraction of its length
+        vector<pair<double, int>> between;
+        list<Box *> neighbors;
+        box->get_neighbors(neighbors, side);
+        for (Box * neighbor : neighbors)
+        {
+            if (!neighbor->active) continue;
+            for (int j : shared[side])
+            {
+                int id = corners(neighbor)[j];
+                if (id == start || id == end) continue;
+                const Point2d & p = m_vertices[id];
+                double fraction = ((p[0] - a[0]) * ex + (p[1] - a[1]) * ey) / length_squared;
+                if (fraction > 0.0 && fraction < 1.0) between.push_back(make_pair(fraction, id));
+            }
+        }
+        sort(between.begin(), between.end());
+        between.erase(unique(between.begin(), between.end()), between.end());
+        for (auto & entry : between) ids.push_back(entry.second);
+    }
+    return ids;
 }
 
 void GridVertices::get_corners(const Box * box, double * x, double * y) const

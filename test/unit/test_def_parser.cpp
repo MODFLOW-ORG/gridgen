@@ -521,6 +521,7 @@ TEST(DefinitionParser, RunningABlockThatIsNotAnActionWarns)
     blocks.emplace_back(empty_block<GridToUsgdataBlock>("grid_to_usgdata"), true);
     blocks.emplace_back(empty_block<GridToVtkfileBlock>("grid_to_vtkfile"), true);
     blocks.emplace_back(empty_block<GridIntersectionBlock>("grid_intersection"), true);
+    blocks.emplace_back(empty_block<GridToGsfBlock>("grid_to_gsf"), true);
     for (auto & [block, is_action] : blocks)
     {
         clear_warnings();
@@ -535,4 +536,78 @@ TEST(DefinitionParser, RunningABlockThatIsNotAnActionWarns)
             << get_warnings()[0];
     }
     clear_warnings();
+}
+
+TEST(DefinitionParser, GridToGsfBlock)
+{
+    std::istringstream dfn(std::string(mfg_block) + "BEGIN GRID_TO_GSF gsf\n"
+                                                    "  GRID = mfg\n"
+                                                    "  GSF_FILE = output\\mfg.gsf\n"
+                                                    "  HANGING_VERTICES = TRUE\n"
+                                                    "  NODE_DATA_TABLE_FILE = mfg.ndt\n"
+                                                    "END GRID_TO_GSF\n"
+                                                    "BEGIN GRID_TO_GSF defaults\n"
+                                                    "  GRID = mfg\n"
+                                                    "  GSF_FILE = mfg.gsf\n"
+                                                    "END GRID_TO_GSF\n"
+                                                    "BEGIN GRID_TO_GSF corners\n"
+                                                    "  GRID = mfg\n"
+                                                    "  GSF_FILE = mfg.gsf\n"
+                                                    "  HANGING_VERTICES = FALSE\n"
+                                                    "END GRID_TO_GSF\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+
+    auto * gsf = dynamic_cast<GridToGsfBlock *>(parser.get_block_data("gsf"));
+    ASSERT_NE(gsf, nullptr);
+    ASSERT_TRUE(gsf->initialize(parser.get_block_data()));
+    EXPECT_NE(gsf->grid, nullptr);
+    EXPECT_EQ(gsf->gsf_file, "output/mfg.gsf");
+    EXPECT_TRUE(gsf->hanging_vertices);
+    EXPECT_EQ(gsf->node_data_table_file, "mfg.ndt");
+    // a MODFLOW grid has no hanging vertices
+    ASSERT_EQ(gsf->get_warnings().size(), 1u);
+    EXPECT_NE(gsf->get_warnings().front().find("HANGING_VERTICES"), std::string::npos);
+
+    auto * defaults = dynamic_cast<GridToGsfBlock *>(parser.get_block_data("defaults"));
+    ASSERT_NE(defaults, nullptr);
+    ASSERT_TRUE(defaults->initialize(parser.get_block_data()));
+    EXPECT_FALSE(defaults->hanging_vertices);
+    EXPECT_TRUE(defaults->node_data_table_file.empty());
+    EXPECT_TRUE(defaults->get_warnings().empty());
+
+    // asking for no hanging vertices asks for nothing the grid ignores
+    auto * corners = dynamic_cast<GridToGsfBlock *>(parser.get_block_data("corners"));
+    ASSERT_NE(corners, nullptr);
+    ASSERT_TRUE(corners->initialize(parser.get_block_data()));
+    EXPECT_FALSE(corners->hanging_vertices);
+    EXPECT_TRUE(corners->get_warnings().empty());
+}
+
+TEST(DefinitionParser, GridToGsfHangingVerticesOfQuadtreeIsNotReported)
+{
+    std::istringstream dfn(std::string(mfg_block) + "BEGIN QUADTREE_BUILDER qtb\n"
+                                                    "  MODFLOW_GRID = mfg\n"
+                                                    "  GRID_DEFINITION_FILE = qtg.dfn\n"
+                                                    "END QUADTREE_BUILDER\n"
+                                                    "BEGIN GRID_TO_GSF gsf\n"
+                                                    "  GRID = qtb\n"
+                                                    "  GSF_FILE = qtg.gsf\n"
+                                                    "  HANGING_VERTICES = True\n"
+                                                    "END GRID_TO_GSF\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    DefinitionBlock * data = parser.get_block_data("gsf");
+    ASSERT_NE(data, nullptr);
+    ASSERT_TRUE(data->initialize(parser.get_block_data()));
+    EXPECT_TRUE(data->get_warnings().empty());
+}
+
+TEST(DefinitionParser, GridToGsfWithoutFileIsAnError)
+{
+    std::istringstream dfn(std::string(mfg_block) + "BEGIN GRID_TO_GSF gsf\n"
+                                                    "  GRID = mfg\n"
+                                                    "END GRID_TO_GSF\n");
+    EXPECT_EQ(error_message([&] { DefinitionParser().parse(dfn); }),
+              "GRID_TO_GSF block gsf has no GSF_FILE record");
 }

@@ -11,7 +11,7 @@
 #include "GridToVTK.h"
 
 #include "vert_pass.h"
-#include "GridToVTK.h"
+#include "VertexExport.h"
 #include "gridgen_version.h"
 #include "GridgenError.h"
 
@@ -44,6 +44,7 @@ static int run(const string & action, const string & dfn_file)
     GridToUsgdataBlock * grid2usg = dynamic_cast<GridToUsgdataBlock *>(data);
     GridIntersectionBlock * grid_intersection = dynamic_cast<GridIntersectionBlock *>(data);
     GridToVtkfileBlock * grid2vtk = dynamic_cast<GridToVtkfileBlock *>(data);
+    GridToGsfBlock * grid2gsf = dynamic_cast<GridToGsfBlock *>(data);
 
     //check if this is a type of grid
     if (grid_data != nullptr)
@@ -66,6 +67,10 @@ static int run(const string & action, const string & dfn_file)
     else if (grid2vtk != nullptr)
     {
         grid = grid2vtk->grid;
+    }
+    else if (grid2gsf != nullptr)
+    {
+        grid = grid2gsf->grid;
     }
 
     QuadTree3D * qtree_grid = dynamic_cast<QuadTree3D *>(grid);
@@ -116,6 +121,14 @@ static int run(const string & action, const string & dfn_file)
         {
             throw GridgenError("the grid to export is neither a MODFLOW grid nor a quadtree grid");
         }
+    }
+    else if (grid2gsf != nullptr)
+    {
+        cout << "- Saving grid: " << grid2gsf->grid_name
+             << " to grid specification file: " << grid2gsf->gsf_file << endl;
+        write_gsf(grid, grid2gsf->gsf_file, grid2gsf->hanging_vertices);
+        if (!grid2gsf->node_data_table_file.empty())
+            write_node_data_table(grid, grid2gsf->node_data_table_file);
     }
     else if (grid2usg != nullptr)
     {
