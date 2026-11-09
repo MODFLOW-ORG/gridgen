@@ -362,8 +362,8 @@ TEST(GhostNode, NoVerticalCorrectionBetweenCellsThatDoNotOverlap)
 {
     // 2 x 2 cells of 100 in 3 layers: the northwest cell of layer 1 refined
     // once, the northwest cell of layer 2 inactive, and layer 3 refined twice;
-    // pass-through connects each fine cell of layer 1 to all 16 cells of layer
-    // 3 below the inactive cell (#163), but only the 4 below it get ghost nodes
+    // pass-through connects each fine cell of layer 1 only to the 4 cells of
+    // layer 3 below it, and each of those connections gets a ghost node
     std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(3, 2, 2, 100.0, 100.0);
     std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{50.0, 150.0, 1, 0},
                                                                   {50.0, 150.0, 2, 2},

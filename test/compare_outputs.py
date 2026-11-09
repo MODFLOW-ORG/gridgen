@@ -132,6 +132,11 @@ OUTPUT_DIRS = (
     "output_vtkfiles",
 )
 
+# USG data whose vertical connections, including those through inactive
+# cells, must join cells that overlap, over no more than the smaller cell, and
+# cover no more than each cell up and down
+OVERLAP_CHECKS = ("output_usgdata/grid03qtg_vp",)
+
 
 def _ignore(src, names):
     skip = []
@@ -188,6 +193,44 @@ def compare_dirs(dir0, dir1):
     return diffs, len(files0 | files1)
 
 
+def _rows(path):
+    with open(path) as f:
+        return [line.split() for line in f if line.strip()]
+
+
+def check_vertical_overlap(prefix):
+    """Return the vertical connections of unrotated USG data that do not overlap."""
+    cells = [[float(v) for v in row[2:7]] for row in _rows(f"{prefix}.nod")[1:]]
+    errors = []
+    for ja, fldr, fahl in zip(
+        _rows(f"{prefix}.ja.dat"),
+        _rows(f"{prefix}.fldr.dat"),
+        _rows(f"{prefix}.fahl.dat"),
+    ):
+        n = int(ja[0]) - 1
+        covered = {3: 0.0, -3: 0.0}
+        for m, direction, area in zip(ja[1:], fldr[1:], fahl[1:]):
+            if int(direction) not in covered:
+                continue
+            small, large = sorted(
+                (cells[n], cells[int(m) - 1]), key=lambda cell: cell[3] * cell[4]
+            )
+            inside = (
+                abs(small[0] - large[0]) < large[3] / 2
+                and abs(small[1] - large[1]) < large[4] / 2
+            )
+            if not inside or float(area) > small[3] * small[4] * (1 + 1e-12):
+                errors.append(f"{n + 1} to {m} with area {area}")
+            covered[int(direction)] += float(area)
+        cell_area = cells[n][3] * cells[n][4]
+        for direction, area in covered.items():
+            if area > cell_area * (1 + 1e-12):
+                errors.append(
+                    f"{n + 1} covers {area} of {cell_area} in direction {direction}"
+                )
+    return errors
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("--exe", required=True, help="gridgen executable to test")
@@ -213,6 +256,10 @@ def main():
         run_cases(ref_exe, root / "ref")
         run_cases(exe, root / "test")
         diffs, nfiles = compare_dirs(root / "ref", root / "test")
+        overlap_errors = {
+            prefix: check_vertical_overlap(root / "test" / prefix)
+            for prefix in OVERLAP_CHECKS
+        }
     finally:
         if not args.keep:
             shutil.rmtree(root, ignore_errors=True)
@@ -225,12 +272,21 @@ def main():
         if d.startswith("differs: ") and d.split(": ", 1)[1].startswith(KNOWN_UNSTABLE)
     ]
     diffs = [d for d in diffs if d not in known]
+    nerrors = 0
+    for prefix, errors in overlap_errors.items():
+        if errors:
+            print(f"{len(errors)} vertical connections in {prefix} do not overlap:")
+            for e in errors[:10]:
+                print(f"  {e}")
+        nerrors += len(errors)
     for d in known:
         print(f"known unstable output {d}")
     if diffs:
         print(f"{len(diffs)} of {nfiles} files differ ({label}):")
         for d in diffs:
             print(f"  {d}")
+        return 1
+    if nerrors:
         return 1
     nsame = nfiles - len(known)
     print(f"{nsame} of {nfiles} files identical, {len(known)} known unstable ({label})")

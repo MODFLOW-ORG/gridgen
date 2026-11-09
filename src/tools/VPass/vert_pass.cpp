@@ -34,10 +34,24 @@ void gen_one_vp(list<Box *> & column, vector<VPassBox> & passes)
         passes.push_back(vertical_pass);
     }
 }
+//true if the footprints of two cells overlap; quadtree cells either nest or do
+//not overlap, so they overlap if the larger contains the center of the smaller
+bool overlaps(Box * first, Box * second)
+{
+    if (fabs(first->dx * first->dy) < fabs(second->dx * second->dy))
+        return second->in(first->x, first->y);
+    return first->in(second->x, second->y);
+}
 //exploration in two vertical directions
 void vertical_explore(Box * box, list<Box *> & column, vector<VPassBox> & passes,
                       bool top_to_down = true)
 {
+    //keep only the cells that overlap the smallest cell of the column; quadtree
+    //cells nest, so those overlap every cell of the column
+    Box * smallest = column.front();
+    for (auto cell : column)
+        if (fabs(cell->dx * cell->dy) < fabs(smallest->dx * smallest->dy)) smallest = cell;
+
     list<Box *> adjacent_boxes;
 
     if (top_to_down && box->p_down != nullptr)
@@ -49,6 +63,7 @@ void vertical_explore(Box * box, list<Box *> & column, vector<VPassBox> & passes
     {
         assert(adjacent != box);
         if (adjacent == nullptr || !(adjacent->is_leaf)) continue;
+        if (!overlaps(adjacent, smallest)) continue;
         if (adjacent->active)
         {
             if (column.size() >= 2)
