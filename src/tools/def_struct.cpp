@@ -1142,6 +1142,9 @@ bool GridToUsgdataBlock::parse()
         if (vs == "true") vertical_pass_through = true;
     }
 
+    value = name_value_map["gnc_vertical"];
+    if (!value.empty()) gnc_vertical = (tolower(value.front()) == "true");
+
     return true;
 }
 
@@ -1150,6 +1153,14 @@ bool GridToUsgdataBlock::initialize(map<string, DefinitionBlock *> & blocks)
     if (m_initialized) return true;
 
     this->grid = build_referenced_grid(blocks, "grid", grid_name);
+
+    //vertical ghost nodes apply only to a quadtree grid
+    if (gnc_vertical && dynamic_cast<QuadTree3D *>(this->grid) == nullptr)
+    {
+        warn_ignored("gnc_vertical", "a MODFLOW_GRID has no cells of different size, so no "
+                                     "connection needs a ghost node");
+        gnc_vertical = false;
+    }
 
     m_initialized = true;
 

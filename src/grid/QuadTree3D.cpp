@@ -1259,17 +1259,13 @@ ostream & operator<<(ostream & out, QuadTree3D & grid)
     return out;
 }
 
-void QuadTree3D::save_ghost_node(string file_path)
+void QuadTree3D::save_ghost_node(string file_path, bool vertical)
 {
-    if (m_gns.size() == 0)
-    {
-        //computed in full before it is kept, so an error leaves no partial list
-        vector<GhostNode> ghost_nodes;
-        compute_ghost_nodes(this, ghost_nodes);
-        m_gns.swap(ghost_nodes);
-    }
+    //computed in full before the file is opened, so an error leaves no partial file
+    vector<GhostNode> ghost_nodes;
+    compute_ghost_nodes(this, ghost_nodes, vertical);
 
-    write_ghost_node(file_path, m_gns, ((this->m_one_based_node_numbering) ? 1 : 0));
+    write_ghost_node(file_path, ghost_nodes, ((this->m_one_based_node_numbering) ? 1 : 0));
     cout << "- Save data to file: " << file_path << endl;
 }
 
