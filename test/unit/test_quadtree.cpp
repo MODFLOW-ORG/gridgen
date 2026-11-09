@@ -237,6 +237,58 @@ TEST(QuadTree, VerticalPassThroughConnectsOnlyOverlappingCells)
     EXPECT_EQ(across, 32);
 }
 
+TEST(QuadTree, VerticalPassThroughAcrossSeveralInactiveCells)
+{
+    // 2 x 2 cells of 100 in 4 layers. Northwest: layer 1 refined once, layer 2
+    // inactive, layer 3 refined once with all but its southeast cell inactive,
+    // and layer 4 refined twice. Northeast: layer 2 refined once with its two
+    // west cells inactive. Each cell of layer 1 is covered below in full
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(4, 2, 2, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(
+        mfgrid.get(),
+        {{50.0, 150.0, 1, 0}, {50.0, 150.0, 1, 2}, {50.0, 150.0, 2, 3}, {150.0, 150.0, 1, 1}});
+    qtree->node_group[mfgrid->get_box_index(1, 0, 0)]->active = false;
+    for (int n = 0; n < qtree->nodes(); n++)
+    {
+        Box * box = qtree->get_cell_box(n);
+        bool northwest = box->x < 100.0 && box->y > 100.0;
+        if (box->layer == 2 && northwest && !(box->x == 75.0 && box->y == 125.0))
+            box->active = false;
+        if (box->layer == 1 && box->x == 125.0) box->active = false;
+    }
+    qtree->number_nodes();
+    qtree->refresh();
+    qtree->vertical_pass_through = true;
+
+    CSRData csr = qtree->get_usg_csr_data();
+    expect_symmetric(csr);
+    expect_csr_valid(csr);
+
+    int layer_1_to_4 = 0;
+    for (int n = 0; n < csr.nodes; n++)
+    {
+        Box * bn = qtree->get_cell_box(n);
+        double covered_below = 0.0;
+        for (int ipos = csr.ia[n] + 1; ipos < csr.ia[n + 1]; ipos++)
+        {
+            if (std::abs(csr.fldr[ipos]) != 3) continue;
+            Box * bm = qtree->get_cell_box(csr.ja[ipos]);
+            Box * smaller = (csr.area[n] < csr.area[csr.ja[ipos]]) ? bn : bm;
+            Box * larger = (smaller == bn) ? bm : bn;
+            EXPECT_TRUE(larger->in(smaller->x, smaller->y)) << "n " << n << " m " << csr.ja[ipos];
+            EXPECT_LE(csr.fahl[ipos], std::min(csr.area[n], csr.area[csr.ja[ipos]]));
+            if (csr.fldr[ipos] == -3) covered_below += csr.fahl[ipos];
+            if (bn->layer == 0 && bm->layer == 3) layer_1_to_4++;
+            // the two inactive quarter cells of layer 2 below the northeast cell
+            if (bn->layer == 0 && bm->layer == 2 && bn->x == 150.0)
+                EXPECT_DOUBLE_EQ(csr.fahl[ipos], 5000.0);
+        }
+        if (bn->layer == 0) EXPECT_DOUBLE_EQ(covered_below, csr.area[n]) << "n " << n;
+    }
+    // 3 fine cells of layer 1, each above 4 cells of layer 4
+    EXPECT_EQ(layer_1_to_4, 12);
+}
+
 TEST(QuadTree, BoxWithNoCellNumberThrows)
 {
     // 3 x 3 cells of 100; the center cell is split and a corner cell inactive

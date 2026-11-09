@@ -46,8 +46,8 @@ bool overlaps(Box * first, Box * second)
 void vertical_explore(Box * box, list<Box *> & column, vector<VPassBox> & passes,
                       bool top_to_down = true)
 {
-    //an inactive cell can be larger than the source, so of the cells beyond it
-    //only those that overlap every cell of the column, the smallest, connect
+    //keep only the cells that overlap the smallest cell of the column; quadtree
+    //cells nest, so those overlap every cell of the column
     Box * smallest = column.front();
     for (auto cell : column)
         if (fabs(cell->dx * cell->dy) < fabs(smallest->dx * smallest->dy)) smallest = cell;

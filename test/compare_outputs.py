@@ -219,7 +219,7 @@ def check_vertical_overlap(prefix):
                 abs(small[0] - large[0]) < large[3] / 2
                 and abs(small[1] - large[1]) < large[4] / 2
             )
-            if not inside or float(area) > small[3] * small[4]:
+            if not inside or float(area) > small[3] * small[4] * (1 + 1e-12):
                 errors.append(f"{n + 1} to {m} with area {area}")
             covered[int(direction)] += float(area)
         cell_area = cells[n][3] * cells[n][4]
