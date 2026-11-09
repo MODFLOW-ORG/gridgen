@@ -1,0 +1,3 @@
+section = "internal"
+subsection = ""
+description = "Each GitHub release lists the new features, fixes, performance changes, and refactoring made since the previous release, each linked to its pull request."

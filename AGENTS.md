@@ -36,6 +36,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Set the version** (`version.txt` is the source; a version containing
   `dev` is a development version): `pixi run update-version --version <v>`;
   add `--date YYYY-MM-DD --releasemode` for a release
+- **Write the changelog of the release in progress** (the body of the GitHub
+  release, from `cliff.toml`): `pixi run changelog`
 
 ## Repository orientation
 
@@ -81,6 +83,14 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   match the branch.
 - **Release notes:** a pull request that changes gridgen adds a TOML item in
   `doc/ReleaseNotes/items/` (see the README there).
+- **Releases:** a pull request titled `chore: release <v>` runs
+  `pixi run update-version --version <v> --date YYYY-MM-DD --releasemode`;
+  check the changelog with `pixi run changelog` before it is merged. Then
+  run the `gridgen checks` workflow on `main` by hand (`workflow_dispatch`):
+  it builds the distributions and the release notes and creates release
+  `v<v>`, whose body is the changelog of the commits since the previous
+  release tag. A pull request `chore: set the version to <next>.dev0` then
+  starts the next development version.
 - **Pull request review:** after the first green CI run, have an agent on a
   smaller model review the diff, given the pull request's intent and the files
   but not the author's conclusions, and post its findings as a `## Review`
@@ -95,7 +105,11 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   refs, not `origin` refs, for the state of the repository.
 - **Commit messages:** conventional commits (`fix:`, `feat:`, `refactor:`,
   `test:`, `docs:`, `ci:`, `chore:`), kept concise: an imperative, lowercase
-  subject and a body that contrasts the previous and new behavior.
+  subject and a body that contrasts the previous and new behavior. A pull
+  request is squash merged, so its title is the commit subject, and the
+  subjects of `feat`, `fix`, `perf`, and `refactor` commits are the lines of
+  the changelog on the GitHub release; `build`, `chore`, `ci`, `docs`,
+  `style`, `test`, and `revert` commits are left out of it.
 - **Testing scope:** rebuild, then run the unit tests or test group that
   covers the change before the full `pixi run test`. Run
   `pixi run compare-main` when a change can alter output.
@@ -186,8 +200,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   build), and the versions in `pixi.toml` and `version.tex` from
   `pixi run update-version`.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
-  `LICENSE`, the lint configuration, `.clangd`, or
-  `.git-blame-ignore-revs` skip the build and tests
+  `LICENSE`, the lint configuration, `.clangd`, `.git-blame-ignore-revs`,
+  or `cliff.toml` skip the build and tests
   (`paths-ignore` in `.github/workflows/ci.yml`); update that list when adding
   non-code files. Adding or removing the `output-change` label starts a new
   run that cancels the one in progress (`cancel-in-progress`); any other
