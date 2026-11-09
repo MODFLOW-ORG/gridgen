@@ -30,10 +30,10 @@ commit_preprocessors = [
 ]
 # only changes to gridgen itself; build, chore, ci, docs, style, test, and revert are left out
 commit_parsers = [
-  { message = "^feat", group = "<!-- 0 -->New features" },
-  { message = "^fix", group = "<!-- 1 -->Fixes" },
-  { message = "^perf", group = "<!-- 2 -->Performance" },
-  { message = "^refactor", group = "<!-- 3 -->Refactoring" },
+  { message = '^feat(\(.*\))?!?:', group = "<!-- 0 -->New features" },
+  { message = '^fix(\(.*\))?!?:', group = "<!-- 1 -->Fixes" },
+  { message = '^perf(\(.*\))?!?:', group = "<!-- 2 -->Performance" },
+  { message = '^refactor(\(.*\))?!?:', group = "<!-- 3 -->Refactoring" },
   { message = ".*", skip = true },
 ]
 filter_commits = true

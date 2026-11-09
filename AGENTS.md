@@ -200,8 +200,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   build), and the versions in `pixi.toml` and `version.tex` from
   `pixi run update-version`.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
-  `LICENSE`, the lint configuration, `.clangd`, or
-  `.git-blame-ignore-revs` skip the build and tests
+  `LICENSE`, the lint configuration, `.clangd`, `.git-blame-ignore-revs`,
+  or `cliff.toml` skip the build and tests
   (`paths-ignore` in `.github/workflows/ci.yml`); update that list when adding
   non-code files. Adding or removing the `output-change` label starts a new
   run that cancels the one in progress (`cancel-in-progress`); any other
