@@ -20,7 +20,6 @@ Cases:
 """
 
 import argparse
-import importlib
 import json
 import shutil
 import subprocess
@@ -30,6 +29,7 @@ from pathlib import Path
 
 import flopy
 import numpy as np
+from flopy.utils.get_modflow import flopy_appdata_path
 from flopy.utils.get_modflow import run_main as get_modflow
 from flopy.utils.gnc import get_gnc_dtype, get_gridprops_gnc5
 
@@ -226,16 +226,19 @@ def check_geometry(data, case):
 
 def print_versions(bindir, programs):
     """Print the release get-modflow installed each program from"""
-    metadata = (
-        importlib.import_module("flopy.utils.get_modflow").flopy_appdata_path
-        / "get_modflow.json"
-    )
-    installs = json.loads(metadata.read_text()) if metadata.is_file() else []
+    # the file lists every get-modflow install of this user; one made without
+    # a subset installed every program of its release
+    try:
+        installs = json.loads((flopy_appdata_path / "get_modflow.json").read_text())
+    except (OSError, json.JSONDecodeError):
+        installs = []
     for program in programs:
         releases = [
-            install["release_id"]
+            install.get("release_id", "unknown release")
             for install in installs
-            if Path(install["bindir"]) == bindir and program in install["subset"]
+            if Path(install.get("bindir", "")) == bindir
+            and install.get("repo") == PROGRAMS[program]
+            and program in install.get("subset", [program])
         ]
         release = releases[-1] if releases else "unknown release"
         print(f"{program} from {PROGRAMS[program]} {release}")
