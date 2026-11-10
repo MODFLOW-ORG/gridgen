@@ -1,0 +1,69 @@
+name: gridgen models
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'src/**'
+      - 'test/check_models*'
+      - 'pixi.toml'
+      - 'pixi.lock'
+      - '.github/workflows/check-models.yml'
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  PIXI_BETA_WARNING_OFF: true
+jobs:
+  check-models:
+    name: MODFLOW 6 and MODFLOW-USG on gridgen output
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout gridgen
+        uses: actions/checkout@v5
+
+      - name: Setup gcc 13
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 13
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.11.3
+        with:
+          pixi-version: v0.82.1
+          environments: default models
+
+      # WrapDB, the only source of the meson patch for GoogleTest, can be down,
+      # so download it once for each change to the wraps and retry when the cache is empty
+      - name: Cache subproject downloads
+        uses: actions/cache@v6
+        with:
+          path: subprojects/packagecache
+          key: subprojects-${{ runner.os }}-${{ hashFiles('subprojects/*.wrap') }}
+
+      - name: Download subprojects
+        run: |
+          for attempt in 1 2 3; do
+            pixi run -- meson subprojects download && exit 0
+            [ $attempt -lt 3 ] && sleep 60
+          done
+          exit 1
+
+      - name: Build gridgen
+        run: |
+          pixi run setup
+          pixi run build
+
+      # get-modflow installs the latest release of each program; the token
+      # raises the GitHub API rate limit
+      - name: Run MODFLOW 6 and MODFLOW-USG on gridgen output
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pixi run check-models

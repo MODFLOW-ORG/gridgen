@@ -1,0 +1,64 @@
+# grids for the MODFLOW 6 and MODFLOW-USG checks (check_models.py): the
+# refinement of grid03qtg with flat layers, so that a head that varies linearly
+# in x and y is the exact solution, and the same refinement in every layer
+
+LOAD action01_buildqtg.dfn
+
+BEGIN MODFLOW_GRID check_models_mfg
+  ROTATION_ANGLE = 0.
+  X_OFFSET = 543750
+  Y_OFFSET = 2792250
+  LENGTH_UNIT = undefined
+  NLAY = 3
+  NROW = 100
+  NCOL = 58
+  DELR = CONSTANT 800.
+  DELC = CONSTANT 800.
+  TOP = CONSTANT 5.
+  BOTTOM LAYER 1 = CONSTANT -15.
+  BOTTOM LAYER 2 = CONSTANT -40.
+  BOTTOM LAYER 3 = CONSTANT -60.
+END MODFLOW_GRID
+
+BEGIN REFINEMENT_FEATURES wells_points
+  SHAPEFILE = shapefiles/wells_points
+  FEATURE_TYPE = point
+  REFINEMENT_LEVEL_BY_ATTRIBUTE = LEVEL
+END REFINEMENT_FEATURES
+
+# three layers refined differently and an active domain in layer 2 only
+BEGIN QUADTREE_BUILDER check_models_build_layered
+  MODFLOW_GRID = check_models_mfg
+  ACTIVE_DOMAIN LAYER 2 = my_active_domain
+  REFINEMENT_FEATURES LAYER 1 = MD_Canals chd_line wells_points
+  REFINEMENT_FEATURES LAYER 2 = well_buffer
+  REFINEMENT_FEATURES LAYER 3 = wells_points
+  SMOOTHING = full
+  SMOOTHING_LEVEL_HORIZONTAL = 1
+  SMOOTHING_LEVEL_VERTICAL = 1
+  GRID_DEFINITION_FILE = check_models_layered.dfn
+  TOP LAYER 1 = REPLICATE check_models_mfg
+  BOTTOM LAYER 1 = REPLICATE check_models_mfg
+  TOP LAYER 2 = REPLICATE check_models_mfg
+  BOTTOM LAYER 2 = REPLICATE check_models_mfg
+  TOP LAYER 3 = REPLICATE check_models_mfg
+  BOTTOM LAYER 3 = REPLICATE check_models_mfg
+END QUADTREE_BUILDER
+
+# the same refinement in every layer and no active domain, for DISV
+BEGIN QUADTREE_BUILDER check_models_build_same
+  MODFLOW_GRID = check_models_mfg
+  REFINEMENT_FEATURES LAYER 1 = MD_Canals chd_line wells_points
+  REFINEMENT_FEATURES LAYER 2 = MD_Canals chd_line wells_points
+  REFINEMENT_FEATURES LAYER 3 = MD_Canals chd_line wells_points
+  SMOOTHING = full
+  SMOOTHING_LEVEL_HORIZONTAL = 1
+  SMOOTHING_LEVEL_VERTICAL = 1
+  GRID_DEFINITION_FILE = check_models_same.dfn
+  TOP LAYER 1 = REPLICATE check_models_mfg
+  BOTTOM LAYER 1 = REPLICATE check_models_mfg
+  TOP LAYER 2 = REPLICATE check_models_mfg
+  BOTTOM LAYER 2 = REPLICATE check_models_mfg
+  TOP LAYER 3 = REPLICATE check_models_mfg
+  BOTTOM LAYER 3 = REPLICATE check_models_mfg
+END QUADTREE_BUILDER

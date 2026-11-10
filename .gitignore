@@ -71,6 +71,12 @@ test/output_shapefiles/grid*
 test/output_vtkfiles/grid*
 test/output_gsf/grid*
 
+# MODFLOW 6 and MODFLOW-USG checks (test/check_models.py)
+test/check_models/
+test/check_models_layered.*
+test/check_models_same.*
+__pycache__/
+
 # meson subproject downloads
 subprojects/*
 !subprojects/*.wrap
