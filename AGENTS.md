@@ -26,6 +26,11 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Run the unit and regression tests with the address and undefined behavior
   sanitizers** (a separate debug build in `builddir-sanitize/`, also run in
   CI on Linux, where leaks are reported too): `pixi run sanitize`
+- **Run MODFLOW 6 and MODFLOW-USG on gridgen output** (the `models`
+  environment, with FloPy; installs the latest `mf6`, `mfusg`, and `mfusgt`
+  in `bin/modflow`, `--update` to reinstall; needs `pixi run build`):
+  `pixi run check-models`; each case must reproduce a linear head field
+  (`test/check_models.py`)
 - **Check format, lint, and spelling** (Python and C++): `pixi run check-format`;
   `pixi run fix-format` applies the fixes
 - **Show the OS tag used for release archives:** `pixi run get-ostag`
@@ -213,6 +218,9 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   (`subprojects/packagecache`, keyed on the wraps) and retry it when the
   cache is empty. `lint.yml` runs `pixi run check-format` on every push and
   on pull requests to `main`.
+  `check-models.yml` runs `pixi run check-models` on Ubuntu for pull requests
+  that change `src/`, the check, or the pixi files; it is not a required
+  check, and changes to it alone skip the build and tests.
   `release-notes.yml` builds the release notes on Ubuntu when
   `doc/ReleaseNotes/` changes and attaches the PDF to each GitHub release.
   It installs only the TeX Live packages the release notes read, and caches

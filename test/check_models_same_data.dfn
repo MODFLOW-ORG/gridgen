@@ -1,0 +1,9 @@
+# GRID_TO_USGDATA block for the MODFLOW 6 and MODFLOW-USG checks
+# (check_models.py) on the grid built by check_models_build_same
+
+LOAD check_models_same.dfn
+
+BEGIN GRID_TO_USGDATA check_models_same_usgdata
+  GRID = check_models_same
+  USG_DATA_PREFIX = check_models/same
+END GRID_TO_USGDATA

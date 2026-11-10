@@ -19,6 +19,7 @@ on:
       - '.clangd'
       - '.git-blame-ignore-revs'
       - '.github/workflows/lint.yml'
+      - '.github/workflows/check-models.yml'
   pull_request:
     # labeled and unlabeled so the output-change label takes effect
     types: [opened, synchronize, reopened, labeled, unlabeled]
@@ -39,6 +40,7 @@ on:
       - '.clangd'
       - '.git-blame-ignore-revs'
       - '.github/workflows/lint.yml'
+      - '.github/workflows/check-models.yml'
   workflow_dispatch:
 # a label other than output-change runs nothing, so its run gets a group of
 # its own and cannot cancel the run in progress
