@@ -6,6 +6,8 @@ on:
       - develop
     paths:
       - 'src/**'
+      - 'meson.build'
+      - 'meson.options'
       - 'test/check_models*'
       - 'test/action01_buildqtg.dfn'
       - 'test/shapefiles/**'
@@ -16,6 +18,8 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+permissions:
+  contents: read
 env:
   PIXI_BETA_WARNING_OFF: true
 jobs:
@@ -69,3 +73,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pixi run check-models
+
+      - name: Upload the MODFLOW listing files
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: check-models-listing-files
+          path: |
+            test/check_models/**/*.lst
+            test/check_models/**/*.list

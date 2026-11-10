@@ -20,6 +20,8 @@ Cases:
 """
 
 import argparse
+import importlib
+import json
 import shutil
 import subprocess
 import sys
@@ -68,6 +70,13 @@ HEAD_AT_ORIGIN = 100.0
 # largest head error allowed, in length units
 HEAD_TOLERANCE = 1.0e-4
 
+# extent of the base grid, the thickness of each layer from the elevations of
+# check_models_mfg, and the layers of each case with an active domain
+X_EXTENT = 58 * 800.0
+Y_EXTENT = 100 * 800.0
+LAYER_THICKNESS = (20.0, 25.0, 20.0)
+ACTIVE_DOMAIN_LAYERS = {"layered_gncv": (2,), "layered_vp_gncv": (2,), "same": ()}
+
 HORIZONTAL_CONDUCTIVITY = 10.0
 VERTICAL_CONDUCTIVITY = 1.0
 
@@ -100,6 +109,9 @@ class UsgData:
         self.fldr = read_numbers(f"{prefix}.fldr.dat", int)
         self.area = read_numbers(f"{prefix}.area.dat")
         self.nodes_per_layer = read_numbers(f"{prefix}.nodesperlay.dat", int)
+        self.layer = np.repeat(
+            np.arange(1, len(self.nodes_per_layer) + 1), self.nodes_per_layer
+        )
         self.ghost_nodes = np.atleast_1d(
             np.genfromtxt(f"{prefix}.gnc.dat", dtype=get_gnc_dtype(2))
         )
@@ -143,6 +155,90 @@ class UsgData:
         perimeter = 2.0 * (self.dx + self.dy)
         self.fixed = shared_width < perimeter * (1.0 - 1.0e-9)
         self.exact_head = linear_head(self.x, self.y)
+
+
+def check_geometry(data, case):
+    """Messages for the data that differs from the definition of the grid"""
+    messages = []
+    if data.nodes_per_layer.sum() != data.nodes or len(data.layer) != data.nodes:
+        return [f"{data.nodes_per_layer.sum()} cells per layer but {data.nodes} cells"]
+    if not np.allclose(data.area, data.dx * data.dy, rtol=1.0e-12):
+        messages.append("area is not dx times dy")
+    for layer, thickness in enumerate(LAYER_THICKNESS, start=1):
+        in_layer = data.layer == layer
+        if not np.allclose(data.thickness[in_layer], thickness):
+            messages.append(f"layer {layer} is not {thickness:g} thick")
+        if layer in ACTIVE_DOMAIN_LAYERS[case]:
+            continue
+        # without an active domain the cells fill the base grid, and the cells
+        # fixed are those on its edge
+        if not np.isclose(data.area[in_layer].sum(), X_EXTENT * Y_EXTENT, rtol=1e-12):
+            messages.append(f"the cells of layer {layer} do not fill the grid")
+        x, y, dx, dy = (
+            data.x - X_ORIGIN,
+            data.y - Y_ORIGIN,
+            data.dx / 2.0,
+            data.dy / 2.0,
+        )
+        on_edge = (
+            np.isclose(x - dx, 0.0)
+            | np.isclose(x + dx, X_EXTENT)
+            | np.isclose(y - dy, 0.0)
+            | np.isclose(y + dy, Y_EXTENT)
+        )
+        if np.any(data.fixed[in_layer] != on_edge[in_layer]):
+            messages.append(f"the fixed cells of layer {layer} are not its edge")
+
+    # each connection is listed by both cells, with the same area and the
+    # opposite direction
+    key = data.row * data.nodes + data.ja
+    order = np.argsort(key)
+    reverse_key = data.ja * data.nodes + data.row
+    position = np.minimum(np.searchsorted(key, reverse_key, sorter=order), len(key) - 1)
+    reverse = order[position]
+    connection = data.connection
+    if not np.array_equal(key[reverse][connection], reverse_key[connection]):
+        return [*messages, "a connection is listed by only one of its cells"]
+    if not np.allclose(data.fahl[connection], data.fahl[reverse][connection]):
+        messages.append("the two cells of a connection give different areas")
+    if np.any(data.fldr[connection] != -data.fldr[reverse][connection]):
+        messages.append("the two cells of a connection give the same direction")
+
+    # a horizontal connection is half a cell from each center, and one between
+    # adjacent layers is the area the cells share at the distance between their
+    # centers; one across a vertical pass-through cell is not checked
+    horizontal = data.horizontal
+    half_size = (
+        np.where(np.abs(data.fldr) == 1, data.dx[data.row], data.dy[data.row]) / 2
+    )
+    if not np.allclose(data.cl12[horizontal], half_size[horizontal]):
+        messages.append("a horizontal distance is not half the cell size")
+    adjacent = data.vertical & (np.abs(data.layer[data.row] - data.layer[data.ja]) == 1)
+    shared_area = np.minimum(data.area[data.row], data.area[data.ja])
+    if not np.allclose(data.fahl[adjacent], shared_area[adjacent]):
+        messages.append("a vertical area is not the area the cells share")
+    center = (data.top + data.bottom) / 2.0
+    distance = np.abs(center[data.row] - center[data.ja])
+    if not np.allclose((data.cl12 + data.cl12[reverse])[adjacent], distance[adjacent]):
+        messages.append("a vertical distance is not the distance between centers")
+    return messages
+
+
+def print_versions(bindir, programs):
+    """Print the release get-modflow installed each program from"""
+    metadata = (
+        importlib.import_module("flopy.utils.get_modflow").flopy_appdata_path
+        / "get_modflow.json"
+    )
+    installs = json.loads(metadata.read_text()) if metadata.is_file() else []
+    for program in programs:
+        releases = [
+            install["release_id"]
+            for install in installs
+            if Path(install["bindir"]) == bindir and program in install["subset"]
+        ]
+        release = releases[-1] if releases else "unknown release"
+        print(f"{program} from {PROGRAMS[program]} {release}")
 
 
 def install_programs(bindir, programs, update):
@@ -390,6 +486,7 @@ def main():
 
     bindir = Path(args.bindir).resolve()
     install_programs(bindir, args.programs, args.update)
+    print_versions(bindir, args.programs)
     run_gridgen(Path(args.gridgen).resolve())
 
     failures = 0
@@ -399,6 +496,11 @@ def main():
     )
     for case in args.cases:
         data = UsgData(WORKSPACE / case)
+        messages = check_geometry(data, case)
+        if messages:
+            failures += 1
+            print(f"{case:16s} FAIL: " + "; ".join(messages))
+            continue
         if case in FIX_CELLS_NEXT_TO_EDGE:
             next_to_edge = data.ja[data.connection & data.fixed[data.row]]
             data.fixed[next_to_edge] = True
