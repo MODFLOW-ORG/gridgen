@@ -4,10 +4,12 @@ Check gridgen output by running MODFLOW 6 and MODFLOW-USG on it.
 Builds the grids of check_models_grids.dfn, writes their DISU data, and runs
 each case with heads fixed on the cells along the edges of the active grid, so
 that a head that varies linearly in x and y is the exact solution (in the
-layered cases, on the cells next to them too; see FIX_CELLS_NEXT_TO_EDGE). A case
-passes when the program terminates normally and the largest head error in the
-other cells is less than HEAD_TOLERANCE. The programs are installed with
-FloPy's get-modflow, from the latest release of each, into bin/modflow.
+layered cases, on the cells next to them too; see FIX_CELLS_NEXT_TO_EDGE). A
+case passes when the program terminates normally and the largest head error in
+the other cells, which start at HEAD_AT_ORIGIN, is less than HEAD_TOLERANCE.
+The largest flow between layers in those cells is reported but not checked. The
+programs are installed with FloPy's get-modflow, from the latest release of
+each, into bin/modflow.
 
 Cases:
   - layered_gncv    : layers refined differently and an active domain in layer
@@ -230,7 +232,7 @@ def run_mf6(data, workspace, executable, discretization):
     flopy.mf6.ModflowGwfnpf(
         model, k=HORIZONTAL_CONDUCTIVITY, k33=VERTICAL_CONDUCTIVITY, icelltype=0
     )
-    flopy.mf6.ModflowGwfic(model, strt=data.exact_head)
+    flopy.mf6.ModflowGwfic(model, strt=data.starting_head)
     flopy.mf6.ModflowGwfchd(
         model,
         stress_period_data=[
@@ -301,7 +303,7 @@ def run_mfusg(data, workspace, executable):
         ivsd=1,
     )
     flopy.mfusg.MfUsgBas(
-        model, ibound=np.where(data.fixed, -1, 1), strt=data.exact_head
+        model, ibound=np.where(data.fixed, -1, 1), strt=data.starting_head
     )
     flopy.mfusg.MfUsgLpf(
         model,
@@ -400,6 +402,9 @@ def main():
         if case in FIX_CELLS_NEXT_TO_EDGE:
             next_to_edge = data.ja[data.connection & data.fixed[data.row]]
             data.fixed[next_to_edge] = True
+        # the cells that are not fixed start away from the solution, so that the
+        # solver has to reach it
+        data.starting_head = np.where(data.fixed, data.exact_head, HEAD_AT_ORIGIN)
         for program in args.programs:
             executable = shutil.which(program, path=str(bindir))
             for discretization in CASES[case]:

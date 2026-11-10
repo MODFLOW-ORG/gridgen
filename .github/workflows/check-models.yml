@@ -7,6 +7,8 @@ on:
     paths:
       - 'src/**'
       - 'test/check_models*'
+      - 'test/action01_buildqtg.dfn'
+      - 'test/shapefiles/**'
       - 'pixi.toml'
       - 'pixi.lock'
       - '.github/workflows/check-models.yml'
