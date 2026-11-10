@@ -6,8 +6,8 @@ namespace cusg
 {
 //large_node (node number of the large cell),
 //	small_node (node number of the small cell),
-//	j1 (neighbor in the direction of the ghost node),
-//	j2 (neighbor in the direction of the ghost node),
+//	j1 (neighbor of the large cell the ghost node is interpolated from),
+//	j2 (second neighbor the ghost node is interpolated from),
 //	alpha1 (contributing factor of j1),
 //	alpha2 (contributing factor of j2)
 //	(when only one cell contributes, j1 and j2 are that cell and

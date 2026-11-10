@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "export"
+description = "A horizontal ghost node in the .gnc.dat file interpolated from a single cell larger than the cell that contains it, and offset along the connection, did not reproduce a head that varies linearly, so the flow between the two connected cells was slightly in error. Such a ghost node is now interpolated from that cell and a second neighbor of the cell that contains it. Where no active neighbor gives such an interpolation, as at some cells along the edge of an active domain, the ghost node is written as before."

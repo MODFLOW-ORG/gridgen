@@ -81,6 +81,37 @@ void expect_linear_head_reproduced(QuadTree3D * qtree, const GhostNode & ghost_n
         << "n " << ghost_node.large_node << " m " << ghost_node.small_node;
 }
 
+// the ghost node of the connection between the cells centered at large and
+// small, or nullptr
+const GhostNode * find_ghost_node(QuadTree3D * qtree, const std::vector<GhostNode> & ghost_nodes,
+                                  std::pair<double, double> large, std::pair<double, double> small)
+{
+    for (const GhostNode & ghost_node : ghost_nodes)
+    {
+        Box * n = qtree->get_cell_box(ghost_node.large_node);
+        Box * m = qtree->get_cell_box(ghost_node.small_node);
+        if (n->x == large.first && n->y == large.second && m->x == small.first &&
+            m->y == small.second)
+            return &ghost_node;
+    }
+    return nullptr;
+}
+
+// a ghost node interpolated from the coarser cell centered at contributor
+// and a second cell, with positive factors that sum to less than one
+void expect_coarser_contributor(QuadTree3D * qtree, const GhostNode & ghost_node,
+                                std::pair<double, double> contributor)
+{
+    Box * j1 = qtree->get_cell_box(ghost_node.j1);
+    EXPECT_EQ(j1->x, contributor.first);
+    EXPECT_EQ(j1->y, contributor.second);
+    EXPECT_NE(ghost_node.j1, ghost_node.j2);
+    EXPECT_GT(ghost_node.alpha1, 0.0);
+    EXPECT_GT(ghost_node.alpha2, 0.0);
+    EXPECT_LT(ghost_node.alpha1 + ghost_node.alpha2, 1.0);
+    expect_linear_head_reproduced(qtree, ghost_node);
+}
+
 std::vector<GhostNode> vertical_ghost_nodes(QuadTree3D * qtree)
 {
     std::vector<GhostNode> ghost_nodes, vertical;
@@ -155,6 +186,104 @@ TEST(GhostNode, TwoFinerNeighborsReproduceLinearHead)
         expect_linear_head_reproduced(qtree.get(), ghost_node);
     }
     EXPECT_EQ(two_cells, 4);
+}
+
+TEST(GhostNode, CoarserNeighborOffsetTowardSmallCell)
+{
+    // 3 x 3 cells of 100 with the center cell refined twice in its northeast
+    // quarter; the fine cell at (162.5, 187.5) connects west to the northwest
+    // quarter, whose neighbor on the north is the coarse cell centered at
+    // (150, 250), offset 25 toward the fine cell
+    std::unique_ptr<QuadTree3D> qtree =
+        make_qtree(make_mfgrid(1, 3, 3, 100.0, 100.0), {{162.5, 187.5, 2, 0}});
+    std::set<std::pair<int, int>> connected = connections(qtree.get());
+    std::vector<GhostNode> ghost_nodes;
+    compute_ghost_nodes(qtree.get(), ghost_nodes);
+
+    const GhostNode * ghost_node =
+        find_ghost_node(qtree.get(), ghost_nodes, {125.0, 175.0}, {162.5, 187.5});
+    ASSERT_NE(ghost_node, nullptr);
+    expect_coarser_contributor(qtree.get(), *ghost_node, {150.0, 250.0});
+    EXPECT_TRUE(connected.count(std::make_pair((int)ghost_node->large_node, (int)ghost_node->j2)));
+}
+
+TEST(GhostNode, CoarserNeighborOffsetAwayFromSmallCell)
+{
+    // 3 x 3 cells of 100 with the center cell refined once and the east cell
+    // refined twice in its northwest quarter; the fine cell at (212.5, 187.5)
+    // connects west to the northeast quarter of the center cell, whose
+    // neighbor on the north is the coarse cell centered at (150, 250), offset
+    // 25 away from the fine cell
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 3, 3, 100.0, 100.0),
+                                                   {{150.0, 150.0, 1, 0}, {212.5, 187.5, 2, 0}});
+    std::set<std::pair<int, int>> connected = connections(qtree.get());
+    std::vector<GhostNode> ghost_nodes;
+    compute_ghost_nodes(qtree.get(), ghost_nodes);
+
+    const GhostNode * ghost_node =
+        find_ghost_node(qtree.get(), ghost_nodes, {175.0, 175.0}, {212.5, 187.5});
+    ASSERT_NE(ghost_node, nullptr);
+    expect_coarser_contributor(qtree.get(), *ghost_node, {150.0, 250.0});
+    EXPECT_TRUE(connected.count(std::make_pair((int)ghost_node->large_node, (int)ghost_node->j2)));
+}
+
+TEST(GhostNode, CoarserNeighborWithoutSecondCellKeepsOneCell)
+{
+    // the grid of CoarserNeighborOffsetTowardSmallCell with the west cell
+    // inactive; the other neighbors of the northwest quarter give a negative
+    // weight, so the ghost node is interpolated from the coarse cell alone
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 3, 3, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{162.5, 187.5, 2, 0}});
+    qtree->node_group[mfgrid->get_box_index(0, 1, 0)]->active = false;
+    qtree->number_nodes();
+    qtree->refresh();
+    std::vector<GhostNode> ghost_nodes;
+    compute_ghost_nodes(qtree.get(), ghost_nodes);
+
+    const GhostNode * ghost_node =
+        find_ghost_node(qtree.get(), ghost_nodes, {125.0, 175.0}, {162.5, 187.5});
+    ASSERT_NE(ghost_node, nullptr);
+    EXPECT_EQ(ghost_node->j1, ghost_node->j2);
+    Box * j1 = qtree->get_cell_box(ghost_node->j1);
+    EXPECT_EQ(j1->x, 150.0);
+    EXPECT_EQ(j1->y, 250.0);
+    // the distance across the connection over that to the coarse cell, halved
+    EXPECT_DOUBLE_EQ(ghost_node->alpha1, (12.5 / 75.0) / 2);
+    EXPECT_DOUBLE_EQ(ghost_node->alpha2, ghost_node->alpha1);
+}
+
+TEST(GhostNode, EveryHorizontalGhostNodeReproducesLinearHead)
+{
+    // 6 x 6 cells of 100 refined by up to three levels at scattered points and
+    // smoothed, so cells have coarser neighbors offset along their
+    // connections
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 6, 6, 100.0, 100.0),
+                                                   {{130.0, 420.0, 3, 0},
+                                                    {310.0, 290.0, 2, 0},
+                                                    {470.0, 120.0, 3, 0},
+                                                    {250.0, 250.0, 1, 0},
+                                                    {90.0, 80.0, 2, 0}},
+                                                   true);
+    std::set<std::pair<int, int>> connected = connections(qtree.get());
+    std::vector<GhostNode> ghost_nodes;
+    compute_ghost_nodes(qtree.get(), ghost_nodes);
+    ASSERT_FALSE(ghost_nodes.empty());
+
+    int coarser = 0;
+    for (const GhostNode & ghost_node : ghost_nodes)
+    {
+        int n = (int)ghost_node.large_node;
+        EXPECT_TRUE(connected.count(std::make_pair(n, (int)ghost_node.j1)));
+        EXPECT_TRUE(connected.count(std::make_pair(n, (int)ghost_node.j2)));
+        EXPECT_GT(ghost_node.alpha1, 0.0);
+        EXPECT_GT(ghost_node.alpha2, 0.0);
+        EXPECT_LT(ghost_node.alpha1 + ghost_node.alpha2, 1.0);
+        expect_linear_head_reproduced(qtree.get(), ghost_node);
+        Box * large = qtree->get_cell_box(ghost_node.large_node);
+        Box * j1 = qtree->get_cell_box(ghost_node.j1);
+        if (j1->depth < large->depth) coarser++;
+    }
+    EXPECT_GT(coarser, 0);
 }
 
 TEST(GhostNode, NoVerticalCorrectionUnlessAsked)
