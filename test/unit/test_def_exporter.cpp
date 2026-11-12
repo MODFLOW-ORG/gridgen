@@ -1,5 +1,6 @@
 // File names in the grid definition files that gridgen writes
 #include <filesystem>
+#include <fstream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -98,5 +99,51 @@ TEST(DefinitionExporter, QuadtreeFilesAreRelativeToTheFile)
     EXPECT_NE(block.find("BOTTOM LAYER 1 = OPEN/CLOSE qtg.bot1.dat\n"), std::string::npos) << block;
     // the files are written where the name of the grid says
     EXPECT_TRUE(std::filesystem::exists(folder / "qtg.tsf"));
+    std::filesystem::remove_all(folder);
+}
+
+TEST(DefinitionExporter, GridFilesAreWrittenBesideTheFileInAFolderWithAPeriod)
+{
+    // a definition file without an extension in a folder with a period in its name (#184)
+    std::filesystem::path folder =
+        std::filesystem::path(::testing::TempDir()) / "gridgen_unit_out.v2";
+    std::filesystem::create_directories(folder);
+    std::string definition_file = (folder / "qtg").generic_string();
+    std::istringstream dfn("BEGIN MODFLOW_GRID mfg\n"
+                           "  ROTATION_ANGLE = 0\n"
+                           "  X_OFFSET = 0\n"
+                           "  Y_OFFSET = 0\n"
+                           "  NLAY = 1\n"
+                           "  NROW = 2\n"
+                           "  NCOL = 2\n"
+                           "  DELR = CONSTANT 50.\n"
+                           "  DELC = CONSTANT 50.\n"
+                           "  TOP = CONSTANT 10.\n"
+                           "  BOTTOM LAYER 1 = CONSTANT 0.\n"
+                           "END MODFLOW_GRID\n"
+                           "BEGIN QUADTREE_BUILDER qtb\n"
+                           "  MODFLOW_GRID = mfg\n"
+                           "  GRID_DEFINITION_FILE = " +
+                           definition_file + "\nEND QUADTREE_BUILDER\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    QuadtreeBuilderBlock * data =
+        dynamic_cast<QuadtreeBuilderBlock *>(parser.get_block_data("qtb"));
+    ASSERT_NE(data, nullptr);
+    for (const char * name : {"mfg", "qtb"})
+        parser.get_block_data(name)->initialize(parser.get_block_data());
+    ASSERT_NE(data->build(), nullptr);
+
+    DefinitionExporter exporter;
+    ASSERT_TRUE(exporter.save_grid_definition(definition_file, *data));
+    std::ifstream written(definition_file);
+    std::stringstream block;
+    block << written.rdbuf();
+    EXPECT_NE(block.str().find("BEGIN QUADTREE qtg\n"), std::string::npos) << block.str();
+    EXPECT_NE(block.str().find("STRUCTURE_File  = OPEN/CLOSE qtg.tsf\n"), std::string::npos)
+        << block.str();
+    EXPECT_TRUE(std::filesystem::exists(folder / "qtg.tsf"));
+    EXPECT_TRUE(std::filesystem::exists(folder / "qtg.top1.dat"));
+    EXPECT_TRUE(std::filesystem::exists(folder / "qtg.bot1.dat"));
     std::filesystem::remove_all(folder);
 }

@@ -809,6 +809,18 @@ QuadtreeBuilderBlock::~QuadtreeBuilderBlock()
     delete qtree_grid;
 }
 
+string QuadtreeBuilderBlock::grid_name() const
+{
+    if (grid_definition_file.empty()) return name;
+
+    //only a period in the file name starts an extension, and not one that begins it
+    size_t slash = grid_definition_file.find_last_of("/\\");
+    size_t file_start = (slash == string::npos) ? 0 : slash + 1;
+    size_t dot = grid_definition_file.find_last_of('.');
+    if (dot == string::npos || dot <= file_start) return grid_definition_file;
+    return grid_definition_file.substr(0, dot);
+}
+
 Grid * QuadtreeBuilderBlock::build()
 {
     //
@@ -821,13 +833,7 @@ Grid * QuadtreeBuilderBlock::build()
 
         qtree_grid = new QuadTree3D((ModflowGrid *)base_grid);
         assert(qtree_grid);
-        if (this->grid_definition_file.empty()) //no name defined...
-            qtree_grid->name = this->name;
-        else
-        {
-            int pos = this->grid_definition_file.find_last_of('.');
-            qtree_grid->name = this->grid_definition_file.substr(0, pos);
-        }
+        qtree_grid->name = grid_name();
 
         QuadtreeBuilder builder;
         try

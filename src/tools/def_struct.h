@@ -358,6 +358,9 @@ public:
     bool initialize(map<string, DefinitionBlock *> & blocks) override;
     Grid * build() override;
 
+    //the name of the grid: its definition file without the extension, keeping the folder
+    string grid_name() const;
+
     int smoothing_level_horizontal;
     int smoothing_level_vertical;
 

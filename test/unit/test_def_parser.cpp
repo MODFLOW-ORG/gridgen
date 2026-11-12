@@ -324,6 +324,35 @@ TEST(DefinitionParser, SmoothingLevelSpellings)
     EXPECT_EQ(data->smoothing_level_horizontal, 4);
 }
 
+TEST(DefinitionParser, GridIsNamedForTheDefinitionFileWithoutItsExtension)
+{
+    // a period in a folder is not an extension (#184)
+    const char * names[][2] = {{"qtg.dfn", "qtg"},
+                               {"qtg", "qtg"},
+                               {"qtg.v2.dfn", "qtg.v2"},
+                               {"out/qtg.dfn", "out/qtg"},
+                               {"out.v2/qtg", "out.v2/qtg"},
+                               {"out.v2/qtg.dfn", "out.v2/qtg"},
+                               {"out.v2\\qtg", "out.v2\\qtg"},
+                               {"../qtg", "../qtg"},
+                               {"./qtg", "./qtg"},
+                               {"out/.qtg", "out/.qtg"}};
+    for (const auto & n : names)
+    {
+        SCOPED_TRACE(n[0]);
+        std::istringstream dfn(std::string("BEGIN QUADTREE_BUILDER qtb\n"
+                                           "  MODFLOW_GRID = mfg\n"
+                                           "  GRID_DEFINITION_FILE = ") +
+                               n[0] + "\nEND QUADTREE_BUILDER\n");
+        DefinitionParser parser;
+        ASSERT_TRUE(parser.parse(dfn));
+        QuadtreeBuilderBlock * data =
+            dynamic_cast<QuadtreeBuilderBlock *>(parser.get_block_data("qtb"));
+        ASSERT_NE(data, nullptr);
+        EXPECT_EQ(data->grid_name(), n[1]);
+    }
+}
+
 TEST(DefinitionParser, RefineLevelByAttributeSpellings)
 {
     // either spelling, and the attribute overrides REFINEMENT_LEVEL (#52)
