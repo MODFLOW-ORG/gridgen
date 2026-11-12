@@ -136,9 +136,12 @@ TEST(DefinitionExporter, GridFilesAreWrittenBesideTheFileInAFolderWithAPeriod)
 
     DefinitionExporter exporter;
     ASSERT_TRUE(exporter.save_grid_definition(definition_file, *data));
-    std::ifstream written(definition_file);
     std::stringstream block;
-    block << written.rdbuf();
+    {
+        //closed before the folder is removed, which Windows does not allow for an open file
+        std::ifstream written(definition_file);
+        block << written.rdbuf();
+    }
     EXPECT_NE(block.str().find("BEGIN QUADTREE qtg\n"), std::string::npos) << block.str();
     EXPECT_NE(block.str().find("STRUCTURE_File  = OPEN/CLOSE qtg.tsf\n"), std::string::npos)
         << block.str();
