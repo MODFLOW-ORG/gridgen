@@ -37,8 +37,9 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Show the OS tag used for release archives:** `pixi run get-ostag`
 - **Build the release notes** (needs TeX Live and the USGS class from
   `MODFLOW-ORG/usgslatex`): `pixi run build-release-notes`, which first runs
-  `doc/ReleaseNotes/mk_releasenotes.py` to check the items and write the
-  History entry for the release in progress (`develop.tex`)
+  `doc/ReleaseNotes/mk_releasenotes.py` to check the items and known issues
+  and write the History entry for the release in progress (`develop.tex`)
+  and the Known Issues section (`knownissues.tex`)
 - **Set the version** (`version.txt` is the source; a version containing
   `dev` is a development version): `pixi run update-version --version <v>`;
   add `--date YYYY-MM-DD --releasemode` for a release
@@ -190,19 +191,20 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   match a build of the base branch byte for byte. A pull request that changes
   output on purpose gets the `output-change` label and says what changed and
   why.
-- **Known issues in the release notes:** the Known Issues section of
-  `doc/ReleaseNotes/ReleaseNotes.tex` lists the open defects a user can run
-  into, each in user terms with any workaround and `\ghissue{N}`. Add an
-  entry when such a bug issue is filed, and remove it in the pull request that
-  fixes the bug, which also adds a release note item.
+- **Known issues in the release notes:** each open defect a user can run
+  into is a TOML file in `doc/ReleaseNotes/known-issues/` (see the README
+  there), with its issue number and a description in user terms with any
+  workaround; they make the Known Issues section of the release notes. Add
+  the file when such a bug issue is filed, and delete it in the pull request
+  that fixes the bug, which also adds a release note item.
 - **Known defects in tests:** a known defect is recorded as an entry in
   `KNOWN_UNSTABLE` (`test/compare_outputs.py`) or a `DISABLED_` unit test, with
   a comment naming its issue. The pull request that fixes the issue removes the
   entry or enables the test, and adds the tests listed in the issue.
 - **Generated files:** do not commit test outputs, `builddir/`, or
   `subprojects/` downloads. Do not hand-edit a generated file; edit its
-  source and regenerate: `develop.tex` comes from the release note items
-  (`mk_releasenotes.py`), `gridgen_version.h` from `version.txt` (the
+  source and regenerate: `develop.tex` and `knownissues.tex` come from the
+  release note items and known issues (`mk_releasenotes.py`), `gridgen_version.h` from `version.txt` (the
   build), and the versions in `pixi.toml` and `version.tex` from
   `pixi run update-version`.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
