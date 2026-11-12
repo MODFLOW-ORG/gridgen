@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "build"
+description = "The Linux executable includes the C++ standard library instead of loading the one installed on the computer, so it no longer stops with a message that a GLIBCXX version is not found on Linux systems whose C++ library is older than that of GCC 12, such as Red Hat Enterprise Linux 9. It still needs glibc 2.34 or later."
