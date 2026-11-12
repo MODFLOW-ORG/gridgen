@@ -67,7 +67,6 @@ jobs:
           # clang (Apple clang from Xcode)
           - {os: macos-15, compiler: clang, version: 17, shell: bash, release: no, xcode-version: '16.4'}
           # intel
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash, release: no}
           - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash, release: yes}
           - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh, release: yes}
     defaults:

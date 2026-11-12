@@ -20,19 +20,11 @@ message('Compiler ID:', cc_id)
 
 compile_args = []
 link_args = []
-if cc_id == 'intel'
-  compile_args += ['-frtti', '-diag-disable=10441']
-  link_args += ['-diag-disable=10441']
-endif
 
 # keep floating-point results the same across compilers and standards: no
 # value-unsafe optimizations and no fused multiply-adds
-if cc_id == 'intel'
-  compile_args += ['-fp-model=precise', '-no-fma']
-elif cc_id == 'intel-llvm'
+if cc_id == 'intel-llvm'
   compile_args += ['-fp-model=precise']
-elif cc_id == 'intel-cl'
-  compile_args += ['/fp:precise', '/Qfma-']
 elif cc_id in ['intel-llvm-cl', 'msvc']
   # MSVC does not contract with /fp:precise unless /fp:contract is given
   compile_args += ['/fp:precise']

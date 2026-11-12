@@ -1,0 +1,14 @@
+# a grid definition file written to another folder than the one gridgen is run
+# from, while the arrays of its MODFLOW_GRID block are in this folder;
+# action22_subfolder.dfn loads it
+
+LOAD action01_buildqtg.dfn
+
+BEGIN QUADTREE_BUILDER buildqtg_subfolder
+  MODFLOW_GRID = grid01mfg
+  REFINEMENT_FEATURES LAYER 1 = chd_line
+  SMOOTHING = full
+  GRID_DEFINITION_FILE = output_grids/grid13qtg.dfn
+  TOP LAYER 1 = REPLICATE grid01mfg
+  BOTTOM LAYER 1 = REPLICATE grid01mfg
+END QUADTREE_BUILDER

@@ -64,6 +64,14 @@ public:
     bool save(ostream & out, ModflowGridBlock & data);
     bool save(ostream & out, QuadtreeBuilderBlock & data);
 
+    //write the grid definition file of a quadtree builder, with the names of the files it
+    //refers to relative to its folder
+    bool save_grid_definition(const string & filename, QuadtreeBuilderBlock & data);
+
+    //write the names of the files a definition file refers to relative to folder, which is
+    //relative to the folder gridgen is run from ("" for that folder)
+    void set_output_folder(const string & folder);
+
     //
     bool save(GridToUsgdataBlock & data);
 
@@ -150,7 +158,16 @@ protected:
     void save(ostream & out, int * data) { out << *data; }
 
 private:
+    //the name of file_name, read relative to read_folder, relative to m_output_folder
+    string output_file_name(const string & file_name, const string & read_folder) const;
+
+    //an array record with the file name of OPEN/CLOSE relative to m_output_folder
+    list<string> output_array(const list<string> & spec, const string & read_folder) const;
+
     int m_number_per_line; //
+
+    //folder of the definition file being written, relative to the folder gridgen is run from
+    string m_output_folder;
 };
 
 }
