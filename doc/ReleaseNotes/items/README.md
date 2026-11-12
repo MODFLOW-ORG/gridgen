@@ -16,6 +16,8 @@ description = "ACTIVE_DOMAIN LAYER n was ignored unless every layer above it als
   wrong or what is new, and what it means for an existing model. Detail
   belongs in the pull request.
 
+A defect that is not fixed yet is a known issue instead (`../known-issues/`).
+
 `../mk_releasenotes.py` checks the items and renders them as the History entry
 for the release in progress (`develop.tex`); `pixi run build-release-notes` runs
 it. At a release the entry is kept in `../previous/` and the items are removed.
