@@ -170,11 +170,12 @@ jobs:
           fi
           echo "MACOSX_DEPLOYMENT_TARGET=14.0" >> $GITHUB_ENV
 
-      # the Linux executable needs only glibc, not the C++ library and libgcc
-      # of the computer it runs on
+      # the Linux executable does not need the C++ library of the computer it
+      # runs on; libgcc stays shared, since the static libgcc of GCC 12 and
+      # later needs glibc 2.35
       - name: Set LDFLAGS (Linux)
         if: runner.os == 'Linux'
-        run: echo "LDFLAGS=$LDFLAGS -static-libstdc++ -static-libgcc" >> $GITHUB_ENV
+        run: echo "LDFLAGS=$LDFLAGS -static-libstdc++" >> $GITHUB_ENV
 
       - name: Build ${{ env.PROGRAM_NAME }}
         working-directory: ${{ env.PROGRAM_NAME }}
@@ -187,15 +188,17 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           readelf -d gridgen | grep NEEDED
-          if readelf -d gridgen | grep NEEDED | grep -E 'libstdc\+\+|libgcc_s'; then
-            echo "error: gridgen dynamically links the C++ library or libgcc"
+          if readelf -d gridgen | grep NEEDED | grep 'libstdc++'; then
+            echo "error: gridgen dynamically links the C++ library"
             exit 1
           fi
           if objdump -T gridgen | grep -E 'GLIBCXX_|CXXABI_'; then
             echo "error: gridgen needs symbols of a shared C++ library"
             exit 1
           fi
-          echo "newest glibc version needed: $(objdump -T gridgen | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)"
+          newest=$(objdump -T gridgen | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)
+          echo "newest glibc version needed: $newest, by:"
+          objdump -T gridgen | grep -w "$newest"
 
       - name: Check architecture (macOS)
         working-directory: ${{ env.PROGRAM_NAME }}/bin
