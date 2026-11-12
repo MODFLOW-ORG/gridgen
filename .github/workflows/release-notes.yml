@@ -57,8 +57,9 @@ jobs:
         with:
           python-version: "3.12"
 
-      # also checks every release note item against the schema
-      - name: Generate the History entry for the release in progress
+      # also checks every release note item and known issue; ReleaseNotes.tex
+      # inputs the knownissues.tex it writes
+      - name: Generate the History entry and the Known Issues section
         working-directory: gridgen/doc/ReleaseNotes
         run: python mk_releasenotes.py
 

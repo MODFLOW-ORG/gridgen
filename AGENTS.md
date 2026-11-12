@@ -204,9 +204,9 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Generated files:** do not commit test outputs, `builddir/`, or
   `subprojects/` downloads. Do not hand-edit a generated file; edit its
   source and regenerate: `develop.tex` and `knownissues.tex` come from the
-  release note items and known issues (`mk_releasenotes.py`), `gridgen_version.h` from `version.txt` (the
-  build), and the versions in `pixi.toml` and `version.tex` from
-  `pixi run update-version`.
+  release note items and known issues (`mk_releasenotes.py`),
+  `gridgen_version.h` from `version.txt` (the build), and the versions in
+  `pixi.toml` and `version.tex` from `pixi run update-version`.
 - **CI:** changes only to Markdown, `doc/`, issue templates, `dependabot.yml`,
   `LICENSE`, the lint configuration, `.clangd`, `.git-blame-ignore-revs`,
   or `cliff.toml` skip the build and tests

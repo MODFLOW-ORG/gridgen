@@ -13,7 +13,8 @@ description = "Along the edge of an active domain, some ghost nodes in the .gnc.
 
 - `issue` is the number of the GitHub issue that tracks the defect.
 - `description` says, for someone using GRIDGEN, what goes wrong, when, and
-  any workaround; the issue number is added after it.
+  any workaround, and ends with a period; the issue number is added before
+  that period.
 
 `../mk_releasenotes.py` checks the files and renders them as the Known Issues
 section (`knownissues.tex`); `pixi run build-release-notes` runs it. They are
