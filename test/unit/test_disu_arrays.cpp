@@ -199,7 +199,7 @@ TEST(DisuArrays, RotationInDegreesIsKeptAsGiven)
                            "  X_OFFSET = 0.\n"
                            "  Y_OFFSET = 0.\n"
                            "  NLAY = 1\n"
-                           "  NROW = 1\n"
+                           "  NROW = 2\n"
                            "  NCOL = 2\n"
                            "  DELR = CONSTANT 10.\n"
                            "  DELC = CONSTANT 10.\n"
@@ -220,5 +220,7 @@ TEST(DisuArrays, RotationInDegreesIsKeptAsGiven)
     {
         if (csr.fldr[ipos] == 1) EXPECT_EQ(angldegx[ipos], 17.3);
         if (csr.fldr[ipos] == -1) EXPECT_DOUBLE_EQ(angldegx[ipos], 197.3);
+        if (csr.fldr[ipos] == 2) EXPECT_DOUBLE_EQ(angldegx[ipos], 107.3);
+        if (csr.fldr[ipos] == -2) EXPECT_DOUBLE_EQ(angldegx[ipos], 287.3);
     }
 }
