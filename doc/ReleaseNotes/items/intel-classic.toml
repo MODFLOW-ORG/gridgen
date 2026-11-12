@@ -1,3 +1,3 @@
 section = "internal"
 subsection = "build"
-description = "GRIDGEN is no longer built or tested with the classic Intel C++ compilers (icpc and icl), which Intel has discontinued, and the build no longer has settings for them. It is built and tested with GCC, Clang, and the LLVM-based Intel compilers (icpx and icx), with which the Linux and Windows executables are compiled."
+description = "GRIDGEN is no longer built or tested with the classic Intel C++ compilers, which Intel has discontinued. It is built and tested with GCC, Clang, and the current LLVM-based Intel compilers, which compile the Linux and Windows executables; the executables are unchanged."
