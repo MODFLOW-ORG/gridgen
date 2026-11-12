@@ -41,10 +41,20 @@ version_h = vcs_tag(command: [python, meson.project_source_root() / 'scripts' / 
                     replace_string: '@VCS_TAG@',
                     fallback: '')
 
+# on Linux the executable carries the C++ library rather than needing that of
+# the computer it runs on; libgcc stays shared, since linking it statically
+# raised the glibc requirement from 2.34 to 2.35 with GCC 13, and a sanitized
+# build keeps the shared C++ library its runtime expects
+gridgen_link_args = []
+if host_machine.system() == 'linux' and get_option('b_sanitize') == 'none'
+  gridgen_link_args = cc.get_supported_link_arguments('-static-libstdc++')
+endif
+
 exe = executable(
                  meson.project_name(),
                  ['gridgenusg.cpp', version_h],
                  dependencies: gridgen_dep,
+                 link_args: gridgen_link_args,
                  install: true
                 )
 
