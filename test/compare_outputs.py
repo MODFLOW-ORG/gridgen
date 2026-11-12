@@ -98,6 +98,10 @@ CASES = (
     ("grid02qtg-to-gsf-hanging", "action20_gsf.dfn"),
     ("grid03qtg-to-gsf", "action20_gsf.dfn"),
     ("grid04qtg-to-gsf", "action20_gsf.dfn"),
+    # a grid definition file written to another folder, with the arrays of the
+    # base grid in this one, and loaded from this folder
+    ("buildqtg_subfolder", "action21_buildqtg_subfolder.dfn"),
+    ("grid13qtg-to-usgdata", "action22_subfolder.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
@@ -125,6 +129,7 @@ SKIP_PATTERNS = (
 KNOWN_UNSTABLE = ()
 
 OUTPUT_DIRS = (
+    "output_grids",
     "output_gsf",
     "output_intersection",
     "output_shapefiles",

@@ -82,7 +82,7 @@ static int run(const string & action, const string & dfn_file)
         DefinitionExporter def_exporter;
         const string & output_file = qtree_builder_data->grid_definition_file;
 
-        def_exporter.save(output_file, *qtree_builder_data);
+        def_exporter.save_grid_definition(output_file, *qtree_builder_data);
     }
     else if (grid2shp != nullptr)
     {
