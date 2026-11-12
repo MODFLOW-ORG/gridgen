@@ -6,10 +6,12 @@ each case with heads fixed on the cells along the edges of the active grid, so
 that a head that varies linearly in x and y is the exact solution (in the
 layered cases, on the cells next to them too; see FIX_CELLS_NEXT_TO_EDGE). A
 case passes when the program terminates normally and the largest head error in
-the other cells, which start at HEAD_AT_ORIGIN, is less than HEAD_TOLERANCE.
-The largest flow between layers in those cells is reported but not checked. The
-programs are installed with FloPy's get-modflow, from the latest release of
-each, into bin/modflow.
+the other cells, which start at HEAD_AT_ORIGIN, is less than HEAD_TOLERANCE,
+and, in MODFLOW 6, their specific discharge differs from the exact one by less
+than DISCHARGE_TOLERANCE. The DISU input is gridgen's arrays, including IHC,
+HWVA, ANGLDEGX, and IVC. The largest flow between layers in those cells is
+reported but not checked. The programs are installed with FloPy's get-modflow,
+from the latest release of each, into bin/modflow.
 
 Cases:
   - layered_gncv    : layers refined differently and an active domain in layer
@@ -80,6 +82,15 @@ ACTIVE_DOMAIN_LAYERS = {"layered_gncv": (2,), "layered_vp_gncv": (2,), "same": (
 HORIZONTAL_CONDUCTIVITY = 10.0
 VERTICAL_CONDUCTIVITY = 1.0
 
+# specific discharge in x, y, and z of the linear head field, and the largest
+# error allowed in the specific discharge MODFLOW 6 saves
+EXACT_DISCHARGE = (
+    -HORIZONTAL_CONDUCTIVITY * X_GRADIENT,
+    -HORIZONTAL_CONDUCTIVITY * Y_GRADIENT,
+    0.0,
+)
+DISCHARGE_TOLERANCE = 1.0e-6
+
 
 def linear_head(x, y):
     return HEAD_AT_ORIGIN + X_GRADIENT * (x - X_ORIGIN) + Y_GRADIENT * (y - Y_ORIGIN)
@@ -107,6 +118,10 @@ class UsgData:
         self.cl12 = read_numbers(f"{prefix}.c1.dat")
         self.fahl = read_numbers(f"{prefix}.fahl.dat")
         self.fldr = read_numbers(f"{prefix}.fldr.dat", int)
+        self.ihc = read_numbers(f"{prefix}.ihc.dat", int)
+        self.ivc = read_numbers(f"{prefix}.ivc.dat", int)
+        self.hwva = read_numbers(f"{prefix}.hwva.dat")
+        self.angldegx = read_numbers(f"{prefix}.angldegx.dat")
         self.area = read_numbers(f"{prefix}.area.dat")
         self.nodes_per_layer = read_numbers(f"{prefix}.nodesperlay.dat", int)
         self.layer = np.repeat(
@@ -136,14 +151,6 @@ class UsgData:
         self.connection = self.ja != self.row
         self.vertical = self.connection & (np.abs(self.fldr) == 3)
         self.horizontal = self.connection & ~self.vertical
-
-        # face width of a horizontal connection; the layers are flat, so the
-        # face area is the width times the average thickness of the two cells
-        self.hwva = self.fahl.copy()
-        average_thickness = 0.5 * (self.thickness[self.row] + self.thickness[self.ja])
-        self.hwva[self.horizontal] = (
-            self.fahl[self.horizontal] / average_thickness[self.horizontal]
-        )
 
         # a cell whose horizontal faces are not all shared with active cells is
         # on the edge of the grid or of an active domain
@@ -204,10 +211,32 @@ def check_geometry(data, case):
     if np.any(data.fldr[connection] != -data.fldr[reverse][connection]):
         messages.append("the two cells of a connection give the same direction")
 
+    # IHC and IVC give the type of each connection; HWVA is the same from both
+    # cells, and, since the layers are flat, a horizontal face area is the
+    # width times the average thickness of the two cells
+    if not np.array_equal(data.ihc, data.horizontal.astype(int)):
+        messages.append("ihc is not 1 for exactly the horizontal connections")
+    if not np.array_equal(data.ivc, data.vertical.astype(int)):
+        messages.append("ivc is not 1 for exactly the vertical connections")
+    if not np.array_equal(data.hwva[connection], data.hwva[reverse][connection]):
+        messages.append("the two cells of a connection give different hwva")
+    horizontal = data.horizontal
+    average_thickness = 0.5 * (data.thickness[data.row] + data.thickness[data.ja])
+    if not np.allclose(
+        (data.hwva * average_thickness)[horizontal], data.fahl[horizontal]
+    ) or not np.array_equal(data.hwva[data.vertical], data.fahl[data.vertical]):
+        messages.append("hwva is not the face width or area")
+
+    # the face normal points toward the center of the connected cell
+    toward = np.arctan2(
+        data.y[data.ja] - data.y[data.row], data.x[data.ja] - data.x[data.row]
+    )
+    if np.any(np.cos(np.radians(data.angldegx) - toward)[horizontal] <= 0.0):
+        messages.append("angldegx points away from a connected cell")
+
     # a horizontal connection is half a cell from each center, and one between
     # adjacent layers is the area the cells share at the distance between their
     # centers; one across a vertical pass-through cell is not checked
-    horizontal = data.horizontal
     half_size = (
         np.where(np.abs(data.fldr) == 1, data.dx[data.row], data.dy[data.row]) / 2
     )
@@ -296,9 +325,10 @@ def run_mf6(data, workspace, executable, discretization):
             area=data.area,
             iac=data.iac,
             ja=data.ja,
-            ihc=np.where(data.vertical, 0, 1),
+            ihc=data.ihc,
             cl12=data.cl12,
             hwva=data.hwva,
+            angldegx=data.angldegx,
             nvert=len(data.vertices),
             vertices=data.vertices,
             cell2d=data.cell2d,
@@ -329,7 +359,11 @@ def run_mf6(data, workspace, executable, discretization):
 
         fixed = [cellid(node) for node in np.flatnonzero(data.fixed)]
     flopy.mf6.ModflowGwfnpf(
-        model, k=HORIZONTAL_CONDUCTIVITY, k33=VERTICAL_CONDUCTIVITY, icelltype=0
+        model,
+        k=HORIZONTAL_CONDUCTIVITY,
+        k33=VERTICAL_CONDUCTIVITY,
+        icelltype=0,
+        save_specific_discharge=True,
     )
     flopy.mf6.ModflowGwfic(model, strt=data.starting_head)
     flopy.mf6.ModflowGwfchd(
@@ -364,9 +398,16 @@ def run_mf6(data, workspace, executable, discretization):
     simulation.write_simulation(silent=True)
     success, _ = simulation.run_simulation(silent=True)
     if not success:
-        return False, None, None
+        return False, None, None, None
     heads = model.output.head().get_data().ravel()
-    flow = model.output.budget().get_data(text="FLOW-JA-FACE")[0].ravel()
+    budget = model.output.budget()
+    flow = budget.get_data(text="FLOW-JA-FACE")[0].ravel()
+    discharge = budget.get_data(text="DATA-SPDIS")[0]
+    discharge_error = np.zeros(data.nodes)
+    for component, exact in zip(("qx", "qy", "qz"), EXACT_DISCHARGE):
+        discharge_error[discharge["node"] - 1] = np.maximum(
+            discharge_error[discharge["node"] - 1], np.abs(discharge[component] - exact)
+        )
     if discretization == "disu":
         row, column, vertical = data.row, data.ja, data.vertical
     else:
@@ -376,7 +417,12 @@ def run_mf6(data, workspace, executable, discretization):
         row = np.repeat(np.arange(grid.nodes), np.diff(grid.ia))
         column = grid.ja
         vertical = np.abs(column - row) == ncpl
-    return True, heads, largest_vertical_flow(data, row, column, vertical, flow)
+    return (
+        True,
+        heads,
+        largest_vertical_flow(data, row, column, vertical, flow),
+        discharge_error[~data.fixed].max(),
+    )
 
 
 def run_mfusg(data, workspace, executable):
@@ -395,7 +441,7 @@ def run_mfusg(data, workspace, executable):
         area=data.area,
         iac=data.iac.copy(),
         ja=data.ja.copy(),
-        ivc=data.vertical.astype(int),
+        ivc=data.ivc,
         cl12=data.cl12.copy(),
         fahl=data.fahl.copy(),
         idsymrd=0,
@@ -433,7 +479,7 @@ def run_mfusg(data, workspace, executable):
     model.write_input()
     success, _ = model.run_model(silent=True)
     if not success:
-        return False, None, None
+        return False, None, None, None
     heads = flopy.utils.HeadUFile(Path(workspace) / f"{name}.hds").get_data()
     heads = np.concatenate([np.asarray(layer).ravel() for layer in heads])
     flow = (
@@ -445,6 +491,7 @@ def run_mfusg(data, workspace, executable):
         True,
         heads,
         largest_vertical_flow(data, data.row, data.ja, data.vertical, flow),
+        None,
     )
 
 
@@ -495,7 +542,8 @@ def main():
     failures = 0
     print(
         f"{'case':16s} {'program':8s} {'grid':5s} {'nodes':>7s} {'fixed':>6s} "
-        f"{'seconds':>8s} {'head error':>11s} {'vertical flow':>14s}  result"
+        f"{'seconds':>8s} {'head error':>11s} {'discharge error':>15s} "
+        f"{'vertical flow':>14s}  result"
     )
     for case in args.cases:
         data = UsgData(WORKSPACE / case)
@@ -518,11 +566,13 @@ def main():
                 workspace = WORKSPACE / f"{case}_{program}_{discretization}"
                 start = time.perf_counter()
                 if program == "mf6":
-                    success, heads, flow = run_mf6(
+                    success, heads, flow, discharge_error = run_mf6(
                         data, workspace, executable, discretization
                     )
                 else:
-                    success, heads, flow = run_mfusg(data, workspace, executable)
+                    success, heads, flow, discharge_error = run_mfusg(
+                        data, workspace, executable
+                    )
                 seconds = time.perf_counter() - start
                 label = (
                     f"{case:16s} {program:8s} {discretization:5s} {data.nodes:7d} "
@@ -531,16 +581,27 @@ def main():
                 if not success:
                     failures += 1
                     print(
-                        f"{label} {'':>11s} {'':>14s}  FAIL: did not terminate normally"
+                        f"{label} {'':>11s} {'':>15s} {'':>14s}  "
+                        "FAIL: did not terminate normally"
                     )
                     continue
                 error = np.abs(heads - data.exact_head)[~data.fixed].max()
-                passed = error < HEAD_TOLERANCE
-                failures += not passed
-                result = (
-                    "pass" if passed else f"FAIL: error of {HEAD_TOLERANCE:g} or more"
+                failed = []
+                if error >= HEAD_TOLERANCE:
+                    failed.append(f"head error of {HEAD_TOLERANCE:g} or more")
+                if (
+                    discharge_error is not None
+                    and discharge_error >= DISCHARGE_TOLERANCE
+                ):
+                    failed.append(f"discharge error of {DISCHARGE_TOLERANCE:g} or more")
+                failures += bool(failed)
+                result = "FAIL: " + "; ".join(failed) if failed else "pass"
+                discharge = (
+                    f"{discharge_error:15.3e}"
+                    if discharge_error is not None
+                    else f"{'':>15s}"
                 )
-                print(f"{label} {error:11.3e} {flow:14.3e}  {result}")
+                print(f"{label} {error:11.3e} {discharge} {flow:14.3e}  {result}")
     return 1 if failures else 0
 
 

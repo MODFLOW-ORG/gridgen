@@ -29,8 +29,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
 - **Run MODFLOW 6 and MODFLOW-USG on gridgen output** (the `models`
   environment, with FloPy; installs the latest `mf6`, `mfusg`, and `mfusgt`
   in `bin/modflow`, `--update` to reinstall; needs `pixi run build`):
-  `pixi run check-models`; each case must reproduce a linear head field
-  (`test/check_models.py`)
+  `pixi run check-models`; each case must reproduce a linear head field, and
+  in MODFLOW 6 its specific discharge (`test/check_models.py`)
 - **Check format, lint, and spelling** (Python and C++): `pixi run check-format`;
   `pixi run fix-format` applies the fixes
 - **Show the OS tag used for release archives:** `pixi run get-ostag`
