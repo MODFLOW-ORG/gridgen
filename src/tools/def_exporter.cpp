@@ -8,6 +8,7 @@
 #include "Warnings.h"
 #include <sstream>
 #include <algorithm>
+#include <filesystem>
 #include <vector>
 
 namespace cusg
@@ -22,6 +23,49 @@ inline ostream & operator<<(ostream & out, list<string> & strlist)
     return out;
 }
 
+string DefinitionExporter::output_file_name(const string & file_name,
+                                            const string & read_folder) const
+{
+    if (read_folder == m_output_folder) return file_name;
+
+    namespace fs = std::filesystem;
+    string path = file_name;
+    if (!read_folder.empty()) path = read_folder + "/" + file_name;
+    replace(path.begin(), path.end(), '\\', '/');
+    if (m_output_folder.empty()) return path;
+
+    fs::path target = fs::absolute(fs::path(path)).lexically_normal();
+    fs::path base = fs::absolute(fs::path(m_output_folder)).lexically_normal();
+    fs::path relative = target.lexically_relative(base);
+    //a file on another drive than the folder has no relative name
+    return relative.empty() ? target.generic_string() : relative.generic_string();
+}
+
+list<string> DefinitionExporter::output_array(const list<string> & spec,
+                                              const string & read_folder) const
+{
+    list<string> record = spec;
+    string keyword = record.empty() ? "" : record.front();
+    for (char & c : keyword) c = static_cast<char>(::tolower(static_cast<unsigned char>(c)));
+    if (keyword == "open/close") record.back() = output_file_name(record.back(), read_folder);
+    return record;
+}
+
+void DefinitionExporter::set_output_folder(const string & folder)
+{
+    m_output_folder = folder;
+    replace(m_output_folder.begin(), m_output_folder.end(), '\\', '/');
+}
+
+bool DefinitionExporter::save_grid_definition(const string & filename, QuadtreeBuilderBlock & data)
+{
+    size_t slash = filename.find_last_of("/\\");
+    set_output_folder((slash == string::npos) ? "" : filename.substr(0, slash));
+    bool saved = save(filename, data);
+    set_output_folder("");
+    return saved;
+}
+
 bool DefinitionExporter::save(ostream & out, ModflowGridBlock & data)
 {
     assert(data.type == "modflow_grid");
@@ -33,13 +77,19 @@ bool DefinitionExporter::save(ostream & out, ModflowGridBlock & data)
     out << "\tNLAY = " << data.nlay << "\n";
     out << "\tNROW = " << data.nrow << "\n";
     out << "\tNCOL = " << data.ncol << "\n";
-    out << "\tDELR = " << data.delr_str << "\n";
-    out << "\tDELC = " << data.delc_str << "\n";
-    out << "\tTOP = " << data.top_str << "\n";
+    //the arrays are read relative to the folder of the definition file of the block
+    const string & read_folder = data.folder_path;
+    list<string> delr = output_array(data.delr_str, read_folder);
+    list<string> delc = output_array(data.delc_str, read_folder);
+    list<string> top = output_array(data.top_str, read_folder);
+    out << "\tDELR = " << delr << "\n";
+    out << "\tDELC = " << delc << "\n";
+    out << "\tTOP = " << top << "\n";
 
     for (auto & i : data.bot_str)
     {
-        out << "\tBOTTOM LAYER " << i.first + 1 << " = " << i.second << "\n";
+        list<string> bottom = output_array(i.second, read_folder);
+        out << "\tBOTTOM LAYER " << i.first + 1 << " = " << bottom << "\n";
     }
 
     out << "END MODFLOW_GRID\n";
@@ -50,18 +100,18 @@ bool DefinitionExporter::save(ostream & out, ModflowGridBlock & data)
 bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
 {
     ModflowGrid * modflow_grid = grid->get_modflow_grid();
-    //filenames...
+    //filenames, relative to the folder gridgen is run from; the name of the grid is that of
+    //the file of its definition, which may include a folder
     const string & name = grid->name;
-
-    string ghostnode_name = name + ".gnc.dat"; //ghost nodes are saved in get_usg_csr_data()
+    size_t slash = name.find_last_of("/\\");
+    string block_name = (slash == string::npos) ? name : name.substr(slash + 1);
 
     string tree_structure_file = name + ".tsf";
-    string nodesperlay_data_name = name + ".nodesperlay.dat";
 
     //start to generate the block
-    out << "BEGIN QUADTREE " << name << "\n";
+    out << "BEGIN QUADTREE " << block_name << "\n";
     out << "\tMODFLOW_GRID = " << modflow_grid->name << "\n";
-    out << "\tSTRUCTURE_File  = OPEN/CLOSE " << tree_structure_file << "\n";
+    out << "\tSTRUCTURE_File  = OPEN/CLOSE " << output_file_name(tree_structure_file, "") << "\n";
 
     //save quadtree structure...
     {
@@ -83,7 +133,8 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
         int nsize_per_layer = grid->node_group.layer_cell_counts[i];
         stringstream ss;
         ss << name << ".top" << i + 1 << ".dat";
-        out << "\tTOP LAYER " << i + 1 << " = OPEN/CLOSE " << ss.str() << "\n";
+        out << "\tTOP LAYER " << i + 1 << " = OPEN/CLOSE " << output_file_name(ss.str(), "")
+            << "\n";
         save(ss.str(), top_ptr, nsize_per_layer);
         top_ptr += nsize_per_layer;
     }
@@ -95,7 +146,8 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
         int nsize_per_layer = grid->node_group.layer_cell_counts[i];
         stringstream ss;
         ss << name << ".bot" << i + 1 << ".dat";
-        out << "\tBOTTOM LAYER " << i + 1 << " = OPEN/CLOSE " << ss.str() << "\n";
+        out << "\tBOTTOM LAYER " << i + 1 << " = OPEN/CLOSE " << output_file_name(ss.str(), "")
+            << "\n";
         save(ss.str(), bot_ptr, nsize_per_layer);
         bot_ptr += nsize_per_layer;
     }

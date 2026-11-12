@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "export"
+description = "A grid definition file written to another folder than the one GRIDGEN is run from, by giving a folder in GRID_DEFINITION_FILE, could not be read with LOAD, and neither could one whose MODFLOW_GRID block read its arrays from another folder. The file names in it are now relative to the folder of the grid definition file, and the QUADTREE block is named for the file without the folder, so a later GRID record names the grid as it would in the folder GRIDGEN is run from. Grid definition files written to that folder are unchanged."

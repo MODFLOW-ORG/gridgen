@@ -70,6 +70,7 @@ test/output_intersection/holeincell_*
 test/output_shapefiles/grid*
 test/output_vtkfiles/grid*
 test/output_gsf/grid*
+test/output_grids/grid*
 
 # MODFLOW 6 and MODFLOW-USG checks (test/check_models.py)
 test/check_models/

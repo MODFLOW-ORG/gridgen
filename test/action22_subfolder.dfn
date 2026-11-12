@@ -1,0 +1,9 @@
+# the grid that action21_buildqtg_subfolder.dfn writes to another folder,
+# loaded from this folder by the name of its file
+
+LOAD output_grids/grid13qtg.dfn
+
+BEGIN GRID_TO_USGDATA grid13qtg-to-usgdata
+  GRID = grid13qtg
+  USG_DATA_PREFIX = output_usgdata/grid13qtg
+END GRID_TO_USGDATA
