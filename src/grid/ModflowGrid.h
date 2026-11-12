@@ -83,6 +83,9 @@ public:
         angle = rotation;
     }
 
+    ///the rotation in degrees as given, so that angles written in degrees are exact
+    double rotation_degrees;
+
 protected:
     void init(int nlay, int nrow, int ncol, const vector<double *> & botm);
 

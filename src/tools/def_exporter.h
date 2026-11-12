@@ -67,8 +67,9 @@ public:
     //
     bool save(GridToUsgdataBlock & data);
 
-    //save csr data into a set of files with "prefix"
-    bool save(const string & prefix, CSRData & csr, int * nperlay);
+    //save csr data into a set of files with "prefix"; the face angles are for a grid rotated
+    //by rotation_degrees
+    bool save(const string & prefix, CSRData & csr, int * nperlay, double rotation_degrees);
 
     //setting flags
     void set_record_per_line(int i)

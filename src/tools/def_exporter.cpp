@@ -106,7 +106,8 @@ bool DefinitionExporter::save(ostream & out, QuadTree3D * grid)
 }
 
 //save csr data into a set of files with "prefix"
-bool DefinitionExporter::save(const string & prefix, CSRData & csr, int * nperlay)
+bool DefinitionExporter::save(const string & prefix, CSRData & csr, int * nperlay,
+                              double rotation_degrees)
 {
     //filenames...
     string ia_data_name = prefix + ".ia.dat";
@@ -117,6 +118,10 @@ bool DefinitionExporter::save(const string & prefix, CSRData & csr, int * nperla
     string connection_length_array = prefix + ".c1.dat";
     string connection_length_array_reversed = prefix + ".c2.dat";
     string connection_count_array = prefix + ".iac.dat";
+    string horizontal_connection_array = prefix + ".ihc.dat";
+    string vertical_connection_array = prefix + ".ivc.dat";
+    string face_width_area_array = prefix + ".hwva.dat";
+    string face_normal_angle_array = prefix + ".angldegx.dat";
 
     //needed information about number of nodes per layer here
 
@@ -130,6 +135,10 @@ bool DefinitionExporter::save(const string & prefix, CSRData & csr, int * nperla
     save(connection_length_array, csr.cl1.data(), csr.nja, csr.ia.data());
     save(connection_length_array_reversed, csr.cl2.data(), csr.nja, csr.ia.data());
     if (!csr.iac.empty()) save(connection_count_array, csr.iac.data(), csr.nodes);
+    save(horizontal_connection_array, csr.ihc().data(), csr.nja, csr.ia.data());
+    save(vertical_connection_array, csr.ivc().data(), csr.nja, csr.ia.data());
+    save(face_width_area_array, csr.hwva.data(), csr.nja, csr.ia.data());
+    save(face_normal_angle_array, csr.angldegx(rotation_degrees).data(), csr.nja, csr.ia.data());
 
     return true;
 }
@@ -149,9 +158,11 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
     //needed information about number of nodes per layer here
     int * nperlay = nullptr;
     vector<int> mf_nperlay; //nodes per layer of a MODFLOW grid
+    double rotation_degrees = 0.0;
     if (quad_grid != nullptr)
     {
         nperlay = quad_grid->get_layer_cell_counts();
+        rotation_degrees = quad_grid->get_modflow_grid()->rotation_degrees;
     }
     else //get number of nodes per layer on the fly
     {
@@ -160,6 +171,7 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
         {
             mf_nperlay.assign(modflow_grid->nlay, modflow_grid->ncol * modflow_grid->nrow);
             nperlay = mf_nperlay.data();
+            rotation_degrees = modflow_grid->rotation_degrees;
         }
     }
 
@@ -176,7 +188,7 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
     //save the rest
     assert(data.grid);
     CSRData csr = data.grid->get_usg_csr_data();
-    save(data.usg_data_prefix, csr, nperlay);
+    save(data.usg_data_prefix, csr, nperlay, rotation_degrees);
     write_vertices_cell2d(data.grid, data.usg_data_prefix);
 
     //save extra information for irregular map

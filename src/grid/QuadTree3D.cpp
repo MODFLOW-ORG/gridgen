@@ -813,6 +813,7 @@ CSRData QuadTree3D::get_usg_csr_data()
     vector<double> cl1(nja);
     vector<double> cl2(nja);
     vector<double> fahl(nja);
+    vector<double> hwva(nja);
     vector<int> fldr(nja);
     vector<int> iac(cell_count); // number of connection +1 for each cell, array of size  nodes
 
@@ -830,6 +831,7 @@ CSRData QuadTree3D::get_usg_csr_data()
         cl1[ja_index] = 0.0;
         cl2[ja_index] = 0.0;
         fahl[ja_index] = 0.0;
+        hwva[ja_index] = 0.0;
         fldr[ja_index] = 0;
         ja_index++;
 
@@ -884,22 +886,26 @@ CSRData QuadTree3D::get_usg_csr_data()
             {
                 if (axis == 0) //x
                 {
-                    fahl[ja_index] = min(dxdydzn[1], to_box_dxdydz[1]) * dz;
+                    hwva[ja_index] = min(dxdydzn[1], to_box_dxdydz[1]);
+                    fahl[ja_index] = hwva[ja_index] * dz;
                 }
                 else if (axis == 1) //y
                 {
-                    fahl[ja_index] = min(dxdydzn[0], to_box_dxdydz[0]) * dz;
+                    hwva[ja_index] = min(dxdydzn[0], to_box_dxdydz[0]);
+                    fahl[ja_index] = hwva[ja_index] * dz;
                 }
                 else if (axis == 2) //z
                 {
                     fahl[ja_index] =
                         min(dxdydzn[0] * dxdydzn[1], to_box_dxdydz[0] * to_box_dxdydz[1]);
+                    hwva[ja_index] = fahl[ja_index];
                 }
             }
             else
             {
                 assert(fldir == 3 || fldir == -3);
                 fahl[ja_index] = *fit;
+                hwva[ja_index] = fahl[ja_index];
             }
 
             ja_index++;
@@ -913,7 +919,8 @@ CSRData QuadTree3D::get_usg_csr_data()
     ia[cell_count] = ja_index + id_offset;
 
     return CSRData(cell_count, nja, std::move(area), std::move(ia), std::move(ja), std::move(cl1),
-                   std::move(cl2), std::move(fahl), std::move(fldr), std::move(iac));
+                   std::move(cl2), std::move(fahl), std::move(hwva), std::move(fldr),
+                   std::move(iac));
 }
 
 void QuadTree3D::sort_connections_by_cell(list<pair<int, int>> & connection_list)

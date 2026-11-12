@@ -31,14 +31,16 @@ namespace cusg
 
 ModflowGrid::ModflowGrid(const ModflowGridBlock & rawdata)
     : ModflowGrid2D(rawdata.nrow, rawdata.ncol, rawdata.delr, rawdata.delc, rawdata.x_offset,
-                    rawdata.y_offset, rawdata.rotation_angle)
+                    rawdata.y_offset, rawdata.rotation_angle),
+      rotation_degrees(rawdata.rotation_degrees)
 {
     init(rawdata.nlay, rawdata.nrow, rawdata.ncol, rawdata.bot);
 }
 
 ModflowGrid::ModflowGrid(int lay, int row, int col, double delr, double delc,
                          vector<double *> & bot, double xoffset, double yoffset, double angle)
-    : ModflowGrid2D(row, col, delr, delc, xoffset, yoffset, angle)
+    : ModflowGrid2D(row, col, delr, delc, xoffset, yoffset, angle),
+      rotation_degrees(angle * 180 / PI)
 {
     init(lay, row, col, bot);
 }
@@ -175,6 +177,7 @@ CSRData ModflowGrid::get_usg_csr_data()
     vector<double> cl1(nja);
     vector<double> cl2(nja);
     vector<double> fahl(nja);
+    vector<double> hwva(nja);
     vector<int> fldr(nja);
     vector<int> iac(box_size); // number of connection +1 for each cell, array of size  nodes
 
@@ -195,6 +198,7 @@ CSRData ModflowGrid::get_usg_csr_data()
                 cl1[japos] = 0;
                 cl2[japos] = 0;
                 fahl[japos] = 0;
+                hwva[japos] = 0;
                 fldr[japos] = 0;
                 iac[cell] = 1;
                 japos += 1;
@@ -214,6 +218,7 @@ CSRData ModflowGrid::get_usg_csr_data()
                     cl1[japos] = 0.5 * (botm(k, i, j) - botm(k + 1, i, j));
                     cl2[japos] = 0.5 * (botm(k - 1, i, j) - botm(k, i, j));
                     fahl[japos] = delr[j] * delc[i];
+                    hwva[japos] = fahl[japos];
                     iac[cell]++;
                     japos += 1;
                 }
@@ -228,6 +233,7 @@ CSRData ModflowGrid::get_usg_csr_data()
                     if (is3d) dz = 0.5 * (botm(k, i - 1, j) - botm(k + 1, i - 1, j) + dzkij);
 
                     fahl[japos] = delr[j] * dz;
+                    hwva[japos] = delr[j];
                     iac[cell]++;
                     japos += 1;
                 }
@@ -242,6 +248,7 @@ CSRData ModflowGrid::get_usg_csr_data()
                     if (is3d) dz = 0.5 * (botm(k, i, j - 1) - botm(k + 1, i, j - 1) + dzkij);
 
                     fahl[japos] = delc[i] * dz;
+                    hwva[japos] = delc[i];
                     iac[cell]++;
                     japos += 1;
                 }
@@ -256,6 +263,7 @@ CSRData ModflowGrid::get_usg_csr_data()
                     if (is3d) dz = 0.5 * (botm(k, i, j + 1) - botm(k + 1, i, j + 1) + dzkij);
 
                     fahl[japos] = delc[i] * dz;
+                    hwva[japos] = delc[i];
                     iac[cell]++;
                     japos += 1;
                 }
@@ -270,6 +278,7 @@ CSRData ModflowGrid::get_usg_csr_data()
                     if (is3d) dz = 0.5 * (botm(k, i + 1, j) - botm(k + 1, i + 1, j) + dzkij);
 
                     fahl[japos] = delr[j] * dz;
+                    hwva[japos] = delr[j];
                     iac[cell]++;
                     japos += 1;
                 }
@@ -282,6 +291,7 @@ CSRData ModflowGrid::get_usg_csr_data()
                     cl1[japos] = 0.5 * (botm(k, i, j) - botm(k + 1, i, j));
                     cl2[japos] = 0.5 * (botm(k + 1, i, j) - botm(k + 2, i, j));
                     fahl[japos] = delr[j] * delc[i];
+                    hwva[japos] = fahl[japos];
                     iac[cell]++;
                     japos += 1;
                 }
@@ -295,7 +305,8 @@ CSRData ModflowGrid::get_usg_csr_data()
     ia[cell] = japos + 1;
 
     return CSRData(nodes, nja, std::move(area), std::move(ia), std::move(ja), std::move(cl1),
-                   std::move(cl2), std::move(fahl), std::move(fldr), std::move(iac));
+                   std::move(cl2), std::move(fahl), std::move(hwva), std::move(fldr),
+                   std::move(iac));
 }
 
 ///number the nodes (i.e. leaves) in the grid
