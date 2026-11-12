@@ -175,6 +175,32 @@ jobs:
           pixi run setup
           pixi run build
 
+      # the executable links the C++ library statically (src/meson.build) and
+      # must run with glibc 2.34, that of RHEL 9
+      - name: Check libraries (Linux)
+        working-directory: ${{ env.PROGRAM_NAME }}/bin
+        if: runner.os == 'Linux'
+        env:
+          NEWEST_GLIBC_ALLOWED: GLIBC_2.34
+        run: |
+          readelf -d gridgen | grep NEEDED
+          if readelf -d gridgen | grep NEEDED | grep 'libstdc++'; then
+            echo "error: gridgen dynamically links the C++ library"
+            exit 1
+          fi
+          if objdump -T gridgen | grep -E 'GLIBCXX_|CXXABI_'; then
+            echo "error: gridgen needs symbols of a shared C++ library"
+            exit 1
+          fi
+          newest=$(objdump -T gridgen | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)
+          echo "newest glibc version needed: $newest, by:"
+          objdump -T gridgen | grep -w "$newest"
+          echo "newest libgcc version needed: $(objdump -T gridgen | grep -o 'GCC_[0-9.]*' | sort -uV | tail -1)"
+          if [ "$(printf '%s\n' "$newest" "$NEWEST_GLIBC_ALLOWED" | sort -V | tail -1)" != "$NEWEST_GLIBC_ALLOWED" ]; then
+            echo "error: gridgen needs $newest, newer than $NEWEST_GLIBC_ALLOWED"
+            exit 1
+          fi
+
       - name: Check architecture (macOS)
         working-directory: ${{ env.PROGRAM_NAME }}/bin
         if: runner.os == 'macOS'

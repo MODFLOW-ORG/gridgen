@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "build"
+description = "The Linux executable now includes the C++ runtime library, so it runs on systems with an older one, such as Red Hat Enterprise Linux 9, where it stopped with a message that a version of GLIBCXX was not found. It still needs glibc 2.34 or later."
