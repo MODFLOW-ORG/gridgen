@@ -327,29 +327,34 @@ TEST(DefinitionParser, SmoothingLevelSpellings)
 TEST(DefinitionParser, GridIsNamedForTheDefinitionFileWithoutItsExtension)
 {
     // a period in a folder is not an extension (#184)
-    const char * names[][2] = {{"qtg.dfn", "qtg"},
-                               {"qtg", "qtg"},
-                               {"qtg.v2.dfn", "qtg.v2"},
-                               {"out/qtg.dfn", "out/qtg"},
-                               {"out.v2/qtg", "out.v2/qtg"},
-                               {"out.v2/qtg.dfn", "out.v2/qtg"},
-                               {"out.v2\\qtg", "out.v2\\qtg"},
-                               {"../qtg", "../qtg"},
-                               {"./qtg", "./qtg"},
-                               {"out/.qtg", "out/.qtg"}};
-    for (const auto & n : names)
+    struct Case
     {
-        SCOPED_TRACE(n[0]);
+        const char * definition_file;
+        const char * expected_name;
+    };
+    const Case cases[] = {{"qtg.dfn", "qtg"},
+                          {"qtg", "qtg"},
+                          {"qtg.v2.dfn", "qtg.v2"},
+                          {"out/qtg.dfn", "out/qtg"},
+                          {"out.v2/qtg", "out.v2/qtg"},
+                          {"out.v2/qtg.dfn", "out.v2/qtg"},
+                          {"out.v2\\qtg", "out.v2\\qtg"},
+                          {"../qtg", "../qtg"},
+                          {"./qtg", "./qtg"},
+                          {"out/.qtg", "out/.qtg"}};
+    for (const Case & test_case : cases)
+    {
+        SCOPED_TRACE(test_case.definition_file);
         std::istringstream dfn(std::string("BEGIN QUADTREE_BUILDER qtb\n"
                                            "  MODFLOW_GRID = mfg\n"
                                            "  GRID_DEFINITION_FILE = ") +
-                               n[0] + "\nEND QUADTREE_BUILDER\n");
+                               test_case.definition_file + "\nEND QUADTREE_BUILDER\n");
         DefinitionParser parser;
         ASSERT_TRUE(parser.parse(dfn));
         QuadtreeBuilderBlock * data =
             dynamic_cast<QuadtreeBuilderBlock *>(parser.get_block_data("qtb"));
         ASSERT_NE(data, nullptr);
-        EXPECT_EQ(data->grid_name(), n[1]);
+        EXPECT_EQ(data->grid_name(), test_case.expected_name);
     }
 }
 

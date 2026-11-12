@@ -813,7 +813,7 @@ string QuadtreeBuilderBlock::grid_name() const
 {
     if (grid_definition_file.empty()) return name;
 
-    //only a period in the file name starts an extension, and not one that begins it
+    //a period starts an extension only after the first character of the file name
     size_t slash = grid_definition_file.find_last_of("/\\");
     size_t file_start = (slash == string::npos) ? 0 : slash + 1;
     size_t dot = grid_definition_file.find_last_of('.');
