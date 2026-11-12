@@ -45,7 +45,6 @@ exe = executable(
                  meson.project_name(),
                  ['gridgenusg.cpp', version_h],
                  dependencies: gridgen_dep,
-                 link_language : 'cpp',
                  install: true
                 )
 
