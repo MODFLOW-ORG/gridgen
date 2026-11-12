@@ -3,7 +3,8 @@ Run the gridgen test cases and compare every output file byte for byte.
 
 With --ref-exe the outputs of two executables (e.g., a branch build and a main
 build) are compared; without it the same executable is run twice to detect
-run-to-run differences. Both runs use the inputs in this directory.
+run-to-run differences. Both runs use the inputs in this directory. With --once
+the cases are run once and nothing is compared (for a sanitized build).
 """
 
 import argparse
@@ -241,12 +242,19 @@ def main():
     parser.add_argument("--exe", required=True, help="gridgen executable to test")
     parser.add_argument("--ref-exe", help="reference gridgen executable")
     parser.add_argument(
+        "--once",
+        action="store_true",
+        help="run the cases once and check them without comparing outputs",
+    )
+    parser.add_argument(
         "--keep",
         type=Path,
         help="directory to keep the outputs in (default: temporary, removed)",
     )
     args = parser.parse_args()
 
+    if args.once and args.ref_exe:
+        parser.error("--once runs one executable; it cannot be given --ref-exe")
     exe = Path(args.exe).resolve()
     ref_exe = Path(args.ref_exe).resolve() if args.ref_exe else exe
     for e in {exe, ref_exe}:
@@ -258,9 +266,12 @@ def main():
         for sub in ("ref", "test"):
             shutil.rmtree(root / sub, ignore_errors=True)
     try:
-        run_cases(ref_exe, root / "ref")
+        if not args.once:
+            run_cases(ref_exe, root / "ref")
         run_cases(exe, root / "test")
-        diffs, nfiles = compare_dirs(root / "ref", root / "test")
+        diffs, nfiles = (
+            ([], 0) if args.once else compare_dirs(root / "ref", root / "test")
+        )
         overlap_errors = {
             prefix: check_vertical_overlap(root / "test" / prefix)
             for prefix in OVERLAP_CHECKS
@@ -284,6 +295,9 @@ def main():
             for e in errors[:10]:
                 print(f"  {e}")
         nerrors += len(errors)
+    if args.once:
+        print(f"{len(CASES)} cases ran once, outputs not compared ({exe})")
+        return 1 if nerrors else 0
     for d in known:
         print(f"known unstable output {d}")
     if diffs:

@@ -39,8 +39,10 @@ coverage = { cmd = "rm -rf builddir-coverage && meson setup -Db_coverage=true -D
 
 # unit and regression tests built with the address and undefined behavior
 # sanitizers; any error they report fails the test, and so does a leak where
-# the leak sanitizer runs by default (Linux)
-sanitize = { cmd = "rm -rf builddir-sanitize && meson setup -Db_sanitize=address,undefined -Db_lundef=false -Dcpp_args=-fno-sanitize-recover=undefined -Dunit_tests=enabled --buildtype=debug builddir-sanitize && meson compile -C builddir-sanitize && meson test -C builddir-sanitize --print-errorlogs --timeout-multiplier 4 unit determinism", env = { ASAN_OPTIONS = "alloc_dealloc_mismatch=1:halt_on_error=1", UBSAN_OPTIONS = "print_stacktrace=1:halt_on_error=1" } }
+# the leak sanitizer runs by default (Linux). -O1 with frame pointers, as the
+# AddressSanitizer documentation recommends, and the regression cases run
+# once, since the determinism test of the other builds compares two runs
+sanitize = { cmd = "rm -rf builddir-sanitize && meson setup -Db_sanitize=address,undefined -Db_lundef=false -Ddebug=true -Doptimization=1 \"-Dcpp_args=-fno-sanitize-recover=undefined -fno-omit-frame-pointer\" -Dunit_tests=enabled builddir-sanitize && meson compile -C builddir-sanitize && meson test -C builddir-sanitize --print-errorlogs unit && python test/compare_outputs.py --exe builddir-sanitize/src/gridgen --once", env = { ASAN_OPTIONS = "alloc_dealloc_mismatch=1:halt_on_error=1", UBSAN_OPTIONS = "print_stacktrace=1:halt_on_error=1" } }
 
 # compare outputs with a build of main checked out at ../gridgen-main
 # (e.g., git worktree add ../gridgen-main main)

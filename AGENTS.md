@@ -24,8 +24,9 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   build; the results by file are in `builddir-coverage/coverage.txt`):
   `pixi run coverage`
 - **Run the unit and regression tests with the address and undefined behavior
-  sanitizers** (a separate debug build in `builddir-sanitize/`, also run in
-  CI on Linux, where leaks are reported too): `pixi run sanitize`
+  sanitizers** (a separate build with `-O1` in `builddir-sanitize/` that runs
+  the regression cases once, also run in CI on Linux, where leaks are
+  reported too): `pixi run sanitize`
 - **Run MODFLOW 6 and MODFLOW-USG on gridgen output** (the `models`
   environment, with FloPy; installs the latest `mf6`, `mfusg`, and `mfusgt`
   in `bin/modflow`, `--update` to reinstall; needs `pixi run build`):
