@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "export"
+description = "When GRID_DEFINITION_FILE named a file without an extension and its path had a period before the file name, as in out.v2/grid02qtg or ../grid02qtg, the grid was named for the part of the path before that period, and its tree structure file and top and bottom arrays were written under that name in another folder. The grid is now named for the file name without its extension, and its files are written beside the grid definition file. Names that end with an extension are unchanged."
