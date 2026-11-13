@@ -1,0 +1,2 @@
+issue = 188
+description = "The integer fields of the shapefiles GRIDGEN writes, the node number, layer, row, and column of a GRID_TO_SHAPEFILE block and the node number and feature ID of the OUTPUT_SHAPEFILE of a GRID_INTERSECTION block, are read by GIS software as double-precision fields rather than integers, so another table cannot be joined to them on one of these fields. Copy the values to a new integer field in the GIS before joining."
