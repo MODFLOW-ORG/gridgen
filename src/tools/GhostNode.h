@@ -23,9 +23,11 @@ struct GhostNode
 };
 
 //compute the ghost nodes of the horizontal connections between cells of
-//different size, and of the vertical connections too if vertical is true
-void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes,
-                         bool vertical = false);
+//different size, and of the vertical connections too if vertical is true;
+//returns the number of connections from a cell next to an inactive cell to a
+//smaller cell whose ghost node is missing or does not reproduce a linear head
+//field, since the head there cannot be interpolated from the active cells nearby
+int compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes, bool vertical = false);
 
 //write ghost node
 void write_ghost_node(string file_path, vector<GhostNode> & ghost_nodes, int offset);

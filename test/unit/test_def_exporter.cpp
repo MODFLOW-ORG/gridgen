@@ -4,11 +4,13 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 
 #include "def_exporter.h"
 #include "def_parser.h"
+#include "Warnings.h"
 #include "def_struct.h"
 #include "grid_helpers.h"
 
@@ -149,4 +151,65 @@ TEST(DefinitionExporter, GridFilesAreWrittenBesideTheFileInAFolderWithAPeriod)
     EXPECT_TRUE(std::filesystem::exists(folder / "qtg.top1.dat"));
     EXPECT_TRUE(std::filesystem::exists(folder / "qtg.bot1.dat"));
     std::filesystem::remove_all(folder);
+}
+
+namespace
+{
+
+// the warnings of exporting the USG data of qtree, with vertical ghost nodes, to
+// a prefix in the temporary folder
+std::vector<std::string> usg_data_warnings(QuadTree3D * qtree)
+{
+    std::istringstream dfn(
+        "BEGIN GRID_TO_USGDATA usg\n"
+        "  GRID = qtg\n"
+        "  USG_DATA_PREFIX = " +
+        (std::filesystem::path(::testing::TempDir()) / "gridgen_unit_gnc_edge").generic_string() +
+        "\n  GNC_VERTICAL = True\nEND GRID_TO_USGDATA\n");
+    DefinitionParser parser;
+    EXPECT_TRUE(parser.parse(dfn));
+    auto * usg = dynamic_cast<GridToUsgdataBlock *>(parser.get_block_data("usg"));
+    EXPECT_NE(usg, nullptr);
+    if (usg == nullptr) return {};
+    usg->grid = qtree;
+    clear_warnings();
+    DefinitionExporter exporter;
+    exporter.save(*usg);
+    std::vector<std::string> warnings = get_warnings();
+    clear_warnings();
+    return warnings;
+}
+
+} // namespace
+
+TEST(DefinitionExporter, GhostNodesBeyondTheActiveCellsAreReported)
+{
+    // 3 x 3 cells of 100 in 2 layers with the center of layer 1 refined and,
+    // in layer 2, the north, east, and south cells inactive: below the east
+    // half of the center cell the head at the two ghost nodes could only be
+    // projected beyond the active cells (#170)
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(2, 3, 3, 100.0, 100.0);
+    mfgrid->name = "mfg";
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{150.0, 150.0, 1, 0}});
+    qtree->name = "qtg";
+    for (int row_col : {1, 5, 7})
+        qtree->node_group[mfgrid->get_box_index(1, row_col / 3, row_col % 3)]->active = false;
+    qtree->number_nodes();
+    qtree->refresh();
+
+    std::vector<std::string> warnings = usg_data_warnings(qtree.get());
+    ASSERT_EQ(warnings.size(), 1u);
+    EXPECT_NE(warnings.front().find("GRID_TO_USGDATA block usg, 2 connections"), std::string::npos)
+        << warnings.front();
+    EXPECT_NE(warnings.front().find("next to an inactive cell"), std::string::npos);
+    EXPECT_NE(warnings.front().find("XT3D"), std::string::npos);
+}
+
+TEST(DefinitionExporter, NoGhostNodeWarningWithoutAnActiveDomain)
+{
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(2, 3, 3, 100.0, 100.0);
+    mfgrid->name = "mfg";
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{150.0, 150.0, 1, 0}});
+    qtree->name = "qtg";
+    EXPECT_TRUE(usg_data_warnings(qtree.get()).empty());
 }

@@ -1266,14 +1266,15 @@ ostream & operator<<(ostream & out, QuadTree3D & grid)
     return out;
 }
 
-void QuadTree3D::save_ghost_node(string file_path, bool vertical)
+int QuadTree3D::save_ghost_node(string file_path, bool vertical)
 {
     //computed in full before the file is opened, so an error leaves no partial file
     vector<GhostNode> ghost_nodes;
-    compute_ghost_nodes(this, ghost_nodes, vertical);
+    int inexact_at_domain_edge = compute_ghost_nodes(this, ghost_nodes, vertical);
 
     write_ghost_node(file_path, ghost_nodes, ((this->m_one_based_node_numbering) ? 1 : 0));
     cout << "- Save data to file: " << file_path << endl;
+    return inexact_at_domain_edge;
 }
 
 //linear interpolation the value of the center of the box
