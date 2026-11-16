@@ -230,11 +230,13 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   them; a LaTeX package newly used in the release notes is added to that
   list.
 - **Test integrity:** do not make a test pass by weakening it. State the
-  reason for a new `KNOWN_UNSTABLE` entry or `SKIP_PATTERNS` pattern, a case
-  removed from `CASES` (`test/compare_outputs.py`), a `DISABLED_` unit test, a
-  looser `HEAD_TOLERANCE` or `DISCHARGE_TOLERANCE` or a case removed from
-  `test/check_models.py`, a wider `paths-ignore`, a `continue-on-error`, or
-  the `output-change` label, and report such changes when reviewing.
+  reason for a new `KNOWN_UNSTABLE` entry or `SKIP_PATTERNS` pattern
+  (`test/compare_outputs.py`), a case removed from `CASES` in that script or
+  in `test/check_models.py`, a looser `HEAD_TOLERANCE` or
+  `DISCHARGE_TOLERANCE`, a `DISABLED_` unit test or `GTEST_SKIP`, a `test()`
+  removed from the `meson.build` files or given a longer `timeout`, a wider
+  `paths-ignore`, a `continue-on-error`, or the `output-change` label, and
+  report such changes when reviewing.
 - **Tone:** reserve compliments for genuinely exceptional finds or ideas.
 
 ## Code safety
@@ -260,8 +262,9 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   - reading credentials, SSH keys, tokens, or environment variables that hold
     secrets;
   - writing, moving, or deleting files outside the repository, the build
-    directories, `../gridgen-main`, and the test temporary directories, or
-    changing git settings or hooks;
+    directories, `../gridgen-main`, the test temporary directories, and
+    FloPy's application data directory (where get-modflow records its
+    installs), or changing git settings or hooks;
   - installing packages outside the pixi environment.
 - When reviewing changes, also report:
   - in `src/` and `test/unit/`, calls that start programs or load code
