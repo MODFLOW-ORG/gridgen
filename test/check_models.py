@@ -57,8 +57,9 @@ CASES = {
     "same": ("disu", "disv"),
 }
 
-# ghost nodes at the edge of an active domain are missing or inexact (#170), so
-# in these cases the cells connected to an edge cell have fixed heads too
+# at the edge of an active domain, a ghost node whose head could only be
+# projected beyond the active cells is missing or inexact (#170), so in these
+# cases the cells connected to an edge cell have fixed heads too
 FIX_CELLS_NEXT_TO_EDGE = ("layered_gncv", "layered_vp_gncv")
 
 # origin of the grid and the head gradient in x and y; the heads vary by 86

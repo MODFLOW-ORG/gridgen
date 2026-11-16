@@ -248,7 +248,16 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
     {
         // Save ghost nodes to file
         string ghostnode_name = data.usg_data_prefix + ".gnc.dat";
-        quad_grid->save_ghost_node(ghostnode_name, data.gnc_vertical);
+        int inexact = quad_grid->save_ghost_node(ghostnode_name, data.gnc_vertical);
+        if (inexact > 0)
+            warn("In " + data.label() + ", " + to_string(inexact) +
+                 " connections between cells of different size at the edge of an active "
+                 "domain have a ghost node that does not account fully for the offset of "
+                 "their cell centers, or none, since the head there could only be projected "
+                 "beyond the active cells; the flow across them is less accurate where the "
+                 "head varies along the edge. Refining the cells along the edge of the active "
+                 "domain to the size of their neighbors, or using the XT3D option of "
+                 "MODFLOW 6 in place of ghost nodes, avoids this.");
 
         // save nodes per layer
         string nodesperlay_data_name = data.usg_data_prefix + ".nodesperlay.dat";

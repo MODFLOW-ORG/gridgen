@@ -161,8 +161,10 @@ public:
     ///number the nodes (i.e. leaves) in the grid
     void number_nodes() override;
 
-    ///save the ghost nodes to file, including those of vertical connections if vertical is true
-    void save_ghost_node(string file_path, bool vertical = false);
+    ///save the ghost nodes to file, including those of vertical connections if vertical is true;
+    ///returns the number of connections at the edge of an active domain whose ghost node does
+    ///not reproduce a linear head field
+    int save_ghost_node(string file_path, bool vertical = false);
 
     ///refresh the tree to get the new box index and cell arrays
     void refresh();

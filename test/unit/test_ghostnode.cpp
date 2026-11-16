@@ -1,6 +1,8 @@
 // Horizontal and vertical ghost node correction
 #include <cmath>
 #include <functional>
+#include <list>
+#include <map>
 #include <set>
 #include <string>
 #include <utility>
@@ -110,6 +112,88 @@ void expect_coarser_contributor(QuadTree3D * qtree, const GhostNode & ghost_node
     EXPECT_GT(ghost_node.alpha2, 0.0);
     EXPECT_LT(ghost_node.alpha1 + ghost_node.alpha2, 1.0);
     expect_linear_head_reproduced(qtree, ghost_node);
+}
+
+// the leaf cell centered at (x, y) in layer, or nullptr
+Box * cell_at(QuadTree3D * qtree, double x, double y, int layer)
+{
+    for (Box * box : qtree->node_group)
+    {
+        if (box->is_leaf && box->layer == layer && box->x == x && box->y == y) return box;
+    }
+    return nullptr;
+}
+
+// deactivate the leaf cells centered at the points of layer and renumber
+void deactivate(QuadTree3D * qtree, const std::vector<std::pair<double, double>> & centers,
+                int layer)
+{
+    for (const auto & center : centers)
+    {
+        Box * box = cell_at(qtree, center.first, center.second, layer);
+        ASSERT_NE(box, nullptr) << center.first << ", " << center.second;
+        box->active = false;
+    }
+    qtree->number_nodes();
+    qtree->refresh();
+}
+
+bool reproduces_linear_head(QuadTree3D * qtree, const GhostNode & ghost_node)
+{
+    return std::fabs(ghost_head(qtree, ghost_node, linear_head) -
+                     ghost_location_head(qtree, ghost_node, linear_field)) < 1.0e-9;
+}
+
+bool next_to_inactive_cell(Box * cell)
+{
+    for (int side = 0; side < 4; side++)
+    {
+        std::list<Box *> neighbors;
+        cell->get_neighbors(neighbors, side);
+        for (Box * neighbor : neighbors)
+        {
+            if (neighbor->number == -1) return true;
+        }
+    }
+    return false;
+}
+
+// every contributing factor is not negative, each pair sums to less than one,
+// and the contributing cells are active; returns the number of connections from
+// a cell next to an inactive one to a smaller cell, horizontal and, if vertical
+// is true, vertical, whose ghost node is missing or does not reproduce a linear
+// head field
+int expect_interpolated(QuadTree3D * qtree, const std::vector<GhostNode> & ghost_nodes,
+                        bool vertical)
+{
+    std::map<std::pair<long, long>, const GhostNode *> by_connection;
+    for (const GhostNode & ghost_node : ghost_nodes)
+    {
+        by_connection[std::make_pair(ghost_node.large_node, ghost_node.small_node)] = &ghost_node;
+        EXPECT_NE(ghost_node.j1, -1);
+        EXPECT_NE(ghost_node.j2, -1);
+        EXPECT_GE(ghost_node.alpha1, 0.0) << "n " << ghost_node.large_node;
+        EXPECT_GE(ghost_node.alpha2, 0.0) << "n " << ghost_node.large_node;
+        EXPECT_LT(ghost_node.alpha1 + ghost_node.alpha2, 1.0);
+    }
+
+    int inexact_at_domain_edge = 0;
+    CSRData csr = qtree->get_usg_csr_data();
+    for (int n = 0; n < csr.nodes; n++)
+    {
+        Box * large = qtree->get_cell_box(n);
+        if (!next_to_inactive_cell(large)) continue;
+        for (int ipos = csr.ia[n] + 1; ipos < csr.ia[n + 1]; ipos++)
+        {
+            int m = csr.ja[ipos];
+            if (csr.area[n] <= csr.area[m]) continue;
+            if (!vertical && large->layer != qtree->get_cell_box(m)->layer) continue;
+            auto found = by_connection.find(std::make_pair((long)n, (long)m));
+            if (found == by_connection.end() || !reproduces_linear_head(qtree, *found->second))
+                inexact_at_domain_edge++;
+        }
+    }
+    return inexact_at_domain_edge;
 }
 
 std::vector<GhostNode> vertical_ghost_nodes(QuadTree3D * qtree)
@@ -227,29 +311,36 @@ TEST(GhostNode, CoarserNeighborOffsetAwayFromSmallCell)
     EXPECT_TRUE(connected.count(std::make_pair((int)ghost_node->large_node, (int)ghost_node->j2)));
 }
 
-TEST(GhostNode, CoarserNeighborWithoutSecondCellKeepsOneCell)
+TEST(GhostNode, CoarserNeighborWithoutSecondCellUsesTheCellBeyondIt)
 {
     // the grid of CoarserNeighborOffsetTowardSmallCell with the west cell
-    // inactive; the other neighbors of the northwest quarter give a negative
-    // weight, so the ghost node is interpolated from the coarse cell alone
+    // inactive; no neighbor of the northwest quarter, with the coarse cell on
+    // its north, interpolates the head at the ghost node, but the cell west of
+    // the coarse cell, which is not connected to the quarter, does, a fourth
+    // of the way from it (#170)
     std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 3, 3, 100.0, 100.0);
     std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{162.5, 187.5, 2, 0}});
     qtree->node_group[mfgrid->get_box_index(0, 1, 0)]->active = false;
     qtree->number_nodes();
     qtree->refresh();
+    std::set<std::pair<int, int>> connected = connections(qtree.get());
     std::vector<GhostNode> ghost_nodes;
-    compute_ghost_nodes(qtree.get(), ghost_nodes);
+    int inexact = compute_ghost_nodes(qtree.get(), ghost_nodes);
 
     const GhostNode * ghost_node =
         find_ghost_node(qtree.get(), ghost_nodes, {125.0, 175.0}, {162.5, 187.5});
     ASSERT_NE(ghost_node, nullptr);
-    EXPECT_EQ(ghost_node->j1, ghost_node->j2);
     Box * j1 = qtree->get_cell_box(ghost_node->j1);
+    Box * j2 = qtree->get_cell_box(ghost_node->j2);
     EXPECT_EQ(j1->x, 150.0);
     EXPECT_EQ(j1->y, 250.0);
-    // the distance across the connection over that to the coarse cell, halved
-    EXPECT_DOUBLE_EQ(ghost_node->alpha1, (12.5 / 75.0) / 2);
-    EXPECT_DOUBLE_EQ(ghost_node->alpha2, ghost_node->alpha1);
+    EXPECT_EQ(j2->x, 50.0);
+    EXPECT_EQ(j2->y, 250.0);
+    EXPECT_FALSE(connected.count(std::make_pair((int)ghost_node->large_node, (int)ghost_node->j2)));
+    EXPECT_DOUBLE_EQ(ghost_node->alpha1, 0.125);
+    EXPECT_DOUBLE_EQ(ghost_node->alpha2, 1.0 / 24.0);
+    expect_linear_head_reproduced(qtree.get(), *ghost_node);
+    EXPECT_EQ(expect_interpolated(qtree.get(), ghost_nodes, false), inexact);
 }
 
 TEST(GhostNode, EveryHorizontalGhostNodeReproducesLinearHead)
@@ -428,30 +519,132 @@ TEST(GhostNode, VerticalCorrectionAtTheGridEdge)
 TEST(GhostNode, VerticalCorrectionSkipsInactiveNeighbor)
 {
     // as VerticalCorrectionReproducesLinearHead with the east cell of layer 1
-    // inactive: below the east half of the center cell only y contributes
+    // inactive: below the west half of the center cell the ghost nodes are
+    // interpolated as before, and below the east half from the north or south
+    // cell and the cell beyond it to the east, which is not connected to the
+    // center cell (#170)
     std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(2, 3, 3, 100.0, 100.0);
     std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{150.0, 150.0, 1, 1}});
     Box * east = qtree->node_group[mfgrid->get_box_index(0, 1, 2)];
     east->active = false;
     qtree->number_nodes();
     qtree->refresh();
+    std::set<std::pair<int, int>> connected = connections(qtree.get());
 
     std::vector<GhostNode> vertical = vertical_ghost_nodes(qtree.get());
     ASSERT_EQ(vertical.size(), 4u);
     for (const GhostNode & ghost_node : vertical)
     {
-        EXPECT_NE(ghost_node.j1, -1);
-        EXPECT_NE(ghost_node.j2, -1);
+        EXPECT_NE(ghost_node.j1, ghost_node.j2);
+        expect_linear_head_reproduced(qtree.get(), ghost_node);
         Box * m = qtree->get_cell_box(ghost_node.small_node);
-        if (m->x < 150.0)
-        {
-            EXPECT_NE(ghost_node.j1, ghost_node.j2);
-            continue;
-        }
-        EXPECT_EQ(ghost_node.j1, ghost_node.j2);
-        Box * j = qtree->get_cell_box(ghost_node.j1);
-        EXPECT_EQ(j->x, 150.0);
+        int n_index = (int)ghost_node.large_node;
+        bool both_connected = connected.count(std::make_pair(n_index, (int)ghost_node.j1)) &&
+                              connected.count(std::make_pair(n_index, (int)ghost_node.j2));
+        EXPECT_EQ(both_connected, m->x < 150.0);
     }
+    std::vector<GhostNode> ghost_nodes;
+    EXPECT_EQ(compute_ghost_nodes(qtree.get(), ghost_nodes, true), 0);
+    EXPECT_EQ(expect_interpolated(qtree.get(), ghost_nodes, true), 0);
+}
+
+TEST(GhostNode, CoarserNeighborWithoutSecondCellInterpolatesFromSmallCell)
+{
+    // the grid of CoarserNeighborOffsetAwayFromSmallCell with the fine cell at
+    // (212.5, 187.5)'s neighbor (212.5, 162.5) inactive; the ghost node is
+    // interpolated from the coarse cell on the north and the fine cell m of the
+    // connection itself (#170)
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(1, 3, 3, 100.0, 100.0),
+                                                   {{150.0, 150.0, 1, 0}, {212.5, 187.5, 2, 0}});
+    deactivate(qtree.get(), {{212.5, 162.5}}, 0);
+    std::vector<GhostNode> ghost_nodes;
+    int inexact = compute_ghost_nodes(qtree.get(), ghost_nodes);
+
+    const GhostNode * ghost_node =
+        find_ghost_node(qtree.get(), ghost_nodes, {175.0, 175.0}, {212.5, 187.5});
+    ASSERT_NE(ghost_node, nullptr);
+    Box * j1 = qtree->get_cell_box(ghost_node->j1);
+    Box * j2 = qtree->get_cell_box(ghost_node->j2);
+    std::set<std::pair<double, double>> contributors = {{j1->x, j1->y}, {j2->x, j2->y}};
+    EXPECT_EQ(contributors, (std::set<std::pair<double, double>>{{150.0, 250.0}, {212.5, 187.5}}));
+    expect_linear_head_reproduced(qtree.get(), *ghost_node);
+    EXPECT_EQ(expect_interpolated(qtree.get(), ghost_nodes, false), inexact);
+}
+
+TEST(GhostNode, HeadBeyondTheActiveCellsIsNotProjected)
+{
+    // 3 x 3 cells of 100 in 2 layers with the center of layer 1 refined and,
+    // in layer 2, the north, east, and south cells inactive: below the west
+    // half of the center cell the ghost nodes are interpolated from the west
+    // cell and the cells beside it, but below the east half the head could
+    // only be projected beyond the active cells, which takes a negative
+    // contributing factor, so those two ghost nodes are not written and are
+    // counted (#170)
+    std::unique_ptr<QuadTree3D> qtree =
+        make_qtree(make_mfgrid(2, 3, 3, 100.0, 100.0), {{150.0, 150.0, 1, 0}});
+    deactivate(qtree.get(), {{150.0, 250.0}, {250.0, 150.0}, {150.0, 50.0}}, 1);
+
+    std::vector<GhostNode> ghost_nodes;
+    int inexact = compute_ghost_nodes(qtree.get(), ghost_nodes, true);
+    EXPECT_EQ(inexact, 2);
+    EXPECT_EQ(expect_interpolated(qtree.get(), ghost_nodes, true), inexact);
+    int below_west_half = 0;
+    for (const GhostNode & ghost_node : ghost_nodes)
+    {
+        if (!is_vertical(qtree.get(), ghost_node)) continue;
+        Box * m = qtree->get_cell_box(ghost_node.small_node);
+        EXPECT_LT(m->x, 150.0);
+        expect_linear_head_reproduced(qtree.get(), ghost_node);
+        below_west_half++;
+    }
+    EXPECT_EQ(below_west_half, 2);
+}
+
+TEST(GhostNode, NoNegativeFactorAroundActiveDomains)
+{
+    // 8 x 8 cells of 100 in 3 layers, refined and smoothed in each layer, with
+    // an irregular active domain in layer 2: no contributing factor is
+    // negative, and the connections at the edge of the active domain whose
+    // ghost node is missing or inexact are the ones counted (#170)
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(3, 8, 8, 100.0, 100.0),
+                                                   {{330.0, 430.0, 3, 0},
+                                                    {510.0, 270.0, 2, 0},
+                                                    {250.0, 350.0, 2, 1},
+                                                    {450.0, 450.0, 1, 1},
+                                                    {410.0, 390.0, 3, 2},
+                                                    {170.0, 610.0, 2, 2}},
+                                                   true);
+    std::vector<std::pair<double, double>> inactive;
+    for (Box * box : qtree->node_group)
+    {
+        if (!box->is_leaf || box->layer != 1) continue;
+        // outside a cross with a notch, so the domain has corners, inlets,
+        // and cells with one active neighbor
+        bool cross = (box->x > 200.0 && box->x < 600.0) || (box->y > 300.0 && box->y < 500.0);
+        bool notch = box->x > 300.0 && box->x < 400.0 && box->y > 400.0 && box->y < 500.0;
+        if (!cross || notch) inactive.push_back(std::make_pair(box->x, box->y));
+    }
+    deactivate(qtree.get(), inactive, 1);
+
+    for (bool pass_through : {false, true})
+    {
+        SCOPED_TRACE(pass_through ? "pass-through" : "no pass-through");
+        qtree->vertical_pass_through = pass_through;
+        std::vector<GhostNode> ghost_nodes;
+        int inexact = compute_ghost_nodes(qtree.get(), ghost_nodes, true);
+        ASSERT_FALSE(ghost_nodes.empty());
+        EXPECT_EQ(expect_interpolated(qtree.get(), ghost_nodes, true), inexact);
+    }
+}
+
+TEST(GhostNode, NoConnectionCountedWithoutAnActiveDomain)
+{
+    // every cell active: nothing is counted, and no factor is negative
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(
+        make_mfgrid(2, 5, 5, 100.0, 100.0), {{250.0, 250.0, 2, 0}, {50.0, 450.0, 1, 1}}, true);
+    std::vector<GhostNode> ghost_nodes;
+    EXPECT_EQ(compute_ghost_nodes(qtree.get(), ghost_nodes, true), 0);
+    EXPECT_EQ(expect_interpolated(qtree.get(), ghost_nodes, true), 0);
 }
 
 TEST(GhostNode, VerticalCorrectionAcrossPassThrough)

@@ -1,6 +1,7 @@
 #include "GhostNode.h"
 #include "GridgenError.h"
 #include "RoundTrip.h"
+#include <algorithm>
 #include <fstream>
 using namespace std;
 
@@ -31,19 +32,24 @@ bool barycentric_weights(Box * cell, Box * first, Box * second, double dx, doubl
     return true;
 }
 
-//interpolate the ghost node, offset by (dx, dy) from the center of
-//large_cell, from contributor and a second neighbor of large_cell when
+//true if contributor alone reproduces a linear head at the ghost node offset
+//by (dx, dy) from the center of large_cell, as when it is in line with them
+bool in_line(Box * large_cell, Box * contributor, double dx, double dy)
+{
+    double cross = dx * (contributor->y - large_cell->y) - dy * (contributor->x - large_cell->x);
+    return fabs(cross) <= 1.0e-9 * fabs(large_cell->dx * large_cell->dy);
+}
+
+//interpolate the head at the ghost node, offset by (dx, dy) from the center
+//of large_cell, from contributor and a second neighbor of large_cell when
 //contributor is offset along the connection, as a coarser neighbor is; of
-//the neighbors that give weights that are not negative and sum to less than
-//one, the one whose weights sum least. Unchanged if contributor is aligned or
-//there is none
-void add_second_contributor(Box * small_cell, Box * large_cell, Box * contributor, double dx,
+//the neighbors that give contributing factors that are not negative and sum
+//to less than one, the one whose factors sum least. False, and unchanged, if
+//no neighbor does; true if contributor is in line
+bool add_second_contributor(Box * small_cell, Box * large_cell, Box * contributor, double dx,
                             double dy, GhostNode & ghost_node)
 {
-    double offset_x = contributor->x - large_cell->x;
-    double offset_y = contributor->y - large_cell->y;
-    double cross = dx * offset_y - dy * offset_x;
-    if (fabs(cross) <= 1.0e-9 * fabs(large_cell->dx * large_cell->dy)) return;
+    if (in_line(large_cell, contributor, dx, dy)) return true;
 
     Box * best = nullptr;
     double best_alpha1 = 0.0, best_alpha2 = 0.0;
@@ -67,15 +73,108 @@ void add_second_contributor(Box * small_cell, Box * large_cell, Box * contributo
             }
         }
     }
-    if (best == nullptr) return;
+    if (best == nullptr) return false;
 
     ghost_node.j1 = contributor->number;
     ghost_node.j2 = best->number;
     ghost_node.alpha1 = best_alpha1;
     ghost_node.alpha2 = best_alpha2;
+    return true;
 }
 
-void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostNode> & ghost_nodes)
+//add the active neighbors of cell, other than skipped and those already in
+//candidates, to candidates
+void add_active_neighbors(Box * cell, Box * skipped, vector<Box *> & candidates)
+{
+    for (int side = 0; side < 4; side++)
+    {
+        list<Box *> neighbors;
+        cell->get_neighbors(neighbors, side);
+        for (Box * neighbor : neighbors)
+        {
+            if (neighbor->number == -1 || neighbor == skipped) continue;
+            if (find(candidates.begin(), candidates.end(), neighbor) != candidates.end()) continue;
+            candidates.push_back(neighbor);
+        }
+    }
+}
+
+//the pair of candidates whose contributing factors give the head of a linear
+//head field at the ghost node offset by (dx, dy) from the center of
+//large_cell, are not negative, sum to less than one, and sum least; false if
+//no pair does
+bool best_pair(Box * large_cell, const vector<Box *> & candidates, double dx, double dy,
+               GhostNode & ghost_node)
+{
+    bool found = false;
+    double best_sum = 0.0;
+    for (size_t i = 0; i < candidates.size(); i++)
+    {
+        for (size_t k = i + 1; k < candidates.size(); k++)
+        {
+            double alpha1, alpha2;
+            if (!barycentric_weights(large_cell, candidates[i], candidates[k], dx, dy, alpha1,
+                                     alpha2))
+                continue;
+            if (alpha1 < 0 || alpha2 < 0 || alpha1 + alpha2 >= 1) continue;
+            if (found && alpha1 + alpha2 >= best_sum) continue;
+            found = true;
+            best_sum = alpha1 + alpha2;
+            ghost_node.j1 = candidates[i]->number;
+            ghost_node.j2 = candidates[k]->number;
+            ghost_node.alpha1 = alpha1;
+            ghost_node.alpha2 = alpha2;
+        }
+    }
+    return found;
+}
+
+//interpolate the head at the ghost node, offset by (dx, dy) from the center of
+//large_cell, where the cells beside large_cell on the side of the offset are
+//inactive, missing, or coarser, so that a linear head field is reproduced: from
+//two active neighbors of large_cell, or small_cell when use_small_cell is true,
+//and otherwise from the neighbors of those neighbors too. The head is not
+//projected beyond the active cells, which would take a negative contributing
+//factor; false if no pair interpolates it
+bool interpolated_contributors(Box * small_cell, Box * large_cell, double dx, double dy,
+                               bool use_small_cell, GhostNode & ghost_node)
+{
+    //small_cell contributes to a horizontal connection only; directly above or
+    //below a vertical ghost node, its factor would be one and the connection
+    //would carry no flow
+    Box * skipped = use_small_cell ? large_cell : small_cell;
+    vector<Box *> candidates;
+    add_active_neighbors(large_cell, skipped, candidates);
+    if (best_pair(large_cell, candidates, dx, dy, ghost_node)) return true;
+
+    //a cell with one active neighbor, or neighbors in line with it
+    size_t first_ring = candidates.size();
+    for (size_t i = 0; i < first_ring; i++)
+        add_active_neighbors(candidates[i], skipped, candidates);
+    candidates.erase(remove(candidates.begin(), candidates.end(), large_cell), candidates.end());
+    return best_pair(large_cell, candidates, dx, dy, ghost_node);
+}
+
+//true if cell has an inactive neighbor in its layer, at the edge of an active domain
+bool next_to_inactive_cell(Box * cell)
+{
+    for (int side = 0; side < 4; side++)
+    {
+        list<Box *> neighbors;
+        cell->get_neighbors(neighbors, side);
+        for (Box * neighbor : neighbors)
+        {
+            if (neighbor->number == -1) return true;
+        }
+    }
+    return false;
+}
+
+//add the ghost node of the horizontal connection between large_cell and the
+//smaller small_cell; inexact_at_domain_edge counts the connections at the edge
+//of an active domain whose ghost node does not reproduce a linear head field
+void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostNode> & ghost_nodes,
+                int & inexact_at_domain_edge)
 { //decide the node j first
 
     GhostNode ghost_node;
@@ -83,6 +182,12 @@ void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostN
     ghost_node.large_node = large_cell->number;
     //the cell the ghost node is interpolated from when there is one
     Box * contributor = nullptr;
+
+    //the ghost node is level with the center of large_cell across the
+    //connection and with the center of small_cell along it
+    bool north_south = (direction == 0 || direction == 2);
+    double dx = north_south ? small_cell->x - large_cell->x : 0.0;
+    double dy = north_south ? 0.0 : small_cell->y - large_cell->y;
 
     //if it is in north or south
     if (direction == 0 || direction == 2)
@@ -97,7 +202,14 @@ void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostN
             large_cell->get_neighbors(neighbors, 1);
         }
 
-        if (neighbors.empty()) return;
+        if (neighbors.empty())
+        {
+            if (interpolated_contributors(small_cell, large_cell, dx, dy, true, ghost_node))
+                ghost_nodes.push_back(ghost_node);
+            else if (next_to_inactive_cell(large_cell))
+                inexact_at_domain_edge++;
+            return;
+        }
 
         if (neighbors.size() > 2)
         {
@@ -136,7 +248,14 @@ void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostN
         else if (between(large_cell->y, large_cell->y - large_cell->dy, small_cell->y))
             large_cell->get_neighbors(neighbors, 2);
 
-        if (neighbors.empty()) return;
+        if (neighbors.empty())
+        {
+            if (interpolated_contributors(small_cell, large_cell, dx, dy, true, ghost_node))
+                ghost_nodes.push_back(ghost_node);
+            else if (next_to_inactive_cell(large_cell))
+                inexact_at_domain_edge++;
+            return;
+        }
 
         if (neighbors.size() > 2)
         {
@@ -167,23 +286,33 @@ void compute_gn(Box * small_cell, Box * large_cell, int direction, vector<GhostN
     else
         assert(false);
 
+    //an inactive neighbor on the side of the offset
     if (ghost_node.j1 == -1 || ghost_node.j2 == -1)
-        return; //don't add it to ghost_nodes if j1 or j2 is inactive...
-
-    if (contributor != nullptr)
     {
-        //the ghost node is level with the center of large_cell across the
-        //connection and with the center of small_cell along it
-        bool north_south = (direction == 0 || direction == 2);
-        double dx = north_south ? small_cell->x - large_cell->x : 0.0;
-        double dy = north_south ? 0.0 : small_cell->y - large_cell->y;
-        add_second_contributor(small_cell, large_cell, contributor, dx, dy, ghost_node);
+        if (interpolated_contributors(small_cell, large_cell, dx, dy, true, ghost_node))
+            ghost_nodes.push_back(ghost_node);
+        else
+            inexact_at_domain_edge++;
+        return;
+    }
+
+    //a coarser neighbor that, with no second neighbor, does not reproduce a
+    //linear head field; the ghost node keeps the coarser neighbor alone if no
+    //pair interpolates it
+    if (contributor != nullptr &&
+        !add_second_contributor(small_cell, large_cell, contributor, dx, dy, ghost_node))
+    {
+        GhostNode interpolated = ghost_node;
+        if (interpolated_contributors(small_cell, large_cell, dx, dy, true, interpolated))
+            ghost_node = interpolated;
+        else if (next_to_inactive_cell(large_cell))
+            inexact_at_domain_edge++;
     }
 
     ghost_nodes.push_back(ghost_node);
 }
 void compute_gn_neigh(Box * small_cell, list<Box *> & neighbors, int direction,
-                      vector<GhostNode> & ghost_nodes)
+                      vector<GhostNode> & ghost_nodes, int & inexact_at_domain_edge)
 {
     //neighbors
     for (auto neighbor : neighbors)
@@ -193,7 +322,7 @@ void compute_gn_neigh(Box * small_cell, list<Box *> & neighbors, int direction,
         if (neighbor->depth >= small_cell->depth) continue;
 
         //the node should be considered
-        compute_gn(small_cell, neighbor, direction, ghost_nodes);
+        compute_gn(small_cell, neighbor, direction, ghost_nodes, inexact_at_domain_edge);
     }
 }
 
@@ -233,8 +362,10 @@ Box * side_neighbor(Box * cell, int direction, double transverse_offset)
 //add the ghost node of the vertical connection between large_cell and the
 //smaller small_cell, placed in large_cell below or above the center of
 //small_cell and interpolated from large_cell and its neighbors on the side of
-//small_cell in x and y
-void compute_vertical_gn(Box * small_cell, Box * large_cell, vector<GhostNode> & ghost_nodes)
+//small_cell in x and y; inexact_at_domain_edge counts the connections at the
+//edge of an active domain whose ghost node does not reproduce a linear head field
+void compute_vertical_gn(Box * small_cell, Box * large_cell, vector<GhostNode> & ghost_nodes,
+                         int & inexact_at_domain_edge)
 {
     double dx = small_cell->x - large_cell->x;
     double dy = small_cell->y - large_cell->y;
@@ -242,11 +373,23 @@ void compute_vertical_gn(Box * small_cell, Box * large_cell, vector<GhostNode> &
     //directions 0 to 3 are north, east, south, and west
     Box * x_neighbor = side_neighbor(large_cell, (dx > 0) ? 1 : 3, dy);
     Box * y_neighbor = side_neighbor(large_cell, (dy > 0) ? 0 : 2, dx);
-    if (x_neighbor == nullptr && y_neighbor == nullptr) return;
-
     GhostNode ghost_node;
     ghost_node.large_node = large_cell->number;
     ghost_node.small_node = small_cell->number;
+
+    //a missing neighbor in x or y, as at the edge of an active domain or of the
+    //grid; if no pair interpolates the ghost node, it is interpolated in one
+    //direction only, or not at all
+    if (x_neighbor == nullptr || y_neighbor == nullptr)
+    {
+        if (interpolated_contributors(small_cell, large_cell, dx, dy, false, ghost_node))
+        {
+            ghost_nodes.push_back(ghost_node);
+            return;
+        }
+        if (next_to_inactive_cell(large_cell)) inexact_at_domain_edge++;
+    }
+    if (x_neighbor == nullptr && y_neighbor == nullptr) return;
 
     if (x_neighbor != nullptr && y_neighbor != nullptr)
     {
@@ -270,8 +413,9 @@ void compute_vertical_gn(Box * small_cell, Box * large_cell, vector<GhostNode> &
     ghost_nodes.push_back(ghost_node);
 }
 
-void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes, bool vertical)
+int compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes, bool vertical)
 {
+    int inexact_at_domain_edge = 0;
     //loop over all the leaf node
     for (auto b : qtree->node_group)
     {
@@ -285,11 +429,11 @@ void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes, bo
 
         for (int j = 0; j < 4; j++)
         {
-            compute_gn_neigh(b, nei[j], j, ghost_nodes);
+            compute_gn_neigh(b, nei[j], j, ghost_nodes, inexact_at_domain_edge);
         }
     }
 
-    if (!vertical) return;
+    if (!vertical) return inexact_at_domain_edge;
 
     //after the horizontal ghost nodes, so they are written as without; the
     //vertical connections are those of the CSR data, including the vertical
@@ -307,9 +451,10 @@ void compute_ghost_nodes(QuadTree3D * qtree, vector<GhostNode> & ghost_nodes, bo
             if (abs(connection.second) != 3) continue;
             Box * neighbor = qtree->node_group[connection.first];
             if (neighbor->number == -1 || neighbor->depth <= b->depth) continue;
-            compute_vertical_gn(neighbor, b, ghost_nodes);
+            compute_vertical_gn(neighbor, b, ghost_nodes, inexact_at_domain_edge);
         }
     }
+    return inexact_at_domain_edge;
 }
 
 void write_ghost_node(string file_path, vector<GhostNode> & ghost_nodes, int offset = 1)
