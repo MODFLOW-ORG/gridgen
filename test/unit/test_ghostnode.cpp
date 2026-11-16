@@ -1,8 +1,6 @@
 // Horizontal and vertical ghost node correction
-#include <algorithm>
 #include <cmath>
 #include <functional>
-#include <iterator>
 #include <list>
 #include <map>
 #include <set>
@@ -227,29 +225,26 @@ std::unique_ptr<QuadTree3D> cross_domain_grid(double cell_size)
     return qtree;
 }
 
-// the ghost nodes as the layer and the center, multiplied by scale and
-// rounded, of the cells n, m, j1, and j2, with the factors rounded, sorted
-std::vector<std::vector<long>>
-records_by_location(QuadTree3D * qtree, const std::vector<GhostNode> & ghost_nodes, double scale)
+// the contributing factors of the ghost nodes, by the layer and the center,
+// multiplied by scale and rounded, of the cells n, m, j1, and j2
+std::map<std::vector<long>, std::pair<double, double>>
+factors_by_location(QuadTree3D * qtree, const std::vector<GhostNode> & ghost_nodes, double scale)
 {
-    std::vector<std::vector<long>> records;
+    std::map<std::vector<long>, std::pair<double, double>> factors;
     for (const GhostNode & ghost_node : ghost_nodes)
     {
-        std::vector<long> record;
+        std::vector<long> location;
         for (long node :
              {ghost_node.large_node, ghost_node.small_node, ghost_node.j1, ghost_node.j2})
         {
             Box * box = qtree->get_cell_box(node);
-            record.push_back(box->layer);
-            record.push_back(std::lround(box->x * scale * 1000.0));
-            record.push_back(std::lround(box->y * scale * 1000.0));
+            location.push_back(box->layer);
+            location.push_back(std::lround(box->x * scale * 1000.0));
+            location.push_back(std::lround(box->y * scale * 1000.0));
         }
-        record.push_back(std::lround(ghost_node.alpha1 * 1.0e9));
-        record.push_back(std::lround(ghost_node.alpha2 * 1.0e9));
-        records.push_back(record);
+        factors[location] = std::make_pair(ghost_node.alpha1, ghost_node.alpha2);
     }
-    std::sort(records.begin(), records.end());
-    return records;
+    return factors;
 }
 
 std::vector<GhostNode> vertical_ghost_nodes(QuadTree3D * qtree)
@@ -687,19 +682,23 @@ TEST(GhostNode, GhostNodesDoNotDependOnCellSize)
     int scaled_inexact = compute_ghost_nodes(scaled.get(), scaled_nodes, true);
     EXPECT_EQ(scaled_inexact, reference_inexact);
     EXPECT_EQ(expect_interpolated(scaled.get(), scaled_nodes, true), scaled_inexact);
-    std::vector<std::vector<long>> scaled_records =
-        records_by_location(scaled.get(), scaled_nodes, 3.0);
-    std::vector<std::vector<long>> reference_records =
-        records_by_location(reference.get(), reference_nodes, 1.0);
-    std::vector<std::vector<long>> differ;
-    std::set_symmetric_difference(scaled_records.begin(), scaled_records.end(),
-                                  reference_records.begin(), reference_records.end(),
-                                  std::back_inserter(differ));
-    for (const std::vector<long> & record : differ)
+    std::map<std::vector<long>, std::pair<double, double>> scaled_factors =
+        factors_by_location(scaled.get(), scaled_nodes, 3.0);
+    std::map<std::vector<long>, std::pair<double, double>> reference_factors =
+        factors_by_location(reference.get(), reference_nodes, 1.0);
+    EXPECT_EQ(scaled_factors.size(), reference_factors.size());
+    for (const auto & [location, expected] : reference_factors)
     {
         std::string text;
-        for (long value : record) text += std::to_string(value) + " ";
-        ADD_FAILURE() << "in one grid only: " << text;
+        for (long value : location) text += std::to_string(value) + " ";
+        auto found = scaled_factors.find(location);
+        if (found == scaled_factors.end())
+        {
+            ADD_FAILURE() << "contributing cells differ: " << text;
+            continue;
+        }
+        EXPECT_NEAR(found->second.first, expected.first, 1.0e-9) << text;
+        EXPECT_NEAR(found->second.second, expected.second, 1.0e-9) << text;
     }
 }
 

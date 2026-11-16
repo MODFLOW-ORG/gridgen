@@ -162,8 +162,8 @@ public:
     void number_nodes() override;
 
     ///save the ghost nodes to file, including those of vertical connections if vertical is true;
-    ///returns the number of connections at the edge of an active domain whose ghost node does
-    ///not reproduce a linear head field
+    ///returns the number of connections from a cell next to an inactive cell to a smaller cell
+    ///whose ghost node is missing or does not reproduce a linear head field
     int save_ghost_node(string file_path, bool vertical = false);
 
     ///refresh the tree to get the new box index and cell arrays
