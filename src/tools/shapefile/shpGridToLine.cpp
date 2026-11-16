@@ -1,4 +1,5 @@
 #include "shpGridToLine.h"
+#include "dbfFields.h"
 #include "GridVertices.h"
 #include "GridgenError.h"
 using namespace cusg;
@@ -27,7 +28,7 @@ void prepare_write_line(string grid_shp_name, SHPHandle * shp_handle, DBFHandle 
     dbf_name += ".dbf";
     *dbf = DBFCreate(dbf_name.c_str());
 
-    *layer_field = DBFAddField(*dbf, "layer", FTInteger, 20, 0);
+    *layer_field = DBFAddField(*dbf, "layer", FTInteger, DBF_INTEGER_WIDTH, 0);
 }
 
 void write_one_line(int nvertices, double * x, double * y, int layer_field, int layer,
