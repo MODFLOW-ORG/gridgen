@@ -201,7 +201,7 @@ TEST(DefinitionExporter, GhostNodesBeyondTheActiveCellsAreReported)
     ASSERT_EQ(warnings.size(), 1u);
     EXPECT_NE(warnings.front().find("GRID_TO_USGDATA block usg, 2 connections"), std::string::npos)
         << warnings.front();
-    EXPECT_NE(warnings.front().find("edge of an active domain"), std::string::npos);
+    EXPECT_NE(warnings.front().find("next to an inactive cell"), std::string::npos);
     EXPECT_NE(warnings.front().find("XT3D"), std::string::npos);
 }
 

@@ -1,6 +1,8 @@
 // Horizontal and vertical ghost node correction
+#include <algorithm>
 #include <cmath>
 #include <functional>
+#include <iterator>
 #include <list>
 #include <map>
 #include <set>
@@ -194,6 +196,60 @@ int expect_interpolated(QuadTree3D * qtree, const std::vector<GhostNode> & ghost
         }
     }
     return inexact_at_domain_edge;
+}
+
+// 8 x 8 cells of cell_size in 3 layers, refined and smoothed in each layer,
+// with an irregular active domain in layer 2
+std::unique_ptr<QuadTree3D> cross_domain_grid(double cell_size)
+{
+    double scale = cell_size / 100.0;
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(3, 8, 8, cell_size, cell_size),
+                                                   {{330.0 * scale, 430.0 * scale, 3, 0},
+                                                    {510.0 * scale, 270.0 * scale, 2, 0},
+                                                    {250.0 * scale, 350.0 * scale, 2, 1},
+                                                    {450.0 * scale, 450.0 * scale, 1, 1},
+                                                    {410.0 * scale, 390.0 * scale, 3, 2},
+                                                    {170.0 * scale, 610.0 * scale, 2, 2}},
+                                                   true);
+    std::vector<std::pair<double, double>> inactive;
+    for (Box * box : qtree->node_group)
+    {
+        if (!box->is_leaf || box->layer != 1) continue;
+        // outside a cross with a notch, so the domain has corners, inlets,
+        // and cells with one active neighbor
+        double x = box->x / scale;
+        double y = box->y / scale;
+        bool cross = (x > 200.0 && x < 600.0) || (y > 300.0 && y < 500.0);
+        bool notch = x > 300.0 && x < 400.0 && y > 400.0 && y < 500.0;
+        if (!cross || notch) inactive.push_back(std::make_pair(box->x, box->y));
+    }
+    deactivate(qtree.get(), inactive, 1);
+    return qtree;
+}
+
+// the ghost nodes as the layer and the center, multiplied by scale and
+// rounded, of the cells n, m, j1, and j2, with the factors rounded, sorted
+std::vector<std::vector<long>>
+records_by_location(QuadTree3D * qtree, const std::vector<GhostNode> & ghost_nodes, double scale)
+{
+    std::vector<std::vector<long>> records;
+    for (const GhostNode & ghost_node : ghost_nodes)
+    {
+        std::vector<long> record;
+        for (long node :
+             {ghost_node.large_node, ghost_node.small_node, ghost_node.j1, ghost_node.j2})
+        {
+            Box * box = qtree->get_cell_box(node);
+            record.push_back(box->layer);
+            record.push_back(std::lround(box->x * scale * 1000.0));
+            record.push_back(std::lround(box->y * scale * 1000.0));
+        }
+        record.push_back(std::lround(ghost_node.alpha1 * 1.0e9));
+        record.push_back(std::lround(ghost_node.alpha2 * 1.0e9));
+        records.push_back(record);
+    }
+    std::sort(records.begin(), records.end());
+    return records;
 }
 
 std::vector<GhostNode> vertical_ghost_nodes(QuadTree3D * qtree)
@@ -606,26 +662,7 @@ TEST(GhostNode, NoNegativeFactorAroundActiveDomains)
     // an irregular active domain in layer 2: no contributing factor is
     // negative, and the connections at the edge of the active domain whose
     // ghost node is missing or inexact are the ones counted (#170)
-    std::unique_ptr<QuadTree3D> qtree = make_qtree(make_mfgrid(3, 8, 8, 100.0, 100.0),
-                                                   {{330.0, 430.0, 3, 0},
-                                                    {510.0, 270.0, 2, 0},
-                                                    {250.0, 350.0, 2, 1},
-                                                    {450.0, 450.0, 1, 1},
-                                                    {410.0, 390.0, 3, 2},
-                                                    {170.0, 610.0, 2, 2}},
-                                                   true);
-    std::vector<std::pair<double, double>> inactive;
-    for (Box * box : qtree->node_group)
-    {
-        if (!box->is_leaf || box->layer != 1) continue;
-        // outside a cross with a notch, so the domain has corners, inlets,
-        // and cells with one active neighbor
-        bool cross = (box->x > 200.0 && box->x < 600.0) || (box->y > 300.0 && box->y < 500.0);
-        bool notch = box->x > 300.0 && box->x < 400.0 && box->y > 400.0 && box->y < 500.0;
-        if (!cross || notch) inactive.push_back(std::make_pair(box->x, box->y));
-    }
-    deactivate(qtree.get(), inactive, 1);
-
+    std::unique_ptr<QuadTree3D> qtree = cross_domain_grid(100.0);
     for (bool pass_through : {false, true})
     {
         SCOPED_TRACE(pass_through ? "pass-through" : "no pass-through");
@@ -634,6 +671,35 @@ TEST(GhostNode, NoNegativeFactorAroundActiveDomains)
         int inexact = compute_ghost_nodes(qtree.get(), ghost_nodes, true);
         ASSERT_FALSE(ghost_nodes.empty());
         EXPECT_EQ(expect_interpolated(qtree.get(), ghost_nodes, true), inexact);
+    }
+}
+
+TEST(GhostNode, GhostNodesDoNotDependOnCellSize)
+{
+    // the grid of NoNegativeFactorAroundActiveDomains with cells of 100 / 3,
+    // whose cell centers are not exact in floating point: the same cells
+    // contribute with the same factors, and the same connections are counted,
+    // so a contributing factor of zero is not rejected as negative
+    std::unique_ptr<QuadTree3D> reference = cross_domain_grid(100.0);
+    std::unique_ptr<QuadTree3D> scaled = cross_domain_grid(100.0 / 3.0);
+    std::vector<GhostNode> reference_nodes, scaled_nodes;
+    int reference_inexact = compute_ghost_nodes(reference.get(), reference_nodes, true);
+    int scaled_inexact = compute_ghost_nodes(scaled.get(), scaled_nodes, true);
+    EXPECT_EQ(scaled_inexact, reference_inexact);
+    EXPECT_EQ(expect_interpolated(scaled.get(), scaled_nodes, true), scaled_inexact);
+    std::vector<std::vector<long>> scaled_records =
+        records_by_location(scaled.get(), scaled_nodes, 3.0);
+    std::vector<std::vector<long>> reference_records =
+        records_by_location(reference.get(), reference_nodes, 1.0);
+    std::vector<std::vector<long>> differ;
+    std::set_symmetric_difference(scaled_records.begin(), scaled_records.end(),
+                                  reference_records.begin(), reference_records.end(),
+                                  std::back_inserter(differ));
+    for (const std::vector<long> & record : differ)
+    {
+        std::string text;
+        for (long value : record) text += std::to_string(value) + " ";
+        ADD_FAILURE() << "in one grid only: " << text;
     }
 }
 

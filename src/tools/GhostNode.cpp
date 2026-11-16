@@ -32,6 +32,21 @@ bool barycentric_weights(Box * cell, Box * first, Box * second, double dx, doubl
     return true;
 }
 
+//roundoff allowed in a contributing factor, so that a factor that is zero in
+//exact arithmetic is not rejected as negative and equal sums tie
+constexpr double FACTOR_TOLERANCE = 1.0e-9;
+
+//true if the contributing factors are not negative and sum to less than one,
+//within roundoff; a factor that is negative by roundoff only is set to zero
+bool interpolates(double & alpha1, double & alpha2)
+{
+    if (alpha1 < -FACTOR_TOLERANCE || alpha2 < -FACTOR_TOLERANCE) return false;
+    if (alpha1 + alpha2 >= 1.0 - FACTOR_TOLERANCE) return false;
+    alpha1 = max(alpha1, 0.0);
+    alpha2 = max(alpha2, 0.0);
+    return true;
+}
+
 //true if contributor alone reproduces a linear head at the ghost node offset
 //by (dx, dy) from the center of large_cell, as when it is in line with them
 bool in_line(Box * large_cell, Box * contributor, double dx, double dy)
@@ -64,8 +79,8 @@ bool add_second_contributor(Box * small_cell, Box * large_cell, Box * contributo
             double alpha1, alpha2;
             if (!barycentric_weights(large_cell, contributor, candidate, dx, dy, alpha1, alpha2))
                 continue;
-            if (alpha1 < 0 || alpha2 < 0 || alpha1 + alpha2 >= 1) continue;
-            if (best == nullptr || alpha1 + alpha2 < best_alpha1 + best_alpha2)
+            if (!interpolates(alpha1, alpha2)) continue;
+            if (best == nullptr || alpha1 + alpha2 < best_alpha1 + best_alpha2 - FACTOR_TOLERANCE)
             {
                 best = candidate;
                 best_alpha1 = alpha1;
@@ -116,8 +131,8 @@ bool best_pair(Box * large_cell, const vector<Box *> & candidates, double dx, do
             if (!barycentric_weights(large_cell, candidates[i], candidates[k], dx, dy, alpha1,
                                      alpha2))
                 continue;
-            if (alpha1 < 0 || alpha2 < 0 || alpha1 + alpha2 >= 1) continue;
-            if (found && alpha1 + alpha2 >= best_sum) continue;
+            if (!interpolates(alpha1, alpha2)) continue;
+            if (found && alpha1 + alpha2 >= best_sum - FACTOR_TOLERANCE) continue;
             found = true;
             best_sum = alpha1 + alpha2;
             ghost_node.j1 = candidates[i]->number;
