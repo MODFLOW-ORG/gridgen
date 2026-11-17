@@ -45,6 +45,7 @@ static int run(const string & action, const string & dfn_file)
     GridIntersectionBlock * grid_intersection = dynamic_cast<GridIntersectionBlock *>(data);
     GridToVtkfileBlock * grid2vtk = dynamic_cast<GridToVtkfileBlock *>(data);
     GridToGsfBlock * grid2gsf = dynamic_cast<GridToGsfBlock *>(data);
+    GridToDisvdataBlock * grid2disv = dynamic_cast<GridToDisvdataBlock *>(data);
 
     //check if this is a type of grid
     if (grid_data != nullptr)
@@ -71,6 +72,10 @@ static int run(const string & action, const string & dfn_file)
     else if (grid2gsf != nullptr)
     {
         grid = grid2gsf->grid;
+    }
+    else if (grid2disv != nullptr)
+    {
+        grid = grid2disv->grid;
     }
 
     QuadTree3D * qtree_grid = dynamic_cast<QuadTree3D *>(grid);
@@ -135,6 +140,11 @@ static int run(const string & action, const string & dfn_file)
         DefinitionExporter def_exporter;
         def_exporter.save(*grid2usg);
         def_exporter.save_node_coordinate(grid2usg->usg_data_prefix, grid2usg->grid);
+    }
+    else if (grid2disv != nullptr)
+    {
+        DefinitionExporter def_exporter;
+        def_exporter.save(*grid2disv);
     }
     else if (grid_intersection != nullptr)
     {

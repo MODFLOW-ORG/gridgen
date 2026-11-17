@@ -38,9 +38,9 @@ public:
     const int * corners(const Box * box) const;
 
     /// vertex indices of the corners of a box and of the corners of the active
-    /// cells beside it in its layer that lie on its edges, clockwise from the
-    /// upper left
-    vector<int> outline(Box * box) const;
+    /// cells beside it in its layer, or of all the cells if include_inactive is
+    /// true, that lie on its edges, clockwise from the upper left
+    vector<int> outline(Box * box, bool include_inactive = false) const;
 
     /// corner coordinates of a box, clockwise from the upper left
     void get_corners(const Box * box, double * x, double * y) const;

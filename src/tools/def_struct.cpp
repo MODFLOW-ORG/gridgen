@@ -1275,8 +1275,8 @@ void DefinitionBlock::warn_if_not_action()
 {
     if (is_action()) return;
     warn(label() + " is not an action, so running it writes nothing; run a QUADTREE_BUILDER, "
-                   "GRID_TO_SHAPEFILE, GRID_TO_USGDATA, GRID_TO_VTKFILE, GRID_TO_GSF, or "
-                   "GRID_INTERSECTION block to write output");
+                   "GRID_TO_SHAPEFILE, GRID_TO_USGDATA, GRID_TO_DISVDATA, GRID_TO_VTKFILE, "
+                   "GRID_TO_GSF, or GRID_INTERSECTION block to write output");
 }
 
 DefinitionBlock * DefinitionBlock::find_block(map<string, DefinitionBlock *> & blocks,
@@ -1461,6 +1461,53 @@ bool GridToGsfBlock::initialize(map<string, DefinitionBlock *> & blocks)
         warn_ignored("hanging_vertices",
                      "the cells of a MODFLOW_GRID are all the same size, so no cell has "
                      "hanging vertices");
+
+    m_initialized = true;
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+//
+//
+// GridToDisvdataBlock
+//
+//
+//-----------------------------------------------------------------------------
+
+bool GridToDisvdataBlock::parse()
+{
+    map<string, list<string>> name_value_map;
+
+    for (auto & i : *this)
+    {
+        string & name = i.name;
+        list<string> & value = i.value;
+
+        if (name.empty() || value.empty())
+            throw GridgenError("a record in " + label() + " has no name or no value");
+
+        name_value_map[name] = value;
+    }
+
+    list<string> & value = name_value_map["grid"];
+    if (value.empty()) throw missing_record("grid");
+    grid_name = value.front();
+
+    value = name_value_map["disv_data_prefix"];
+    if (value.empty()) throw missing_record("disv_data_prefix");
+    disv_data_prefix = output_path(get_folder_path(), value.back());
+
+    value = name_value_map["vertical_pass_through"];
+    if (!value.empty()) vertical_pass_through = (tolower(value.front()) == "true");
+
+    return true;
+}
+
+bool GridToDisvdataBlock::initialize(map<string, DefinitionBlock *> & blocks)
+{
+    if (m_initialized) return true;
+
+    this->grid = build_referenced_grid(blocks, "grid", grid_name);
 
     m_initialized = true;
     return true;

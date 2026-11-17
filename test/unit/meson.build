@@ -13,6 +13,7 @@ unit_sources = files(
     'test_quadtree_io.cpp',
     'test_shapereader.cpp',
     'test_vertex_export.cpp',
+    'test_disv_export.cpp',
     'test_vtk.cpp',
     'test_warnings.cpp',
 )

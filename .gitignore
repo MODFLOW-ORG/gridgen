@@ -60,6 +60,7 @@ test/grid09qtg*
 test/grid10qtg*
 test/grid11qtg*
 test/grid12qtg*
+test/grid14qtg*
 test/output_usgdata/grid*
 test/output_intersection/c*
 test/output_intersection/wells_*
@@ -70,12 +71,14 @@ test/output_intersection/holeincell_*
 test/output_shapefiles/grid*
 test/output_vtkfiles/grid*
 test/output_gsf/grid*
+test/output_disvdata/grid*
 test/output_grids/grid*
 
 # MODFLOW 6 and MODFLOW-USG checks (test/check_models.py)
 test/check_models/
 test/check_models_layered.*
 test/check_models_same.*
+test/check_models_same_domain.*
 __pycache__/
 
 # meson subproject downloads

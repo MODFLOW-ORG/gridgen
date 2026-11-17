@@ -213,3 +213,69 @@ TEST(DefinitionExporter, NoGhostNodeWarningWithoutAnActiveDomain)
     qtree->name = "qtg";
     EXPECT_TRUE(usg_data_warnings(qtree.get()).empty());
 }
+
+namespace
+{
+
+// the warnings of exporting the DISV data of grid, with vertical pass-through
+// cells if vertical_pass_through is true, to a prefix in the temporary folder
+std::vector<std::string> disv_data_warnings(Grid * grid, bool vertical_pass_through)
+{
+    std::string prefix =
+        (std::filesystem::path(::testing::TempDir()) / "gridgen_unit_disv_warnings")
+            .generic_string();
+    std::istringstream dfn("BEGIN GRID_TO_DISVDATA disv\n"
+                           "  GRID = qtg\n"
+                           "  DISV_DATA_PREFIX = " +
+                           prefix + "\n  VERTICAL_PASS_THROUGH = " +
+                           (vertical_pass_through ? "True" : "False") + "\nEND GRID_TO_DISVDATA\n");
+    DefinitionParser parser;
+    EXPECT_TRUE(parser.parse(dfn));
+    auto * disv = dynamic_cast<GridToDisvdataBlock *>(parser.get_block_data("disv"));
+    EXPECT_NE(disv, nullptr);
+    if (disv == nullptr) return {};
+    disv->grid = grid;
+    clear_warnings();
+    DefinitionExporter exporter;
+    exporter.save(*disv);
+    std::vector<std::string> warnings = get_warnings();
+    clear_warnings();
+    return warnings;
+}
+
+} // namespace
+
+TEST(DefinitionExporter, DisvDataWithoutInactiveCellsHasNoWarning)
+{
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(2, 3, 3, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree =
+        make_qtree(mfgrid.get(), {{150.0, 150.0, 1, 0}, {150.0, 150.0, 1, 1}});
+    qtree->name = "qtg";
+    EXPECT_TRUE(disv_data_warnings(qtree.get(), false).empty());
+}
+
+TEST(DefinitionExporter, DisvPassThroughWithoutInactiveCellsWarns)
+{
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(2, 3, 3, 100.0, 100.0);
+    std::vector<std::string> warnings = disv_data_warnings(mfgrid.get(), true);
+    ASSERT_EQ(warnings.size(), 1u);
+    EXPECT_NE(warnings.front().find("VERTICAL_PASS_THROUGH in GRID_TO_DISVDATA block disv"),
+              std::string::npos)
+        << warnings.front();
+    EXPECT_NE(warnings.front().find("no inactive cells"), std::string::npos);
+}
+
+TEST(DefinitionExporter, DisvTopsThatDifferFromTheBottomAboveAreReported)
+{
+    // the center cell of layer 2 starts 1 below the bottom of the cell above it
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(2, 3, 3, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {});
+    qtree->name = "qtg";
+    Box * center = qtree->node_group[mfgrid->get_box_index(1, 1, 1)];
+    qtree->top[center->number] -= 1.0;
+    std::vector<std::string> warnings = disv_data_warnings(qtree.get(), false);
+    ASSERT_EQ(warnings.size(), 1u);
+    EXPECT_NE(warnings.front().find("GRID_TO_DISVDATA block disv, 1 active cell has a top"),
+              std::string::npos)
+        << warnings.front();
+}

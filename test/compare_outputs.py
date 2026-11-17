@@ -103,6 +103,13 @@ CASES = (
     # base grid in this one, and loaded from this folder
     ("buildqtg_subfolder", "action21_buildqtg_subfolder.dfn"),
     ("grid13qtg-to-usgdata", "action22_subfolder.dfn"),
+    # MODFLOW 6 DISV input of a three-layer base grid, and of a quadtree grid
+    # with the same refinement in every layer and an active domain in layer 2,
+    # without and with vertical pass-through cells
+    ("buildqtg_same", "action23_buildqtg_same.dfn"),
+    ("grid14mfg-to-disvdata", "action24_disvdata.dfn"),
+    ("grid14qtg-to-disvdata", "action24_disvdata.dfn"),
+    ("grid14qtg-to-disvdata-vp", "action24_disvdata.dfn"),
 )
 
 # generated files and test infrastructure that are not copied as inputs
@@ -119,6 +126,7 @@ SKIP_PATTERNS = (
     "grid10qtg*",
     "grid11qtg*",
     "grid12qtg*",
+    "grid14qtg*",
     "*.py",
     "__pycache__",
     "compare",
@@ -131,6 +139,7 @@ KNOWN_UNSTABLE = ()
 
 OUTPUT_DIRS = (
     "output_grids",
+    "output_disvdata",
     "output_gsf",
     "output_intersection",
     "output_shapefiles",
