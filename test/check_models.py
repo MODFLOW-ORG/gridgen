@@ -24,10 +24,12 @@ Cases:
 
 The DISV data of a case is checked against its DISU data: the same active
 cells, centers, elevations, and ghost nodes, and cell areas from the vertices.
+MODFLOW 6 reads gridgen's DISV and ghost node files with OPEN/CLOSE.
 """
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -202,6 +204,7 @@ class DisvData:
     """The DISV data gridgen writes with one DISV_DATA_PREFIX"""
 
     def __init__(self, prefix):
+        self.prefix = Path(prefix)
         dimensions = dict(
             line.split()
             for line in Path(f"{prefix}.dimensions.dat").read_text().splitlines()
@@ -418,6 +421,34 @@ def run_gridgen(gridgen):
             )
 
 
+def read_disv_files(workspace, name, disv):
+    """Replace the DISV and GNC input FloPy wrote with input that reads gridgen's
+    DISV files, so that MODFLOW 6 reads them as gridgen writes them"""
+
+    def path(kind):
+        return Path(os.path.relpath(f"{disv.prefix}.{kind}.dat", workspace)).as_posix()
+
+    # the DIMENSIONS block cannot be read from a file
+    dimensions = Path(f"{disv.prefix}.dimensions.dat").read_text()
+    (Path(workspace) / f"{name}.disv").write_text(
+        "BEGIN options\nEND options\n\n"
+        f"BEGIN dimensions\n{dimensions}END dimensions\n\n"
+        "BEGIN griddata\n"
+        f"  top\n    OPEN/CLOSE {path('top')}\n"
+        f"  botm\n    OPEN/CLOSE {path('botm')}\n"
+        f"  idomain\n    OPEN/CLOSE {path('idomain')}\n"
+        "END griddata\n\n"
+        f"BEGIN vertices\n  OPEN/CLOSE {path('vertices')}\nEND vertices\n\n"
+        f"BEGIN cell2d\n  OPEN/CLOSE {path('cell2d')}\nEND cell2d\n"
+    )
+    (Path(workspace) / f"{name}.gnc").write_text(
+        "BEGIN options\nEND options\n\n"
+        f"BEGIN dimensions\n  NUMGNC {len(disv.ghost_nodes)}\n  NUMALPHAJ 2\n"
+        "END dimensions\n\n"
+        f"BEGIN gncdata\n  OPEN/CLOSE {path('gnc')}\nEND gncdata\n"
+    )
+
+
 def run_mf6(data, workspace, executable, discretization):
     name = "check"
     simulation = flopy.mf6.MFSimulation(
@@ -521,6 +552,8 @@ def run_mf6(data, workspace, executable, discretization):
         saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     )
     simulation.write_simulation(silent=True)
+    if discretization == "disv":
+        read_disv_files(workspace, name, data.disv)
     success, _ = simulation.run_simulation(silent=True)
     if not success:
         return False, None, None, None
