@@ -253,10 +253,12 @@ TEST(DisvExport, RotatedGridVerticesAreRotatedAndClockwise)
 TEST(DisvExport, GhostNodesAreByLayerAndCellOfTheLayer)
 {
     // the southwest cell inactive in layer 1, so that the cells of layer 2 are
-    // numbered differently in DISU; each ghost node is that of the DISU grid,
-    // by layer and cell of the layer
+    // numbered differently in DISU, and a small cell inactive in layer 2, next
+    // to the ghost nodes of that layer; each ghost node is that of the DISU
+    // grid, by layer and cell of the layer
     std::unique_ptr<QuadTree3D> qtree = make_northwest_refined(2);
     deactivate(qtree.get(), {{50.0, 50.0}}, 0);
+    deactivate(qtree.get(), {{75.0, 175.0}}, 1);
     std::vector<GhostNode> expected_nodes;
     compute_ghost_nodes(qtree.get(), expected_nodes, false);
     DisvData data = disv_data(qtree.get(), false);

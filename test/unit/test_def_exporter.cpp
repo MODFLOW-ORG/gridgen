@@ -297,3 +297,31 @@ TEST(DefinitionExporter, DisvLayersRefinedDifferentlyNameTheBlock)
             << message;
     }
 }
+
+TEST(DefinitionExporter, DisvFileThatCannotBeWrittenNamesTheBlock)
+{
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(1, 2, 2, 100.0, 100.0);
+    std::istringstream dfn(
+        "BEGIN GRID_TO_DISVDATA disv\n"
+        "  GRID = mfg\n"
+        "  DISV_DATA_PREFIX = " +
+        (std::filesystem::path(::testing::TempDir()) / "no_such_folder" / "mfg").generic_string() +
+        "\nEND GRID_TO_DISVDATA\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+    auto * disv = dynamic_cast<GridToDisvdataBlock *>(parser.get_block_data("disv"));
+    ASSERT_NE(disv, nullptr);
+    disv->grid = mfgrid.get();
+    DefinitionExporter exporter;
+    try
+    {
+        exporter.save(*disv);
+        ADD_FAILURE() << "no error";
+    }
+    catch (const GridgenError & error)
+    {
+        std::string message = error.what();
+        EXPECT_EQ(message.rfind("In GRID_TO_DISVDATA block disv, cannot write file", 0), 0u)
+            << message;
+    }
+}
