@@ -279,3 +279,21 @@ TEST(DefinitionExporter, DisvTopsThatDifferFromTheBottomAboveAreReported)
               std::string::npos)
         << warnings.front();
 }
+
+TEST(DefinitionExporter, DisvLayersRefinedDifferentlyNameTheBlock)
+{
+    std::unique_ptr<ModflowGrid> mfgrid = make_mfgrid(2, 3, 3, 100.0, 100.0);
+    std::unique_ptr<QuadTree3D> qtree = make_qtree(mfgrid.get(), {{150.0, 150.0, 1, 0}});
+    qtree->name = "qtg";
+    try
+    {
+        disv_data_warnings(qtree.get(), false);
+        ADD_FAILURE() << "no error";
+    }
+    catch (const GridgenError & error)
+    {
+        std::string message = error.what();
+        EXPECT_EQ(message.rfind("In GRID_TO_DISVDATA block disv, layer 2 of grid qtg", 0), 0u)
+            << message;
+    }
+}

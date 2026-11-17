@@ -281,7 +281,15 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
 
 bool DefinitionExporter::save(GridToDisvdataBlock & data)
 {
-    DisvData disv = disv_data(data.grid, data.vertical_pass_through);
+    DisvData disv;
+    try
+    {
+        disv = disv_data(data.grid, data.vertical_pass_through);
+    }
+    catch (const GridgenError & error)
+    {
+        throw GridgenError("In " + data.label() + ", " + error.what());
+    }
     write_disv_data(disv, data.disv_data_prefix);
 
     warn_inexact_ghost_nodes(data.label(), disv.inexact_ghost_nodes);

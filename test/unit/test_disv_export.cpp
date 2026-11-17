@@ -197,6 +197,59 @@ TEST(DisvExport, InactiveCellAboveAnActiveCellEndsAtItsTop)
     EXPECT_EQ(data.tops_not_aligned, 1);
 }
 
+TEST(DisvExport, InactiveCellsInConsecutiveLayers)
+{
+    // the northeast cell inactive in layers 1 and 2 of three: the bottom of the
+    // one in layer 2 is the top of the active cell below it, and the bottom of
+    // the one in layer 1 and the top are those of the base grid
+    std::unique_ptr<QuadTree3D> qtree = make_northwest_refined(3);
+    deactivate(qtree.get(), {{150.0, 150.0}}, 0);
+    deactivate(qtree.get(), {{150.0, 150.0}}, 1);
+    Box * below = cell_at(qtree.get(), 150.0, 150.0, 2);
+    qtree->top[below->number] = -19.0;
+
+    DisvData data = disv_data(qtree.get(), true);
+    int northeast = cell_index(data, 150.0, 150.0);
+    ASSERT_GE(northeast, 0);
+    EXPECT_EQ(data.top[northeast], 0.0);
+    EXPECT_EQ(data.botm[northeast], -10.0);
+    EXPECT_EQ(data.botm[data.ncpl + northeast], -19.0);
+    EXPECT_EQ(data.botm[2 * data.ncpl + northeast], -30.0);
+    EXPECT_EQ(data.idomain[northeast], -1);
+    EXPECT_EQ(data.idomain[data.ncpl + northeast], -1);
+    EXPECT_EQ(data.idomain[2 * data.ncpl + northeast], 1);
+    EXPECT_EQ(data.tops_not_aligned, 0);
+}
+
+TEST(DisvExport, RotatedGridVerticesAreRotatedAndClockwise)
+{
+    // the grid of LayersShareTheCellsAndHangingVertices rotated 30 degrees about
+    // its origin: the cell centers are rotated, and the areas from the
+    // vertices are still positive, clockwise, and fill the grid
+    // the grid takes its rotation in radians
+    double angle = std::acos(-1.0) / 6.0;
+    std::vector<gridgen_test::RefinePoint> points = {{50.0, 150.0, 1, 0}, {50.0, 150.0, 1, 1}};
+    std::unique_ptr<QuadTree3D> qtree =
+        make_qtree(make_mfgrid(2, 2, 2, 100.0, 100.0, 10.0, 0.0, 0.0, angle), points);
+    DisvData data = disv_data(qtree.get(), false);
+    ASSERT_EQ(data.ncpl, 7);
+    double total = 0.0;
+    for (const Cell2d & cell : data.cell2d)
+    {
+        double area = cell_area(data, cell);
+        EXPECT_GT(area, 0.0);
+        total += area;
+    }
+    EXPECT_NEAR(total, 40000.0, 1.0e-6);
+    // the southeast cell, centered at (150, 50) before rotation
+    double x = 150.0 * std::cos(angle) - 50.0 * std::sin(angle);
+    double y = 150.0 * std::sin(angle) + 50.0 * std::cos(angle);
+    bool found = false;
+    for (const Cell2d & cell : data.cell2d)
+        found = found || (std::fabs(cell.x - x) < 1.0e-9 && std::fabs(cell.y - y) < 1.0e-9);
+    EXPECT_TRUE(found) << x << ", " << y;
+}
+
 TEST(DisvExport, GhostNodesAreByLayerAndCellOfTheLayer)
 {
     // the southwest cell inactive in layer 1, so that the cells of layer 2 are
