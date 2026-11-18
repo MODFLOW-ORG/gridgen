@@ -1,8 +1,12 @@
 # Release note items
 
-Each pull request that changes gridgen adds one TOML file here describing the
-change for the release notes. Name the file after the change, not the pull
-request number (for example `active-domain-layer.toml`).
+Each pull request that changes what a user runs, gets back, reads, or compiles
+(the program, its output and messages, the GRIDGEN report or release notes, or
+how the executables are built) adds one TOML file here describing the change
+for the release notes. A `refactor`, `build`, `ci`, `test`, `style`, `docs`, or
+`chore` pull request that changes none of these adds none. Name the file after
+the change, not the pull request number (for example
+`active-domain-layer.toml`).
 
 ```toml
 section = "fixes"

@@ -88,8 +88,12 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   request, check whether the commit makes the description, the Reviewer
   Summary, or the release note item untrue or incomplete, and edit them to
   match the branch.
-- **Release notes:** a pull request that changes gridgen adds a TOML item in
-  `doc/ReleaseNotes/items/` (see the README there).
+- **Release notes:** a pull request that changes what a user runs, gets back,
+  reads, or compiles (the program, its output and messages, the GRIDGEN report
+  or release notes, or how the executables are built) adds a TOML item in
+  `doc/ReleaseNotes/items/` (see the README there). A `refactor`, `build`,
+  `ci`, `test`, `style`, `docs`, or `chore` pull request that changes none of
+  these adds none.
 - **Releases:** a pull request titled `chore: release <v>` runs
   `pixi run update-version --version <v> --date YYYY-MM-DD --releasemode`;
   check the changelog with `pixi run changelog` before it is merged. Then
