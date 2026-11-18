@@ -585,6 +585,31 @@ public:
     Grid * grid;
 };
 
+//----------------------------------------------------------------------------
+class GridToDisvdataBlock : public DefinitionBlock
+{
+public:
+    bool is_action() const override { return true; }
+
+    GridToDisvdataBlock(DefinitionBlock & block) : DefinitionBlock(block)
+    {
+        grid = nullptr;
+        vertical_pass_through = false;
+    }
+
+    bool parse() override;
+    bool initialize(map<string, DefinitionBlock *> & blocks) override;
+
+    string grid_name;
+    string disv_data_prefix; //prefix of the names of the files written
+
+    //write an inactive cell as a vertical pass-through cell, -1 in IDOMAIN
+    bool vertical_pass_through;
+
+    //actual data...
+    Grid * grid;
+};
+
 } //end namespace
 
 #endif //CUSG_DEF_STRUCT_H

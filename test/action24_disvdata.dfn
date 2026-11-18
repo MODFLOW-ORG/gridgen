@@ -1,0 +1,21 @@
+# MODFLOW 6 DISV input of the base grid, and of the three-layer grid with the
+# same refinement in every layer and an active domain in layer 2, with and
+# without vertical pass-through cells
+
+LOAD grid14qtg.dfn
+
+BEGIN GRID_TO_DISVDATA grid14mfg-to-disvdata
+  GRID = grid14mfg
+  DISV_DATA_PREFIX = output_disvdata/grid14mfg
+END GRID_TO_DISVDATA
+
+BEGIN GRID_TO_DISVDATA grid14qtg-to-disvdata
+  GRID = grid14qtg
+  DISV_DATA_PREFIX = output_disvdata/grid14qtg
+END GRID_TO_DISVDATA
+
+BEGIN GRID_TO_DISVDATA grid14qtg-to-disvdata-vp
+  GRID = grid14qtg
+  DISV_DATA_PREFIX = output_disvdata/grid14qtg_vp
+  VERTICAL_PASS_THROUGH = True
+END GRID_TO_DISVDATA

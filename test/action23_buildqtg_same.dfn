@@ -1,0 +1,38 @@
+# a three-layer grid with the same refinement in every layer and an active
+# domain in layer 2, for MODFLOW 6 DISV input (action24_disvdata.dfn)
+
+LOAD action01_buildqtg.dfn
+
+BEGIN MODFLOW_GRID grid14mfg
+  ROTATION_ANGLE = 0.
+  X_OFFSET = 543750
+  Y_OFFSET = 2792250
+  LENGTH_UNIT = undefined
+  NLAY = 3
+  NROW = 100
+  NCOL = 58
+  DELR = CONSTANT 800.
+  DELC = CONSTANT 800.
+  TOP = OPEN/CLOSE grid01mfg.top.dat
+  BOTTOM LAYER 1 = OPEN/CLOSE grid01mfg.bot.dat
+  BOTTOM LAYER 2 = CONSTANT -60.
+  BOTTOM LAYER 3 = CONSTANT -80.
+END MODFLOW_GRID
+
+BEGIN QUADTREE_BUILDER buildqtg_same
+  MODFLOW_GRID = grid14mfg
+  ACTIVE_DOMAIN LAYER 2 = my_active_domain
+  REFINEMENT_FEATURES LAYER 1 = MD_Canals chd_line well_buffer
+  REFINEMENT_FEATURES LAYER 2 = MD_Canals chd_line well_buffer
+  REFINEMENT_FEATURES LAYER 3 = MD_Canals chd_line well_buffer
+  SMOOTHING = full
+  SMOOTHING_LEVEL_HORIZONTAL = 1
+  SMOOTHING_LEVEL_VERTICAL = 1
+  GRID_DEFINITION_FILE = grid14qtg.dfn
+  TOP LAYER 1 = INTERPOLATE grid14mfg
+  BOTTOM LAYER 1 = INTERPOLATE grid14mfg
+  TOP LAYER 2 = INTERPOLATE grid14mfg
+  BOTTOM LAYER 2 = REPLICATE grid14mfg
+  TOP LAYER 3 = REPLICATE grid14mfg
+  BOTTOM LAYER 3 = REPLICATE grid14mfg
+END QUADTREE_BUILDER

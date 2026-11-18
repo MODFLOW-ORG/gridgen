@@ -556,6 +556,7 @@ TEST(DefinitionParser, RunningABlockThatIsNotAnActionWarns)
     blocks.emplace_back(empty_block<GridToVtkfileBlock>("grid_to_vtkfile"), true);
     blocks.emplace_back(empty_block<GridIntersectionBlock>("grid_intersection"), true);
     blocks.emplace_back(empty_block<GridToGsfBlock>("grid_to_gsf"), true);
+    blocks.emplace_back(empty_block<GridToDisvdataBlock>("grid_to_disvdata"), true);
     for (auto & [block, is_action] : blocks)
     {
         clear_warnings();
@@ -616,6 +617,43 @@ TEST(DefinitionParser, GridToGsfBlock)
     ASSERT_TRUE(corners->initialize(parser.get_block_data()));
     EXPECT_FALSE(corners->hanging_vertices);
     EXPECT_TRUE(corners->get_warnings().empty());
+}
+
+TEST(DefinitionParser, GridToDisvdataBlock)
+{
+    std::istringstream dfn(std::string(mfg_block) + "BEGIN GRID_TO_DISVDATA disv\n"
+                                                    "  GRID = mfg\n"
+                                                    "  DISV_DATA_PREFIX = output\\mfg\n"
+                                                    "  VERTICAL_PASS_THROUGH = TRUE\n"
+                                                    "END GRID_TO_DISVDATA\n"
+                                                    "BEGIN GRID_TO_DISVDATA defaults\n"
+                                                    "  GRID = mfg\n"
+                                                    "  DISV_DATA_PREFIX = mfg\n"
+                                                    "END GRID_TO_DISVDATA\n");
+    DefinitionParser parser;
+    ASSERT_TRUE(parser.parse(dfn));
+
+    auto * disv = dynamic_cast<GridToDisvdataBlock *>(parser.get_block_data("disv"));
+    ASSERT_NE(disv, nullptr);
+    ASSERT_TRUE(disv->initialize(parser.get_block_data()));
+    EXPECT_NE(disv->grid, nullptr);
+    EXPECT_EQ(disv->disv_data_prefix, "output/mfg");
+    EXPECT_TRUE(disv->vertical_pass_through);
+
+    auto * defaults = dynamic_cast<GridToDisvdataBlock *>(parser.get_block_data("defaults"));
+    ASSERT_NE(defaults, nullptr);
+    ASSERT_TRUE(defaults->initialize(parser.get_block_data()));
+    EXPECT_FALSE(defaults->vertical_pass_through);
+    EXPECT_TRUE(defaults->get_warnings().empty());
+}
+
+TEST(DefinitionParser, GridToDisvdataWithoutPrefixIsAnError)
+{
+    std::istringstream dfn(std::string(mfg_block) + "BEGIN GRID_TO_DISVDATA disv\n"
+                                                    "  GRID = mfg\n"
+                                                    "END GRID_TO_DISVDATA\n");
+    DefinitionParser parser;
+    EXPECT_THROW(parser.parse(dfn), GridgenError);
 }
 
 TEST(DefinitionParser, GridToGsfHangingVerticesOfQuadtreeIsNotReported)

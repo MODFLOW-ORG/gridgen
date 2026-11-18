@@ -18,11 +18,18 @@ Cases:
                       2, with horizontal and vertical ghost nodes (DISU).
   - layered_vp_gncv : the same, with vertical pass-through cells (DISU).
   - same            : the same refinement in every layer (DISU, and DISV in
-                      MODFLOW 6).
+                      MODFLOW 6 from gridgen's DISV data).
+  - same_domain     : the same, with an active domain in layer 2.
+  - same_domain_vp  : the same, with vertical pass-through cells.
+
+The DISV data of a case is checked against its DISU data: the same active
+cells, centers, elevations, and ghost nodes, and cell areas from the vertices.
+MODFLOW 6 reads gridgen's DISV and ghost node files with OPEN/CLOSE.
 """
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -47,7 +54,13 @@ GRIDGEN_BLOCKS = (
     ("check_models_build_same", "check_models_grids.dfn"),
     ("check_models_layered_gncv", "check_models_layered_data.dfn"),
     ("check_models_layered_vp_gncv", "check_models_layered_data.dfn"),
+    ("check_models_build_same_domain", "check_models_grids.dfn"),
     ("check_models_same_usgdata", "check_models_same_data.dfn"),
+    ("check_models_same_disvdata", "check_models_same_data.dfn"),
+    ("check_models_same_domain_usgdata", "check_models_same_domain_data.dfn"),
+    ("check_models_same_domain_disvdata", "check_models_same_domain_data.dfn"),
+    ("check_models_same_domain_vp_usgdata", "check_models_same_domain_data.dfn"),
+    ("check_models_same_domain_vp_disvdata", "check_models_same_domain_data.dfn"),
 )
 
 # case name and the discretizations it is run with
@@ -55,12 +68,22 @@ CASES = {
     "layered_gncv": ("disu",),
     "layered_vp_gncv": ("disu",),
     "same": ("disu", "disv"),
+    "same_domain": ("disu", "disv"),
+    "same_domain_vp": ("disu", "disv"),
 }
+
+# cases whose inactive cells are vertical pass-through cells
+VERTICAL_PASS_THROUGH_CASES = ("layered_vp_gncv", "same_domain_vp")
 
 # at the edge of an active domain, a ghost node whose head could only be
 # projected beyond the active cells is missing or inexact (#170), so in these
 # cases the cells connected to an edge cell have fixed heads too
-FIX_CELLS_NEXT_TO_EDGE = ("layered_gncv", "layered_vp_gncv")
+FIX_CELLS_NEXT_TO_EDGE = (
+    "layered_gncv",
+    "layered_vp_gncv",
+    "same_domain",
+    "same_domain_vp",
+)
 
 # origin of the grid and the head gradient in x and y; the heads vary by 86
 # length units over the grid
@@ -78,7 +101,13 @@ HEAD_TOLERANCE = 1.0e-4
 X_EXTENT = 58 * 800.0
 Y_EXTENT = 100 * 800.0
 LAYER_THICKNESS = (20.0, 25.0, 20.0)
-ACTIVE_DOMAIN_LAYERS = {"layered_gncv": (2,), "layered_vp_gncv": (2,), "same": ()}
+ACTIVE_DOMAIN_LAYERS = {
+    "layered_gncv": (2,),
+    "layered_vp_gncv": (2,),
+    "same": (),
+    "same_domain": (2,),
+    "same_domain_vp": (2,),
+}
 
 HORIZONTAL_CONDUCTIVITY = 10.0
 VERTICAL_CONDUCTIVITY = 1.0
@@ -137,15 +166,7 @@ class UsgData:
             [int(row[0]) - 1, row[1], row[2]]
             for row in np.loadtxt(f"{prefix}.vertices.dat")
         ]
-        self.cell2d = []
-        with open(f"{prefix}.cell2d.dat") as file:
-            for line in file:
-                values = line.split()
-                self.cell2d.append(
-                    [int(values[0]) - 1, float(values[1]), float(values[2])]
-                    + [int(values[3])]
-                    + [int(vertex) - 1 for vertex in values[4:]]
-                )
+        self.cell2d = read_cell2d(f"{prefix}.cell2d.dat")
 
         # node of each entry of ja, and the connections other than a cell to itself
         self.row = np.repeat(np.arange(self.nodes), self.iac)
@@ -163,6 +184,108 @@ class UsgData:
         perimeter = 2.0 * (self.dx + self.dy)
         self.fixed = shared_width < perimeter * (1.0 - 1.0e-9)
         self.exact_head = linear_head(self.x, self.y)
+
+
+def read_cell2d(path):
+    """CELL2D records with 0-based cell and vertex numbers"""
+    cell2d = []
+    with open(path) as file:
+        for line in file:
+            values = line.split()
+            cell2d.append(
+                [int(values[0]) - 1, float(values[1]), float(values[2])]
+                + [int(values[3])]
+                + [int(vertex) - 1 for vertex in values[4:]]
+            )
+    return cell2d
+
+
+class DisvData:
+    """The DISV data gridgen writes with one DISV_DATA_PREFIX"""
+
+    def __init__(self, prefix):
+        self.prefix = Path(prefix)
+        dimensions = dict(
+            line.split()
+            for line in Path(f"{prefix}.dimensions.dat").read_text().splitlines()
+        )
+        self.nlay = int(dimensions["NLAY"])
+        self.ncpl = int(dimensions["NCPL"])
+        self.nvert = int(dimensions["NVERT"])
+        self.vertices = [
+            [int(row[0]) - 1, row[1], row[2]]
+            for row in np.loadtxt(f"{prefix}.vertices.dat")
+        ]
+        self.cell2d = read_cell2d(f"{prefix}.cell2d.dat")
+        self.top = read_numbers(f"{prefix}.top.dat")
+        self.botm = read_numbers(f"{prefix}.botm.dat").reshape(self.nlay, self.ncpl)
+        self.idomain = read_numbers(f"{prefix}.idomain.dat", int).reshape(
+            self.nlay, self.ncpl
+        )
+        # the active cells, layer by layer, are the cells of the DISU data
+        self.user_node = np.flatnonzero(self.idomain.ravel() > 0)
+        records = np.loadtxt(f"{prefix}.gnc.dat", ndmin=2)
+        self.ghost_nodes = [
+            [(int(record[i]) - 1, int(record[i + 1]) - 1) for i in range(0, 8, 2)]
+            + [record[8], record[9]]
+            for record in records
+        ]
+
+    def cellid(self, node):
+        """Layer and cell of a DISU node"""
+        return divmod(int(self.user_node[node]), self.ncpl)
+
+
+def check_disv(data, disv, vertical_pass_through):
+    """Messages for the DISV data that differs from the DISU data"""
+    if len(disv.top) != disv.ncpl or len(disv.cell2d) != disv.ncpl:
+        return ["the DISV arrays do not have NCPL values per layer"]
+    if len(disv.user_node) != data.nodes:
+        return [f"{len(disv.user_node)} active DISV cells but {data.nodes} cells"]
+    messages = []
+    inactive = disv.idomain[disv.idomain <= 0]
+    if np.any(inactive != (-1 if vertical_pass_through else 0)):
+        messages.append(
+            "idomain of an inactive cell is not -1 with pass-through, 0 without"
+        )
+    layer, cell = np.divmod(disv.user_node, disv.ncpl)
+    if not np.array_equal(layer + 1, data.layer):
+        messages.append("the active DISV cells are not in the layers of the DISU cells")
+    center = np.array([record[1:3] for record in disv.cell2d])
+    if not np.allclose(center[cell], np.column_stack((data.x, data.y)), rtol=1.0e-12):
+        messages.append("a DISV cell center differs from its DISU cell")
+    # DISV takes the top of a cell from the bottom of the cell above
+    above = np.vstack((disv.top, disv.botm[:-1]))
+    if not np.allclose(above[layer, cell], data.top) or not np.allclose(
+        disv.botm[layer, cell], data.bottom
+    ):
+        messages.append("a DISV cell top or bottom differs from its DISU cell")
+    xy = np.array([vertex[1:] for vertex in disv.vertices])
+    area = np.zeros(disv.ncpl)
+    for record in disv.cell2d:
+        ring = xy[record[4:]]
+        x, y = ring[:, 0], ring[:, 1]
+        # the vertices are clockwise
+        area[record[0]] = 0.5 * np.sum(y * np.roll(x, -1) - x * np.roll(y, -1))
+    if not np.allclose(area[cell], data.area, rtol=1.0e-12):
+        messages.append(
+            "the area of a DISV cell from its vertices is not its DISU area"
+        )
+    expected = sorted(
+        (
+            tuple(disv.cellid(record[name]) for name in ("n", "m", "j0", "j1")),
+            round(record["alpha0"], 12),
+            round(record["alpha1"], 12),
+        )
+        for record in data.ghost_nodes
+    )
+    written = sorted(
+        (tuple(record[:4]), round(record[4], 12), round(record[5], 12))
+        for record in disv.ghost_nodes
+    )
+    if written != expected:
+        messages.append("the DISV ghost nodes differ from the DISU ghost nodes")
+    return messages
 
 
 def check_geometry(data, case):
@@ -298,6 +421,34 @@ def run_gridgen(gridgen):
             )
 
 
+def read_disv_files(workspace, name, disv):
+    """Replace the DISV and GNC input FloPy wrote with input that reads gridgen's
+    DISV files, so that MODFLOW 6 reads them as gridgen writes them"""
+
+    def path(kind):
+        return Path(os.path.relpath(f"{disv.prefix}.{kind}.dat", workspace)).as_posix()
+
+    # the DIMENSIONS block cannot be read from a file
+    dimensions = Path(f"{disv.prefix}.dimensions.dat").read_text()
+    (Path(workspace) / f"{name}.disv").write_text(
+        "BEGIN options\nEND options\n\n"
+        f"BEGIN dimensions\n{dimensions}END dimensions\n\n"
+        "BEGIN griddata\n"
+        f"  top\n    OPEN/CLOSE {path('top')}\n"
+        f"  botm\n    OPEN/CLOSE {path('botm')}\n"
+        f"  idomain\n    OPEN/CLOSE {path('idomain')}\n"
+        "END griddata\n\n"
+        f"BEGIN vertices\n  OPEN/CLOSE {path('vertices')}\nEND vertices\n\n"
+        f"BEGIN cell2d\n  OPEN/CLOSE {path('cell2d')}\nEND cell2d\n"
+    )
+    (Path(workspace) / f"{name}.gnc").write_text(
+        "BEGIN options\nEND options\n\n"
+        f"BEGIN dimensions\n  NUMGNC {len(disv.ghost_nodes)}\n  NUMALPHAJ 2\n"
+        "END dimensions\n\n"
+        f"BEGIN gncdata\n  OPEN/CLOSE {path('gnc')}\nEND gncdata\n"
+    )
+
+
 def run_mf6(data, workspace, executable, discretization):
     name = "check"
     simulation = flopy.mf6.MFSimulation(
@@ -340,24 +491,19 @@ def run_mf6(data, workspace, executable, discretization):
 
         fixed = [cellid(node) for node in np.flatnonzero(data.fixed)]
     else:
-        # every layer has the same cells, so the vertices and the CELL2D
-        # records of the first layer describe each layer
-        ncpl = int(data.nodes_per_layer[0])
-        nlay = len(data.nodes_per_layer)
+        disv = data.disv
         flopy.mf6.ModflowGwfdisv(
             model,
-            nlay=nlay,
-            ncpl=ncpl,
-            nvert=len(data.vertices),
-            top=data.top[:ncpl],
-            botm=data.bottom.reshape(nlay, ncpl),
-            vertices=data.vertices,
-            cell2d=data.cell2d[:ncpl],
+            nlay=disv.nlay,
+            ncpl=disv.ncpl,
+            nvert=disv.nvert,
+            top=disv.top,
+            botm=disv.botm,
+            idomain=disv.idomain,
+            vertices=disv.vertices,
+            cell2d=disv.cell2d,
         )
-
-        def cellid(node):
-            return (int(node) // ncpl, int(node) % ncpl)
-
+        cellid = disv.cellid
         fixed = [cellid(node) for node in np.flatnonzero(data.fixed)]
     flopy.mf6.ModflowGwfnpf(
         model,
@@ -366,7 +512,14 @@ def run_mf6(data, workspace, executable, discretization):
         icelltype=0,
         save_specific_discharge=True,
     )
-    flopy.mf6.ModflowGwfic(model, strt=data.starting_head)
+    if discretization == "disv":
+        # inactive cells are given a starting head too, which is not used
+        starting_head = np.full(data.disv.nlay * data.disv.ncpl, HEAD_AT_ORIGIN)
+        starting_head[data.disv.user_node] = data.starting_head
+        starting_head = starting_head.reshape(data.disv.nlay, data.disv.ncpl)
+    else:
+        starting_head = data.starting_head
+    flopy.mf6.ModflowGwfic(model, strt=starting_head)
     flopy.mf6.ModflowGwfchd(
         model,
         stress_period_data=[
@@ -378,7 +531,9 @@ def run_mf6(data, workspace, executable, discretization):
         model,
         numgnc=len(gnc),
         numalphaj=2,
-        gncdata=[
+        gncdata=data.disv.ghost_nodes
+        if discretization == "disv"
+        else [
             [
                 cellid(record["n"]),
                 cellid(record["m"]),
@@ -397,27 +552,40 @@ def run_mf6(data, workspace, executable, discretization):
         saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     )
     simulation.write_simulation(silent=True)
+    if discretization == "disv":
+        read_disv_files(workspace, name, data.disv)
     success, _ = simulation.run_simulation(silent=True)
     if not success:
         return False, None, None, None
-    heads = model.output.head().get_data().ravel()
+    # the heads and specific discharge of the DISU nodes; MODFLOW 6 numbers
+    # every DISV cell, active or not
+    user_node = (
+        data.disv.user_node if discretization == "disv" else np.arange(data.nodes)
+    )
+    heads = model.output.head().get_data().ravel()[user_node]
     budget = model.output.budget()
     flow = budget.get_data(text="FLOW-JA-FACE")[0].ravel()
     discharge = budget.get_data(text="DATA-SPDIS")[0]
-    discharge_error = np.zeros(data.nodes)
+    discharge_error = np.zeros(user_node[-1] + 1)
     for component, exact in zip(("qx", "qy", "qz"), EXACT_DISCHARGE):
         discharge_error[discharge["node"] - 1] = np.maximum(
             discharge_error[discharge["node"] - 1], np.abs(discharge[component] - exact)
         )
+    discharge_error = discharge_error[user_node]
     if discretization == "disu":
         row, column, vertical = data.row, data.ja, data.vertical
     else:
-        # the connections are numbered by MODFLOW 6; a vertical one joins
-        # the same cell in two layers
+        # MODFLOW 6 numbers the connections of every DISV cell, active or not;
+        # a vertical one joins the same cell in two layers, and the flows are
+        # checked between active cells by their DISU nodes
         grid = flopy.mf6.utils.MfGrdFile(Path(workspace) / f"{name}.disv.grb")
-        row = np.repeat(np.arange(grid.nodes), np.diff(grid.ia))
-        column = grid.ja
-        vertical = np.abs(column - row) == ncpl
+        user_row = np.repeat(np.arange(grid.nodes), np.diff(grid.ia))
+        separation = np.abs(grid.ja - user_row)
+        node = np.full(grid.nodes, -1)
+        node[user_node] = np.arange(data.nodes)
+        active = (node[user_row] >= 0) & (node[grid.ja] >= 0)
+        row, column, flow = node[user_row][active], node[grid.ja][active], flow[active]
+        vertical = (separation[active] > 0) & (separation[active] % data.disv.ncpl == 0)
     return (
         True,
         heads,
@@ -549,6 +717,9 @@ def main():
     for case in args.cases:
         data = UsgData(WORKSPACE / case)
         messages = check_geometry(data, case)
+        if "disv" in CASES[case]:
+            data.disv = DisvData(WORKSPACE / f"{case}_disv")
+            messages += check_disv(data, data.disv, case in VERTICAL_PASS_THROUGH_CASES)
         if messages:
             failures += 1
             print(f"{case:16s} FAIL: " + "; ".join(messages))

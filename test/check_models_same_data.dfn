@@ -1,5 +1,5 @@
-# GRID_TO_USGDATA block for the MODFLOW 6 and MODFLOW-USG checks
-# (check_models.py) on the grid built by check_models_build_same
+# GRID_TO_USGDATA and GRID_TO_DISVDATA blocks for the MODFLOW 6 and MODFLOW-USG
+# checks (check_models.py) on the grid built by check_models_build_same
 
 LOAD check_models_same.dfn
 
@@ -7,3 +7,8 @@ BEGIN GRID_TO_USGDATA check_models_same_usgdata
   GRID = check_models_same
   USG_DATA_PREFIX = check_models/same
 END GRID_TO_USGDATA
+
+BEGIN GRID_TO_DISVDATA check_models_same_disvdata
+  GRID = check_models_same
+  DISV_DATA_PREFIX = check_models/same_disv
+END GRID_TO_DISVDATA

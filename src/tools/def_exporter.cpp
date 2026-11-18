@@ -5,6 +5,7 @@
 #include "QuadTreeBuilder.h"
 #include "GridVertices.h"
 #include "VertexExport.h"
+#include "DisvExport.h"
 #include "Warnings.h"
 #include <sstream>
 #include <algorithm>
@@ -203,6 +204,24 @@ bool DefinitionExporter::save(ostream & out, QuadtreeBuilderBlock & data)
     return save(out, data.qtree_grid);
 }
 
+//warn of the connections from a cell next to an inactive cell to a smaller
+//cell whose ghost node is missing or inexact
+static void warn_inexact_ghost_nodes(const string & label, int inexact)
+{
+    if (inexact == 0) return;
+    warn("In " + label + ", " +
+         (inexact == 1 ? string("1 connection") : to_string(inexact) + " connections") +
+         " from a cell next to an inactive cell to a smaller cell " +
+         (inexact == 1 ? "has" : "have") +
+         " a ghost node in the .gnc.dat file that is missing or that does not "
+         "reproduce a head that varies linearly, since the head at the ghost node "
+         "cannot be interpolated from the active cells nearby; the flow across them "
+         "is less accurate where the head varies along the edge of the active "
+         "domain. Refining the cells along the edge of the active domain to the size "
+         "of their neighbors, or using the XT3D option of MODFLOW 6 in place of ghost "
+         "nodes, avoids this.");
+}
+
 bool DefinitionExporter::save(GridToUsgdataBlock & data)
 {
     QuadTree3D * quad_grid = dynamic_cast<QuadTree3D *>(data.grid);
@@ -249,18 +268,7 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
         // Save ghost nodes to file
         string ghostnode_name = data.usg_data_prefix + ".gnc.dat";
         int inexact = quad_grid->save_ghost_node(ghostnode_name, data.gnc_vertical);
-        if (inexact > 0)
-            warn("In " + data.label() + ", " +
-                 (inexact == 1 ? string("1 connection") : to_string(inexact) + " connections") +
-                 " from a cell next to an inactive cell to a smaller cell " +
-                 (inexact == 1 ? "has" : "have") +
-                 " a ghost node in the .gnc.dat file that is missing or that does not "
-                 "reproduce a head that varies linearly, since the head at the ghost node "
-                 "cannot be interpolated from the active cells nearby; the flow across them "
-                 "is less accurate where the head varies along the edge of the active "
-                 "domain. Refining the cells along the edge of the active domain to the size "
-                 "of their neighbors, or using the XT3D option of MODFLOW 6 in place of ghost "
-                 "nodes, avoids this.");
+        warn_inexact_ghost_nodes(data.label(), inexact);
 
         // save nodes per layer
         string nodesperlay_data_name = data.usg_data_prefix + ".nodesperlay.dat";
@@ -268,6 +276,38 @@ bool DefinitionExporter::save(GridToUsgdataBlock & data)
         save(nodesperlay_data_name, nperlay, modflow_grid->nlay);
     }
 
+    return true;
+}
+
+bool DefinitionExporter::save(GridToDisvdataBlock & data)
+{
+    DisvData disv;
+    try
+    {
+        disv = disv_data(data.grid, data.vertical_pass_through);
+        write_disv_data(disv, data.disv_data_prefix);
+    }
+    catch (const GridgenError & error)
+    {
+        throw GridgenError("In " + data.label() + ", " + error.what());
+    }
+
+    warn_inexact_ghost_nodes(data.label(), disv.inexact_ghost_nodes);
+    if (data.vertical_pass_through &&
+        find(disv.idomain.begin(), disv.idomain.end(), -1) == disv.idomain.end())
+        warn("Record VERTICAL_PASS_THROUGH in " + data.label() +
+             " has no effect; the grid has no inactive cells.");
+    if (disv.tops_not_aligned > 0)
+    {
+        int count = disv.tops_not_aligned;
+        warn("In " + data.label() + ", " +
+             (count == 1 ? string("1 active cell has") : to_string(count) + " active cells have") +
+             " a top that differs from the bottom of the active cell above; MODFLOW 6 DISV "
+             "input takes the top of a cell from the bottom of the cell above, so in the "
+             ".botm.dat file " +
+             (count == 1 ? "this cell is" : "these cells are") +
+             " thicker or thinner than in the grid.");
+    }
     return true;
 }
 

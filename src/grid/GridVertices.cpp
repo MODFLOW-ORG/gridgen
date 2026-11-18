@@ -127,7 +127,7 @@ const int * GridVertices::corners(const Box * box) const
     return m_cells.at(box).corner;
 }
 
-vector<int> GridVertices::outline(Box * box) const
+vector<int> GridVertices::outline(Box * box, bool include_inactive) const
 {
     const int * corner = corners(box);
     // the corners a neighbor to the north, east, south, or west shares with box
@@ -151,7 +151,7 @@ vector<int> GridVertices::outline(Box * box) const
         box->get_neighbors(neighbors, side);
         for (Box * neighbor : neighbors)
         {
-            if (!neighbor->active) continue;
+            if (!neighbor->active && !include_inactive) continue;
             for (int j : shared[side])
             {
                 int id = corners(neighbor)[j];
