@@ -1,3 +1,3 @@
 section = "internal"
 subsection = "build"
-description = "GRIDGEN is no longer built or tested with the classic Intel C++ compilers, which Intel has discontinued. It is built and tested with GCC, Clang, and the current LLVM-based Intel compilers, which compile the Linux and Windows executables; the executables are unchanged."
+description = "The Windows executable is compiled with the LLVM-based Intel oneAPI C++ compiler, as the Linux executable already was, rather than the Microsoft compiler. GRIDGEN is no longer built or tested with the classic Intel C++ compiler, which Intel has discontinued; it is built and tested with GCC, Clang, and the LLVM-based Intel compilers."
