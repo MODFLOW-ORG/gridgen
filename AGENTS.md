@@ -224,8 +224,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   environment (`pixi run -e gcc setup`); the Intel jobs and the macOS gcc
   job, whose release cannot use the conda-forge libc++ that the conda-forge
   g++ links on macOS, get their compilers through `setup-fortran`.
-  `lint.yml` runs `pixi run check-format` on every push and
-  on pull requests to `main`.
+  `lint.yml` runs `pixi run check-format` on every push and on pull requests
+  to `main`.
   `check-models.yml` runs `pixi run check-models` on Ubuntu for pull requests
   that change `src/`, the check, or the pixi files; it is not a required
   check, and changes to it alone skip the build and tests.
