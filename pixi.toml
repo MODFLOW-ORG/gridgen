@@ -66,7 +66,7 @@ fix-format = { cmd = "ruff format . && ruff check --fix . && codespell --write-c
 # ostag
 get-ostag = { cmd = "python -c 'from modflow_devtools.ostags import get_ostag; print(get_ostag())'"} 
 
-# MODFLOW 6 and MODFLOW-USG runs on gridgen output (FloPy installs the programs)
+# MODFLOW-USG and MODFLOW 6 runs on gridgen output (FloPy installs the programs)
 [feature.models.dependencies]
 flopy = "*"
 

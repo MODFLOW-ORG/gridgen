@@ -24,7 +24,7 @@ env:
   PIXI_BETA_WARNING_OFF: true
 jobs:
   check-models:
-    name: MODFLOW 6 and MODFLOW-USG on gridgen output
+    name: MODFLOW-USG and MODFLOW 6 on gridgen output
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     defaults:
@@ -69,7 +69,7 @@ jobs:
 
       # get-modflow installs the latest release of each program; the token
       # raises the GitHub API rate limit
-      - name: Run MODFLOW 6 and MODFLOW-USG on gridgen output
+      - name: Run MODFLOW-USG and MODFLOW 6 on gridgen output
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pixi run check-models

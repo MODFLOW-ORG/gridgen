@@ -24,7 +24,7 @@ namespace cusg
 /*! \brief Sparse Matrix in CSR format
 
     This object contains the connections of the active cells of a grid,
-    the DISU input of MODFLOW 6 and MODFLOW-USG.  The data are stored
+    the DISU input of MODFLOW-USG and MODFLOW 6.  The data are stored
     in the CSR format.
  */
 struct CSRData

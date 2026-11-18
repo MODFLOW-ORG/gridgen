@@ -51,7 +51,7 @@ public:
     /*! \brief Obtain CSRData 
 	
 	    Return a CSRData object, which contains the DISU input of
-        MODFLOW 6 and MODFLOW-USG.
+        MODFLOW-USG and MODFLOW 6.
      */
     virtual CSRData get_usg_csr_data() = 0;
 

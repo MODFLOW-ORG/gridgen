@@ -1,4 +1,4 @@
-# GRID_TO_USGDATA and GRID_TO_DISVDATA blocks for the MODFLOW 6 and MODFLOW-USG
+# GRID_TO_USGDATA and GRID_TO_DISVDATA blocks for the MODFLOW-USG and MODFLOW 6
 # checks (check_models.py) on the grid built by check_models_build_same_domain,
 # without and with vertical pass-through cells
 

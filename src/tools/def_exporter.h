@@ -72,7 +72,7 @@ public:
     //relative to the folder gridgen is run from ("" for that folder)
     void set_output_folder(const string & folder);
 
-    //write the MODFLOW 6 and MODFLOW-USG DISU input of a grid
+    //write the MODFLOW-USG and MODFLOW 6 DISU input of a grid
     bool save(GridToUsgdataBlock & data);
 
     //write the MODFLOW 6 DISV input of a grid

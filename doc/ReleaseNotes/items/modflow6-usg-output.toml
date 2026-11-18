@@ -1,3 +1,0 @@
-section = "documentation"
-subsection = "export"
-description = "A new section, Using GRIDGEN Output with MODFLOW 6 and MODFLOW-USG, has a table of the file that holds each item of the MODFLOW 6 DISU, MODFLOW 6 DISV, and MODFLOW-USG DISU input, in place of a paragraph in the Introduction. The Abstract, the test problems, and the Tips and Recommendations describe the output for both programs."

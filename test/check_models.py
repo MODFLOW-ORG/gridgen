@@ -1,5 +1,5 @@
 """
-Check gridgen output by running MODFLOW 6 and MODFLOW-USG on it.
+Check gridgen output by running MODFLOW-USG and MODFLOW 6 on it.
 
 Builds the grids of check_models_grids.dfn, writes their DISU data, and runs
 each case with heads fixed on the cells along the edges of the active grid, so
