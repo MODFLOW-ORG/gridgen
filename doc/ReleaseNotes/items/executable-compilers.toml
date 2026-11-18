@@ -1,3 +1,0 @@
-section = "internal"
-subsection = "build"
-description = "The Windows executable is compiled with the LLVM-based Intel oneAPI C++ compiler, as the Linux executable already was, rather than the Microsoft compiler, and the macOS executable with gcc 15 rather than gcc 13. GRIDGEN is no longer built or tested with the classic Intel C++ compiler, which Intel has discontinued; it is built and tested with GCC, Clang, and the LLVM-based Intel compilers."

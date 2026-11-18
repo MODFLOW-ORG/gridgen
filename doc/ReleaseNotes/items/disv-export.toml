@@ -1,3 +1,0 @@
-section = "features"
-subsection = "export"
-description = "A new GRID_TO_DISVDATA block writes the input of the MODFLOW 6 DISV Package for a MODFLOW grid or a quadtree grid with the same cells in every layer: the dimensions, vertices, and CELL2D records, the TOP, BOTM, and IDOMAIN arrays, and the horizontal ghost nodes by layer and cell. Unlike FloPy's get_gridprops_disv, it writes grids with an active domain in some layers, and it can write inactive cells as vertical pass-through cells. It is described in the Tips and Recommendations section."
