@@ -50,8 +50,8 @@ public:
 
     /*! \brief Obtain CSRData 
 	
-	    Return a UsgCsrData object, which contains all of the necessary
-        information for creating an unstructured grid model.
+	    Return a CSRData object, which contains the DISU input of
+        MODFLOW 6 and MODFLOW-USG.
      */
     virtual CSRData get_usg_csr_data() = 0;
 

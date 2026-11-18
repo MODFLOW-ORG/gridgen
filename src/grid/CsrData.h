@@ -23,8 +23,8 @@ namespace cusg
 
 /*! \brief Sparse Matrix in CSR format
 
-    This object contains all of the unstructured grid information
-    necessary for an unstructured grid model.  The data are stored
+    This object contains the connections of the active cells of a grid,
+    the DISU input of MODFLOW 6 and MODFLOW-USG.  The data are stored
     in the CSR format.
  */
 struct CSRData
@@ -46,22 +46,22 @@ struct CSRData
     /// total # of connections
     int nja;
 
-    /// array of size nja for connections
+    /// array of size nja for connections (JA)
     vector<int> ja;
 
     /// index array of size  nodes+1
     vector<int> ia;
 
-    /// surface area from a plane view, size is nodes
+    /// surface area from a plane view, size is nodes (AREA)
     vector<double> area;
 
-    /// size of nja storing distance to the shared face of each connection
+    /// size of nja storing distance to the shared face of each connection (CL12)
     vector<double> cl1;
 
     /// size of nja storing reversed distance to the shared face from each connection
     vector<double> cl2;
 
-    /// area of the connection of size nja
+    /// area of the connection of size nja (MODFLOW-USG FAHL)
     vector<double> fahl;
 
     /// face width of a horizontal connection and face area of a vertical one, size nja
@@ -71,7 +71,7 @@ struct CSRData
     /// direction indicator of size nja (+-1 for x, +-2 for y +-3 for z)
     vector<int> fldr;
 
-    /// number of connection +1 for each cell, array of size  nodes; empty if not computed
+    /// number of connection +1 for each cell, array of size  nodes; empty if not computed (IAC)
     vector<int> iac;
 
     /// 1 for a horizontal connection and 0 otherwise, size nja (MODFLOW 6 IHC)
