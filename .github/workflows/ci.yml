@@ -60,15 +60,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # gcc
-          - {os: ubuntu-22.04, compiler: gcc, version: 13, shell: bash, release: no}
-          - {os: macos-15, compiler: gcc, version: 13, shell: bash, release: yes, xcode-version: '16.4'}
-          - {os: windows-2022, compiler: gcc, version: 13, shell: pwsh, release: no}
+          # gcc; on Linux and Windows from conda-forge (the gcc pixi
+          # environment, whose gxx version in pixi.toml the version here and
+          # the sanitizer job name follow), on macOS from Homebrew through
+          # setup-fortran, since programs the conda-forge g++ builds on macOS
+          # corrupt std::string
+          - {os: ubuntu-22.04, compiler: gcc, version: 15, shell: bash, release: no, pixi-environment: gcc}
+          - {os: macos-15, compiler: gcc, version: 15, shell: bash, release: yes, xcode-version: '16.4', pixi-environment: default}
+          - {os: windows-2022, compiler: gcc, version: 15, shell: pwsh, release: no, pixi-environment: gcc}
           # clang (Apple clang from Xcode)
-          - {os: macos-15, compiler: clang, version: 17, shell: bash, release: no, xcode-version: '16.4'}
+          - {os: macos-15, compiler: clang, version: 17, shell: bash, release: no, xcode-version: '16.4', pixi-environment: default}
           # intel
-          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash, release: yes}
-          - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh, release: yes}
+          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash, release: yes, pixi-environment: default}
+          - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh, release: yes, pixi-environment: default}
     defaults:
       run:
         shell: ${{ matrix.shell }}
@@ -79,7 +83,7 @@ jobs:
           path: ${{ env.PROGRAM_NAME }}
 
       - name: Setup ${{ matrix.compiler }} ${{ matrix.version }} on ${{ matrix.os }}
-        if: matrix.compiler != 'clang'
+        if: ${{ matrix.compiler != 'clang' && matrix.pixi-environment == 'default' }}
         uses: fortran-lang/setup-fortran@v1
         with:
           compiler: ${{ matrix.compiler}}
@@ -113,6 +117,7 @@ jobs:
         with:
           pixi-version: v0.82.1
           manifest-path: "${{ env.PROGRAM_NAME }}/pixi.toml"
+          environments: ${{ matrix.pixi-environment }}
 
       # WrapDB, the only source of the meson patch for GoogleTest, can be down,
       # so download it once for each change to the wraps and retry when the cache is empty
@@ -127,7 +132,7 @@ jobs:
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
           for attempt in 1 2 3; do
-            pixi run -- meson subprojects download && exit 0
+            pixi run -e ${{ matrix.pixi-environment }} -- meson subprojects download && exit 0
             [ $attempt -lt 3 ] && sleep 60
           done
           exit 1
@@ -137,7 +142,7 @@ jobs:
         working-directory: ${{ env.PROGRAM_NAME }}
         id: ostag
         run: |
-          echo "ostag=$(pixi run get-ostag)" >> $GITHUB_ENV
+          echo "ostag=$(pixi run -e ${{ matrix.pixi-environment }} get-ostag)" >> $GITHUB_ENV
     
       - name: Create source zip file on Linux
         if: ${{ matrix.release == 'yes' && runner.os == 'Linux' }}
@@ -172,8 +177,8 @@ jobs:
       - name: Build ${{ env.PROGRAM_NAME }}
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
-          pixi run setup
-          pixi run build
+          pixi run -e ${{ matrix.pixi-environment }} setup
+          pixi run -e ${{ matrix.pixi-environment }} build
 
       # the executable links the C++ library statically (src/meson.build) and
       # must run with glibc 2.34, that of RHEL 9
@@ -250,7 +255,7 @@ jobs:
       - name: Test ${{ env.PROGRAM_NAME }}
         if: success()
         working-directory: ${{ env.PROGRAM_NAME }}
-        run: pixi run test
+        run: pixi run -e ${{ matrix.pixi-environment }} test
 
       # outputs are compared with the base branch on pull requests only; add the
       # output-change label to a pull request that changes output intentionally
@@ -271,13 +276,13 @@ jobs:
           if cmp -s <(cat subprojects/*.wrap) <(cat ../${{ env.PROGRAM_NAME }}-main/subprojects/*.wrap); then
             cp -R subprojects/packagecache ../${{ env.PROGRAM_NAME }}-main/subprojects/
           fi
-          pixi run setup-main
-          pixi run build-main
+          pixi run -e ${{ matrix.pixi-environment }} setup-main
+          pixi run -e ${{ matrix.pixi-environment }} build-main
 
       - name: Compare outputs with ${{ env.PROGRAM_NAME }} base branch
         if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'output-change') }}
         working-directory: ${{ env.PROGRAM_NAME }}
-        run: pixi run compare-main
+        run: pixi run -e ${{ matrix.pixi-environment }} compare-main
 
       - name: Create zip file on MacOS and Linux
         if: ${{ matrix.release == 'yes' && runner.os != 'Windows' }}
@@ -302,7 +307,7 @@ jobs:
           path: ${{ env.PROGRAM_NAME }}/*.zip
 
   sanitize:
-    name: ubuntu-22.04 gcc 13 sanitizers
+    name: ubuntu-22.04 gcc 15 sanitizers
     if: ${{ !contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) || github.event.label.name == 'output-change' }}
     runs-on: ubuntu-22.04
     timeout-minutes: 45
@@ -315,17 +320,13 @@ jobs:
         with:
           path: ${{ env.PROGRAM_NAME }}
 
-      - name: Setup gcc 13
-        uses: fortran-lang/setup-fortran@v1
-        with:
-          compiler: gcc
-          version: 13
-
+      # g++ from conda-forge (the gcc pixi environment)
       - name: Setup pixi
         uses: prefix-dev/setup-pixi@v0.11.3
         with:
           pixi-version: v0.82.1
           manifest-path: "${{ env.PROGRAM_NAME }}/pixi.toml"
+          environments: gcc
 
       # WrapDB, the only source of the meson patch for GoogleTest, can be down,
       # so download it once for each change to the wraps and retry when the cache is empty
@@ -340,14 +341,14 @@ jobs:
         working-directory: ${{ env.PROGRAM_NAME }}
         run: |
           for attempt in 1 2 3; do
-            pixi run -- meson subprojects download && exit 0
+            pixi run -e gcc -- meson subprojects download && exit 0
             [ $attempt -lt 3 ] && sleep 60
           done
           exit 1
 
       - name: Test ${{ env.PROGRAM_NAME }} with the sanitizers
         working-directory: ${{ env.PROGRAM_NAME }}
-        run: pixi run sanitize
+        run: pixi run -e gcc sanitize
 
   release_notes:
     name: Release notes

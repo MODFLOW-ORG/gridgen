@@ -44,12 +44,15 @@ python = import('python').find_installation()
 
 subdir('src')
 
-# unit tests
+# unit tests; GoogleTest is built as a static library, since with a shared one
+# the unit tests built with Homebrew gcc 15 on macOS, which links the C++
+# library statically, crashed at the first test
 gtest_dep = dependency(
                        'gtest_main',
                        version: '>=1.17',
                        required: get_option('unit_tests'),
                        allow_fallback: true,
+                       default_options: ['default_library=static'],
                       )
 if gtest_dep.found()
   subdir('test/unit')

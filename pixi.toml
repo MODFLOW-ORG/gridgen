@@ -73,5 +73,19 @@ flopy = "*"
 [feature.models.tasks]
 check-models = { cmd = "python test/check_models.py" }
 
+# g++ for the Linux and Windows gcc CI jobs, from conda-forge rather than the
+# package sources of each operating system; a separate environment, since it
+# sets CXX. Not for macOS, where programs it builds against the conda-forge
+# libc++ corrupt std::string; the macOS gcc job uses Homebrew gcc
+[feature.gcc]
+platforms = ["linux-64", "win-64"]
+
+[feature.gcc.dependencies]
+gxx = "15.*"
+
+[feature.gcc.activation.env]
+CXX = "g++"
+
 [environments]
 models = ["models"]
+gcc = ["gcc"]
