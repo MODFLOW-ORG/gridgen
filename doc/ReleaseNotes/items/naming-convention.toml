@@ -1,3 +1,0 @@
-section = "internal"
-subsection = ""
-description = "Names in the C++ source say what a variable holds or what a function or class does, in whole words rather than abbreviations or placeholders, and follow one case convention, which clang-tidy checks on every change. The two cell numberings have one name each, a closed ring of a polygon is called a ring rather than a ply, the classes that hold a block of the definition file are named after the block, and the shapefile and VTK writers are one function each for both grid types. The program and its output are unchanged, except that the warning about cells with negative thickness now spells thickness correctly."
