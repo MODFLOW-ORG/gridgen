@@ -44,12 +44,15 @@ python = import('python').find_installation()
 
 subdir('src')
 
-# unit tests
+# unit tests; GoogleTest is built as a static library, so that a build that
+# links the C++ library statically (macOS gcc) has one copy of it, not one in
+# the test executable and another in a shared GoogleTest library
 gtest_dep = dependency(
                        'gtest_main',
                        version: '>=1.17',
                        required: get_option('unit_tests'),
                        allow_fallback: true,
+                       default_options: ['default_library=static'],
                       )
 if gtest_dep.found()
   subdir('test/unit')
