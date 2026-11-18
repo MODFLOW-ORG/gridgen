@@ -1,4 +1,4 @@
-// The MODFLOW 6 IHC, HWVA, and ANGLDEGX arrays and the MODFLOW-USG IVC array
+// The MODFLOW-USG IVC array and the MODFLOW 6 IHC, HWVA, and ANGLDEGX arrays
 #include <cmath>
 #include <cstdlib>
 #include <map>

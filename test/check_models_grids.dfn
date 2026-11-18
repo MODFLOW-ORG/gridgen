@@ -1,4 +1,4 @@
-# grids for the MODFLOW 6 and MODFLOW-USG checks (check_models.py): the
+# grids for the MODFLOW-USG and MODFLOW 6 checks (check_models.py): the
 # refinement of grid03qtg with flat layers, so that a head that varies linearly
 # in x and y is the exact solution, and the same refinement in every layer,
 # without and with an active domain

@@ -27,8 +27,8 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   sanitizers** (a separate build with `-O1` in `builddir-sanitize/` that runs
   the regression cases once, also run in CI on Linux, where leaks are
   reported too): `pixi run sanitize`
-- **Run MODFLOW 6 and MODFLOW-USG on gridgen output** (the `models`
-  environment, with FloPy; installs the latest `mf6`, `mfusg`, and `mfusgt`
+- **Run MODFLOW-USG and MODFLOW 6 on gridgen output** (the `models`
+  environment, with FloPy; installs the latest `mfusg`, `mfusgt`, and `mf6`
   in `bin/modflow`, `--update` to reinstall; needs `pixi run build`):
   `pixi run check-models`; each case must reproduce a linear head field, and
   in MODFLOW 6 its specific discharge (`test/check_models.py`)
@@ -121,13 +121,13 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   covers the change before the full `pixi run test`. Run
   `pixi run compare-main` when a change can alter output.
 - **Downstream use:** FloPy and two modflow6-examples scripts run gridgen
-  and pass its output to MODFLOW 6, MODFLOW-USG, and MODPATH 7. For a
+  and pass its output to MODFLOW-USG, MODFLOW 6, and MODPATH 7. For a
   change to `src/` that could change behavior, run them once with the
   branch build and once with a build of `main` first on `PATH`, and compare
   what each run writes file by file:
   - FloPy `develop`: the autotests that call gridgen
     (`grep -l Gridgen autotest/*.py`, except `test_get_modflow.py`), with
-    `pytest --basetemp=<dir>` so the outputs are kept. Put `mf6`, `mfusg`,
+    `pytest --basetemp=<dir>` so the outputs are kept. Put `mfusg`, `mf6`,
     and `mp7` on `PATH` and install `pyshp`; tests whose programs or
     packages are missing are skipped rather than failed.
   - modflow6-examples: `scripts/ex-prt-mp7-p02.py` and `ex-prt-mp7-p04.py`
@@ -254,7 +254,7 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   - programs run other than git (including `scripts/vcs_tag_suffix.py`,
     which Meson runs at build time), Meson, Ninja, the compilers,
     clang-format and clang-tidy (`scripts/`), gridgen
-    (`test/compare_outputs.py`), MODFLOW 6 and MODFLOW-USG
+    (`test/compare_outputs.py`), MODFLOW-USG and MODFLOW 6
     (`test/check_models.py`), pixi tasks, and latexmk;
   - in Python, `eval`, `exec`, `compile`, `pickle` loads of untrusted files,
     or code that is encoded or obscured (base64 or hex strings that are

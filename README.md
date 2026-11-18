@@ -4,12 +4,12 @@ A Program for Generating Unstructured Finite-Volume Grids
 [![gridgen checks](https://github.com/MODFLOW-ORG/gridgen/actions/workflows/ci.yml/badge.svg)](https://github.com/MODFLOW-ORG/gridgen/actions/workflows/ci.yml)
 
 ## Overview of GRIDGEN
-GRIDGEN is a computer program for creating layered quadtree grids for use with numerical models, such as the MODFLOW-USG program for simulation of groundwater flow.
+GRIDGEN is a computer program for creating layered quadtree grids for use with numerical models, such as the MODFLOW-USG and MODFLOW 6 programs for simulation of groundwater flow.
 
 The program begins by reading a three-dimensional base grid, which can have variable row and column widths and spatially variable cell top and bottom elevations. From this base grid, GRIDGEN will continuously divide into four any cell intersecting user-provided refinement features (points, lines, and polygons) until the desired level of refinement is reached. GRIDGEN will then smooth, or balance, the grid so that no two adjacent cells, including overlying and underlying cells, differ by more than a user-specified level tolerance. Once these gridding processes are completed, GRIDGEN saves a tree structure file so that the layered quadtree grid can be quickly reconstructed as needed. Once a tree structure file has been created, GRIDGEN can then be used to:
 
 - export the layered quadtree grid as a shapefile, 
-- export grid connectivity and cell information as ASCII text files for use with MODFLOW-USG or other numerical models, and 
+- export grid connectivity and cell information as ASCII text files for use with MODFLOW-USG, MODFLOW 6, or other numerical models, and 
 - intersect the grid with shapefiles of points, lines, or polygons, and save intersection output as ASCII text files and shapefiles.
 
 The GRIDGEN program is demonstrated by creating a layered quadtree grid for the Biscayne aquifer in Miami-Dade County, Florida, using hydrologic features to control where refinement is added.
