@@ -127,7 +127,7 @@ GRIDGEN is run from a command prompt or terminal by entering ``gridgen'' followe
 
 \section{Using GRIDGEN Output with MODFLOW~6 and MODFLOW-USG}
 
-The GRIDGEN report describes the GRID\_TO\_USGDATA block as writing the unstructured discretization (DISU) input of MODFLOW-USG, but the same files are the DISU input of MODFLOW~6, and the block also writes the arrays and the vertex and cell records that only MODFLOW~6 reads. The block and its record USG\_DATA\_PREFIX keep their names, so that existing definition files and FloPy work as before. For a grid with the same cells in every layer, a GRID\_TO\_DISVDATA block writes the discretization by vertices (DISV) input of MODFLOW~6. Table~\ref{tab:modelinput} lists the file that holds each item of the input of the two programs; the files are described in the GRIDGEN report and in the Tips and Recommendations section.
+The GRIDGEN report describes the GRID\_TO\_USGDATA block as writing the unstructured discretization (DISU) input of MODFLOW-USG, but most of its files are also DISU input of MODFLOW~6, and the block also writes the arrays and the vertex and cell records that only MODFLOW~6 reads. The block and its record USG\_DATA\_PREFIX keep their names, so that existing definition files and FloPy work as before. For a grid with the same cells in every layer, a GRID\_TO\_DISVDATA block writes the discretization by vertices (DISV) input of MODFLOW~6. Table~\ref{tab:modelinput} lists the file that holds each item of the input of the two programs; the files are described in the GRIDGEN report and in the Tips and Recommendations section.
 
 \begin{table}[htbp]
 \caption{Files that hold the discretization input of MODFLOW~6 and MODFLOW-USG}
@@ -139,7 +139,9 @@ Input & MODFLOW-USG DISU & MODFLOW~6 DISU & MODFLOW~6 DISV \\
 \hline
 NODES & .nod, first value & .nod, first value & --- \\
 NJA (NJAG in MODFLOW-USG) & number of values in .ja.dat & number of values in .ja.dat & --- \\
-NLAY, NCPL, NVERT & NLAY: number of values in .nodesperlay.dat & NVERT: number of lines in .vertices.dat & .dimensions.dat \\
+NLAY & number of values in .nodesperlay.dat & --- & .dimensions.dat \\
+NCPL & --- & --- & .dimensions.dat \\
+NVERT & --- & number of lines in .vertices.dat & .dimensions.dat \\
 NODELAY & .nodesperlay.dat & --- & --- \\
 TOP & tops of the grid & tops of the grid & .top.dat \\
 BOT (BOTM in DISV) & bottoms of the grid & bottoms of the grid & .botm.dat \\
@@ -160,7 +162,7 @@ Ghost nodes (GNC Package) & .gnc.dat & .gnc.dat & .gnc.dat \\
 \end{tabular}
 \end{table}
 
-The MODFLOW-USG and MODFLOW~6 DISU columns are files of a GRID\_TO\_USGDATA block, and the DISV column files of a GRID\_TO\_DISVDATA block. The tops and bottoms of the grid in the DISU input are those of its active cells: for a quadtree grid, the files that the QUADTREE\_BUILDER block writes for each layer, ending in .top1.dat, .bot1.dat, and so on, and for a MODFLOW grid, its TOP and BOTTOM arrays. The .nodesperlay.dat and .gnc.dat files are written only for a quadtree grid; for a MODFLOW grid, NODELAY is the number of rows times the number of columns in each layer. MODFLOW-USG reads IVC when IVSD is 1, and reads CL12 and FAHL for every value of JA when IDSYMRD is 0. Neither program reads the .ia.dat, .c2.dat, or .fldr.dat file: IAC is the difference between successive values of IA, the .c2.dat file has the value of the .c1.dat file for the reverse of each connection, and the .fldr.dat file gives the direction of each connection, from which IHC and IVC are found. Each line of a .gnc.dat file is a ghost-node record of the GNC Package of either program, with NUMALPHAJ = 2, and NUMGNC is the number of lines. Node and vertex numbers start at 1 whatever the NODE\_NUMBERING of the grid. FloPy reads these files to create the input of both programs, as described in the Tips and Recommendations section.
+Except for the tops and bottoms of the grid, the files in the MODFLOW-USG and MODFLOW~6 DISU columns are written by a GRID\_TO\_USGDATA block, and those in the DISV column by a GRID\_TO\_DISVDATA block. The tops and bottoms of the grid in the DISU input are those of its active cells: for a quadtree grid, the files that the QUADTREE\_BUILDER block writes for each layer, ending in .top1.dat, .bot1.dat, and so on, and for a MODFLOW grid, its TOP and BOTTOM arrays; the .nod file also lists the layer, center, and thickness of each cell. The .nodesperlay.dat file and the .gnc.dat files of both blocks are written only for a quadtree grid; for a MODFLOW grid, NODELAY is the number of rows times the number of columns in each layer. MODFLOW-USG reads IVC when IVSD is 1, and reads CL12 and FAHL for every value of JA when IDSYMRD is 0. A GRID\_TO\_USGDATA block also writes the .ia.dat, .c2.dat, and .fldr.dat files, which neither program reads: IAC is the difference between successive values of IA, the .c2.dat file has the value of the .c1.dat file for the reverse of each connection, and the .fldr.dat file gives the direction of each connection along the x, y, or z axis. Each line of the .gnc.dat file of a GRID\_TO\_USGDATA block is a ghost-node record of the GNC Package of either program, and each line of the .gnc.dat file of a GRID\_TO\_DISVDATA block is a record of the MODFLOW~6 GNC Package with the layer and cell number of each cell; NUMALPHAJ is 2, and NUMGNC is the number of lines. Node and vertex numbers start at 1 whatever the NODE\_NUMBERING of the grid. FloPy reads the files of a GRID\_TO\_USGDATA block to create the input of both programs, as described in the Tips and Recommendations section.
 
 \section{Testing}
 
