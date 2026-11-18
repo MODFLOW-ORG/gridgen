@@ -3,6 +3,7 @@
 #include "Box.h"
 #include "GridVertices.h"
 #include "shpGridToLine.h"
+#include "dbfFields.h"
 #include <fstream>
 #include <sstream>
 using namespace std;
@@ -188,10 +189,10 @@ void write_shapefile(QuadTree3D * qtree, string shp_name, string feature_type, b
 
     dbf_name += ".dbf";
     DBFHandle dbf_handle = DBFCreate(dbf_name.c_str());
-    int node_field_id = DBFAddField(dbf_handle, "nodenumber", FTInteger, 12, 0);
-    int layer_field_id = DBFAddField(dbf_handle, "layer", FTInteger, 20, 0);
-    int row_field_id = DBFAddField(dbf_handle, "row", FTInteger, 20, 0);
-    int col_field_id = DBFAddField(dbf_handle, "col", FTInteger, 20, 0);
+    int node_field_id = DBFAddField(dbf_handle, "nodenumber", FTInteger, DBF_INTEGER_WIDTH, 0);
+    int layer_field_id = DBFAddField(dbf_handle, "layer", FTInteger, DBF_INTEGER_WIDTH, 0);
+    int row_field_id = DBFAddField(dbf_handle, "row", FTInteger, DBF_INTEGER_WIDTH, 0);
+    int col_field_id = DBFAddField(dbf_handle, "col", FTInteger, DBF_INTEGER_WIDTH, 0);
     int location_field_id = DBFAddField(dbf_handle, "child_location", FTString, 50, 10);
 
     int top_field_id = DBFAddField(dbf_handle, "top", FTDouble, 20, 8);
@@ -278,10 +279,10 @@ void write_shapefile(ModflowGrid * modflow, string grid_shp_name, string feature
 
     dbf_name += ".dbf";
     DBFHandle dbf_handle = DBFCreate(dbf_name.c_str());
-    int node_field_id = DBFAddField(dbf_handle, "nodenumber", FTInteger, 12, 0);
-    int layer_field_id = DBFAddField(dbf_handle, "layer", FTInteger, 20, 0);
-    int row_field_id = DBFAddField(dbf_handle, "row", FTInteger, 20, 0);
-    int col_field_id = DBFAddField(dbf_handle, "col", FTInteger, 20, 0);
+    int node_field_id = DBFAddField(dbf_handle, "nodenumber", FTInteger, DBF_INTEGER_WIDTH, 0);
+    int layer_field_id = DBFAddField(dbf_handle, "layer", FTInteger, DBF_INTEGER_WIDTH, 0);
+    int row_field_id = DBFAddField(dbf_handle, "row", FTInteger, DBF_INTEGER_WIDTH, 0);
+    int col_field_id = DBFAddField(dbf_handle, "col", FTInteger, DBF_INTEGER_WIDTH, 0);
     int location_field_id = DBFAddField(dbf_handle, "child_location", FTString, 50, 10);
 
     int top_field_id = DBFAddField(dbf_handle, "top", FTDouble, 20, 8);

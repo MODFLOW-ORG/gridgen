@@ -1,0 +1,3 @@
+section = "fixes"
+subsection = "export"
+description = "GIS software read the integer fields of the shapefiles GRIDGEN writes as double-precision fields, so another table could not be joined to them on one of these fields: the nodenumber, layer, row, and col fields of a GRID_TO_SHAPEFILE block, and the nodenumber field, the pointid, arcid, or polyid field, and the integer attributes copied from the input shapefile in the OUTPUT_SHAPEFILE of a GRID_INTERSECTION block. These fields are now 10 characters wide, which ArcGIS reads as a 32-bit integer and GDAL-based software such as QGIS and geopandas as a 64-bit integer. Their values are unchanged."

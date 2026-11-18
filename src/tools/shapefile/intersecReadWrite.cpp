@@ -1,4 +1,5 @@
 #include "intersecReadWrite.h"
+#include "dbfFields.h"
 #include "RoundTrip.h"
 #include "Warnings.h"
 #include <sstream>
@@ -127,7 +128,8 @@ void add_db_handle_fields(DBFHandle & dbf_handle, int int_field_count,
 {
     for (int i = 0; i < int_field_count; i++)
     {
-        int tid = DBFAddField(dbf_handle, int_field_names[i].c_str(), FTInteger, 20, 0);
+        int tid =
+            DBFAddField(dbf_handle, int_field_names[i].c_str(), FTInteger, DBF_INTEGER_WIDTH, 0);
         int_field_ids.push_back(tid);
     }
     for (int i = 0; i < double_field_count; i++)
@@ -244,7 +246,8 @@ void write_intersection(string file, int int_field_count, vector<vector<int>> & 
 
     //create cell field
     int node_field_id = -1;
-    if (!is_txt) node_field_id = DBFAddField(dbf_handle, "nodenumber", FTInteger, 12, 0);
+    if (!is_txt)
+        node_field_id = DBFAddField(dbf_handle, "nodenumber", FTInteger, DBF_INTEGER_WIDTH, 0);
     vector<int> int_field_ids;     //create integer fields
     vector<int> double_field_ids;  //create double fields
     vector<int> str_field_ids;     //create string fields
