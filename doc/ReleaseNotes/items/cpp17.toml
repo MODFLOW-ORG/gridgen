@@ -1,3 +1,0 @@
-section = "internal"
-subsection = "build"
-description = "GRIDGEN is compiled to the C++17 standard rather than C++14, so building it from source needs a compiler that supports C++17. Its output is unchanged."
