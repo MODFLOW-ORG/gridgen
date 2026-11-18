@@ -1,0 +1,3 @@
+section = "internal"
+subsection = "build"
+description = "The continuous integration builds with gcc on Linux and Windows, and those with checks for invalid memory use, now install gcc 15 from conda-forge, in place of gcc 13 from operating-system package sources that were sometimes unavailable. The released executables, built with Intel compilers on Linux and Windows and with gcc 13 on macOS, are unchanged."

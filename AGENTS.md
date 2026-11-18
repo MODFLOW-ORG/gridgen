@@ -219,7 +219,12 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   skipped or cancelled jobs `gh pr checks` reports. The build and sanitizer
   jobs, and the lint job for clang-tidy, cache the GoogleTest download
   (`subprojects/packagecache`, keyed on the wraps) and retry it when the
-  cache is empty. `lint.yml` runs `pixi run check-format` on every push and
+  cache is empty. The Linux and Windows gcc jobs, the sanitizer job, and
+  `check-models.yml` get g++ from conda-forge through the `gcc` pixi
+  environment (`pixi run -e gcc setup`); the Intel jobs and the macOS gcc
+  job, whose release cannot use the conda-forge libc++ that the conda-forge
+  g++ links on macOS, get their compilers through `setup-fortran`.
+  `lint.yml` runs `pixi run check-format` on every push and
   on pull requests to `main`.
   `check-models.yml` runs `pixi run check-models` on Ubuntu for pull requests
   that change `src/`, the check, or the pixi files; it is not a required
