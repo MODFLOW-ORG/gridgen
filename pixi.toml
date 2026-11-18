@@ -75,8 +75,8 @@ check-models = { cmd = "python test/check_models.py" }
 
 # g++ for the Linux and Windows gcc CI jobs, from conda-forge rather than the
 # package sources of each operating system; a separate environment, since it
-# sets CXX. On macOS it links the conda-forge libc++, which a release cannot
-# use, so the macOS gcc job keeps Homebrew gcc
+# sets CXX. On macOS, programs it builds against the conda-forge libc++
+# corrupt std::string, so the macOS gcc job uses Homebrew gcc
 [feature.gcc.dependencies]
 gxx = "15.*"
 

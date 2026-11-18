@@ -63,9 +63,10 @@ jobs:
           # gcc; on Linux and Windows from conda-forge (the gcc pixi
           # environment, whose gxx version in pixi.toml the version here and
           # the sanitizer job name follow), on macOS from Homebrew through
-          # setup-fortran
+          # setup-fortran, since programs the conda-forge g++ builds on macOS
+          # corrupt std::string
           - {os: ubuntu-22.04, compiler: gcc, version: 15, shell: bash, release: no, pixi-environment: gcc}
-          - {os: macos-15, compiler: gcc, version: 13, shell: bash, release: yes, xcode-version: '16.4', pixi-environment: default}
+          - {os: macos-15, compiler: gcc, version: 15, shell: bash, release: yes, xcode-version: '16.4', pixi-environment: default}
           - {os: windows-2022, compiler: gcc, version: 15, shell: pwsh, release: no, pixi-environment: gcc}
           # clang (Apple clang from Xcode)
           - {os: macos-15, compiler: clang, version: 17, shell: bash, release: no, xcode-version: '16.4', pixi-environment: default}
