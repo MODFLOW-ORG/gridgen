@@ -221,9 +221,10 @@ Run from the project root. Pixi is the canonical workflow and matches CI.
   (`subprojects/packagecache`, keyed on the wraps) and retry it when the
   cache is empty. The Linux and Windows gcc jobs, the sanitizer job, and
   `check-models.yml` get g++ from conda-forge through the `gcc` pixi
-  environment (`pixi run -e gcc setup`); the Intel jobs and the macOS gcc
-  job get their compilers through `setup-fortran`, the latter Homebrew gcc,
-  since programs the conda-forge g++ builds on macOS corrupt `std::string`.
+  environment (`pixi run -e gcc setup`, on Linux and Windows only); the
+  Intel jobs and the macOS gcc job get their compilers through
+  `setup-fortran`, the latter Homebrew gcc, since programs the conda-forge
+  g++ builds on macOS corrupt `std::string`.
   `lint.yml` runs `pixi run check-format` on every push and on pull requests
   to `main`.
   `check-models.yml` runs `pixi run check-models` on Ubuntu for pull requests
